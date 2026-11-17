@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-17  
@@ -119,6 +119,8 @@ Individual ADRs use their own decision lifecycle.
 | Accepted | Decision formally approved |
 | Rejected | Decision formally rejected |
 | Superseded | Decision replaced by a later accepted ADR |
+| Deprecated | Decision no longer recommended for new implementation |
+| Withdrawn | Proposal withdrawn before acceptance |
 | Withdrawn | Proposal withdrawn before acceptance |
 
 The ADR governance document, `docs/05-architecture-decision-records.md`, defines the authoritative ADR lifecycle and transition rules.
@@ -157,11 +159,11 @@ The versions below represent the documented baseline recorded in the inspected r
 
 | Document ID | Title | Repository Path | Recorded Version | Lifecycle Status |
 |---|---|---|---|---|
-| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.1 | Draft — Under Architecture Review |
-| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.1 | Draft — Under Architecture Review |
+| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.2 | Draft — Under Architecture Review |
+| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.2 | Draft — Under Architecture Review |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.2 | Draft — Under Architecture Review |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.1 | Draft — Under Architecture Review |
-| GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.2 | Draft — Under Architecture Review |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.2 | Draft — Under Architecture Review |
+| GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.4 | Draft — Under Architecture Review |
 
 **Important:** A proposed revision prepared during documentation review does not change the published version until the revised file is actually committed and published.
 
@@ -169,10 +171,10 @@ The versions below represent the documented baseline recorded in the inspected r
 
 | Document ID | Document | Repository Path | Recorded Version | Lifecycle Status |
 |---|---|---|---|---|
-| GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.0 | Proposed — Pending Project Owner Approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.1 | Proposed — Pending Project Owner Approval |
-| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.5 | Draft — Under Documentation Review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.5 | Draft — Under Documentation Review |
+| GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.1 | Proposed — Pending Project Owner Approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.4 | Proposed — Pending Project Owner Approval |
+| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.6 | Draft — Under Documentation Review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.7 | Draft — Under Documentation Review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.0 | Template |
 
 The version and lifecycle information must be refreshed from the actual document headers.
