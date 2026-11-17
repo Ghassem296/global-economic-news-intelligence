@@ -946,7 +946,7 @@ Any replacement approach must still demonstrate how it preserves source provenan
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines the proposed Event, Article, relationship, and history data model. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines implementation sequencing and dependencies. |
 | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | Internal ADR | Establishes the foundational event-centric recommendation. |
-| `GENI-ADR-002` | Related Proposed ADR | Defines the separation of article deduplication and event matching; repository document pending. |
+| [GENI-ADR-002](GENI-ADR-002-article-deduplication-and-event-matching.md) | Related Proposed ADR | Defines the separation of article deduplication and event matching; the ADR is published in this repository. |
 
 The recommendation in this ADR is an architectural proposal based on the project's documented requirements and domain analysis.
 
