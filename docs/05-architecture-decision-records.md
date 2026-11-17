@@ -2,7 +2,7 @@
 # Architecture Decision Records Governance
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Draft — Under Architecture Review  
 **Document Type:** Architecture Decision Management and Governance  
 **Project:** Global Economic News Intelligence  
@@ -598,24 +598,24 @@ The ADR governance process is considered operational when:
 
 ## 16. Current Governance State
 
-According to the project documentation inventory snapshot dated 2026-11-17:
+According to the GitHub `main` repository snapshot inspected on 2026-11-17:
 
 - The ADR governance document exists in the shared repository.
 - The ADR template exists in the shared repository.
 - The ADR registry exists in the shared repository.
 - Eighteen initial architectural decision topics have been identified.
-- Six individual ADR documents exist in the local project working directory.
-- `GENI-ADR-001` exists in the shared repository with status `Proposed`.
-- `GENI-ADR-002`, `GENI-ADR-006`, `GENI-ADR-008`, `GENI-ADR-011`, and `GENI-ADR-013` have been prepared as individual draft files in the local working tree but are not yet published to the shared repository.
-- The remaining twelve registered topics do not yet have individual ADR files in the recorded local working-tree inventory.
-- All six existing individual ADRs have status `Proposed`.
-- No individual ADR is recorded as `Accepted` in the current registry snapshot.
+- Six individual ADR documents are published in the shared repository:
+  `GENI-ADR-001`, `GENI-ADR-002`, `GENI-ADR-006`, `GENI-ADR-008`, `GENI-ADR-011`, and `GENI-ADR-013`.
+- The remaining twelve registered topics do not yet have individual ADR files in the inspected repository snapshot.
+- All six published individual ADRs have status `Proposed`.
+- No individual ADR is recorded as `Accepted` in the inspected repository snapshot.
+- Publication does not imply approval; the six published proposals remain unapproved.
 - Existing architectural descriptions that depend on unresolved ADRs remain provisional where applicable.
 - Implementation must not treat unresolved proposals as finalized architectural decisions.
 
-These statements describe the recorded project snapshot and must be rechecked against the actual working tree and repository before a later publication or approval.
+This is a repository-only snapshot. It makes no claim about the current local Working Tree, which was not inspected for this review.
 
-The next steps are to complete the documentation review, synchronize the ADR registry with the working tree and committed repository state, and publish the authorized documentation changes.
+The next steps are to complete the documentation review, keep the central documentation registry and ADR registry synchronized with GitHub `main`, and publish any further authorized documentation changes.
 
 The governance process becomes effective for an individual decision only when the required approval is explicitly recorded.
 
