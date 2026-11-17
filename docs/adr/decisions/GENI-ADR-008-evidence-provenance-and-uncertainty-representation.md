@@ -1151,7 +1151,7 @@ Any alternative must still preserve claim attribution, evidence traceability, co
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines the proposed Claim, Evidence, and Analysis domain concepts. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines implementation sequencing and evaluation requirements. |
 | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | Internal ADR | Establishes the event-centric architectural foundation. |
-| `GENI-ADR-011` | Related Proposed ADR | Defines event identity and the use of evidence in event matching; repository document pending. |
+| [GENI-ADR-011](GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md) | Related Proposed ADR | Defines event identity and the use of evidence in event matching; the ADR is published in this repository. |
 | `GENI-ADR-013` | Related Proposed ADR | Addresses source content access, retention, and licensing constraints. |
 
 The recommendation is based on the project's documented product and architecture requirements.
