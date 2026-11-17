@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-17
 
@@ -69,6 +69,7 @@ Every individual ADR must use one of the following statuses:
 | Rejected | The proposal has been reviewed and explicitly declined. |
 | Deprecated | The decision is no longer recommended or applicable. |
 | Superseded | The decision has been replaced by a newer ADR. |
+| Withdrawn | The proposal has been withdrawn before acceptance. |
 
 A Proposed ADR must not be treated as an approved architectural constraint.
 
