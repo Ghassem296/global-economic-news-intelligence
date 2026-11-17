@@ -207,103 +207,25 @@ The following is a proposed target structure. It is not a requirement to create 
 global-economic-news-intelligence/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml
-│       ├── security.yml
-│       └── eval.yml
-│
 ├── docs/
+│   ├── README.md
 │   ├── 01-product-and-system-architecture.md
 │   ├── 02-component-architecture-and-interfaces.md
 │   ├── 03-data-model-and-storage-design.md
 │   ├── 04-implementation-plan-and-roadmap.md
-│   ├── 05-agent-template-architecture.md
-│   ├── 06-agent-template-implementation-specification.md
-│   ├── 07-architecture-decision-records.md
-│   └── adr/
-│       ├── README.md
-│       └── adr-template.md
-│
+│   ├── 05-architecture-decision-records.md
+│   ├── 06-documentation-governance-and-change-management.md
+│   ├── 07-documentation-registry.md
+│   ├── adr/
+│   │   ├── README.md
+│   │   ├── adr-template.md
+│   │   └── decisions/
+│   └── references/
+│       └── agent-template/
 ├── evals/
-│   ├── datasets/
-│   ├── runners/
-│   ├── rubrics/
-│   ├── metrics/
-│   └── failure-analysis/
-│
 ├── tests/
-│   ├── unit/
-│   ├── integration/
-│   ├── contract/
-│   ├── security/
-│   ├── e2e/
-│   └── fixtures/
-│
 ├── src/
 │   └── global_economic_news_intelligence/
-│       ├── __init__.py
-│       ├── __main__.py
-│       ├── cli.py
-│       ├── config.py
-│       ├── exceptions.py
-│       │
-│       ├── domain/
-│       │   ├── entities/
-│       │   ├── value_objects/
-│       │   ├── enums/
-│       │   ├── policies/
-│       │   └── repositories/
-│       │
-│       ├── application/
-│       │   ├── workflows/
-│       │   ├── services/
-│       │   ├── commands/
-│       │   └── queries/
-│       │
-│       ├── acquisition/
-│       │   ├── collectors/
-│       │   ├── adapters/
-│       │   └── source_registry.py
-│       │
-│       ├── processing/
-│       │   ├── normalization/
-│       │   ├── deduplication/
-│       │   ├── classification/
-│       │   ├── entity_extraction/
-│       │   └── translation/
-│       │
-│       ├── intelligence/
-│       │   ├── event_detection/
-│       │   ├── event_matching/
-│       │   ├── event_management/
-│       │   ├── evidence/
-│       │   ├── analysis/
-│       │   └── importance/
-│       │
-│       ├── reporting/
-│       │   ├── generators/
-│       │   ├── templates/
-│       │   ├── publication/
-│       │   ├── review/
-│       │   └── delivery/
-│       │
-│       ├── llm/
-│       │   ├── interfaces/
-│       │   ├── providers/
-│       │   ├── schemas/
-│       │   └── execution/
-│       │
-│       ├── infrastructure/
-│       │   ├── persistence/
-│       │   │   ├── models/
-│       │   │   ├── repositories/
-│       │   │   ├── migrations/
-│       │   │   └── database.py
-│       │   ├── external_services/
-│       │   └── delivery/
-│       │
-│       ├── scheduling/
-│       └── observability/
-│
 ├── .env.example
 ├── .gitignore
 ├── .python-version
@@ -311,8 +233,7 @@ global-economic-news-intelligence/
 ├── uv.lock
 ├── README.md
 ├── CHANGELOG.md
-├── SECURITY.md
-└── Makefile
+└── SECURITY.md
 ```
 
 The actual directory structure should evolve with implementation.
