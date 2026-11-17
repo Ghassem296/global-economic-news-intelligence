@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-006  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-17  
@@ -426,6 +426,7 @@ ADRs use the following decision statuses:
 - Proposed
 - Accepted
 - Rejected
+- Deprecated
 - Superseded
 - Withdrawn
 
