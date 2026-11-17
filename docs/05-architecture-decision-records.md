@@ -624,6 +624,6 @@ The governance process becomes effective for an individual decision only when th
 **End of Document**
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Draft — Under Architecture Review  
 **Last Updated:** 2026-11-17
