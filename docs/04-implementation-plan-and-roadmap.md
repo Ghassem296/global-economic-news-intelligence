@@ -1,1640 +1,2214 @@
-# Global Economic News Intelligence
-## Implementation Plan & Development Roadmap
+# Global Economic News Intelligence — Data Model & Storage Design
 
-**Document ID:** GENI-PLAN-004
-
-**Version:** 1.1
-**Status:** Draft — Under Architecture Review
-**Last Updated:** 2026-11-16
-**Project:** Global Economic News Intelligence
+**Document ID:** GENI-DATA-003  
+**Version:** 1.3  
+**Status:** Draft — Under Architecture Review  
+**Project:** Global Economic News Intelligence  
+**Last Updated:** 2026-11-17
 
 ---
 
 ## 1. Purpose
 
-This document defines the implementation sequence, development stages, dependencies, milestones, testing strategy, and acceptance criteria for Global Economic News Intelligence.
+This document defines the logical domain data model, entity relationships, persistence requirements, integrity constraints, and storage contracts for Global Economic News Intelligence (GENI).
 
-The objective is to build a reliable, event-centric economic news intelligence platform through incremental, testable implementation.
+GENI is an event-centric intelligence system. It collects information from international sources, identifies and correlates real-world economic developments, evaluates claims and evidence, produces analytical outputs, and delivers versioned reports.
 
-The roadmap is governed by the following product-specific documents:
+The data model must support:
 
-1. Product & System Architecture.
-2. Component Architecture & Interface Contracts.
-3. Data Model & Storage Design.
-4. Architecture Decision Records.
+- Source and article management.
+- Article normalization, revision tracking, and deduplication.
+- Topic classification and entity extraction.
+- Event detection, matching, continuation, merging, and splitting.
+- Claim and evidence provenance.
+- Analysis and report versioning.
+- Publication decisions and human review.
+- Report delivery and retry tracking.
+- Workflow execution, recovery, and observability.
+- LLM usage and cost tracking.
+- Reproducibility of analytical outputs.
+- Content retention and rights management.
 
-The generic Agent Template Architecture and Generic Agent Template Implementation Specification are foundational reference documents. They are not, by themselves, requirements to implement a complete conversational Agent Runtime in this product.
+This document defines logical domain requirements. It does not prescribe a final physical database schema or approve a database engine.
 
-The initial product release focuses on text-based economic news intelligence. Audio and video capabilities are outside the initial release scope.
+Component responsibilities and application-level contracts are defined in Document 02. Any conflict between documents must be explicitly reconciled.
 
-This roadmap is a development plan, not an approval of unresolved architectural decisions. Technology and policy choices that require ADR approval remain provisional until formally accepted.
+## 2. Design Principles
 
----
+### 2.1 Event-Centric Domain Model
 
-## 2. Development Strategy
+An Article represents a publication. An Event represents a real-world development.
 
-The project follows an incremental, workflow-first development strategy.
+These are separate domain entities connected through explicit relationships.
 
-Each development stage should produce a working, testable result and reduce a meaningful product or technical risk.
+- One event may be covered by multiple articles.
+- One article may describe multiple events when justified.
+- Article deduplication identifies identical or substantially equivalent publications.
+- Event matching determines whether an article or observation concerns an existing event.
+- Event relationships describe connections between distinct developments and do not imply identical event identity.
 
-The implementation should avoid building infrastructure before a concrete requirement has been demonstrated.
+### 2.2 Provenance and Traceability
 
-### 2.1 Core Principles
+Important analytical conclusions must be traceable to their inputs.
 
-1. Architecture and critical decisions before dependent implementation.
-2. Small, independently testable components.
-3. Domain logic separated from infrastructure.
-4. Deterministic workflows as the default execution model.
-5. LLM reasoning only where it adds measurable value.
-6. Evidence provenance designed into the initial data model.
-7. Evaluation and quality measurement from the beginning.
-8. Explicit event identity and correlation policies.
-9. Idempotent processing and recoverable workflows.
-10. Controlled external dependencies and operating costs.
-11. Security and content rights considered at acquisition time.
-12. No premature distributed architecture.
-13. No mandatory vector database without an approved requirement.
-14. No premature audio or video implementation.
+The system should identify:
 
-### 2.2 Workflow-First Architecture
+- The source that published or supplied the information.
+- The article revision or external document containing it.
+- The exact passage, data point, or document location, when available.
+- Publication, collection, and observation timestamps.
+- The claim supported, contradicted, or contextualized by the evidence.
+- The analysis that used the evidence.
+- The report version containing the resulting conclusion.
+- The model, provider, prompt, schema, and processing versions involved.
 
-The product is primarily a collection of deterministic application workflows supported by shared LLM execution capabilities.
+Provenance must not depend solely on free-text descriptions.
 
-The following operations should normally remain deterministic:
+### 2.3 Explicit Uncertainty
 
-- Source configuration and collection scheduling.
-- Article normalization and persistence.
-- Exact and near-duplicate candidate generation.
-- Database operations and state transitions.
-- Event history recording.
-- Publication policy enforcement.
-- Review queue management.
-- Report versioning and delivery.
-- Retry, recovery, and idempotency handling.
+Unknown information must remain unknown.
 
-LLMs may support tasks such as:
+Examples:
 
-- Topic classification.
-- Entity and claim extraction.
-- Entity resolution.
-- Event matching assistance.
-- Evidence interpretation.
-- Economic analysis.
-- Report generation.
+- Unknown economic impact must not be represented as zero.
+- Missing publication time must remain null.
+- An unverified claim must not be represented as confirmed.
+- Missing market data must not be replaced with an invented market reaction.
+- Model confidence must not be treated as an objective probability unless calibrated and explicitly defined.
 
-LLM output must be validated and must not directly bypass domain policies or publication controls.
+### 2.4 Historical Integrity
 
-A shared LLM Execution Layer should provide provider abstraction, structured output validation, execution budgets, deadlines, retry policies, cancellation, and usage tracking.
+Material changes to articles, events, analyses, reports, publication decisions, reviews, and delivery attempts must be traceable.
 
-A generic conversational loop, conversation memory, generic MCP integration, or autonomous tool execution is not an initial product requirement.
+Completed analyses and published reports must not be silently overwritten. New results must create traceable versions or records.
 
----
+### 2.5 Idempotency and Recoverability
 
-## 3. Scope and Release Terminology
+Repeated execution must not create duplicate domain effects.
 
-The roadmap distinguishes development stages from product capability phases.
+Processing must support safe retries and recovery after partial failures.
 
-This distinction avoids using the term "Phase 1" for both project setup and product functionality.
+External side effects must be treated separately from transactional database operations.
 
-### 3.1 Initial Product Release
+### 2.6 Database Independence
 
-The initial release is the text-based economic intelligence platform.
+Domain entities must not depend on SQLite-specific or PostgreSQL-specific types, SQL statements, or behavior.
 
-It should support:
+Persistence must be accessed through repository interfaces and application-level transaction boundaries.
 
-- International economic news acquisition.
-- Article normalization and deduplication.
-- Economic topic classification.
-- Entity and claim extraction.
-- Event detection and correlation.
-- Evidence and uncertainty management.
-- Economic analysis.
-- Event dossiers and versioned reports.
-- Publication decisions and human review where required.
-- Text delivery.
-- Scheduling, observability, and recovery.
+### 2.7 Separation of Facts, Claims, and Analysis
 
-### 3.2 Future Product Capability Phases
+The model must distinguish:
 
-| Product Phase | Scope |
-|---|---|
-| Product Phase 1 | Text-based economic news intelligence |
-| Product Phase 2 | Audio intelligence and briefings |
-| Product Phase 3 | Video intelligence and publishing |
-| Product Phase 4 | Advanced intelligence, personalization, and automation |
+- **Observed information:** content directly available from a source or dataset.
+- **Source claim:** an assertion attributed to a person, organization, publication, or institution.
+- **Evidence assessment:** an evaluation of evidence supporting or contradicting a claim.
+- **AI analysis:** an interpretation generated from available inputs.
+- **Forecast:** a forward-looking estimate or scenario.
 
-These product phases do not prescribe the order of engineering tasks. The development stages below define that order.
+These categories must not be conflated in reports.
 
----
+### 2.8 Logical Model Versus Initial Implementation
 
-## 4. Development Environment and Technology Strategy
+The logical model describes the capabilities and relationships required by the product.
 
-### 4.1 Initial Technology Candidates
+It does not require every logical entity to become a separate physical table in the first migration. Initial implementation should prioritize the first usable end-to-end workflow while preserving the ability to evolve.
 
-The following technologies are candidates for the initial implementation. Choices requiring architectural commitment must be approved through the ADR process.
+## 3. Persistence Strategy
 
-| Area | Candidate |
-|---|---|
-| Language | Python |
-| Python version | A supported stable Python release, explicitly pinned for the project |
-| Package management | uv |
-| Data validation | Pydantic |
-| LLM integration | Provider-independent adapter, with LiteLLM as a candidate |
-| Database | Relational database; SQLite is a candidate for the initial deployment |
-| Database access | SQLAlchemy or an equivalent repository-backed approach |
-| Migrations | Alembic or an equivalent migration mechanism |
-| Testing | pytest |
-| Async testing | pytest-asyncio |
-| Linting and formatting | Ruff |
-| Type checking | mypy or pyright |
-| Configuration | Validated settings and environment variables |
-| Logging | Structured logging |
-| CI | GitHub Actions |
-| Version control | Git |
+### 3.1 Initial Relational Storage
 
-The selected Python version, database access library, migration mechanism, async database strategy, and LLM adapter must be recorded in the appropriate architecture decisions before they become implementation constraints.
+SQLite is a proposed initial relational database, subject to formal architecture approval.
 
-### 4.2 Database Considerations
+If selected, the initial implementation must support:
 
-If SQLite is selected for the initial deployment, its implementation must explicitly address:
+- Local development and single-instance operation.
+- Relational integrity.
+- Versioned migrations.
+- Transactional updates.
+- Controlled connection lifecycle.
+- Tested backup and restore procedures.
+- Explicit handling of write concurrency and database locking.
+
+The implementation must configure and test:
 
 - Foreign key enforcement.
 - Transaction boundaries.
-- Write concurrency.
-- Busy timeout behavior.
-- WAL suitability and configuration.
-- Async access strategy.
-- Backup consistency.
-- Migration testing.
+- Busy timeout and lock handling.
+- Connection management.
+- Migration execution.
+- Appropriate indexes.
+- Async access and write serialization.
 
-The system must not assume that SQLite provides the same concurrency characteristics as a client-server database.
+WAL mode may be considered only after validating its operational implications.
 
-PostgreSQL may be considered as a future deployment option, but migration must not be assumed to be automatic merely because repositories are used.
+SQLite concurrency limitations must be documented. Concurrent asynchronous workflows must not assume unrestricted concurrent writes.
 
-### 4.3 Development Tools
+### 3.2 Future Relational Storage
 
-Recommended development environment:
+PostgreSQL is a potential future implementation when operational requirements justify it.
 
-- Visual Studio Code.
-- Python extension.
-- Ruff extension.
-- Git integration.
-- Python debugger.
-- Terminal with uv available.
+Possible triggers include:
 
-### 4.4 Environment Configuration
+- Multiple application instances.
+- Higher write concurrency.
+- Multiple independent workers.
+- Larger datasets.
+- More advanced operational and backup requirements.
 
-Separate configuration must be supported for:
+Migration must preserve domain behavior and repository contracts.
 
-- Local development.
-- Automated testing.
-- Evaluation.
-- Production deployment.
+### 3.3 Logical Storage Categories
 
-Secrets must be supplied through environment variables or an appropriate secret provider.
+The logical storage model consists of:
 
-A `.env.example` file should document required configuration without containing real credentials.
+1. Relational domain data.
+2. Article content and revision references.
+3. Event, claim, and evidence history.
+4. Analytical and report versions.
+5. Publication, review, and delivery records.
+6. Workflow execution and recovery metadata.
+7. Scheduling and operational metadata.
+8. LLM usage and operational metadata.
+9. Optional semantic search representations.
 
-Production credentials must never be committed to version control or written into ordinary application logs.
+These categories may initially share one relational database. Their logical separation must remain clear.
 
----
+### 3.4 Storage Decisions Requiring ADR Approval
 
-## 5. Project Structure
+The following decisions remain subject to formal architecture approval:
 
-The following is a proposed target structure. It is not a requirement to create every directory during project initialization.
+- Initial database engine and operating configuration.
+- Embedding generation and storage strategy.
+- Full-text and external content retention.
+- Content licensing and rights enforcement.
+- Asynchronous database library and concurrency strategy.
+- Future object storage requirements.
+- Scheduling and worker execution infrastructure.
+
+This document does not independently approve any of these decisions.
+
+## 4. Domain Relationship Overview
+
+The following is a conceptual overview rather than a physical schema specification.
 
 ```text
-global-economic-news-intelligence/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml
-│       ├── security.yml
-│       └── eval.yml
-│
-├── docs/
-│   ├── 01-product-and-system-architecture.md
-│   ├── 02-component-architecture-and-interfaces.md
-│   ├── 03-data-model-and-storage-design.md
-│   ├── 04-implementation-plan-and-roadmap.md
-│   ├── 05-agent-template-architecture.md
-│   ├── 06-agent-template-implementation-specification.md
-│   ├── 07-architecture-decision-records.md
-│   └── adr/
-│       ├── README.md
-│       └── adr-template.md
-│
-├── evals/
-│   ├── datasets/
-│   ├── runners/
-│   ├── rubrics/
-│   ├── metrics/
-│   └── failure-analysis/
-│
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   ├── contract/
-│   ├── security/
-│   ├── e2e/
-│   └── fixtures/
-│
-├── src/
-│   └── global_economic_news_intelligence/
-│       ├── __init__.py
-│       ├── __main__.py
-│       ├── cli.py
-│       ├── config.py
-│       ├── exceptions.py
-│       │
-│       ├── domain/
-│       │   ├── entities/
-│       │   ├── value_objects/
-│       │   ├── enums/
-│       │   ├── policies/
-│       │   └── repositories/
-│       │
-│       ├── application/
-│       │   ├── workflows/
-│       │   ├── services/
-│       │   ├── commands/
-│       │   └── queries/
-│       │
-│       ├── acquisition/
-│       │   ├── collectors/
-│       │   ├── adapters/
-│       │   └── source_registry.py
-│       │
-│       ├── processing/
-│       │   ├── normalization/
-│       │   ├── deduplication/
-│       │   ├── classification/
-│       │   ├── entity_extraction/
-│       │   └── translation/
-│       │
-│       ├── intelligence/
-│       │   ├── event_detection/
-│       │   ├── event_matching/
-│       │   ├── event_management/
-│       │   ├── evidence/
-│       │   ├── analysis/
-│       │   └── importance/
-│       │
-│       ├── reporting/
-│       │   ├── generators/
-│       │   ├── templates/
-│       │   ├── publication/
-│       │   ├── review/
-│       │   └── delivery/
-│       │
-│       ├── llm/
-│       │   ├── interfaces/
-│       │   ├── providers/
-│       │   ├── schemas/
-│       │   └── execution/
-│       │
-│       ├── infrastructure/
-│       │   ├── persistence/
-│       │   │   ├── models/
-│       │   │   ├── repositories/
-│       │   │   ├── migrations/
-│       │   │   └── database.py
-│       │   ├── external_services/
-│       │   └── delivery/
-│       │
-│       ├── scheduling/
-│       └── observability/
-│
-├── .env.example
-├── .gitignore
-├── .python-version
-├── pyproject.toml
-├── uv.lock
-├── README.md
-├── CHANGELOG.md
-├── SECURITY.md
-└── Makefile
+Source
+  |
+  +---- SourceHealthRecord
+  +---- SourceRelationship
+  +---- CollectionCheckpoint
+  |
+  +---- Article
+          |
+          +---- ArticleRevision
+          +---- ArticleProcessingRecord
+          +---- ArticleTopicClassification
+          +---- ArticleEntityMention
+          +---- DuplicateCandidate
+          +---- ArticleEventLink
+                    |
+                    +---- Event
+                           |
+                           +---- EventHistory
+                           +---- EventRelationship
+                           +---- EventEntityLink
+                           +---- EventClaimLink
+                           +---- Analysis
+                           +---- ReportEventLink
+
+Claim
+  |
+  +---- ClaimObservation
+  +---- ClaimEvidenceLink
+                    |
+                    +---- Evidence
+                           |
+                           +---- EvidenceLocation
+                           +---- AnalysisEvidenceLink
+                           +---- ReportEvidenceLink
+
+Report
+  |
+  +---- ReportArticleLink
+  +---- ReportAnalysisLink
+  +---- ReportEventLink
+  +---- PublicationDecision
+  +---- ReviewRecord
+  +---- DeliveryRecord
+          |
+          +---- DeliveryAttempt
+
+EventIdentityOperation
+  |
+  +---- EventIdentityOperationInput
+  +---- EventIdentityOperationOutput
+
+ProcessingRun
+  |
+  +---- ProcessingStep
+
+LLMUsageRecord
+  |
+  +---- ProcessingRun / ProcessingStep / Analysis
+
+Schedule
+  |
+  +---- ScheduledExecution
 ```
 
-The actual directory structure should evolve with implementation.
+## 5. Core Domain Entities
 
-The generic Agent Template documents remain reference material. Product-specific news workflows must not be placed inside a generic conversational runtime merely to reproduce the template structure.
+### 5.1 Source
 
-A separate generic runtime package should be introduced only if a concrete reusable requirement justifies it.
-
----
+Represents a configured information source.
+
+Fields:
+
+| Field | Type | Description |
+|---|---|---|
+| id | UUID/string | Internal identifier |
+| name | string | Display name |
+| source_type | enum/string | RSS, API, web, official dataset, etc. |
+| base_url | string | Validated source URL |
+| language | string/null | Primary language, if known |
+| country_code | string/null | Source country |
+| ownership_group | string/null | Known ownership grouping |
+| syndication_group | string/null | Known syndication grouping |
+| reliability_profile | JSON/null | Documented assessment context |
+| collection_config | JSON | Non-secret source configuration |
+| is_active | boolean | Collection enabled state |
+| created_at | timestamp | Creation time |
+| updated_at | timestamp | Last modification |
+
+Constraints:
+
+- Source identifiers must be stable.
+- Source URLs must be validated.
+- Credentials and secrets must not be stored in ordinary configuration fields.
+- Reliability information must have documented semantics.
+- Ownership and syndication relationships must not be inferred solely from domain names.
+- Operationally significant configuration changes must be auditable.
+
+A numeric reliability score requires a documented scale, calculation method, version, and calibration policy.
+
+### 5.2 SourceHealthRecord
+
+Represents a source collection health observation.
+
+Fields:
+
+- `id`
+- `source_id`
+- `checked_at`
+- `health_status`
+- `response_status`
+- `latency_ms`
+- `error_category`
+- `error_summary`
+- `items_discovered`
+- `items_collected`
+- `metadata`
+
+Possible health states:
+
+- `HEALTHY`
+- `DEGRADED`
+- `UNAVAILABLE`
+- `UNKNOWN`
+
+Historical health observations must be preserved.
+
+### 5.3 SourceRelationship
+
+Represents a known relationship between information sources.
+
+Fields:
+
+- `id`
+- `source_id_a`
+- `source_id_b`
+- `relationship_type`
+- `confidence`
+- `evidence_reference`
+- `created_at`
+- `updated_at`
+- `metadata`
+
+Relationship types may include:
+
+- `SAME_OWNER`
+- `SYNDICATES_CONTENT`
+- `REPUBLISHES`
+- `SHARES_ORIGINAL_REPORTING`
+- `AFFILIATED_WITH`
+- `UNKNOWN_RELATIONSHIP`
+
+Source pairs must use canonical ordering or an equivalent uniqueness rule.
+
+Relationships must not be inferred from domain similarity alone. Supporting evidence and confidence must be recorded when available.
+
+### 5.4 Article
+
+Represents one collected publication.
+
+Fields:
+
+| Field | Type | Description |
+|---|---|---|
+| id | UUID/string | Internal identifier |
+| source_id | UUID/string | Source reference |
+| external_id | string/null | Source-provided identifier |
+| url | string | Original article URL |
+| canonical_url | string/null | Normalized canonical URL |
+| title | string | Current normalized title |
+| content_reference | string/null | Reference to permitted stored content |
+| summary | string/null | Source summary or permitted extract |
+| author | string/null | Author, if known |
+| language | string/null | Detected or declared language |
+| published_at | timestamp/null | Original publication time |
+| collected_at | timestamp | First successful collection |
+| last_seen_at | timestamp | Most recent observation |
+| content_hash | string/null | Normalized content fingerprint |
+| content_availability | enum/string | Available, partial, metadata-only, unavailable |
+| rights_status | enum/string | Access and retention classification |
+| current_revision_id | UUID/string/null | Current revision reference |
+| metadata | JSON | Additional source metadata |
+| created_at | timestamp | Record creation |
+| updated_at | timestamp | Last modification |
+
+Constraints:
+
+- `source_id` must reference an existing source.
+- Original and canonical URLs must remain distinguishable.
+- Missing content must not be represented as an empty article without an explicit availability state.
+- Content hashes must use a documented normalization and hashing algorithm.
+- Material content changes must create a new article revision.
+- External identifiers should be unique within a source when present.
+- Canonical URLs and fingerprints may support duplicate detection but must not automatically merge articles without the configured policy.
+
+A unique constraint on `(source_id, external_id)` should apply only when the external identifier is present and meaningful.
+
+**Content ownership rule:** `Article` represents the current searchable projection of the latest accepted article revision. `ArticleRevision` preserves historical meaningful changes. Updating the current projection and creating a revision must occur atomically.
+
+The presence of a content field or content reference does not grant permission to retain full article text. Storage must comply with the applicable rights and retention policy in Section 22 and ADR-013.
+
+### 5.5 ArticleRevision
+
+Preserves meaningful article changes.
+
+Fields:
+
+- `id`
+- `article_id`
+- `revision_number`
+- `title`
+- `content_reference`
+- `content_hash`
+- `summary`
+- `language`
+- `observed_at`
+- `change_reason`
+- `rights_status`
+- `metadata`
+
+Constraints:
+
+- `(article_id, revision_number)` must be unique.
+- Repeated collection of unchanged content must not create a revision.
+- Material changes must preserve the previous revision.
+- Content references must comply with retention and licensing rules.
+- A revision must identify the text representation to which hashes and offsets refer.
+
+The physical storage method is an implementation decision.
+
+### 5.6 Event
+
+Represents a real-world economic or economically relevant geopolitical development.
+
+Fields:
+
+| Field | Type | Description |
+|---|---|---|
+| id | UUID/string | Stable event identifier |
+| title | string | Current event title |
+| description | text/null | Current description |
+| event_type | string | Event classification |
+| primary_topic | string | Main economic topic |
+| geographic_scope | string/null | Global, regional, national, or local |
+| primary_country_code | string/null | Primary country |
+| occurrence_start_at | timestamp/null | Estimated or observed start |
+| occurrence_end_at | timestamp/null | Estimated or observed end |
+| occurrence_time_precision | string/null | Exact, approximate, date-only, unknown |
+| status | string | Current lifecycle state |
+| importance_score | decimal/null | Importance assessment |
+| economic_relevance_score | decimal/null | Economic relevance assessment |
+| score_policy_version | string/null | Scoring policy version |
+| first_observed_at | timestamp | First system observation |
+| last_updated_at | timestamp | Latest meaningful update |
+| resolved_at | timestamp/null | Resolution time |
+| created_at | timestamp | Creation time |
+| updated_at | timestamp | Last modification |
+
+Constraints:
+
+- Event identifiers remain stable during ordinary updates.
+- Event identity changes must use explicit merge or split operations.
+- Lifecycle transitions must follow an approved policy.
+- Scores must include documented scales and assessment versions.
+- Missing occurrence times must remain null.
+- `UPDATED` is not a persistent lifecycle state; changes are represented through event history.
+
+The event record represents current state. `EventHistory` preserves meaningful prior states.
+
+### 5.7 ArticleEventLink
+
+Associates an article with an event.
+
+Fields:
+
+- `id`
+- `article_id`
+- `event_id`
+- `relationship_type`
+- `association_confidence`
+- `association_method`
+- `matching_policy_version`
+- `associated_at`
+- `is_active`
+- `deactivated_at`
+- `decision_reference`
+- `metadata`
+
+Relationship types may include:
+
+- `INITIAL_REPORT`
+- `FOLLOW_UP`
+- `CONFIRMATION`
+- `CONTEXT`
+- `CONTRADICTION`
+- `RELATED_DEVELOPMENT`
+
+Constraints:
+
+- An active association must not be duplicated.
+- Confidence must have documented semantics.
+- Association method and policy version must be recorded.
+- Deactivation must preserve historical association information.
+- A rejected match must not be represented as an active association.
+- Association changes must be traceable to a matching decision or authorized correction.
+
+### 5.8 DuplicateCandidate
+
+Represents a possible duplicate relationship between two articles.
+
+Fields:
+
+- `id`
+- `article_id_a`
+- `article_id_b`
+- `similarity_score`
+- `matching_method`
+- `matching_policy_version`
+- `decision`
+- `decision_reason`
+- `created_at`
+- `reviewed_at`
+- `metadata`
+
+Possible decisions:
+
+- `PENDING`
+- `CONFIRMED_DUPLICATE`
+- `NOT_DUPLICATE`
+- `SUPERSEDED`
+
+The same article must not be compared with itself. Article pairs must use canonical ordering or an equivalent uniqueness rule.
+
+Duplicate confirmation must not erase the identity or provenance of either original article. Duplicate detection remains separate from event matching.
+
+## 6. Topic Classification and Entity Model
+
+### 6.1 ArticleTopicClassification
+
+Records topic classification results for an article revision.
+
+Fields:
+
+- `id`
+- `article_id`
+- `article_revision_id`
+- `topic`
+- `confidence`
+- `classification_method`
+- `model_provider`
+- `model_id`
+- `prompt_version`
+- `taxonomy_version`
+- `created_at`
+- `is_current`
+
+The initial economic taxonomy includes:
+
+- `MONETARY_POLICY`
+- `FINANCIAL_MARKETS`
+- `MACROECONOMICS`
+- `TRADE_AND_INDUSTRY`
+- `ENERGY_AND_RESOURCES`
+- `FISCAL_POLICY_AND_PUBLIC_DEBT`
+- `GEOPOLITICAL_ECONOMIC_RISK`
+
+An article may have multiple topic classifications. The primary topic must be explicitly identifiable.
+
+Classification history must remain available when a new taxonomy or model version produces a different result.
+
+### 6.2 Entity
+
+Represents a resolved real-world entity.
+
+Entity types may include:
+
+- `PERSON`
+- `ORGANIZATION`
+- `COUNTRY`
+- `REGION`
+- `INSTITUTION`
+- `COMPANY`
+- `INDUSTRY`
+- `COMMODITY`
+- `FINANCIAL_INSTRUMENT`
+
+Fields:
+
+- `id`
+- `canonical_name`
+- `entity_type`
+- `country_code`
+- `description`
+- `external_identifiers`
+- `metadata`
+- `created_at`
+- `updated_at`
+
+The entity table represents resolved entities, not every raw mention.
+
+### 6.3 EntityAlias
+
+Stores alternative names and identifiers.
+
+Fields:
+
+- `id`
+- `entity_id`
+- `alias`
+- `language`
+- `alias_type`
+- `source`
+- `created_at`
+
+Examples include abbreviations, former names, transliterations, local-language names, and alternative spellings.
+
+Ambiguous aliases must not automatically merge distinct entities.
+
+### 6.4 ArticleEntityMention
+
+Represents an entity mention extracted from an article revision.
+
+Fields:
+
+- `id`
+- `article_id`
+- `article_revision_id`
+- `entity_id` nullable
+- `mention_text`
+- `mention_type`
+- `confidence`
+- `start_offset`
+- `end_offset`
+- `offset_representation`
+- `extraction_method`
+- `extraction_version`
+- `created_at`
+
+An unresolved mention may have a null `entity_id`.
+
+Offsets must specify the exact text representation and revision they reference. They must not be assumed to remain valid across revisions.
+
+### 6.5 EventEntityLink
+
+Associates entities with events.
+
+Fields:
+
+- `id`
+- `event_id`
+- `entity_id`
+- `relationship_type`
+- `confidence`
+- `created_at`
+- `metadata`
+
+Relationship types may include:
+
+- `PRIMARY_ACTOR`
+- `AFFECTED_ENTITY`
+- `REGULATOR`
+- `COUNTERPARTY`
+- `LOCATION`
+- `MARKET`
+- `OTHER`
+
+An event may be linked to multiple entities with different roles.
+
+## 7. Event Matching and Identity History
+
+### 7.1 EventMatchCandidate
+
+Represents a candidate match between an incoming article or observation and an existing event.
+
+Fields:
+
+- `id`
+- `article_id`
+- `candidate_event_id`
+- `lexical_similarity`
+- `semantic_similarity`
+- `entity_overlap_score`
+- `temporal_compatibility_score`
+- `geographic_compatibility_score`
+- `overall_score`
+- `matching_method`
+- `matching_policy_version`
+- `candidate_status`
+- `decision_reason`
+- `created_at`
+- `decided_at`
+
+Candidate states may include:
+
+- `PENDING`
+- `ACCEPTED`
+- `REJECTED`
+- `INCONCLUSIVE`
+- `SUPERSEDED`
+
+The system must preserve the distinction between a candidate match, an accepted association, a rejected association, and a newly created event.
+
+A similarity score is not a final event identity decision.
+
+Exact thresholds and decision rules require a formal architecture decision or approved policy.
 
-## 6. Development Stage 0 — Documentation and Architecture Approval
+### 7.2 Event Identity Operations
 
-### Objectives
+Event merging and splitting must preserve stable identifiers and historical traceability.
 
-Establish a consistent architecture baseline and resolve decisions that block safe implementation.
+A merge operation must record:
+
+- The surviving event identifier.
+- The identifiers of merged events.
+- The reason for merging.
+- The decision method and confidence, where applicable.
+- The operation time.
+- The resulting article and entity associations.
+
+A split operation must record:
+
+- The original event identifier.
+- The new event identifiers.
+- The reason for splitting.
+- The reassignment of article-event relationships.
+- The decision method and time.
+
+The logical operation is represented by `EventIdentityOperation`.
+
+Fields:
+
+- `id`
+- `operation_type`
+- `reason`
+- `decision_method`
+- `decision_confidence`
+- `policy_version`
+- `created_at`
+- `metadata`
+
+Possible operation types:
 
-### Tasks
+- `MERGE`
+- `SPLIT`
+- `IDENTITY_CORRECTION`
 
-1. Review the product architecture.
-2. Review component responsibilities and interfaces.
-3. Review the data model and storage design.
-4. Review the implementation roadmap.
-5. Verify documentation links and file names.
-6. Identify conflicting or duplicated requirements.
-7. Establish the ADR register.
-8. Identify decisions that require formal ADRs.
-9. Define initial product scope.
-10. Define the initial economic topic taxonomy.
-11. Define initial report and publication requirements.
-12. Define the initial source and content-rights policy.
-13. Define initial event identity and correlation rules.
-14. Define the review process for held reports.
-15. Define the first evaluation cases.
+Input and output relationships must use explicit relational entities.
+
+**EventIdentityOperationInput**
 
-### Required Architectural Topics
+- `id`
+- `operation_id`
+- `event_id`
+- `role`
 
-The following topics must be resolved or explicitly bounded before dependent implementation:
+**EventIdentityOperationOutput**
 
-- Workflow-first architecture and shared LLM execution.
-- Article deduplication versus event matching.
-- Event identity, matching, merging, and splitting.
-- Semantic similarity and embedding strategy.
-- Initial persistence and async execution strategy.
-- News acquisition and full-text access rights.
-- Publication, review, correction, and withdrawal policy.
-- Market data availability and impact classification.
-- Processing recovery and idempotency.
+- `id`
+- `operation_id`
+- `event_id`
+- `role`
 
-Not every future capability must be fully designed before the first implementation. However, unresolved decisions must not be disguised as accepted architecture.
+Constraints:
 
-### Deliverables
+- Input and output event relationships must be validated.
+- Event identity operations and affected association changes must be committed atomically.
+- Event identifiers must not be silently deleted or reused.
+- Survivor selection and aliasing rules require an approved event identity policy.
+
+### 7.3 EventRelationship
+
+Represents relationships between distinct events.
+
+Relationship types may include:
+
+- `RELATED_TO`
+- `CAUSED_BY`
+- `TRIGGERED_BY`
+- `PART_OF`
+- `FOLLOWED_BY`
+- `ESCALATION_OF`
+- `CONTINUATION_OF`
 
-- Consistent architecture documents.
-- Maintained ADR register.
-- Initial scope and constraints.
-- Defined first implementation slice.
-- Initial evaluation plan.
+Fields:
 
-### Exit Criteria
+- `id`
+- `source_event_id`
+- `target_event_id`
+- `relationship_type`
+- `confidence`
+- `direction`
+- `policy_version`
+- `created_at`
+- `metadata`
+
+Self-referential relationships must be rejected unless explicitly supported by a documented rule.
+
+Directed relationships must preserve direction. Related events must not be merged solely because a relationship exists.
+
+## 8. Claims and Evidence
+
+### 8.1 Claim
+
+Represents a factual assertion, attributed statement, estimate, or forecast.
+
+Fields:
+
+- `id`
+- `claim_text`
+- `claim_type`
+- `attribution`
+- `verification_status`
+- `confidence`
+- `first_observed_at`
+- `last_observed_at`
+- `created_at`
+- `updated_at`
 
-- Critical architecture conflicts are resolved.
-- Decisions blocking the first implementation slice are accepted or explicitly bounded.
-- The initial product scope is clear.
-- The documents identify which choices remain provisional.
-- No dependent implementation begins on the assumption that a Proposed ADR is already Accepted.
+Claim types:
 
----
+- `FACTUAL`
+- `OFFICIAL_STATEMENT`
+- `SOURCE_CLAIM`
+- `ESTIMATE`
+- `FORECAST`
 
-## 7. Development Stage 1 — Project Foundation
+Verification states:
 
-### Objectives
+- `UNVERIFIED`
+- `SUPPORTED`
+- `CONTRADICTED`
+- `PARTIALLY_SUPPORTED`
+- `DISPUTED`
+
+A claim must not be considered verified merely because an LLM labels it credible. Verification must be based on recorded evidence assessments and an explicit evaluation policy.
+
+### 8.2 EventClaimLink
 
-Create a maintainable Python application foundation.
+Associates claims with events.
 
-### Tasks
+Fields:
 
-1. Initialize the Python project with uv.
-2. Configure package metadata.
-3. Pin the supported Python version.
-4. Configure Ruff.
-5. Configure type checking.
-6. Configure pytest and pytest-asyncio.
-7. Implement validated application configuration.
-8. Implement shared exceptions.
-9. Configure structured logging.
-10. Establish import architecture rules.
-11. Configure initial CI workflows.
-12. Add dependency and secret scanning.
-13. Establish test conventions.
-14. Add a minimal CLI entry point.
+- `id`
+- `event_id`
+- `claim_id`
+- `relationship_type`
+- `created_at`
+- `metadata`
 
-### Deliverables
+A claim may be associated with more than one event when justified. This association does not imply independent verification for every event.
 
-- Installable Python package.
-- Validated configuration.
-- Basic CLI.
-- Test infrastructure.
-- Initial CI pipeline.
-- Development instructions.
+### 8.3 ClaimObservation
 
-### Exit Criteria
+Records where and how a claim was observed or attributed.
 
-- The project installs successfully.
-- Tests run without paid external services.
-- Linting and type checking work.
-- CI runs automatically.
-- Secrets are excluded from version control.
-- The package structure follows the approved dependency boundaries.
+Fields:
 
----
+- `id`
+- `claim_id`
+- `article_id` nullable
+- `article_revision_id` nullable
+- `source_id` nullable
+- `evidence_id` nullable
+- `attributed_to` nullable
+- `observed_at`
+- `publication_reference` nullable
+- `content_location` nullable
+- `observation_type`
+- `extraction_method`
+- `extraction_version`
+- `metadata`
 
-## 8. Development Stage 2 — Domain Foundations and Initial Evaluation
+The same claim may appear in multiple articles or documents without duplicating its logical identity.
 
-### Objectives
+Repeated publication of the same claim must not automatically count as independent corroboration.
 
-Implement only the domain concepts needed for the first end-to-end workflow, while establishing evaluation practices early.
+### 8.4 Evidence
 
-### Initial Domain Concepts
+Represents information used to assess a claim or support an analysis.
 
-The first implementation slice should introduce the minimum required concepts, including:
-
-- Source.
-- Article and ArticleRevision.
-- Topic classification.
-- Entity and entity mention.
-- Event.
-- Article-event association.
-- ProcessingRun and ProcessingStep.
-- Evidence and evidence references.
-- Analysis.
-- Report.
-- PublicationDecision.
-- Review task or equivalent review queue record.
-- Delivery intent and delivery attempt.
+Fields:
 
-Additional concepts from the approved data model should be introduced when required by a concrete workflow.
+- `id`
+- `origin_type`
+- `source_id` nullable
+- `article_id` nullable
+- `article_revision_id` nullable
+- `source_document_reference` nullable
+- `permitted_extract` nullable
+- `content_reference` nullable
+- `evidence_type`
+- `observed_at`
+- `content_location` nullable
+- `language`
+- `content_fingerprint` nullable
+- `created_at`
+- `metadata`
 
-The project should not implement every planned table or entity simply because it appears in the complete conceptual model.
+Evidence types may include:
 
-### Domain Rules
+- `DIRECT_QUOTE`
+- `REPORTED_FACT`
+- `OFFICIAL_DOCUMENT`
+- `DATA_POINT`
+- `SOURCE_INTERPRETATION`
+- `SYSTEM_DERIVED`
+- `OTHER`
 
-Implement and test:
+Evidence may originate from an article, official document, structured dataset, approved system-derived calculation, or another approved information source.
 
-- Article identity and revision behavior.
-- Article deduplication boundaries.
-- Event association rules.
-- Event lifecycle transitions.
-- Event history append-only behavior.
-- Claim and evidence relationships.
-- Analysis versioning.
-- Report versioning.
-- Publication decision rules.
-- Review task transitions.
-- Delivery idempotency boundaries.
+The `origin_type` determines which origin references are expected. An evidence record must identify its origin or explicitly state that its origin is unavailable.
 
-### Initial Evaluation Work
+A system-derived evidence item must identify its input records and calculation or processing version.
 
-Create a small, human-reviewed reference dataset covering:
+Evidence text and content references are subject to the content rights policy. The data model must not imply unrestricted storage of full source documents.
 
-- Exact duplicate articles.
-- Near-duplicate articles.
-- Different articles about the same event.
-- Similar topics describing different events.
-- Ambiguous event matches.
-- Conflicting source claims.
-- Unsupported analytical statements.
+### 8.5 EvidenceLocation
 
-The dataset should evolve as the system develops.
+Where precise provenance is available, evidence location should be represented in a structured form.
 
-### Deliverables
+Fields may include:
 
-- Initial domain entities and policies.
-- Domain-level tests.
-- Initial reference dataset.
-- Initial evaluation rubrics.
+- `id`
+- `evidence_id`
+- `location_type`
+- `page_number`
+- `section_reference`
+- `paragraph_reference`
+- `start_offset`
+- `end_offset`
+- `offset_representation`
+- `external_locator`
+- `metadata`
 
-### Exit Criteria
+Examples include URL fragments, document pages, article revision offsets, dataset rows and fields, and table or cell references.
 
-- Core domain rules are tested.
-- Domain code does not depend on database or LLM SDKs.
-- Event identity is not based solely on topic similarity.
-- Evaluation cases are version-controlled and reproducible.
-- The first workflow can be implemented without inventing domain semantics.
+Unavailable location information must remain null.
 
----
+### 8.6 ClaimEvidenceLink
 
-## 9. Development Stage 3 — Persistence and Recovery Foundations
-
-### Objectives
-
-Implement the minimum reliable persistence layer for the first end-to-end workflow.
-
-### Tasks
-
-1. Confirm the approved database and access strategy.
-2. Configure database lifecycle management.
-3. Implement migrations.
-4. Create the initial schema.
-5. Implement repository interfaces and adapters.
-6. Implement transaction boundaries.
-7. Enforce foreign keys and required unique constraints.
-8. Implement processing run and step persistence.
-9. Implement collection checkpoint persistence.
-10. Implement idempotency keys for supported operations.
-11. Implement recovery of expired or interrupted work.
-12. Add repository contract tests.
-13. Document backup and restore procedures.
-
-### Important Requirements
-
-The persistence layer must support:
-
-- Stable identifiers.
-- Append-only history where required.
-- Explicit versioning.
-- Transactional state changes.
-- Idempotent reruns.
-- Processing status and error records.
-- Recovery after interruption.
-- Auditability of publication and review decisions.
-
-A polymorphic reference without enforceable integrity must not silently replace required foreign-key relationships.
-
-The exact persistence design must follow the accepted data model and ADRs.
-
-### Deliverables
-
-- Initial relational schema.
-- Versioned migrations.
-- Repository implementations.
-- Transaction and recovery tests.
-- Backup and restore instructions.
-
-### Exit Criteria
-
-- Required initial workflow entities can be stored and retrieved.
-- Foreign keys and unique constraints are verified.
-- Critical state changes are transactional.
-- Repeated execution does not create uncontrolled duplicates.
-- Interrupted processing can be detected and recovered safely.
-- Migration tests pass.
-
----
-
-## 10. Development Stage 4 — Shared LLM Execution and Vertical Slice
-
-### Objectives
-
-Build the shared LLM capability and prove that the system can execute one complete economic news workflow.
-
-This stage intentionally occurs before the full implementation of all intelligence components.
-
-### Shared LLM Execution Tasks
-
-1. Define provider-independent request and response contracts.
-2. Implement the selected provider adapter.
-3. Implement structured output validation.
-4. Implement model and prompt version tracking.
-5. Apply token and execution budgets.
-6. Apply deadlines and cancellation.
-7. Implement bounded retry behavior.
-8. Track token usage and cost when available.
-9. Record model execution provenance.
-10. Treat source content as untrusted input.
-11. Prevent analysis stages from receiving unrestricted tool access.
-
-The LLM layer should remain an execution capability. It must not own product workflows or domain state transitions.
-
-### Vertical Slice
-
-Implement one limited workflow:
-
-```text
-Configured Source
-       |
-       v
-Collect One Article
-       |
-       v
-Normalize and Persist
-       |
-       v
-Classify the Article
-       |
-       v
-Create or Match an Event
-       |
-       v
-Attach Initial Evidence
-       |
-       v
-Generate a Structured Analysis
-       |
-       v
-Generate a Draft Report
-       |
-       v
-Apply Publication Policy
-       |
-       v
-Store the Result
-```
-
-The first slice may use a deliberately small set of sources and a limited taxonomy.
-
-It does not need to support every event type or delivery channel.
-
-### Deliverables
-
-- Shared LLM Execution Layer.
-- Initial provider integration.
-- Structured output contracts.
-- LLM usage records.
-- A working vertical slice.
-- End-to-end test and trace.
-
-### Exit Criteria
-
-- The workflow completes using controlled dependencies.
-- LLM outputs are schema-validated.
-- LLM calls respect budgets and deadlines.
-- Usage is recorded where provider data is available.
-- The workflow can be rerun without uncontrolled duplication.
-- The generated report retains source and evidence references.
-- Publication decisions cannot be bypassed.
-
----
-
-## 11. Development Stage 5 — News Source Management and Acquisition
-
-### Objectives
-
-Collect international economic news from configured and approved sources.
-
-### Tasks
-
-1. Define the source adapter contract.
-2. Implement SourceRegistry.
-3. Implement an initial RSS collector.
-4. Add approved API or other source adapters when justified.
-5. Implement incremental collection.
-6. Implement pagination where required.
-7. Implement checkpoint handling.
-8. Normalize collection errors.
-9. Apply timeout and safe retry policies.
-10. Implement source health records.
-11. Implement source assessment records where required.
-12. Record collection provenance.
-13. Add collection observability.
-14. Implement source URL and redirect safety checks.
-
-### Initial Source Strategy
-
-Start with a limited set of reputable international sources.
-
-Source selection should prioritize:
-
-- Reliable publication history.
-- Relevant economic coverage.
-- Accessible structured feeds or APIs.
-- Clear publication timestamps.
-- Stable source identifiers.
-- Transparent attribution.
-- Documented access and reuse conditions.
-
-### Content Access and Rights
-
-RSS availability does not imply permission to store or republish the complete article.
-
-The acquisition design must distinguish:
-
-- Feed metadata.
-- Article title and excerpt.
-- Licensed article content.
-- Publicly accessible article content.
-- Content requiring restricted or temporary access.
-- Content that must not be retained.
-
-Full-text acquisition and retention must follow the approved rights policy.
-
-### Security
+Connects claims and evidence.
 
-Source ingestion must defend against:
+Fields:
 
-- Server-side request forgery.
-- Unsafe redirects.
-- Private or restricted network destinations.
-- Unexpected content types.
-- Oversized responses.
-- Malformed feeds.
-- Malicious or misleading metadata.
-
-### Deliverables
-
-- Source registry.
-- Initial collectors.
-- Collection checkpoints.
-- Collection execution records.
-- Source health visibility.
-- Content-access policy enforcement.
-
-### Exit Criteria
+- `id`
+- `claim_id`
+- `evidence_id`
+- `relationship`
+- `relevance_score`
+- `assessment_method`
+- `assessment_version`
+- `created_at`
 
-- Configured sources can be collected.
-- Repeated collection does not create uncontrolled duplicates.
-- Failed collection does not advance an unsafe checkpoint.
-- Source failures are observable.
-- Collection can resume after interruption.
-- Unsafe URLs and redirects are rejected.
-- Content is retained only according to the configured rights policy.
+Relationships:
 
----
+- `SUPPORTS`
+- `CONTRADICTS`
+- `CONTEXTUALIZES`
+- `MENTIONS`
 
-## 12. Development Stage 6 — Article Processing
+The same evidence may relate to multiple claims.
 
-### Objectives
+### 8.7 Evidence Independence
 
-Transform collected publications into normalized article records.
+Source independence must not be inferred from different domain names alone.
 
-### Tasks
+Where known, source relationships should capture syndication, shared original reporting, common ownership, republishing, and direct attribution.
 
-1. Implement ArticleNormalizer.
-2. Implement canonical URL handling.
-3. Normalize timestamps and time zones.
-4. Detect source language.
-5. Define original and normalized language fields.
-6. Implement content fingerprinting.
-7. Implement exact duplicate detection.
-8. Implement near-duplicate candidate generation.
-9. Implement TopicClassifier.
-10. Implement EntityExtractor.
-11. Implement entity resolution foundations.
-12. Implement article revision handling.
-13. Implement processing status management.
-14. Implement translation support only where required by the approved language policy.
-15. Add processing evaluation cases.
+Evidence assessment must prevent multiple copies of one original report from being counted as independent corroboration.
 
-### Article Deduplication
+Unknown source independence must remain explicitly unknown.
 
-Article deduplication must remain independent of event matching.
+## 9. Analysis and Analytical Provenance
 
-Different publications may describe the same event and must remain separate article records.
+### 9.1 Analysis
 
-The system should distinguish:
+Represents one analytical execution or completed analytical result.
 
-- Exact duplicates.
-- Near-duplicate versions.
-- Syndicated or wire-copy content.
-- Updated versions of an article.
-- Independent reporting about the same event.
+Fields:
 
-A similarity score alone must not cause irreversible deletion or merging.
+- `id`
+- `event_id`
+- `analysis_type`
+- `version`
+- `content`
+- `structured_output`
+- `confidence`
+- `status`
+- `model_provider`
+- `model_id`
+- `prompt_version`
+- `schema_version`
+- `analysis_policy_version`
+- `input_fingerprint`
+- `created_at`
+- `completed_at`
 
-### Deliverables
+Analysis types may include:
 
-- Normalized article records.
-- Article revision support.
-- Duplicate candidate records.
-- Topic classifications.
-- Extracted entities and mentions.
-- Processing metadata.
+- `EVENT_SUMMARY`
+- `IMPORTANCE_ASSESSMENT`
+- `ECONOMIC_IMPACT`
+- `MARKET_IMPLICATIONS`
+- `RISK_ASSESSMENT`
+- `EVIDENCE_ASSESSMENT`
+- `SCENARIO_ANALYSIS`
 
-### Exit Criteria
+An analysis should be immutable after successful completion. A new execution must create a new record or version.
 
-- Articles are normalized consistently.
-- Exact duplicates are handled deterministically.
-- Near-duplicate candidates retain their similarity and decision provenance.
-- Related but distinct publications are preserved.
-- Topic classifications include method and confidence metadata.
-- Entity mentions retain enough provenance to be reviewed.
-- Processing can be repeated safely.
+### 9.2 AnalysisEvidenceLink
 
----
+Connects an analysis to evidence used during execution.
 
-## 13. Development Stage 7 — Event Intelligence
+Fields:
 
-### Objectives
+- `id`
+- `analysis_id`
+- `evidence_id`
+- `usage_type`
+- `created_at`
 
-Implement the event-centric intelligence layer.
+Usage types may include:
 
-This is the core product capability.
+- `PRIMARY_SUPPORT`
+- `CONTRADICTING_EVIDENCE`
+- `CONTEXT`
+- `BACKGROUND`
 
-### Tasks
+### 9.3 AnalysisInput
 
-1. Implement EventDetector.
-2. Implement candidate event generation.
-3. Implement EventMatcher.
-4. Implement semantic and lexical matching signals.
-5. Implement entity and temporal matching signals.
-6. Implement EventService.
-7. Implement article-event association.
-8. Implement event lifecycle transitions.
-9. Implement EventHistory.
-10. Implement event relationship handling.
-11. Implement event merge and split operations.
-12. Implement ImportanceRanker.
-13. Implement event matching evaluation datasets.
+Records other inputs used by an analysis.
 
-### Event Identity Policy
+Fields:
 
-Event identity must represent the same underlying real-world occurrence or continuing development.
+- `id`
+- `analysis_id`
+- `input_type`
+- `input_reference`
+- `input_fingerprint`
+- `input_version`
+- `created_at`
 
-Sharing a topic, country, organization, or entity is not sufficient to establish event identity.
+Input types may include:
 
-For example:
+- `ARTICLE_REVISION`
+- `EVENT_VERSION`
+- `CLAIM`
+- `EVIDENCE`
+- `MARKET_OBSERVATION`
+- `HISTORICAL_CONTEXT`
+- `EXTERNAL_DATASET`
+- `OTHER`
 
-- A central bank rate decision is an event.
-- A subsequent currency movement may be a separate event.
-- The two events may be related through a causal, consequential, or contextual relationship.
-- They must not be merged merely because they concern the same central bank.
+Polymorphic references must use an explicit type discriminator and validated identifier format.
 
-### Event Resolution Outcomes
+Where practical, frequently used input types should use dedicated relational link entities.
 
-Each candidate must result in an explicit resolution:
+The application layer must validate that every referenced input exists and is eligible for use.
 
-- Associate with an existing event.
-- Create a new event.
-- Mark as ambiguous or requiring review.
-- Reject the candidate association.
+### 9.4 Analysis Output Classification
 
-The system must preserve:
+Analytical content must distinguish:
 
-- Candidate signals and scores.
-- Matching method and policy version.
-- Final decision.
-- Decision provenance.
-- Relevant event history.
-
-Semantic similarity is a required matching capability, but a dedicated vector database is not automatically required.
-
-The initial implementation may use an approved embedding service and a simple storage or retrieval strategy. The exact approach must follow the relevant ADR.
-
-No universal similarity threshold should be assumed without evaluation and calibration.
-
-### Event Identity Integrity
-
-Event IDs must remain stable.
-
-Merge and split operations must preserve historical references and record:
-
-- Source and resulting event IDs.
-- Reason.
-- Method.
-- Confidence or assessment.
-- Affected article associations.
-- Decision time.
-- Policy version.
-
-Historical event records must not be silently deleted or rewritten.
-
-### Deliverables
-
-- Event detection.
-- Event matching and resolution.
-- Event creation and updates.
-- Event history.
-- Event relationships.
-- Importance ranking.
-
-### Exit Criteria
-
-- Multiple articles can be associated with one event.
-- Unrelated developments are not automatically merged.
-- Ambiguous matches are explicitly represented.
-- Event identity operations are traceable.
-- Event lifecycle transitions are validated.
-- Importance assessments include explanations and policy provenance.
-- False merges and event fragmentation are measured.
-
----
-
-## 14. Development Stage 8 — Evidence and Economic Analysis
-
-### Objectives
-
-Produce evidence-based economic intelligence.
-
-### Tasks
-
-1. Implement Claim extraction.
-2. Implement EvidenceService.
-3. Implement evidence spans or equivalent precise source locators.
-4. Implement ClaimEvidenceLink.
-5. Implement claim assessment.
-6. Implement source attribution.
-7. Implement contradictory claim detection.
-8. Implement source independence assessment.
-9. Implement uncertainty representation.
-10. Implement economic impact analysis.
-11. Implement analysis versioning.
-12. Implement analysis input fingerprints.
-13. Add analysis evaluation datasets.
-
-### Economic Analysis Dimensions
-
-The initial analysis may consider:
-
-- Inflation.
-- Interest rates.
-- Currency movements.
-- Financial markets.
-- International trade.
-- Energy markets.
-- Supply chains.
-- Employment.
-- Public debt.
-- Fiscal policy.
-- Economic growth.
-- Financial stability.
-
-### Required Distinctions
-
-The system must distinguish:
-
-- Verified or corroborated facts.
-- Claims attributed to a source.
-- AI-generated interpretations.
+- Observed facts.
+- Source-attributed claims.
+- AI-generated interpretation.
 - Forecasts and scenarios.
-- Observed market reactions.
-- Reactions reported by sources.
-- AI-inferred potential impacts.
-- Unknown or unavailable impact information.
+- Explicitly unknown or unavailable information.
 
-### Market Impact Integrity
+Important structured conclusions must not depend on free text alone.
 
-The system must not describe market movement as observed unless it has actual market data or an appropriately documented observation.
+Structured analysis output must use a versioned schema that identifies material claims, uncertainty, and supporting evidence references.
 
-If market data is unavailable, the system may describe potential implications or clearly attributed source-reported reactions.
+### 9.5 Market Impact Evidence
 
-Temporal proximity alone does not establish causation.
+Market impact must not be represented as observed fact when no market data is available.
 
-### Provenance Requirements
+The model must distinguish:
 
-Material analytical assertions must retain references to their supporting or contradicting evidence.
+1. `OBSERVED_MARKET_REACTION` — supported by an identified market data source.
+2. `SOURCE_REPORTED_REACTION` — reported by a publication or other source.
+3. `AI_INFERRED_IMPACT` — analytical interpretation without direct observed market data.
+4. `UNKNOWN` — insufficient information.
 
-Where possible, evidence references should identify the exact article revision and text span, not only the source publication.
+Where market data is integrated, a `MarketObservation` entity may record:
 
-Source independence must account for syndication and shared origin. Multiple copies of the same wire report must not be treated as independent corroboration.
+- `id`
+- `event_id`
+- `instrument_reference`
+- `market`
+- `observation_type`
+- `value`
+- `unit`
+- `observed_at`
+- `baseline_reference`
+- `data_source`
+- `source_reference`
+- `metadata`
 
-### Deliverables
+Market data integration and its source rights require a separate architecture decision.
 
-- Claims.
-- Evidence records and precise source references.
-- Claim assessments.
-- Contradiction and uncertainty records.
-- Versioned economic analysis.
-- Analysis evaluation results.
+A market observation must preserve its measurement time, source, unit, and baseline context. It must not imply causation between an event and a market movement without an explicit analytical assessment.
 
-### Exit Criteria
+## 10. Event History
 
-- Claims are linked to supporting or contradicting evidence.
-- Material assertions have traceable provenance.
-- Source attribution is retained.
-- Conflicting information is represented.
-- Facts, source claims, analysis, and forecasts are distinguishable.
-- Market impact categories are supported by the available data.
-- Completed analyses are versioned and reproducible.
+### 10.1 EventHistory
 
----
+Preserves meaningful changes to an event.
 
-## 15. Development Stage 9 — Event Dossiers and Reporting
+Fields:
 
-### Objectives
+- `id`
+- `event_id`
+- `version`
+- `change_type`
+- `previous_state`
+- `new_state`
+- `change_reason`
+- `processing_run_id` nullable
+- `created_at`
 
-Convert event intelligence into structured, versioned reports.
+Possible change types:
 
-### Tasks
+- `CREATED`
+- `TITLE_UPDATED`
+- `DESCRIPTION_UPDATED`
+- `STATUS_CHANGED`
+- `IMPORTANCE_UPDATED`
+- `ENTITY_ADDED`
+- `ARTICLE_ASSOCIATED`
+- `ARTICLE_DISASSOCIATED`
+- `ANALYSIS_COMPLETED`
+- `RESOLVED`
+- `REOPENED`
+- `MERGED`
+- `SPLIT`
 
-1. Define report scope and templates.
-2. Implement event dossier queries.
-3. Implement ReportGenerator.
-4. Implement report versioning.
-5. Implement report-to-event relationships.
-6. Implement evidence references.
-7. Implement source references.
-8. Implement report validation.
-9. Implement PublicationPolicy.
-10. Implement report correction and withdrawal records.
-11. Implement report storage.
-12. Add report evaluation datasets.
+History must be append-only from the application perspective.
 
-### Initial Report Structure
+### 10.2 Lifecycle Transitions
 
-The initial event dossier should support:
+Event lifecycle states and allowed transitions must be defined in an approved event lifecycle policy.
 
-1. Headline.
-2. Executive Summary.
-3. What Happened?
-4. Latest Developments.
-5. Timeline.
-6. Key Entities.
-7. Economic Significance.
-8. Observed Market Reaction, if supported by data.
-9. Potential Market and Sector Impact.
-10. Supporting Evidence.
-11. Conflicting or Unconfirmed Information.
-12. Risks and Uncertainties.
-13. Analytical Assessment.
-14. Sources.
+The data layer must not independently invent lifecycle transitions.
 
-Reports should be concise enough to be useful while preserving important evidence and context.
+A transition must be validated by the domain/application layer and recorded in EventHistory within the same transaction as the event update.
 
-The data model should also support reports covering multiple events, such as periodic economic briefings, without forcing them into a single-event structure.
+### 10.3 Event Versioning
 
-### Publication Policy
+Event history must make it possible to reconstruct or inspect material prior states.
 
-A report must receive a publication decision before delivery.
+The implementation must define whether `previous_state` and `new_state` are full snapshots or structured change sets.
 
-Initial outcomes:
+If snapshots are used, their schema must be versioned. If change sets are used, reconstruction rules must be documented and tested.
+
+## 11. Reports and Publication
+
+### 11.1 Report
+
+Represents one generated report version.
+
+Fields:
+
+- `id`
+- `event_id` nullable
+- `version`
+- `report_type`
+- `report_scope`
+- `title`
+- `content`
+- `content_format`
+- `language`
+- `generation_status`
+- `generated_at`
+- `created_at`
+- `supersedes_report_id` nullable
+
+Report types may include:
+
+- `INITIAL_EVENT_REPORT`
+- `EVENT_UPDATE`
+- `EVENT_CLOSURE_REPORT`
+- `PERIODIC_SUMMARY`
+
+Generation status may include:
+
+- `DRAFT`
+- `GENERATED`
+- `FAILED`
+- `SUPERSEDED`
+
+Publication status must not be duplicated as an independently mutable field on Report. It is represented through PublicationDecision and the publication workflow.
+
+Constraints:
+
+- Event-specific report versions must be unique within their event.
+- Reports must preserve input and evidence references.
+- A material update creates a new report version.
+- Published reports must not be silently modified.
+- Reports covering multiple events must be supported through explicit report scope and event relationships.
+
+### 11.2 ReportEventLink
+
+Connects a report to one or more events.
+
+Fields:
+
+- `id`
+- `report_id`
+- `event_id`
+- `relationship_type`
+- `is_primary`
+- `created_at`
+
+This supports periodic summaries, regional briefings, and other reports covering multiple events.
+
+`Report.event_id` may be retained as an optional primary-event convenience reference for event-specific reports. `ReportEventLink` is the authoritative relationship for multi-event reports.
+
+### 11.3 ReportEvidenceLink
+
+Connects reports to evidence.
+
+Fields:
+
+- `id`
+- `report_id`
+- `evidence_id`
+- `section_reference`
+- `usage_type`
+- `created_at`
+
+### 11.4 ReportArticleLink
+
+Connects reports to source articles.
+
+Fields:
+
+- `id`
+- `report_id`
+- `article_id`
+- `reference_type`
+- `created_at`
+
+### 11.5 ReportAnalysisLink
+
+Connects reports to analyses.
+
+Fields:
+
+- `id`
+- `report_id`
+- `analysis_id`
+- `section_reference`
+- `created_at`
+
+This ensures that reports can be traced to their analytical inputs.
+
+### 11.6 PublicationDecision
+
+Records a publication policy decision.
+
+Fields:
+
+- `id`
+- `report_id`
+- `decision`
+- `reason_codes`
+- `explanation`
+- `policy_version`
+- `decided_at`
+- `supersedes_decision_id` nullable
+- `metadata`
+
+Decision values:
 
 - `PUBLISH`
 - `PUBLISH_WITH_CAVEATS`
 - `HOLD_FOR_REVIEW`
 - `REJECT`
 
-Publication decisions must be recorded independently from report content and delivery state.
+A decision is an immutable record. A new decision must be created when the publication outcome changes.
 
-### Human Review
+The current effective decision must be derived through an explicit supersession rule. Historical decisions must remain queryable.
 
-`HOLD_FOR_REVIEW` must create a persistent review task or equivalent queue record.
+A `HOLD_FOR_REVIEW` decision must create or reference an operational review task. It must not silently remain unprocessed.
+
+Publication policy and quality gates are governed by the relevant publication ADR. Human review, corrections, and withdrawals are governed separately by the corresponding human-review ADR.
+
+### 11.7 ReviewRecord
+
+Represents a human review or review action.
 
-The review workflow must support:
+Fields:
 
-- Queue and priority.
-- Assignment or ownership.
-- Review status.
-- Review timestamps.
-- Reviewer action.
-- Review rationale.
-- Resulting publication decision.
+- `id`
+- `report_id`
+- `publication_decision_id`
+- `review_status`
+- `reviewer_reference` nullable
+- `assigned_at` nullable
+- `due_at` nullable
+- `review_reason`
+- `review_notes`
+- `created_at`
+- `completed_at`
+- `metadata`
 
-A held report must not be treated as publishable until the required review and publication policy conditions are satisfied.
+Review states may include:
 
-### Corrections and Withdrawals
+- `PENDING`
+- `IN_PROGRESS`
+- `APPROVED`
+- `CHANGES_REQUESTED`
+- `REJECTED`
+- `CANCELLED`
 
-Published reports must not be silently overwritten.
+The operational review queue must support:
 
-The system must preserve a correction or withdrawal history and maintain links between superseded and replacement report versions.
+- Finding pending reviews.
+- Assigning and reassigning reviewers.
+- Recording review ownership.
+- Recording due dates where required.
+- Recording review actions and outcomes.
+- Identifying overdue or abandoned reviews.
+- Creating a new publication decision after a material review outcome where required.
 
-### Deliverables
+Review history must not be silently overwritten.
 
-- Structured event dossiers.
-- Versioned reports.
-- Publication decisions.
-- Review workflow.
-- Report validation.
-- Correction and withdrawal traceability.
+Reviewer identity and authorization must be managed by the application's security layer.
 
-### Exit Criteria
+## 12. Delivery Records
 
-- Reports retain event, article, analysis, and evidence references.
-- Multi-event report scope is supported where required.
-- Reports distinguish facts from analysis.
-- Uncertainty is disclosed.
-- Report versions are preserved.
-- Publication policy is enforced.
-- Held reports enter a real review workflow.
-- Corrections and withdrawals are auditable.
-- Invalid or unapproved reports cannot be delivered.
+### 12.1 DeliveryRecord
 
----
+Represents a logical delivery operation for a report.
 
-## 16. Development Stage 10 — Delivery, Scheduling, and Automation
+Fields:
 
-### Objectives
+- `id`
+- `report_id`
+- `channel`
+- `destination_reference`
+- `idempotency_key`
+- `status`
+- `external_reference`
+- `attempt_count`
+- `scheduled_at`
+- `last_attempt_at`
+- `delivered_at`
+- `error_category`
+- `error_summary`
+- `created_at`
+- `updated_at`
+- `metadata`
 
-Enable controlled automated processing and text report delivery.
+Possible statuses:
 
-### Tasks
+- `PENDING`
+- `IN_PROGRESS`
+- `DELIVERED`
+- `FAILED`
+- `CANCELLED`
 
-1. Implement ReportDelivery.
-2. Define delivery destination interfaces.
-3. Implement delivery intent records.
-4. Implement delivery attempt history.
-5. Implement idempotent delivery operations.
-6. Implement scheduled collection.
-7. Implement scheduled processing.
-8. Implement event monitoring.
-9. Implement update detection.
-10. Implement operational status reporting.
-11. Implement retry and reconciliation behavior.
-12. Add delivery and scheduling integration tests.
+Constraints:
 
-### Scheduling Strategy
+- An idempotency key must be present for externally visible delivery operations.
+- The key must be unique within its destination and operation scope.
+- Retries must not create duplicate external publications when the destination supports idempotency.
+- Delivery attempts must remain traceable.
+- Delivery status must not be confused with publication approval.
+- The logical delivery operation must be distinct from individual attempts.
 
-The initial release should use a simple scheduling mechanism.
+### 12.2 DeliveryAttempt
 
-A distributed task queue is not required unless demonstrated workload or reliability requirements justify it.
+Represents one delivery attempt.
 
-The scheduling design must define whether schedule definitions and execution history are persisted internally or managed by an external scheduler.
+Fields:
 
-If the application owns scheduling state, it must persist enough information to recover missed or interrupted executions.
+- `id`
+- `delivery_record_id`
+- `attempt_number`
+- `started_at`
+- `completed_at`
+- `outcome`
+- `external_reference`
+- `error_category`
+- `error_summary`
+- `metadata`
 
-Scheduling configuration should support:
+Each attempt must be separately traceable.
 
-- Collection frequency.
-- Processing frequency.
-- Source-specific schedules.
-- Retry intervals.
-- Maximum concurrent jobs.
-- Job deadlines.
-- Execution history.
-- Missed-run handling.
+A retry must reuse the logical delivery operation and its idempotency key unless the operation has been explicitly superseded.
 
-### Delivery Integrity
+### 12.3 Delivery State Consistency
 
-The system must distinguish a logical delivery request from individual delivery attempts.
+External delivery operations cannot generally be included in a database transaction.
 
-An idempotency key should be scoped to the delivery operation, destination, report version, and relevant operation type.
+The system must use explicit state transitions, idempotency keys, and recovery handling.
 
-Exactly-once external delivery must not be claimed unless the destination provider offers the required guarantees. Ambiguous external outcomes must be reconciled before blindly repeating non-idempotent actions.
+If the destination supports idempotency, the same key must be reused for retries of the same logical operation.
 
-Delivery must occur only after an eligible publication decision.
+If it does not, the duplicate-delivery risk and reconciliation strategy must be documented.
+
+## 13. Processing and Operational Data
 
-### Deliverables
+### 13.1 ProcessingRun
 
-- Text delivery.
-- Scheduling.
-- Delivery status and attempt tracking.
-- Automated processing cycle.
-- Recovery and reconciliation behavior.
-
-### Exit Criteria
-
-- Collection and processing can run automatically.
-- New information can update existing events.
-- Reports are delivered only under the publication policy.
-- Duplicate delivery is controlled within documented guarantees.
-- Failed operations are visible and recoverable.
-- Scheduled execution can resume after interruption.
+Represents one workflow execution.
 
----
-
-## 17. Development Stage 11 — Evaluation, Quality Assurance, and Hardening
-
-### Objectives
-
-Measure system quality using representative economic news cases and validate operational behavior.
+Fields:
 
-Evaluation is continuous throughout development. This stage consolidates the evaluation system and applies release-level quality gates.
+- `id`
+- `run_type`
+- `target_type`
+- `target_id`
+- `status`
+- `idempotency_key`
+- `input_fingerprint`
+- `started_at`
+- `heartbeat_at`
+- `lease_expires_at`
+- `next_retry_at`
+- `completed_at`
+- `error_category`
+- `error_summary`
+- `metadata`
 
-### Evaluation Datasets
+Possible statuses:
 
-Create datasets covering:
+- `PENDING`
+- `RUNNING`
+- `COMPLETED`
+- `FAILED`
+- `CANCELLED`
+- `PARTIALLY_COMPLETED`
 
-- Monetary policy announcements.
-- Inflation reports.
-- Central bank decisions.
-- Financial market developments.
-- Trade restrictions.
-- Energy market developments.
-- Government debt developments.
-- Geopolitical economic risks.
-- Conflicting reports.
-- Exact duplicate articles.
-- Near-duplicate articles.
-- Syndicated publications.
-- Multiple events in one article.
-- Multiple articles about one event.
-- Related but distinct developments.
-- Ambiguous event matches.
-- Multilingual publications where supported.
+`target_type` and `target_id` form a polymorphic reference. The application layer must validate the target reference.
 
-### Evaluation Areas
+A running workflow must have a recoverable execution lease or equivalent ownership mechanism.
 
-**Acquisition**
+A stale execution must not be resumed concurrently with a still-active worker.
 
-- Collection success rate.
-- Missing article rate where measurable.
-- Collection latency.
-- Unsafe URL rejection.
-- Checkpoint correctness.
+### 13.2 ProcessingStep
 
-**Processing**
+Represents an individual step within a processing run.
+
+Fields:
+
+- `id`
+- `processing_run_id`
+- `step_name`
+- `status`
+- `step_version`
+- `input_fingerprint`
+- `output_reference`
+- `started_at`
+- `heartbeat_at`
+- `lease_expires_at`
+- `next_retry_at`
+- `completed_at`
+- `attempt_number`
+- `error_category`
+- `error_summary`
+- `metadata`
 
-- Normalization accuracy.
-- Duplicate detection precision and recall.
-- Topic classification quality.
-- Entity extraction quality.
-- Translation quality where enabled.
+A step must be safely repeatable or explicitly marked as non-repeatable.
 
-**Event Intelligence**
+Completed step outputs should be reusable when input fingerprints and relevant processing versions have not changed.
 
-- Event detection precision and recall.
-- Event matching accuracy.
-- False event merge rate.
-- Event fragmentation rate.
-- Event update correctness.
-- Merge and split correctness.
+A step with an expired lease may be recovered only after verifying that its previous execution is no longer active.
 
-**Evidence**
+### 13.3 ArticleProcessingRecord
 
-- Claim extraction quality.
-- Evidence relevance.
-- Provenance completeness.
-- Contradiction detection quality.
-- Source independence accuracy.
-
-**Analysis**
+Represents processing state for an article across processing stages.
 
-- Economic relevance.
-- Analytical consistency.
-- Unsupported assertion rate.
-- Forecast and uncertainty quality.
-- Market impact classification correctness.
-
-**Reporting**
+Fields:
 
-- Factual accuracy.
-- Source attribution completeness.
-- Summary usefulness.
-- Duplicate report rate.
-- Publication decision quality.
-- Correction and withdrawal correctness.
+- `id`
+- `article_id`
+- `article_revision_id`
+- `processing_run_id`
+- `stage`
+- `status`
+- `processing_version`
+- `input_fingerprint`
+- `output_reference`
+- `started_at`
+- `completed_at`
+- `error_category`
+- `metadata`
 
-**Operations**
+Possible stages include:
 
-- Processing success rate.
-- Median and P95 latency.
-- LLM cost per successful report when measurable.
-- Failure recovery rate.
-- Delivery reconciliation success.
-- Resource utilization.
+- `NORMALIZATION`
+- `DEDUPLICATION`
+- `LANGUAGE_DETECTION`
+- `TOPIC_CLASSIFICATION`
+- `ENTITY_EXTRACTION`
+- `ENTITY_RESOLUTION`
+- `CLAIM_EXTRACTION`
+- `EVENT_MATCHING`
+- `EVIDENCE_PROCESSING`
 
-### Evaluation Method
+The current processing state may be derived from history or maintained as a projection. Any projection must be rebuildable from processing records.
 
-Use a combination of:
+### 13.4 CollectionCheckpoint
 
-- Deterministic unit and integration tests.
-- Human-reviewed reference datasets.
-- Component-level evaluation.
-- End-to-end evaluation.
-- LLM-assisted judging with explicit rubrics.
-- Trace and failure analysis.
-- Regression testing.
-
-LLM-based judging must not be treated as an independent guarantee of factual correctness.
-
-### Acceptance Thresholds
-
-Quality thresholds must be established using representative datasets and documented in the evaluation rubrics.
-
-Critical metrics should include:
-
-- False event merge rate.
-- Unsupported material assertion rate.
-- Evidence provenance completeness.
-- Publication policy enforcement.
-- Duplicate delivery rate within the documented delivery guarantees.
-- Recovery correctness.
-
-Thresholds must not be invented without a baseline or reference dataset.
-
-### Deliverables
-
-- Versioned evaluation datasets.
-- Evaluation runners.
-- Evaluation rubrics.
-- Failure taxonomy.
-- Regression reports.
-- Release quality report.
-
-### Exit Criteria
-
-- Core components have representative evaluation cases.
-- Critical failure categories are measured.
-- Regressions can be detected.
-- Evaluation results are reproducible.
-- Release thresholds are documented.
-- Critical quality and safety failures block release.
-
----
-
-## 18. Development Stage 12 — Operational Readiness
-
-### Objectives
-
-Prepare the initial product for controlled operation.
-
-### Tasks
-
-1. Review configuration security.
-2. Verify secret redaction.
-3. Test backup and restore.
-4. Test restart recovery.
-5. Review database integrity.
-6. Test source failures.
-7. Test LLM provider failures.
-8. Test cancellation and deadlines.
-9. Test review queue operation.
-10. Test report delivery failures.
-11. Test ambiguous delivery reconciliation.
-12. Review observability and alerting.
-13. Document deployment.
-14. Document operational procedures.
-15. Review content rights and retention controls.
-16. Prepare release and rollback procedures.
-
-### Deliverables
-
-- Operational documentation.
-- Deployment instructions.
-- Backup and restore procedure.
-- Health and failure monitoring.
-- Recovery procedures.
-- Release checklist.
-
-### Exit Criteria
-
-The application can operate within its documented deployment model and recover from expected failures without corrupting core data, losing audit history, or bypassing publication controls.
-
----
-
-## 19. Stage Dependencies
-
-The recommended development order is:
-
-```text
-Documentation and Architecture Approval
-                  |
-                  v
-          Project Foundation
-                  |
-                  v
-    Domain Foundations and Evaluation
-                  |
-                  v
-       Persistence and Recovery
-                  |
-                  v
-     Shared LLM Execution and Slice
-                  |
-                  v
-          News Acquisition
-                  |
-                  v
-          Article Processing
-                  |
-                  v
-          Event Intelligence
-                  |
-                  v
-     Evidence and Economic Analysis
-                  |
-                  v
-       Event Dossiers and Reporting
-                  |
-                  v
-   Delivery, Scheduling, and Automation
-                  |
-                  v
-       Evaluation and Hardening
-                  |
-                  v
-        Operational Readiness
-```
-
-Evaluation, security, observability, and documentation are cross-cutting activities. They must not be postponed until the final stage.
-
-Some work may overlap after the relevant interfaces and decisions are stable.
-
-A dependent implementation must not proceed on the basis of an unresolved assumption.
-
----
-
-## 20. Milestone Summary
-
-| Milestone | Expected Result |
+Tracks incremental source collection.
+
+Fields:
+
+- `id`
+- `source_id`
+- `checkpoint_type`
+- `checkpoint_value`
+- `updated_at`
+- `metadata`
+
+Constraints:
+
+- A checkpoint must advance only after corresponding collection results have been safely persisted.
+- Checkpoint updates must be atomic with the ingestion state they represent.
+- Uniqueness must be defined by source and checkpoint type.
+- Repeated collection of the same source item must be idempotent.
+
+### 13.5 LLMUsageRecord
+
+Records LLM execution usage and cost information.
+
+Fields:
+
+- `id`
+- `processing_run_id` nullable
+- `processing_step_id` nullable
+- `analysis_id` nullable
+- `provider`
+- `model_id`
+- `operation_type`
+- `prompt_version`
+- `schema_version`
+- `input_tokens` nullable
+- `output_tokens` nullable
+- `total_tokens` nullable
+- `estimated_cost` nullable
+- `currency` nullable
+- `duration_ms` nullable
+- `outcome`
+- `recorded_at`
+- `metadata`
+
+Unknown usage or cost must remain null, not zero.
+
+Usage records should support cost reporting, provider comparison, budget enforcement, and operational evaluation.
+
+Every recorded LLM operation should be traceable to the Shared LLM Execution Layer and, where applicable, its processing run, step, or analysis.
+
+### 13.6 Schedule
+
+Represents a configured recurring or one-time workflow schedule.
+
+Fields:
+
+- `id`
+- `schedule_type`
+- `target_type`
+- `target_id` nullable
+- `schedule_config`
+- `timezone`
+- `is_active`
+- `created_at`
+- `updated_at`
+- `metadata`
+
+Schedule configuration must be validated and versioned.
+
+### 13.7 ScheduledExecution
+
+Represents one execution initiated by a schedule.
+
+Fields:
+
+- `id`
+- `schedule_id`
+- `scheduled_for`
+- `processing_run_id` nullable
+- `status`
+- `started_at`
+- `completed_at`
+- `error_category`
+- `error_summary`
+- `metadata`
+
+Duplicate execution of the same schedule occurrence must be prevented through an idempotency rule.
+
+Scheduling metadata must not replace ProcessingRun as the authoritative workflow execution record.
+
+## 14. Semantic Matching and Search Storage
+
+### 14.1 Matching Requirements
+
+Event matching may combine:
+
+- Lexical similarity.
+- Entity overlap.
+- Temporal compatibility.
+- Geographic compatibility.
+- Semantic similarity.
+- Event type and topic compatibility.
+- Explicit domain rules.
+
+The matching method and policy version must be recorded.
+
+A similarity score is a signal for a decision, not proof that two articles describe the same event.
+
+### 14.2 EmbeddingRecord
+
+If semantic embeddings are used, they may be represented through a logical `EmbeddingRecord`.
+
+Fields:
+
+- `id`
+- `target_type`
+- `target_id`
+- `embedding_model`
+- `embedding_version`
+- `vector_reference` or `vector_data`
+- `content_fingerprint`
+- `created_at`
+
+The physical vector representation is not fixed by this document.
+
+Embeddings may be stored in an approved vector-capable database, a compatible extension, or another search service.
+
+A dedicated vector database is not a mandatory initial dependency.
+
+### 14.3 Search and Retrieval
+
+Search infrastructure must not become the authoritative store of domain identity.
+
+The relational domain model remains authoritative for:
+
+- Article identity.
+- Event identity.
+- Accepted article-event relationships.
+- Claims and evidence.
+- Analysis and report history.
+
+Search indexes and embeddings must be rebuildable from authoritative records where technically feasible.
+
+## 15. Recommended Logical Table Inventory
+
+The logical table inventory includes:
+
+| Table | Purpose |
 |---|---|
-| M0 | Architecture baseline and critical ADRs reviewed |
-| M1 | Python project foundation operational |
-| M2 | Initial domain rules and evaluation dataset available |
-| M3 | Persistence and recovery foundations operational |
-| M4 | Shared LLM execution and first vertical slice working |
-| M5 | News acquisition operational |
-| M6 | Article processing operational |
-| M7 | Event intelligence operational |
-| M8 | Evidence and economic analysis operational |
-| M9 | Event dossiers and publication workflow operational |
-| M10 | Automated delivery and scheduling operational |
-| M11 | Evaluation and release quality gates operational |
-| M12 | Initial product release operationally ready |
-
-Milestones represent completion criteria, not fixed calendar deadlines.
-
-No calendar estimate or staffing commitment is implied by this document.
-
----
-
-## 21. Initial Product Release Definition of Done
-
-The initial text-based product release is complete when:
-
-1. International economic sources can be configured.
-2. News collection runs automatically.
-3. Article records and revisions are managed consistently.
-4. Duplicate articles are controlled.
-5. Articles are classified using the approved economic taxonomy.
-6. Relevant entities and mentions are extracted.
-7. Related articles can be associated with events.
-8. Event identity is maintained across updates.
-9. Event merge and split operations are traceable.
-10. Ambiguous event matches are not silently merged.
-11. Claims and evidence are traceable to source material.
-12. Conflicting information is represented.
-13. Economic analysis distinguishes evidence from interpretation.
-14. Market impact claims reflect the data actually available.
-15. Importance ranking is available and explainable.
-16. Event dossiers can be generated.
-17. Reports are versioned.
-18. Publication policy is enforced.
-19. Held reports enter a functioning review workflow.
-20. Text reports can be delivered automatically.
-21. Delivery attempts and outcomes are observable.
-22. Processing runs can be recovered safely.
-23. LLM usage and costs are tracked where available.
-24. Data can be recovered from verified backups.
-25. Core tests run without paid external services.
-26. CI enforces required quality gates.
-27. Content retention and publication comply with the approved rights policy.
-28. Operational limitations are documented.
+| `sources` | Source configuration |
+| `source_health_records` | Source health history |
+| `source_relationships` | Known source relationships |
+| `articles` | Current normalized article projection |
+| `article_revisions` | Article revision history |
+| `article_topic_classifications` | Topic classification history |
+| `article_entity_mentions` | Extracted entity mentions |
+| `entities` | Resolved entities |
+| `entity_aliases` | Alternative entity names |
+| `article_event_links` | Article-event associations |
+| `duplicate_candidates` | Article duplicate candidates |
+| `events` | Current event state |
+| `event_match_candidates` | Event matching candidates |
+| `event_history` | Event change history |
+| `event_relationships` | Relationships between events |
+| `event_identity_operations` | Event merge and split operations |
+| `event_identity_operation_inputs` | Input events to identity operations |
+| `event_identity_operation_outputs` | Result events from identity operations |
+| `event_entity_links` | Event entities |
+| `claims` | Logical claims |
+| `event_claim_links` | Claim-event relationships |
+| `claim_observations` | Claim source observations |
+| `evidence` | Evidence records |
+| `evidence_locations` | Precise evidence provenance |
+| `claim_evidence_links` | Claim-evidence relationships |
+| `analyses` | Analytical results |
+| `analysis_evidence_links` | Analysis provenance |
+| `analysis_inputs` | Analysis input references |
+| `market_observations` | Optional observed market data |
+| `reports` | Report versions |
+| `report_event_links` | Report-event relationships |
+| `report_evidence_links` | Report evidence references |
+| `report_article_links` | Report article references |
+| `report_analysis_links` | Report analysis references |
+| `publication_decisions` | Publication policy history |
+| `review_records` | Human review records |
+| `delivery_records` | Logical delivery operations |
+| `delivery_attempts` | Delivery retry history |
+| `processing_runs` | Workflow execution records |
+| `processing_steps` | Workflow step records |
+| `article_processing_records` | Article processing stage history |
+| `collection_checkpoints` | Incremental collection state |
+| `llm_usage_records` | LLM usage and cost |
+| `schedules` | Workflow schedule definitions |
+| `scheduled_executions` | Schedule execution history |
+| `embedding_records` | Optional semantic representations |
+
+Not every logical entity must be implemented in the first migration.
+
+## 16. Indexing and Constraints
+
+### 16.1 Initial Indexes
+
+Indexes should support:
+
+- Article lookup by source, publication time, and collection time.
+- Content hash and canonical URL lookup.
+- Article revision and classification lookup.
+- Entity lookup by canonical name and type.
+- Entity alias lookup.
+- Event lookup by status, topic, occurrence time, and update time.
+- Article-event lookup in both directions.
+- Event match candidate lookup by status and score.
+- Duplicate candidate lookup.
+- Claim lookup by event and observation.
+- Evidence lookup by source, article, and origin type.
+- Analysis lookup by event and type.
+- Report lookup by event and version.
+- Report-event lookup in both directions.
+- Publication decision lookup by report and decision.
+- Review queue lookup by status, assignment, due date, and creation time.
+- Delivery lookup by status and scheduled time.
+- Delivery attempt lookup by delivery operation.
+- Processing run lookup by type, status, target, and lease expiry.
+- Processing step lookup by run and status.
+- LLM usage lookup by provider, model, and time.
+- Schedule lookup by active status and next execution time.
+
+Indexes must be based on actual query patterns and validated through query plans where appropriate.
+
+### 16.2 Unique Constraints
+
+Where applicable, enforce:
+
+- Source-scoped external article identity.
+- Article revision number uniqueness.
+- Active article-event association uniqueness.
+- Canonical article pair uniqueness for duplicate candidates.
+- Event-specific report version uniqueness.
+- Source and checkpoint type uniqueness.
+- Processing step identity within a run.
+- Delivery idempotency key uniqueness within its scope.
+- Schedule occurrence uniqueness.
+- Event identity operation input/output uniqueness.
+- Entity alias uniqueness where language and alias type make it unambiguous.
+
+All uniqueness rules involving nullable fields must be tested against the selected database engine.
+
+### 16.3 Referential Integrity
+
+Foreign keys should protect ordinary relational relationships.
 
----
+Polymorphic references must be explicitly documented and validated by the application layer.
 
-## 22. Development Risks and Mitigations
+Deletion policies must protect historical evidence, reports, and provenance. Cascading deletion must not silently remove records referenced by published reports.
 
-### 22.1 Source Availability and Content Rights
+## 17. Score and Confidence Semantics
 
-**Risk:** Sources may change feed formats, restrict access, or prohibit certain storage and redistribution practices.
+Scores must not be treated as interchangeable values.
 
-**Mitigation:**
+For each score type, the system must document:
 
-- Use source adapters.
-- Track source health.
-- Maintain source access and rights metadata.
-- Respect licensing and terms.
-- Avoid assuming that accessible content is reusable.
-- Preserve attribution.
-- Provide alternative sources where appropriate.
+- What is being measured.
+- Valid range and scale.
+- Whether higher values indicate stronger or weaker results.
+- Calculation or assessment method.
+- Policy or model version.
+- Whether the value is calibrated.
+- Whether the value is comparable across models, sources, or time periods.
 
-### 22.2 Duplicate and Event Matching Errors
+At minimum, separate semantics must be defined for:
 
-**Risk:** Incorrect matching may merge unrelated developments or split one event into multiple records.
+- Source reliability.
+- Article duplicate similarity.
+- Event matching similarity.
+- Entity resolution confidence.
+- Claim-evidence relevance.
+- Claim verification confidence.
+- Event importance.
+- Economic relevance.
+- Analytical confidence.
 
-**Mitigation:**
+A score must not be interpreted as a probability unless its calculation and calibration support that interpretation.
 
-- Separate article deduplication from event matching.
-- Use multiple matching signals.
-- Preserve candidate scores and policy versions.
-- Record decisions and identity operations.
-- Keep ambiguous cases explicit.
-- Evaluate false merges and fragmentation.
+Missing scores must remain null.
 
-### 22.3 Unsupported LLM Conclusions
+## 18. JSON Storage Policy
 
-**Risk:** Models may generate plausible but unsupported statements.
+JSON may be used for flexible, versioned metadata.
 
-**Mitigation:**
+Appropriate examples include:
 
-- Require evidence references for material assertions.
-- Separate source claims from AI analysis.
-- Validate structured outputs.
-- Treat source content as untrusted input.
-- Apply publication quality gates.
-- Preserve uncertainty.
-- Use review workflows for cases that exceed automatic publication policy.
+- Source-specific configuration.
+- External identifiers.
+- Provider metadata.
+- Classification details.
+- Model metadata.
+- Error context.
+- Event identity operation metadata.
+- Schedule configuration.
 
-### 22.4 Excessive LLM Costs
+JSON must not replace relational tables for core domain relationships.
 
-**Risk:** Repeated analysis may increase cost and latency.
+Important queryable fields must have explicit relational columns.
 
-**Mitigation:**
+JSON structures must have documented schemas and versioning expectations.
 
-- Fingerprint analysis inputs.
-- Avoid unnecessary reprocessing.
-- Use deterministic processing where possible.
-- Apply execution budgets and deadlines.
-- Track model usage and cost.
-- Reanalyze only after meaningful changes.
-- Evaluate model choice against quality and cost.
+Secrets, credentials, and access tokens must not be stored in ordinary metadata.
 
-### 22.5 Inadequate Event Identity Policy
+## 19. Timestamp and Identity Policy
 
-**Risk:** Similarity-based matching may confuse related developments with the same event.
+### 19.1 Timestamps
 
-**Mitigation:**
+Persist timestamps in UTC.
 
-- Define event identity separately from topical similarity.
-- Preserve related-but-distinct event relationships.
-- Record matching decisions.
-- Support explicit merge and split operations.
-- Calibrate matching policies using reviewed examples.
+Use timezone-aware datetime values in application code.
 
-### 22.6 Missing Market Data
+Distinguish:
 
-**Risk:** Economic analysis may imply observed market reactions without actual market observations.
+- `published_at`: source publication time.
+- `collected_at`: first successful system collection time.
+- `last_seen_at`: latest article observation.
+- `occurrence_start_at`: estimated or observed event start.
+- `occurrence_end_at`: estimated or observed event end.
+- `observed_at`: observation time.
+- `created_at`: record creation time.
+- `updated_at`: last modification time.
+- `completed_at`: processing completion time.
+- `scheduled_for`: intended schedule execution time.
 
-**Mitigation:**
+Missing timestamps must remain null.
 
-- Distinguish observed, source-reported, and AI-inferred impact.
-- Integrate market data only through an approved source and licensing strategy.
-- Do not infer causality from timing alone.
-- Represent unavailable information as unknown.
+When time precision is limited, record the precision explicitly rather than inventing a precise timestamp.
 
-### 22.7 Operational Recovery Failures
+### 19.2 Identifiers
 
-**Risk:** Interrupted workflows may create duplicate work, inconsistent states, or repeated external side effects.
+Use stable internal identifiers for domain entities.
 
-**Mitigation:**
+UUIDs are recommended, subject to the final database implementation decision.
 
-- Persist processing runs and steps.
-- Use idempotency keys.
-- Apply leases or equivalent recovery mechanisms.
-- Reconcile uncertain external delivery outcomes.
-- Test restart and retry scenarios.
+External source identifiers must be stored separately.
 
-### 22.8 Premature Infrastructure
+Database row ordering must never be used as domain identity.
 
-**Risk:** Excessive infrastructure may delay product delivery.
+Event identifiers must remain stable during ordinary updates. Merge and split operations must preserve identity history.
 
-**Mitigation:**
+## 20. Transactions and Consistency
 
-- Start with the simplest approved deployment model.
-- Avoid mandatory vector databases without evidence.
-- Avoid distributed task queues until justified.
-- Keep generic Agent Runtime capabilities out of the initial scope unless required.
-- Introduce additional infrastructure only through explicit requirements and decisions.
+The following operations require atomic transactions or an equivalent consistency mechanism:
 
----
+- Article creation and ingestion metadata.
+- Article revision creation and current article projection update.
+- Event creation and initial event history.
+- Event update and corresponding history creation.
+- Article-event association and its decision record.
+- Event merge or split and related identity history.
+- Claim observation and its source references.
+- Claim and evidence association.
+- Analysis completion and its provenance links.
+- Report version creation and report input links.
+- Publication decision persistence.
+- Review state changes.
+- Delivery state transitions.
+- Collection checkpoint updates after successful persistence.
+- Schedule occurrence registration and scheduled execution creation.
 
-## 23. Future Product Roadmap
+A report must not be marked as published before the publication workflow has successfully recorded the publication outcome.
 
-### Product Phase 2 — Audio Intelligence
+External delivery operations cannot generally be included in a database transaction. They require idempotency keys, explicit state transitions, and recovery handling.
 
-Potential capabilities:
+## 21. Idempotency, Reprocessing, and Recovery
 
-- Audio script generation.
-- Text-to-speech.
-- Daily economic audio briefings.
-- Multiple briefing lengths.
-- Audio version management.
-- Audio delivery integrations.
+Idempotency is required for:
 
-### Product Phase 3 — Video Intelligence
+- Article ingestion.
+- Article normalization.
+- Duplicate detection.
+- Topic classification.
+- Entity extraction and resolution.
+- Claim extraction.
+- Event matching.
+- Article-event association.
+- Event update processing.
+- Analysis generation.
+- Report generation.
+- Publication decisions.
+- Report delivery.
+- Collection checkpoint advancement.
+- Scheduled workflow execution.
 
-Potential capabilities:
+A repeated operation with the same logical input and processing version should not create duplicate domain effects.
 
-- Video script generation.
-- Charts and visual assets.
-- Automated narration.
-- Video composition.
-- Publishing integrations.
-- Video version management.
+Processing fingerprints should include relevant input identifiers and versions, such as:
 
-### Product Phase 4 — Advanced Intelligence
+- Article revision.
+- Taxonomy version.
+- Matching policy version.
+- Prompt version.
+- Model identifier.
+- Analysis schema version.
+- Relevant event version.
+- Relevant source or dataset version.
 
-Potential capabilities:
+Reprocessing must create a traceable new execution when relevant inputs or policies change.
 
-- Historical event comparisons.
-- Economic indicator integration.
-- Advanced scenario analysis.
-- User personalization.
-- Custom alerts.
-- Advanced retrieval.
-- Expanded multilingual reporting.
-- Additional analytical tools.
+Failed workflow steps must be recoverable without incorrectly repeating completed external side effects.
 
-Future phases must reuse the established event, evidence, analysis, and report foundations.
+Expired execution leases must be detected and handled through a documented recovery policy.
 
-They must not require rewriting core event identity or provenance mechanisms.
+A workflow must not be resumed concurrently by multiple workers. Execution ownership must be atomic and recoverable after process termination.
 
----
+## 22. Retention and Content Rights
 
-## 24. Change Management
+Retention must comply with applicable source terms, licensing requirements, and legal obligations.
 
-Changes to the roadmap or architecture must be documented.
+Technical access to content does not imply permission to store, reproduce, or republish it.
 
-A material change should identify:
+The model must distinguish:
 
-- Reason for change.
-- Affected requirements.
-- Affected components.
-- Data migration implications.
-- Security and content-rights implications.
-- Operational and cost implications.
-- Compatibility implications.
-- Testing and evaluation requirements.
-- Relevant ADRs.
+- Article metadata.
+- Short permitted extracts.
+- Source-provided summaries.
+- Retrieved full text.
+- External content references.
+- Derived analytical outputs.
 
-Changes to domain concepts, data relationships, event identity, publication policy, or workflow guarantees require corresponding updates to the architecture and data model documents before dependent implementation.
+Retention rules must define which content may be stored, for how long, and for what purpose.
 
-An implementation shortcut must not silently become a permanent architectural decision.
+Full-text storage must not be assumed to be permitted by default.
 
----
+The system must be able to represent restricted, expired, unavailable, or withdrawn content without losing legally permissible provenance and audit information.
 
-## 25. Final Development Statement
+Published reports must preserve sufficient provenance to identify their sources, subject to legal and contractual restrictions.
 
-The project should be implemented as a sequence of controlled, testable development stages.
+Deletion or withdrawal requests must be handled through an auditable correction, withdrawal, or restricted-retention process.
 
-The first objective is a reliable economic news intelligence pipeline that transforms international publications into evidence-based event dossiers and controlled, automatically delivered text reports.
+Where content must be deleted, the system should preserve only legally permissible metadata and audit information without retaining prohibited content.
 
-The initial implementation must prioritize:
+Detailed content acquisition, retention, licensing, and republication rules are governed by the relevant ADR.
 
-- Correct event identity.
-- Evidence traceability.
-- Transparent uncertainty.
-- Reliable workflow execution.
-- Publication governance.
-- Recovery and idempotency.
-- Measurable quality.
-- Operational simplicity.
+## 23. Repository Contracts
 
-The system should use deterministic workflows supported by a shared, provider-independent LLM execution layer.
+The application layer should depend on domain-oriented repository interfaces.
 
-It should not implement a general conversational Agent architecture unless a concrete product requirement justifies that complexity.
+Initial repository contracts include:
 
-Audio, video, and advanced intelligence capabilities should build on the completed text intelligence foundation rather than complicate the initial release.
+- `SourceRepository`
+- `SourceHealthRepository`
+- `SourceRelationshipRepository`
+- `ArticleRepository`
+- `ArticleRevisionRepository`
+- `ArticleProcessingRepository`
+- `ArticleClassificationRepository`
+- `DuplicateCandidateRepository`
+- `EntityRepository`
+- `EntityAliasRepository`
+- `ArticleEntityMentionRepository`
+- `EventRepository`
+- `ArticleEventLinkRepository`
+- `EventMatchCandidateRepository`
+- `EventHistoryRepository`
+- `EventRelationshipRepository`
+- `EventIdentityOperationRepository`
+- `ClaimRepository`
+- `ClaimObservationRepository`
+- `EvidenceRepository`
+- `EvidenceLocationRepository`
+- `ClaimEvidenceLinkRepository`
+- `EventClaimLinkRepository`
+- `AnalysisRepository`
+- `AnalysisInputRepository`
+- `AnalysisEvidenceLinkRepository`
+- `MarketObservationRepository`
+- `ReportRepository`
+- `ReportEventLinkRepository`
+- `ReportEvidenceLinkRepository`
+- `ReportArticleLinkRepository`
+- `ReportAnalysisLinkRepository`
+- `PublicationDecisionRepository`
+- `ReviewRepository`
+- `DeliveryRepository`
+- `DeliveryAttemptRepository`
+- `ProcessingRunRepository`
+- `ProcessingStepRepository`
+- `CollectionCheckpointRepository`
+- `LLMUsageRepository`
+- `ScheduleRepository`
+- `ScheduledExecutionRepository`
+- `EmbeddingRepository`, when semantic storage is implemented.
 
----
+Additional repositories may be introduced when implementation needs justify them.
 
-**End of Document**
+Repository interfaces must expose domain-oriented operations rather than raw SQL.
 
-**Document ID:** GENI-PLAN-006
-**Version:** 1.1
-**Status:** Draft — Under Architecture Review
+Transaction boundaries must be managed through a unit-of-work or equivalent application-level transaction mechanism.
+
+Logical entities do not require a one-to-one repository-per-table implementation.
+
+Repository contracts must remain consistent with the component interfaces defined in Document 02.
+
+## 24. Migration Strategy
+
+Use versioned database migrations.
+
+Requirements:
+
+- Every schema change must be versioned.
+- Migrations must be repeatable in test environments.
+- Destructive migrations require explicit review.
+- Migration state must be recorded.
+- Database upgrades must be tested with representative data.
+- Application code must handle expected schema compatibility during deployment.
+- Migrations must preserve historical records and provenance.
+- Database-specific behavior must not leak into domain models.
+
+Migration tests must include fresh database creation and upgrades from prior schema versions.
+
+## 25. Backup and Recovery
+
+The initial deployment must document:
+
+- Database backup procedure.
+- Backup frequency.
+- Restore procedure.
+- Data integrity checks.
+- Recovery objectives.
+- Treatment of in-progress workflows after restoration.
+- Treatment of pending external delivery operations after restoration.
+
+Backups must use a method safe for the selected database operating mode.
+
+A restore test is required before backups are considered operationally reliable.
+
+After restoration, workflow recovery must detect incomplete processing runs and determine whether they can safely resume.
+
+External side effects must be reconciled before a restored workflow repeats a delivery or publication operation.
+
+## 26. Testing Requirements
+
+Data-layer tests must cover:
+
+- Foreign key enforcement.
+- Unique constraints.
+- Article ingestion idempotency.
+- Article revision creation.
+- Current article projection consistency.
+- Duplicate candidate behavior.
+- Event identity preservation.
+- Event matching decisions.
+- Event merge and split history.
+- Many-to-many article-event relationships.
+- Topic classification history.
+- Entity aliases and resolution.
+- Claim observations and provenance.
+- Claim-evidence relationships.
+- Evidence location traceability.
+- Analysis provenance.
+- Analysis input validation.
+- Report version uniqueness.
+- Multi-event report relationships.
+- Published report immutability.
+- Publication decision history.
+- Review queue state transitions.
+- Delivery idempotency.
+- Delivery attempt history.
+- Processing run and step recovery.
+- Expired execution lease handling.
+- Atomic event history updates.
+- Atomic publication state changes.
+- Collection checkpoint consistency.
+- LLM usage recording.
+- Schedule execution idempotency.
+- Transaction rollback.
+- Migration compatibility.
+- Backup and restore behavior.
+- Content retention and rights enforcement.
+
+Repository contract tests should run against every supported persistence implementation.
+
+Tests must verify that unknown values remain null and that the system does not silently convert missing information into zero or false.
+
+## 27. Initial Implementation Scope
+
+The first usable end-to-end implementation should prioritize the smallest data model that supports collection, article processing, event intelligence, evidence-backed analysis, reporting, and controlled delivery.
+
+### 27.1 Initial Operational Requirements
+
+The initial implementation requires:
+
+- Source records and collection checkpoints.
+- Article records and content fingerprints.
+- Article revisions or an explicitly versioned content strategy.
+- Article processing records.
+- Topic classification records.
+- Entity records and entity mentions.
+- Event records and event history.
+- Article-event associations.
+- Event match candidates and recorded decisions.
+- Claims and evidence.
+- Claim observations and evidence links.
+- Analysis records and evidence links.
+- Report versions and source references.
+- Report-event relationships where multi-event reporting is required.
+- Publication decisions.
+- Review records for held reports.
+- Delivery records with idempotency.
+- Delivery attempt history.
+- Processing runs and processing steps.
+- Basic LLM usage records.
+
+### 27.2 Deferred Capabilities
+
+The following may be deferred where they are not required by the first operational workflow:
+
+- PostgreSQL deployment.
+- Dedicated vector database.
+- Advanced embedding infrastructure.
+- Object storage.
+- Distributed caching.
+- Data warehouse.
+- Large-scale historical analytics.
+- Advanced market data integration.
+- Sophisticated source ownership graphs.
+- Advanced scheduling infrastructure.
+
+Deferring a dedicated vector database does not mean semantic event matching can be ignored. Initial matching must use an explicit, testable strategy, which may begin with lexical, entity, temporal, and other available signals.
+
+### 27.3 Implementation Sequencing
+
+The implementation roadmap should introduce entities when the corresponding workflow requires them.
+
+The first end-to-end slice should demonstrate:
+
+1. Source configuration and collection.
+2. Article persistence and deduplication.
+3. Article classification and entity extraction.
+4. Event candidate generation and event association.
+5. Evidence and claim recording.
+6. Structured analysis.
+7. Report generation and provenance.
+8. Publication decision and review handling.
+9. Idempotent delivery.
+10. Workflow execution tracking and recovery.
+
+The logical model may contain additional entities that are implemented later.
+
+## 28. Open Architecture Decisions
+
+The following topics require formal ADRs or explicit approval before their implementation is treated as fixed:
+
+1. Initial relational database and operating configuration.
+2. Event identity, matching thresholds, merge, and split policy.
+3. Embedding generation and semantic search storage.
+4. Article full-text acquisition, retention, and licensing.
+5. Source reliability assessment and calibration.
+6. Publication review and correction workflow.
+7. Market data sources and observed impact classification.
+8. Reprocessing, checkpoint, and workflow recovery guarantees.
+9. Multilingual content storage, translation, and reporting policy.
+10. Retention, archival, and deletion requirements.
+11. Score semantics, calibration, and versioning.
+12. Scheduling and worker execution strategy.
+
+Until the relevant decisions are accepted, implementation choices must remain replaceable and must not be presented as approved architecture.
+
+The authoritative ADR inventory and decision statuses are maintained in the ADR documentation.
+
+## 29. Acceptance Criteria
+
+The data model is acceptable for implementation when:
+
+1. Articles and events have separate identities.
+2. Multiple articles can be associated with one event.
+3. Article deduplication is separate from event matching.
+4. Event matching decisions are traceable.
+5. Event merge and split operations preserve identity history.
+6. Article processing stages and versions can be inspected.
+7. Topic classifications retain method and taxonomy version.
+8. Entity aliases and unresolved mentions can be represented.
+9. Claims and their source observations have explicit relationships.
+10. Evidence has traceable origin and location where available.
+11. Analysis inputs and evidence references are traceable.
+12. Reports retain their article, evidence, analysis, and event references.
+13. Report versions are preserved.
+14. Multi-event reports are supported.
+15. Publication decisions are separately recorded.
+16. Held reports can enter an operational review workflow.
+17. Delivery operations have idempotency and retry history.
+18. Processing runs and steps support recovery.
+19. LLM usage and known costs can be recorded.
+20. Unknown values remain distinct from zero or false.
+21. Critical state changes are transactionally consistent.
+22. Migrations are versioned and tested.
+23. Repository interfaces hide database-specific implementation details.
+24. Backup and restore procedures are documented and tested.
+25. Content retention respects applicable rights and licensing restrictions.
+26. Scores have documented semantics and versioning.
+27. Scheduled workflow execution can be tracked and made idempotent where implemented.
+28. The model is consistent with Document 02 component and interface contracts.
+29. Publication approval, human review, and external delivery remain separate concepts.
+30. Content references and evidence extracts comply with the applicable retention and licensing policy.
+
+## 30. Final Design Statement
+
+The data model is designed around economic events, their source publications, and the evidence required to understand them.
+
+It preserves the distinction between articles, events, claims, observations, evidence, analyses, reports, publication decisions, reviews, and deliveries.
+
+It also provides explicit support for event identity decisions, processing recovery, analytical provenance, historical integrity, and operational traceability.
+
+The initial persistence implementation should remain deliberately simple, but must not sacrifice traceability, idempotency, content rights, or the ability to evolve.
+
+Database engine selection, semantic storage, content retention, and other unresolved architecture choices remain subject to formal ADR approval.
+
+This document defines the intended logical data model. Physical schema design and migration implementation must follow the approved architecture and the component contracts defined in Document 02.

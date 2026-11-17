@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-006  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-17  
@@ -12,26 +12,37 @@
 
 ## 1. Purpose
 
-This document defines the governance process for creating, maintaining, reviewing, approving, versioning, and changing project documentation.
+This document defines the governance process for creating, maintaining, reviewing, approving, versioning, publishing, and changing project documentation.
 
 Its primary objective is to ensure that project documentation remains accurate, consistent, traceable, and aligned with the actual system architecture and implementation.
 
 Documentation is treated as a maintained engineering asset rather than a one-time planning deliverable.
 
-This policy applies to all project documentation, including architecture specifications, data models, implementation plans, Architecture Decision Records (ADRs), technical guides, and operational documentation.
+This policy applies to all controlled project documentation, including:
+
+- Product and architecture specifications.
+- Component and interface specifications.
+- Data models and storage designs.
+- Implementation plans and roadmaps.
+- Architecture Decision Records (ADRs).
+- Documentation governance and registries.
+- Technical references.
+- Testing, deployment, and operational documentation.
 
 ## 2. Governance Principles
 
 The following principles govern documentation management:
 
-1. **Single Source of Truth:** The project's GitHub repository is the authoritative location for approved documentation.
+1. **Single Source of Truth:** The GitHub repository is the authoritative location for published project documentation. Individual documents retain their own approval status.
 2. **Documentation-Code Alignment:** Documentation and implementation must remain consistent.
-3. **Explicit Approval:** Proposed architectural decisions and official documentation changes require explicit approval.
+3. **Explicit Approval:** Publication does not automatically constitute approval.
 4. **Traceability:** Significant changes must have an identifiable reason, author, review history, and approval record.
-5. **Incremental Maintenance:** Documentation should be updated when relevant changes occur, not postponed until the entire project is rewritten.
+5. **Incremental Maintenance:** Documentation should be updated when relevant changes occur rather than postponed until the entire project is rewritten.
 6. **Historical Preservation:** Important architectural decisions and their history must remain traceable.
 7. **Proportional Documentation:** Documentation effort should reflect the complexity, impact, and risk of a change.
 8. **No Silent Decisions:** A proposal must not be treated as an approved architectural decision without explicit authorization.
+9. **State Accuracy:** Documentation inventories must distinguish local availability, Git commit status, repository publication, approval, and implementation.
+10. **Clear Document Authority:** Every controlled document must have a defined responsibility and authoritative scope.
 
 ## 3. Documentation Scope and Classification
 
@@ -41,67 +52,74 @@ Project documentation is classified into the following categories.
 
 Describes:
 
-- Product objectives and scope
-- Target users and use cases
-- Functional capabilities
-- Product constraints
-- Non-functional requirements
+- Product objectives and scope.
+- Target users and use cases.
+- Functional capabilities.
+- Product constraints.
+- Non-functional requirements.
 
 ### 3.2 Architecture Documentation
 
 Describes:
 
-- System architecture
-- Component responsibilities
-- Interfaces and dependencies
-- Processing workflows
-- Architectural boundaries
+- System architecture.
+- Component responsibilities.
+- Interfaces and dependencies.
+- Processing workflows.
+- Architectural boundaries.
 
 ### 3.3 Data Documentation
 
 Describes:
 
-- Data entities and relationships
-- Storage architecture
-- Data lifecycle
-- Data provenance
-- Retention and integrity requirements
+- Data entities and relationships.
+- Storage architecture.
+- Data lifecycle.
+- Data provenance.
+- Retention and integrity requirements.
 
 ### 3.4 Governance Documentation
 
 Defines:
 
-- Architectural decision processes
-- Documentation management
-- Approval responsibilities
-- Change management rules
+- Architectural decision processes.
+- Documentation management.
+- Approval responsibilities.
+- Change management rules.
+- Documentation registry responsibilities.
 
 ### 3.5 Architecture Decision Records
 
 ADRs document significant architectural decisions, including:
 
-- The problem being addressed
-- Considered alternatives
-- The selected approach
-- Decision rationale
-- Consequences and trade-offs
-- Approval status
+- The problem being addressed.
+- Relevant context.
+- Considered alternatives.
+- Decision rationale.
+- Consequences and trade-offs.
+- Approval and implementation status.
 
 ### 3.6 Implementation and Operational Documentation
 
 Describes:
 
-- Development phases
-- Implementation requirements
-- Testing and evaluation
-- Deployment and operational procedures
-- Maintenance and recovery processes
+- Development phases.
+- Implementation requirements.
+- Testing and evaluation.
+- Deployment and operational procedures.
+- Maintenance and recovery processes.
+
+### 3.7 Technical Reference Documentation
+
+Provides reusable engineering guidance and technical knowledge.
+
+Reference documents do not automatically establish product-specific requirements. Product-specific adoption must be documented in the appropriate authoritative project documents.
 
 ## 4. Document Ownership and Responsibilities
 
 Every controlled document must have an assigned owner.
 
-The following responsibilities apply.
+The following responsibilities apply under the current project governance model.
 
 ### 4.1 Project Owner
 
@@ -114,7 +132,8 @@ Responsibilities:
 - Approve changes to product scope and architectural direction.
 - Resolve conflicts between competing proposals.
 - Prioritize documentation work.
-- Authorize official updates to the main documentation baseline.
+- Authorize official updates to the project documentation baseline.
+- Confirm when a document or decision becomes formally approved.
 
 ### 4.2 Architecture Advisor
 
@@ -129,6 +148,7 @@ Responsibilities:
 - Prepare ADRs and technical recommendations.
 - Review implementation against approved architectural decisions.
 - Maintain documentation consistency.
+- Identify unresolved technical questions.
 
 The Architecture Advisor may recommend decisions but cannot independently approve architectural changes.
 
@@ -141,6 +161,7 @@ When development begins, the Development Team is responsible for:
 - Updating implementation-level documentation.
 - Providing technical evidence for proposed changes.
 - Participating in documentation reviews.
+- Identifying undocumented dependencies and technical limitations.
 
 ## 5. Document Metadata Requirements
 
@@ -152,27 +173,30 @@ Required fields:
 |---|---|
 | Document ID | Unique document identifier |
 | Title | Official document title |
-| Version | Document version |
-| Status | Current approval and review status |
+| Version | Current document version |
+| Status | Current lifecycle and approval status |
 | Owner | Accountable document owner |
 | Last Updated | Date of the latest substantive update |
 
 Optional fields may include:
 
-- Related Documents
-- Supersedes
-- Superseded By
-- Review Date
-- Approved By
-- Approval Date
+- Related Documents.
+- Supersedes.
+- Superseded By.
+- Review Date.
+- Approved By.
+- Approval Date.
+- Publication Reference.
 
 Document identifiers must remain stable throughout the document's lifecycle.
 
 A title or content change does not automatically justify assigning a new Document ID.
 
+The metadata must accurately describe the document's actual state. A draft must not claim formal approval or publication that has not occurred.
+
 ## 6. Document Lifecycle and Status
 
-Controlled documentation uses the following lifecycle statuses.
+Controlled documents use the following lifecycle statuses.
 
 ### 6.1 Proposed
 
@@ -182,7 +206,7 @@ It must not be treated as an approved project requirement or architectural decis
 
 ### 6.2 Under Review
 
-The document is undergoing technical or product review.
+The document is undergoing technical, architectural, product, or documentation review.
 
 Changes may be requested before approval.
 
@@ -200,15 +224,30 @@ The reason for rejection should be recorded.
 
 ### 6.5 Superseded
 
-The document or decision has been replaced by a newer approved document or decision.
+The document has been replaced by a newer approved document.
 
-Historical content must remain available.
+Historical content and the relationship to the replacement must remain traceable.
 
 ### 6.6 Retired
 
 The document is no longer applicable and has not necessarily been replaced by another document.
 
 Its retirement reason must be recorded.
+
+### 6.7 Lifecycle and Publication Are Separate
+
+Publication state is not a lifecycle status.
+
+The following conditions must be distinguished:
+
+- **Locally Available:** The file exists in the local Working Tree.
+- **Committed:** The file is recorded in a Git commit.
+- **Published:** The file is available in the designated GitHub repository and branch.
+- **Approved:** The document has received explicit Project Owner approval.
+
+A document may be published while remaining Proposed or Under Review.
+
+Likewise, a locally prepared draft is not published merely because it has been reviewed.
 
 Status transitions must be explicit and traceable.
 
@@ -222,7 +261,7 @@ Controlled documents use semantic-style versioning:
 
 Increment the major version when:
 
-- The document undergoes a substantial architectural restructuring.
+- The document undergoes substantial architectural restructuring.
 - Its fundamental scope or conceptual model changes.
 - Previously established assumptions or requirements are materially revised.
 - The changes introduce significant incompatibility with the previous specification.
@@ -239,6 +278,7 @@ Increment the minor version when:
 - Interfaces or data structures are extended compatibly.
 - Clarifications materially improve the specification.
 - New requirements or constraints are introduced within the existing scope.
+- Cross-document consistency requires substantive changes.
 
 Example:
 
@@ -257,6 +297,7 @@ Such changes should still be visible in Git history.
 - Version numbers must not be used as substitutes for approval status.
 - A new version does not automatically become Accepted.
 - The document version and its Git commit history are separate records.
+- Registry metadata must match the version in the actual document header.
 
 ## 8. Documentation Change Management
 
@@ -273,6 +314,7 @@ A change may originate from:
 - A security or compliance requirement.
 - A new external dependency.
 - A previously approved decision that needs revision.
+- A documentation inconsistency or outdated assumption.
 
 The reason for the proposed change must be documented.
 
@@ -286,6 +328,7 @@ Before editing, identify:
 - Data model implications.
 - Implementation and testing implications.
 - Operational, security, and compliance implications.
+- Affected registry entries and internal references.
 
 The impact analysis must distinguish confirmed effects from possible future effects.
 
@@ -324,6 +367,8 @@ The revision must:
 - Update cross-references.
 - Identify unresolved questions.
 - Avoid presenting unapproved proposals as established requirements.
+- Preserve the distinction between recommendation and decision.
+- Use the correct document version and status.
 
 ### Step 5 — Review
 
@@ -332,11 +377,12 @@ The Architecture Advisor checks:
 - Technical correctness.
 - Internal consistency.
 - Cross-document consistency.
-- Alignment with approved ADRs.
+- Alignment with accepted ADRs.
 - Missing dependencies.
 - Unintended consequences.
+- Accuracy of document metadata and references.
 
-The Project Owner reviews and decides whether to approve the change.
+The Project Owner reviews the proposal and decides whether to approve the change.
 
 ### Step 6 — Approval and Publication
 
@@ -345,9 +391,15 @@ After explicit approval:
 - Update document status where appropriate.
 - Update the version number when required.
 - Record approval metadata.
-- Merge the approved change into the main branch.
+- Prepare and review the complete Git diff.
+- Merge the approved change into the designated repository branch.
 - Update the documentation registry.
-- Review dependent documents.
+- Update affected indexes and cross-references.
+- Verify the resulting repository state.
+
+Publication and approval must remain separately recorded.
+
+A change must not be described as approved merely because it has been committed or pushed.
 
 ## 9. Architecture Decision Record Governance
 
@@ -375,7 +427,9 @@ ADRs use the following decision statuses:
 - Accepted
 - Rejected
 - Superseded
-- Deprecated
+- Withdrawn
+
+The status definitions and transition rules in `docs/05-architecture-decision-records.md` are authoritative for ADR governance.
 
 An ADR in Proposed status is not an approved architectural constraint.
 
@@ -397,6 +451,7 @@ When a material decision changes:
 4. Document the new alternatives and rationale.
 5. Obtain explicit approval.
 6. Mark the earlier ADR as Superseded after the replacement decision is accepted.
+7. Update the ADR registry and affected project documents.
 
 Minor editorial corrections that do not change the decision are permitted.
 
@@ -417,6 +472,8 @@ The following relationships must be reviewed:
 | AI execution architecture | Component Architecture, relevant ADRs, Implementation Plan |
 | Evidence and provenance | Data Model, Product Architecture, relevant ADRs |
 | Security and data retention | Architecture, Data Model, relevant ADRs, Operational Documentation |
+| Documentation governance | Documents 05, 06, and 07; Documentation Index |
+| ADR status or publication | Individual ADR, ADR Registry, Documentation Registry |
 
 This table is a starting point rather than an exhaustive dependency matrix.
 
@@ -451,25 +508,33 @@ If it materially changes an architectural decision, the ADR process applies.
 
 Implementation must not silently redefine the approved architecture.
 
+Implementation status must be tracked separately from document approval and ADR acceptance.
+
 ## 12. GitHub Repository and Change Control
 
-The GitHub repository is the authoritative documentation repository.
+The GitHub repository is the authoritative location for published project documentation.
 
-The following practices are recommended.
+Repository publication and formal approval are separate concepts.
 
 ### 12.1 Main Branch
 
-The `main` branch contains the approved documentation baseline and approved implementation changes.
+The `main` branch contains the published repository baseline.
 
-Unreviewed architectural proposals must not be represented as accepted decisions.
+It may contain documents in different lifecycle states, including Proposed, Under Review, and Accepted.
+
+The presence of a document in `main` does not automatically mean that the document or its recommendations have been approved.
+
+The lifecycle status in the document metadata and its approval evidence determine its approval state.
 
 ### 12.2 Branches
 
-Documentation changes should normally be prepared in a dedicated branch.
+Significant documentation changes should normally be prepared in a dedicated branch.
 
 Example:
 
 `docs/update-data-model`
+
+Small editorial corrections may follow the project's established contribution process.
 
 ### 12.3 Pull Requests
 
@@ -483,6 +548,7 @@ Pull Requests should include:
 - Impact analysis.
 - Open questions.
 - Required approvals.
+- Registry and index updates, where applicable.
 
 ### 12.4 Commit Messages
 
@@ -502,29 +568,44 @@ The Project Owner must explicitly approve changes that alter the approved produc
 
 Repository access permissions and branch protection should support this governance model when the project team grows.
 
-## 13. Documentation Registry
+A Git commit, Pull Request merge, or publication event must not be used as a substitute for explicit approval.
 
-A central registry must track all controlled documents.
+## 13. Documentation Registry and Document Authority
 
-The registry should contain:
+A central documentation registry must track all controlled documents.
 
-| Field | Purpose |
+The responsibilities of the documentation indexes and registries are separated as follows:
+
+| Document | Authoritative Responsibility |
 |---|---|
-| Document ID | Unique identity |
-| Title | Document name |
-| Path | Repository location |
-| Version | Current version |
-| Status | Current lifecycle status |
-| Owner | Responsible person |
-| Last Updated | Latest substantive revision |
-| Related Documents | Dependencies and references |
-| Approval Date | Date of formal acceptance, if applicable |
+| `docs/README.md` | Documentation navigation and reading guidance |
+| `docs/05-architecture-decision-records.md` | ADR governance policy |
+| `docs/06-documentation-governance-and-change-management.md` | General documentation governance and change control |
+| `docs/07-documentation-registry.md` | Central inventory of all controlled project documents |
+| `docs/adr/README.md` | Inventory and status tracking of ADR topics and individual ADR files |
+| Individual ADR files | Context, alternatives, rationale, and decision record for each architectural decision |
 
-The registry should be maintained in `docs/README.md` or in a dedicated registry file if the documentation set becomes large.
+The central registry must contain, where applicable:
 
-The registry must reflect the actual repository state.
+- Document ID.
+- Title.
+- Repository path.
+- Version.
+- Lifecycle status.
+- Publication state.
+- Local availability and Git commit state.
+- Owner.
+- Last Updated date.
+- Related documents.
+- Approval information.
 
-It must not claim that a document is Accepted when its status or approval evidence does not support that claim.
+The registry in `docs/07-documentation-registry.md` is the authoritative inventory for the complete documentation set.
+
+The ADR registry in `docs/adr/README.md` is the authoritative inventory for ADRs.
+
+The documentation index in `docs/README.md` provides navigation and must not maintain conflicting inventory information.
+
+Every registry must reflect the actual repository and Working Tree state being described.
 
 ## 14. Documentation Review Schedule
 
@@ -539,6 +620,8 @@ A review is required when:
 - A data structure or interface changes.
 - A significant security or compliance issue is identified.
 - An implementation discrepancy is discovered.
+- A controlled document is added, removed, renamed, or materially revised.
+- An ADR changes status.
 
 ### 14.2 Periodic Review
 
@@ -551,6 +634,8 @@ The review should focus on:
 - Cross-document contradictions.
 - Missing implementation updates.
 - Broken references.
+- Incorrect metadata.
+- Registry accuracy.
 - Unnecessary or obsolete documentation.
 
 A periodic review does not require rewriting every document.
@@ -567,6 +652,9 @@ Every controlled document should satisfy the following quality criteria:
 - Clear distinction between proposals and approved requirements.
 - No unsupported claims of implementation or approval.
 - No unnecessary duplication of authoritative specifications.
+- Accurate metadata and version information.
+- Valid repository paths and internal links.
+- English language for official project documentation.
 
 Where information is duplicated across documents, one document should be designated as the authoritative source for that information.
 
@@ -577,12 +665,12 @@ Other documents should reference it rather than maintain competing versions.
 The following governance decisions remain open and require future review:
 
 1. Whether GitHub branch protection and mandatory Pull Request approvals should be enforced immediately or introduced when development contributors are added.
-2. Whether a dedicated machine-readable documentation registry is necessary.
+2. Whether the documentation registry should eventually use a machine-readable format in addition to Markdown.
 3. Whether automated link checking and metadata validation should be added to CI.
-4. Whether a formal documentation review checklist should be introduced.
+4. Whether a formal documentation review checklist should be introduced as a separate controlled document.
 5. Whether documentation approval should be recorded through GitHub Pull Request approval, an explicit approval record, or both.
 
-These questions do not prevent the adoption of the basic governance process.
+These questions do not prevent the use of the basic governance process.
 
 ## 17. Implementation Plan
 
@@ -593,22 +681,28 @@ The governance process should be introduced incrementally.
 - Approve this governance document.
 - Confirm the document metadata conventions.
 - Review existing document IDs and filenames.
-- Establish a reliable documentation registry.
+- Establish `docs/07-documentation-registry.md` as the central documentation inventory.
+- Confirm the responsibilities of the documentation index and ADR registry.
 - Identify documents awaiting approval.
+- Record the distinction between local files and published repository files.
 
 ### Phase 2 — Align Existing Documentation
 
 - Review existing architecture documents.
 - Identify outdated references and inconsistent terminology.
 - Align ADR references and statuses.
+- Align the documentation index and registries.
 - Record unresolved architectural decisions.
+- Verify that publication and approval states are not confused.
 
 ### Phase 3 — Introduce Change Control
 
-- Use dedicated documentation branches.
+- Use dedicated documentation branches for significant changes.
 - Review significant changes through Pull Requests.
 - Record approval and version changes.
-- Keep the main branch as the approved baseline.
+- Update the central documentation registry.
+- Keep the `main` branch as the published repository baseline.
+- Preserve the separate approval status of every controlled document.
 
 ### Phase 4 — Automate Quality Checks
 
@@ -618,6 +712,7 @@ When justified by project size:
 - Check internal Markdown links.
 - Detect missing ADR references.
 - Validate required document sections.
+- Detect inconsistent document identifiers and versions.
 - Integrate documentation checks into CI.
 
 ## 18. Acceptance Criteria
@@ -627,18 +722,24 @@ This governance document may be considered ready for operational adoption when:
 1. The Project Owner approves the document.
 2. Document status and versioning rules are understood.
 3. Responsibilities are explicitly assigned.
-4. ADR approval and supersession rules are established.
-5. The documentation registry reflects the actual repository.
-6. The change management process is usable through GitHub.
-7. Existing documentation is reviewed for consistency.
-8. The process distinguishes proposals, approved decisions, and implementation status.
+4. ADR approval and supersession rules are aligned with Document 05.
+5. The documentation registry reflects the actual repository and Working Tree state.
+6. The documentation index and ADR registry have clearly defined responsibilities.
+7. The change management process is usable through GitHub.
+8. Existing documentation is reviewed for consistency.
+9. The process distinguishes proposals, approved decisions, publication, and implementation status.
+10. Document metadata and cross-references are accurate.
 
 ## 19. Final Decision
 
-**Current Status:** Proposed
+**Current Status:** Proposed — Pending Project Owner Approval
 
-**Recommendation:** Adopt this document as the governing policy for project documentation and architectural change management.
+**Recommendation:** Adopt this document as the governing policy for project documentation and documentation change management.
 
 **Final Approval:** Pending explicit Project Owner approval.
 
-This document does not independently approve existing architecture proposals or ADRs. Each architectural decision must retain its own approval status and decision history.
+This document does not independently approve existing architecture proposals, specifications, or ADRs.
+
+Each controlled document and architectural decision must retain its own approval status and decision history.
+
+**End of Document**

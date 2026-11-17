@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-17
 
@@ -54,7 +54,7 @@ docs/
 | `adr-template.md` | Standard template for creating individual ADRs |
 | `decisions/` | Contains individual architectural decision records |
 
-The `decisions/` directory contains the individual ADR documents currently prepared for the project.
+The `decisions/` directory contains the individual ADR documents published in the shared repository.
 
 New ADR files must be stored in this directory.
 
@@ -93,30 +93,33 @@ These are separate properties and must not be confused.
 
 ### 4.1 Individual ADR Documents
 
-The following individual ADR documents currently exist in the local project working directory.
+The following individual ADR documents are published in the shared repository.
 
-| ADR ID | Title | Local Document Availability | Decision Status | Repository Path |
+| ADR ID | Title | Document Availability | Decision Status | Repository Path |
 |---|---|---|---|---|
 | GENI-ADR-001 | Event-Centric Intelligence Architecture | Published | Proposed | `decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | Prepared locally; pending publication | Proposed | `decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` |
-| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | Prepared locally; pending publication | Proposed | `decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` |
-| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | Prepared locally; pending publication | Proposed | `decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | Prepared locally; pending publication | Proposed | `decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` |
-| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | Prepared locally; pending publication | Proposed | `decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | Published | Proposed | `decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` |
+| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | Published | Proposed | `decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` |
+| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | Published | Proposed | `decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` |
+| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | Published | Proposed | `decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` |
+| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | Published | Proposed | `decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` |
 
 **Publication terminology:**
 
-- Published means the document is committed to and available in the shared Git repository.
-- Prepared locally means the document exists in the local working directory but has not yet been published to the shared repository.
-- Not created means no individual ADR document currently exists.
+- **Published** means the document is committed to and available in the shared Git repository.
+- **Not created** means no individual ADR document currently exists in the repository.
+- **Proposed** means the architectural proposal has been documented but has not been formally approved.
+- **Accepted** means the decision has been formally approved by the authorized decision owner.
 
-The local documents listed as prepared must be reviewed, committed, and pushed before they are considered published.
+Document availability and decision status are independent properties.
 
-The existence of an ADR file does not imply that its proposal has been accepted.
+The publication of an ADR does not imply that its proposal has been accepted.
+
+The existence of an ADR file does not imply that its implementation is complete.
 
 ### 4.2 Remaining Decision Backlog
 
-The following decision topics have been identified but do not yet have individual ADR documents in the current local project directory.
+The following decision topics have been identified but do not yet have individual ADR documents in the shared repository.
 
 | ADR ID | Title | Priority | Document Availability |
 |---|---|---|---|
@@ -127,7 +130,7 @@ The following decision topics have been identified but do not yet have individua
 | GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | P1 | Not created |
 | GENI-ADR-010 | Phased Text, Audio, and Video Delivery | P2 | Not created |
 | GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | P1 | Not created |
-| GENI-ADR-014 | Publication Decisions, Human Review, Corrections, and Withdrawals | P0 | Not created |
+| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | P0 | Not created |
 | GENI-ADR-015 | Market Data Integration and Economic Impact Classification | P1 | Not created |
 | GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | P1 | Not created |
 | GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | P1 | Not created |
@@ -136,8 +139,7 @@ The following decision topics have been identified but do not yet have individua
 ### 4.3 Inventory Rules
 
 - A decision topic may exist before its individual ADR is drafted.
-- An ADR draft may exist locally without being published to the shared repository.
-- A document must not be marked Published until its file is committed and available in the shared repository.
+- An ADR document must not be marked Published until it is committed and available in the shared repository.
 - The decision status must match the metadata of the individual ADR.
 - Proposed topics must not be presented as approved architectural requirements.
 - The registry must be updated when a document is created, published, or its decision status changes.
@@ -171,8 +173,8 @@ In particular:
 - **ADR-011** defines event identity and the rules for matching, continuing, merging, and splitting events.
 - **ADR-012** addresses semantic retrieval and similarity calculation as technical capabilities supporting event intelligence.
 - **ADR-008** defines evidence provenance and uncertainty representation.
-- **ADR-004** defines publication outcomes and automated quality gates.
-- **ADR-014** defines the operational review process, including human review, corrections, and withdrawals.
+- **ADR-004** defines publication decisions, publication outcomes, and automated quality gates.
+- **ADR-014** defines the operational human review process, including corrections and withdrawals.
 - **ADR-005** addresses initial persistence technology and migration strategy.
 - **ADR-016** addresses execution reliability, idempotency, and recovery.
 - **ADR-006** defines the provider-independent LLM execution boundary.
@@ -236,7 +238,7 @@ The expected ADR lifecycle is:
 2. **Proposal:** An individual ADR is drafted using the standard template.
 3. **Review:** Technical, product, security, operational, and other relevant implications are examined.
 4. **Decision:** The proposal is accepted or rejected by the authorized decision owner.
-5. **Publication:** The approved or reviewed ADR document is committed to the shared repository with its accurate status.
+5. **Publication:** The ADR document is committed to the shared repository with its accurate status.
 6. **Implementation:** Accepted decisions are reflected in implementation and relevant documentation.
 7. **Verification:** Implementation is checked against the accepted decision.
 8. **Maintenance:** The ADR is reviewed when significant assumptions or architectural conditions change.
@@ -354,10 +356,8 @@ At the time of this revision:
 - The ADR template exists.
 - The ADR registry exists.
 - Eighteen initial architectural decision topics have been identified.
-- Six individual ADR documents currently exist in the local project working directory.
-- `GENI-ADR-001` is published in the shared repository.
-- `GENI-ADR-001` has Proposed status.
-- `GENI-ADR-002`, `GENI-ADR-006`, `GENI-ADR-008`, `GENI-ADR-011`, and `GENI-ADR-013` are prepared locally and pending publication.
+- Six individual ADR documents are published in the shared repository.
+- The six published ADRs are GENI-ADR-001, GENI-ADR-002, GENI-ADR-006, GENI-ADR-008, GENI-ADR-011, and GENI-ADR-013.
 - All six existing individual ADRs have Proposed status.
 - Twelve identified decision topics remain without individual ADR documents.
 - No individual ADR is currently recorded as Accepted in this registry.
@@ -365,7 +365,7 @@ At the time of this revision:
 
 The registry must be updated as additional ADR documents are created, published, reviewed, and approved.
 
-The local document availability statements must be rechecked before committing this registry to the shared repository.
+The publication status must be verified against the shared repository. Decision status must be verified against the metadata of each individual ADR.
 
 ## 14. Final Governance Statement
 
@@ -373,7 +373,7 @@ This registry is an inventory and planning tool.
 
 It does not independently approve architectural decisions, authorize implementation, or replace the Project Owner's decision authority.
 
-The distinction between a decision topic, an unpublished draft, a locally prepared ADR, a published Proposed ADR, an Accepted ADR, and an implemented decision must be preserved throughout the project lifecycle.
+The distinction between an identified decision topic, an ADR that has not yet been created, a published Proposed ADR, an Accepted ADR, and an implemented decision must be preserved throughout the project lifecycle.
 
 The registry is the central reference for ADR inventory and status tracking. Individual ADR documents remain the authoritative records for their respective decision contexts, rationale, consequences, and approval history.
 

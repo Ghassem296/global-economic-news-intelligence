@@ -1,11 +1,11 @@
 # Global Economic News Intelligence
-## Component Architecture & Interface Contracts
+## Component Architecture and Interface Contracts
 
-**Document ID:** GENI-ARCH-002
-**Version:** 1.1
-**Status:** Draft — Under Architecture Review
-**Project:** Global Economic News Intelligence
-**Last Updated:** 2026-11-16
+**Document ID:** GENI-ARCH-002  
+**Version:** 1.2  
+**Status:** Draft — Under Architecture Review  
+**Project:** Global Economic News Intelligence  
+**Last Updated:** 2026-11-17
 
 ---
 
@@ -15,17 +15,28 @@ This document defines the internal component architecture, responsibilities, bou
 
 It translates the high-level product architecture into implementable software components.
 
-The design follows a workflow-first architecture and separates domain logic, application workflows, infrastructure implementations, and external provider integrations.
+The design follows a workflow-first architecture and separates:
+
+- Domain logic.
+- Application workflows.
+- Infrastructure implementations.
+- External provider integrations.
 
 The system uses deterministic workflows wherever practical and invokes LLM capabilities selectively through a shared execution layer.
 
 A general-purpose conversational Agent Runtime is not a mandatory architectural dependency.
 
-Detailed entity fields, database relationships, migrations, and persistence constraints are maintained in the Data Model & Storage Design document.
+Detailed entity fields, database relationships, migrations, indexes, and persistence constraints are maintained in:
+
+`docs/03-data-model-and-storage-design.md`
+
+The high-level product and system architecture is maintained in:
+
+`docs/01-product-and-system-architecture.md`
 
 ## 2. Architectural Rules
 
-The following rules are mandatory:
+The following rules govern component design and implementation:
 
 1. Components have explicit and non-overlapping responsibilities.
 2. Components communicate through defined interfaces.
@@ -43,6 +54,10 @@ The following rules are mandatory:
 14. Historical reports and analytical versions must not be silently overwritten.
 15. Components must be independently testable.
 16. Provider-specific logic must remain outside domain and application business rules.
+17. Lifecycle transitions must be validated by domain policies.
+18. Processing state must remain separate from domain state.
+19. All external operations must have explicit resource and execution limits.
+20. Unapproved architectural decisions must not be treated as established implementation constraints.
 
 ## 3. Logical Component Architecture
 
@@ -72,6 +87,7 @@ Contains:
 - Event intelligence workflow.
 - Reporting workflow.
 - Publication workflow.
+- Review workflow.
 - Delivery workflow.
 - Reprocessing and recovery coordination.
 
@@ -89,6 +105,7 @@ Contains:
 - Language identification.
 - Topic classification.
 - Entity extraction.
+- Entity resolution.
 - Candidate claim extraction.
 
 ### 3.4 Event Intelligence
@@ -212,7 +229,8 @@ Responsibilities:
 - Use canonical URLs and content fingerprints.
 - Identify near-duplicate and syndicated content where possible.
 - Generate duplicate candidates with confidence.
-- Preserve the original article records and duplicate relationships.
+- Preserve original article records and duplicate relationships.
+- Distinguish confirmed duplicates from uncertain candidates.
 
 It must not merge articles merely because they describe the same event.
 
@@ -299,9 +317,18 @@ The matcher must not independently modify persistent event associations.
 
 A low-confidence match must not silently merge unrelated events.
 
-Matching may combine deterministic rules, entity comparisons, temporal and geographic context, textual similarity, and semantic similarity.
+Matching may combine:
 
-The detailed matching algorithm and thresholds are defined in the Event Intelligence and Correlation Specification.
+- Deterministic rules.
+- Entity comparisons.
+- Temporal and geographic context.
+- Textual similarity.
+- Semantic similarity.
+- Confidence evaluation.
+
+The matching strategy and thresholds must be documented, versioned, and evaluated.
+
+The detailed event identity and matching decisions are governed by the relevant ADRs and supporting architecture specifications.
 
 ### 4.11 EventService
 
@@ -489,6 +516,8 @@ Possible review outcomes include:
 
 A held report must not be automatically published without an authorized review outcome.
 
+The initial implementation must define the actual review mechanism and the authorized decision-maker.
+
 ### 4.22 ReportVersionService
 
 Responsibilities:
@@ -574,49 +603,45 @@ Sensitive article content, secrets, and credentials must not be logged by defaul
 
 ## 5. Domain Model Contracts
 
-The following entities represent the initial domain model. Exact fields, types, constraints, and database relationships are defined in the Data Model & Storage Design document.
+The following entities represent the initial domain model.
+
+Exact fields, types, constraints, indexes, relationships, and database mappings are defined in:
+
+`docs/03-data-model-and-storage-design.md`
+
+This section establishes component-level expectations rather than a second authoritative database schema.
 
 ### 5.1 Source
 
 Represents a configured information source.
 
-Important attributes include:
+The domain model must support:
 
-- `id`
-- `name`
-- `source_type`
-- `base_url`
-- `language`
-- `country`
-- `reliability_profile`
-- `collection_config`
-- `access_policy`
-- `is_active`
-- `created_at`
-- `updated_at`
+- Source identity.
+- Source type.
+- Collection configuration.
+- Language and geographic coverage.
+- Access restrictions.
+- Reliability metadata.
+- Activation status.
+- Source health information.
 
 ### 5.2 Article
 
 Represents one collected publication.
 
-Important attributes include:
+The domain model must support:
 
-- `id`
-- `source_id`
-- `external_id`
-- `url`
-- `canonical_url`
-- `title`
-- `content_reference`
-- `summary`
-- `language`
-- `author`
-- `published_at`
-- `collected_at`
-- `content_hash`
-- `content_availability`
-- `metadata`
-- `created_at`
+- Source identity.
+- External and canonical identifiers.
+- Original URL.
+- Title and available content references.
+- Original source language.
+- Author and publication metadata when available.
+- Collection timestamp.
+- Content fingerprint.
+- Content availability.
+- Processing history.
 
 Full-text storage must comply with applicable source terms and content rights.
 
@@ -626,39 +651,31 @@ Content availability must be represented explicitly.
 
 Represents a processing attempt or version for an article.
 
-Important attributes include:
+It must preserve:
 
-- `id`
-- `article_id`
-- `processing_stage`
-- `status`
-- `method`
-- `version`
-- `started_at`
-- `completed_at`
-- `error_category`
-- `metadata`
+- Processing stage.
+- Processing status.
+- Method and version.
+- Execution timestamps.
+- Error classification.
+- Relevant processing metadata.
 
-Processing history must not be confused with the current article content.
+Processing history must not be confused with current article content.
 
 ### 5.4 Event
 
 Represents a real-world development.
 
-Important attributes include:
+The domain model must support:
 
-- `id`
-- `title`
-- `description`
-- `event_type`
-- `primary_topic`
-- `geographic_scope`
-- `status`
-- `first_observed_at`
-- `last_updated_at`
-- `resolved_at`
-- `created_at`
-- `updated_at`
+- Stable event identity.
+- Event classification.
+- Geographic scope.
+- Lifecycle status.
+- First observation.
+- Last material update.
+- Resolution information.
+- Event history.
 
 Importance and economic impact assessments should be stored with their methodology and version metadata rather than treated as unqualified permanent properties.
 
@@ -666,17 +683,16 @@ Importance and economic impact assessments should be stored with their methodolo
 
 Represents an article-event relationship.
 
-Important attributes include:
+The relationship must support:
 
-- `id`
-- `article_id`
-- `event_id`
-- `relationship_type`
-- `association_confidence`
-- `matching_method`
-- `matching_version`
-- `associated_at`
-- `status`
+- Article identity.
+- Event identity.
+- Relationship type.
+- Association confidence.
+- Matching method and version.
+- Association timestamp.
+- Relationship status.
+- Correction and supersession history.
 
 The system must preserve the history of corrected or superseded associations.
 
@@ -684,40 +700,17 @@ The system must preserve the history of corrected or superseded associations.
 
 Represents a real-world entity.
 
-Important attributes include:
-
-- `id`
-- `canonical_name`
-- `entity_type`
-- `country`
-- `external_identifiers`
-- `metadata`
+The domain model must support canonical identity, entity type, geographic information, external identifiers, and metadata.
 
 ### 5.7 EntityAlias
 
 Represents an alternative name or identifier associated with a canonical entity.
 
-Important attributes include:
-
-- `id`
-- `entity_id`
-- `alias`
-- `language`
-- `alias_type`
-- `created_at`
+Aliases must preserve language and alias type where relevant.
 
 ### 5.8 Claim
 
 Represents a source-attributed assertion or analytical assertion.
-
-Important attributes include:
-
-- `id`
-- `claim_text`
-- `claim_type`
-- `attribution`
-- `verification_status`
-- `created_at`
 
 Claim provenance must be represented through explicit relationships to articles, sources, and evidence.
 
@@ -727,50 +720,21 @@ A claim must not be considered verified solely because it has been extracted fro
 
 Represents information supporting, qualifying, or contradicting a claim.
 
-Important attributes include:
+The domain model must support evidence origin, source attribution, evidence type, relevance, verification status, and claim relationships.
 
-- `id`
-- `article_id`
-- `source_id`
-- `evidence_text`
-- `evidence_type`
-- `relevance_score`
-- `created_at`
-
-Claim-to-evidence relationships must support the appropriate relationship type, including support and contradiction.
+Claim-to-evidence relationships must support appropriate relationship types, including support and contradiction.
 
 ### 5.10 Analysis
 
 Represents a versioned analytical result.
 
-Important attributes include:
-
-- `id`
-- `event_id`
-- `analysis_type`
-- `content`
-- `confidence`
-- `model_metadata`
-- `prompt_version`
-- `methodology_version`
-- `created_at`
-
-Analysis records must preserve references to relevant claims, evidence, and processing inputs.
+Analysis records must preserve references to relevant claims, evidence, processing inputs, model configuration, prompt version, and methodology version where applicable.
 
 ### 5.11 Report
 
-Represents one immutable generated report version.
+Represents one generated report version.
 
-Important attributes include:
-
-- `id`
-- `event_id`
-- `version`
-- `title`
-- `content`
-- `analysis_reference`
-- `generated_at`
-- `created_at`
+Reports must be versioned and preserve their relationship to the event, analysis, evidence references, and generation metadata.
 
 Publication decisions and delivery outcomes must be stored separately from report content.
 
@@ -778,63 +742,46 @@ Publication decisions and delivery outcomes must be stored separately from repor
 
 Represents a publication policy evaluation.
 
-Important attributes include:
+It must preserve:
 
-- `id`
-- `report_id`
-- `decision`
-- `reason`
-- `policy_version`
-- `created_at`
+- Report reference.
+- Decision.
+- Decision reason.
+- Policy version.
+- Evaluation timestamp.
 
 ### 5.13 ReviewRecord
 
 Represents a review request and its outcome.
 
-Important attributes include:
+It must preserve:
 
-- `id`
-- `report_id`
-- `status`
-- `reason`
-- `reviewer_reference`
-- `created_at`
-- `completed_at`
-- `outcome`
+- Report reference.
+- Review status.
+- Review reason.
+- Reviewer reference where applicable.
+- Creation and completion timestamps.
+- Review outcome.
 
 ### 5.14 DeliveryRecord
 
 Represents a delivery attempt.
 
-Important attributes include:
+It must preserve:
 
-- `id`
-- `report_id`
-- `destination_id`
-- `idempotency_key`
-- `status`
-- `attempt_count`
-- `external_reference`
-- `created_at`
-- `completed_at`
+- Report reference.
+- Destination reference.
+- Idempotency key.
+- Delivery status.
+- Attempt information.
+- External delivery reference where available.
+- Execution timestamps.
 
 ### 5.15 ProcessingRun
 
 Represents one workflow or processing execution.
 
-Important attributes include:
-
-- `id`
-- `run_type`
-- `target_type`
-- `target_id`
-- `status`
-- `started_at`
-- `completed_at`
-- `error_category`
-- `metadata`
-
-Target references must be validated by application-level rules or explicit relational constraints where applicable.
+It must preserve execution identity, target, run type, status, timestamps, error category, and metadata.
 
 ProcessingRun represents execution state, not domain state.
 
@@ -842,18 +789,9 @@ ProcessingRun represents execution state, not domain state.
 
 Represents a historical occurrence or material change associated with an event.
 
-Important attributes include:
-
-- `id`
-- `event_id`
-- `history_type`
-- `previous_state`
-- `new_state`
-- `description`
-- `related_record_reference`
-- `created_at`
-
 Event history must be append-oriented and auditable.
+
+It must preserve relevant lifecycle transitions, material updates, corrections, merges, and splits.
 
 ## 6. Repository Interfaces
 
@@ -886,25 +824,27 @@ Database-specific query logic belongs in infrastructure implementations.
 
 Repository contracts must support the transaction boundaries required by their corresponding application workflows.
 
+Repositories must not expose database-specific types to domain or application layers.
+
 ## 7. Workflow Contracts
 
 ### 7.1 Collection Workflow
 
-Input:
+**Input:**
 
 - Source identifier.
 - Source configuration.
 - Collection checkpoint.
 - Execution context and deadline.
 
-Output:
+**Output:**
 
 - Acquired article metadata and permitted content references.
 - Collection result.
 - Updated checkpoint.
 - Collection health information.
 
-Failure conditions:
+**Failure conditions:**
 
 - Network errors.
 - Source access failures.
@@ -917,13 +857,13 @@ The workflow must preserve enough information to resume collection safely.
 
 ### 7.2 Article Processing Workflow
 
-Input:
+**Input:**
 
 - Raw article record.
 - Processing configuration.
 - Execution context.
 
-Output:
+**Output:**
 
 - Normalized article.
 - Language identification.
@@ -939,14 +879,14 @@ New processing versions must not silently overwrite historical results.
 
 ### 7.3 Event Resolution Workflow
 
-Input:
+**Input:**
 
 - Processed article.
 - Candidate event information.
 - Existing event candidates.
 - Matching configuration.
 
-Output:
+**Output:**
 
 - Matched event, new event candidate, or unresolved candidate.
 - Association confidence.
@@ -960,7 +900,7 @@ New event creation and association must be coordinated through EventService.
 
 ### 7.4 Event Intelligence Workflow
 
-Input:
+**Input:**
 
 - Event identifier.
 - Related articles.
@@ -968,7 +908,7 @@ Input:
 - Historical event context.
 - Analysis configuration.
 
-Output:
+**Output:**
 
 - Evidence assessment.
 - Importance assessment.
@@ -981,14 +921,14 @@ Observed, source-reported, and inferred economic impacts must remain distinguish
 
 ### 7.5 Reporting Workflow
 
-Input:
+**Input:**
 
 - Event dossier.
 - Analysis version.
 - Evidence references.
 - Report template and version.
 
-Output:
+**Output:**
 
 - Immutable report version.
 - Report generation metadata.
@@ -998,13 +938,13 @@ Report generation must not itself publish or deliver the report.
 
 ### 7.6 Publication and Review Workflow
 
-Input:
+**Input:**
 
 - Generated report.
 - Publication policy configuration.
 - Relevant evidence and provenance information.
 
-Output:
+**Output:**
 
 - Publication decision.
 - Decision reasons.
@@ -1013,15 +953,17 @@ Output:
 
 A held report must be routed to a defined review mechanism.
 
+The workflow must not bypass review requirements.
+
 ### 7.7 Delivery Workflow
 
-Input:
+**Input:**
 
 - Approved report version.
 - Delivery destination.
 - Stable idempotency key.
 
-Output:
+**Output:**
 
 - Delivery status.
 - Delivery reference.
@@ -1031,13 +973,13 @@ The workflow must prevent unintended duplicate publication or delivery when retr
 
 ### 7.8 Reprocessing Workflow
 
-Input:
+**Input:**
 
 - Target article, event, or report-related processing scope.
 - Requested processing stage.
 - Processing or methodology version.
 
-Output:
+**Output:**
 
 - New processing records.
 - New analytical versions where applicable.
@@ -1177,6 +1119,8 @@ The following dependency rules apply:
 
 Application workflows coordinate components but must not become containers for duplicated business logic.
 
+The composition root is responsible for assembling concrete infrastructure implementations and injecting them into application workflows.
+
 ## 12. Observability Contracts
 
 Each major operation should emit structured information.
@@ -1215,7 +1159,16 @@ Examples:
 
 Events should include correlation identifiers and relevant entity references where appropriate.
 
-Observability must track processing duration, retry counts, error categories, and LLM usage when available.
+Observability must track:
+
+- Processing duration.
+- Retry counts.
+- Error categories.
+- Workflow status.
+- LLM usage when available.
+- Publication outcomes.
+- Review queue age.
+- Delivery outcomes.
 
 Sensitive content and secrets must not be logged by default.
 
@@ -1272,9 +1225,11 @@ Reprocessing should create new processing or analytical versions rather than sil
 
 Changes to event identity or association logic must preserve historical associations and correction records.
 
+Breaking changes to component interfaces must be reviewed for their impact on dependent workflows.
+
 ## 15. Initial Release Implementation Boundaries
 
-The initial product release includes:
+The initial product release includes the following capabilities:
 
 - Source management.
 - News acquisition.
@@ -1294,10 +1249,11 @@ The initial product release includes:
 - Publication policy.
 - A defined review mechanism for held reports.
 - Text delivery.
-- SQLite persistence.
 - Basic scheduling and workflow recovery.
 - Shared LLM Execution Layer.
 - Evaluation and observability.
+
+The initial persistence technology must be selected and approved through the relevant architectural decision process. SQLite is a proposed initial option, not an approved implementation constraint in this document.
 
 Deferred unless separately justified:
 
@@ -1331,6 +1287,8 @@ A component is complete when:
 12. Security boundaries are respected.
 13. Historical records are preserved where required.
 14. Documentation is updated.
+15. Its dependencies and configuration are documented.
+16. Its behavior is covered by relevant evaluation criteria where applicable.
 
 ## 17. Architecture Decisions and Open Items
 
@@ -1351,9 +1309,15 @@ The following items require formal review and corresponding ADRs or supporting s
 13. LLM budget, cost tracking, and evaluation.
 14. Source acquisition security and content retention.
 
-Until the relevant ADRs are accepted, these decisions remain proposed and must not be treated as approved implementation constraints.
+The current individual ADR documents are listed in:
 
-The ADR registry is maintained in `docs/adr/README.md`.
+`docs/adr/README.md`
+
+The project currently has six published individual ADR documents, all with Proposed status.
+
+The remaining identified decision topics are tracked in the ADR Registry and must not be treated as accepted architectural decisions.
+
+Until the relevant ADRs are accepted, these decisions remain proposed and must not be treated as approved implementation constraints.
 
 ## 18. Final Design Statement
 

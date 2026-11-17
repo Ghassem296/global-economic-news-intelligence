@@ -1,18 +1,18 @@
 # Global Economic News Intelligence
-# Architecture Decision Records (ADR) Governance
+# Architecture Decision Records Governance
 
-**Document ID:** GENI-GOV-005
-**Version:** 1.2
-**Status:** Draft — Under Architecture Review
-**Document Type:** Architecture Decision Management and Governance
-**Project:** Global Economic News Intelligence
+**Document ID:** GENI-GOV-005  
+**Version:** 1.3  
+**Status:** Draft — Under Architecture Review  
+**Document Type:** Architecture Decision Management and Governance  
+**Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-17
 
 ---
 
 ## 1. Purpose
 
-This document defines the governance process for identifying, evaluating, approving, recording, implementing, validating, and revising architectural decisions for Global Economic News Intelligence.
+This document defines the governance process for identifying, evaluating, approving, recording, implementing, validating, and revising architectural decisions for Global Economic News Intelligence (GENI).
 
 Architecture Decision Records (ADRs) preserve the reasoning behind significant product, architectural, technical, and operational decisions.
 
@@ -53,15 +53,18 @@ The generic Agent Template documents are reference materials. They are not autom
 
 ## 3. Decision-Making Responsibilities
 
-### 3.1 Product Owner
+### 3.1 Project Owner
 
-The Product Owner is responsible for:
+The Project Owner is the final authority for project-level architectural decisions.
+
+Responsibilities include:
 
 - Approving or rejecting architectural decisions.
 - Establishing product priorities and constraints.
 - Resolving product-level trade-offs.
 - Approving material changes to accepted decisions.
 - Accepting implementation conditions where appropriate.
+- Authorizing material changes to project scope and governance.
 
 ### 3.2 AI Architecture Assistant
 
@@ -87,6 +90,7 @@ Implementation work must:
 - Avoid treating proposed decisions as approved requirements.
 - Report implementation constraints and newly discovered risks.
 - Preserve traceability between implementation and architectural decisions.
+- Identify cases where the approved design cannot be implemented as specified.
 
 ### 3.4 Approval Authority
 
@@ -94,10 +98,10 @@ The following approval rules apply:
 
 | Decision Area | Approval Authority |
 |---|---|
-| Product scope and priorities | Product Owner |
-| Publication risk and editorial policy | Product Owner |
-| Data rights and content retention policy | Product Owner, with appropriate legal review where needed |
-| Major architecture direction | Product Owner |
+| Product scope and priorities | Project Owner |
+| Publication risk and editorial policy | Project Owner |
+| Data rights and content retention policy | Project Owner, with appropriate legal review where needed |
+| Major architecture direction | Project Owner |
 | Technical implementation details within an accepted architecture | May be delegated if they do not conflict with accepted ADRs |
 | Technical recommendation | AI Architecture Assistant may prepare; recommendation alone is not approval |
 
@@ -166,6 +170,18 @@ For example, an ADR may be `Accepted` while its implementation remains `Not Star
 
 An implementation may also require additional verification before it can be considered compliant with an Accepted ADR.
 
+### 5.2 Document Availability and Decision Status
+
+The following properties must remain independent:
+
+- **Decision topic:** An architectural question has been identified.
+- **Document availability:** An individual ADR file exists.
+- **Repository publication:** The file is committed and available in the shared repository.
+- **Decision status:** The proposal is Proposed, Accepted, Rejected, or another defined status.
+- **Implementation status:** The decision has or has not been implemented and verified.
+
+The existence or publication of an ADR does not imply acceptance.
+
 ## 6. ADR Status Definitions
 
 The following statuses are used for individual ADRs:
@@ -182,6 +198,25 @@ The following statuses are used for individual ADRs:
 A decision may be Accepted with explicit implementation conditions. Those conditions must be recorded in the ADR.
 
 An ADR must not be marked Accepted without an explicit approval record.
+
+A Superseded ADR must identify its replacement where applicable.
+
+A Withdrawn ADR must retain its historical record and explain why the proposal was withdrawn.
+
+### 6.1 Implementation Status
+
+Implementation progress is not an ADR lifecycle status.
+
+The project may use the following implementation labels in task tracking or implementation records:
+
+- Not Started.
+- In Progress.
+- Implemented.
+- Verified.
+- Blocked.
+- Not Applicable.
+
+These labels must not replace the formal decision status in an ADR.
 
 ## 7. ADR Identification and Organization
 
@@ -223,11 +258,11 @@ Examples:
 - `GENI-ADR-002-article-deduplication-and-event-matching.md`
 - `GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md`
 
-The ADR registry in `docs/adr/README.md` lists decision topics and links to their individual records.
+The ADR registry in `docs/adr/README.md` lists decision topics and tracks the availability and status of their individual records.
 
 A registry entry is not a substitute for an individual ADR document.
 
-A file must only be represented as an existing document link after it has actually been created in the repository.
+A file must only be represented as an existing document link after it has actually been created.
 
 ### 7.4 ADR Versioning
 
@@ -352,22 +387,29 @@ The authoritative registry of individual architectural decisions is:
 
 `docs/adr/README.md`
 
-The registry must:
+The overall project documentation inventory is maintained separately in:
+
+`docs/07-documentation-registry.md`
+
+The two registries have different responsibilities.
+
+The ADR registry must:
 
 - List all registered ADR identifiers.
 - Provide the correct decision title.
 - Show the current status of each ADR.
+- Track individual ADR document availability.
 - Link to existing individual ADR files.
 - Distinguish existing documents from planned or uncreated topics.
 - Identify dependencies and relevant relationships where appropriate.
 
-The registry must reflect the actual repository state.
+The documentation registry must track the overall project document inventory, including architecture specifications, governance documents, templates, and reference materials.
 
 ### 10.1 Registry Accuracy
 
 The following rules apply:
 
-- The registry must reflect the actual status of each individual ADR.
+- The ADR registry must reflect the actual status of each individual ADR.
 - Every registered decision must have a unique identifier.
 - Every drafted ADR must have an individual file under `docs/adr/decisions/` once it is added to the repository.
 - A Proposed registry entry must not be interpreted as an approved design.
@@ -377,23 +419,28 @@ The following rules apply:
 - The registry must not mark an ADR Accepted unless its individual record contains an explicit approval record.
 - A document link must not point to a file that does not exist in the repository.
 - The registry must distinguish a drafted ADR from an ADR that has been committed to the repository.
+- The registry's status vocabulary must remain consistent with this governance document.
 
 ### 10.2 Initial Decision Priorities
 
-The following topics should receive early attention because they affect multiple product documents and implementation dependencies:
+The following topics should receive early attention because they affect multiple product documents and implementation dependencies.
 
-1. Event-Centric Intelligence Architecture.
-2. Article Deduplication and Event Matching Separation.
-3. Event Identity, Matching, Continuation, Merging, and Splitting.
-4. Publication Decisions and Quality Gates.
-5. Human Review, Corrections, and Withdrawals.
-6. Provider-Independent LLM Execution.
-7. News Content Access and Rights.
-8. Evidence Provenance and Uncertainty.
-9. Semantic Retrieval and Embedding Strategy.
-10. Market Data and Economic Impact Classification.
-11. Persistence and Recovery.
-12. LLM Budgets and Evaluation.
+| Priority | ADR | Decision Topic |
+|---|---|---|
+| P0 | GENI-ADR-001 | Event-Centric Intelligence Architecture |
+| P0 | GENI-ADR-002 | Article Deduplication and Event Matching Separation |
+| P0 | GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting |
+| P0 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy |
+| P0 | GENI-ADR-014 | Human Review, Corrections, and Withdrawals |
+| P0 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture |
+| P0 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing |
+| P1 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation |
+| P1 | GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage |
+| P1 | GENI-ADR-015 | Market Data Integration and Economic Impact Classification |
+| P1 | GENI-ADR-005 | Initial Persistence Technology and Migration Strategy |
+| P1 | GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery |
+
+The complete list of registered topics and their current priorities is maintained in `docs/adr/README.md`.
 
 Priority does not imply approval.
 
@@ -414,9 +461,11 @@ The primary governed documents are:
 5. `docs/03-data-model-and-storage-design.md`
 6. `docs/04-implementation-plan-and-roadmap.md`
 7. `docs/05-architecture-decision-records.md`
-8. `docs/adr/README.md`
-9. `docs/adr/adr-template.md`
-10. Individual ADR records under `docs/adr/decisions/`
+8. `docs/06-documentation-governance-and-change-management.md`
+9. `docs/07-documentation-registry.md`
+10. `docs/adr/README.md`
+11. `docs/adr/adr-template.md`
+12. Individual ADR records under `docs/adr/decisions/`
 
 The generic Agent Template reference documents are:
 
@@ -435,8 +484,9 @@ When an ADR is accepted:
 3. Update only the affected sections unless a broader revision is necessary.
 4. Update document versions and revision metadata.
 5. Update the ADR registry.
-6. Verify links, identifiers, terminology, and cross-references.
-7. Confirm that no remaining document contradicts the accepted decision.
+6. Update the documentation registry if document metadata or availability changes.
+7. Verify links, identifiers, terminology, and cross-references.
+8. Confirm that no remaining document contradicts the accepted decision.
 
 The individual ADR records the reasoning behind the decision.
 
@@ -457,6 +507,8 @@ If an ADR conflicts with an existing project document:
 7. Preserve historical decision and document history.
 
 An Accepted ADR takes precedence over an older conflicting proposal, but affected documents must still be updated to remove ambiguity.
+
+If no Accepted ADR exists, the conflict must remain visible until the Project Owner resolves the relevant decision.
 
 ### 11.3 Unapproved Assumptions
 
@@ -482,8 +534,9 @@ When a requirement or architectural decision changes:
 6. Determine whether an existing ADR can be amended or a new ADR is required.
 7. Obtain the required approval.
 8. Update the ADR and related documentation.
-9. Update the registry.
-10. Validate consistency and preserve historical records.
+9. Update the ADR registry.
+10. Update the documentation registry when document metadata or availability changes.
+11. Validate consistency and preserve historical records.
 
 Accepted ADRs must not be silently rewritten to represent a different decision.
 
@@ -500,6 +553,7 @@ Before implementation begins for a major component, the following questions must
 - Are unresolved assumptions visible?
 - Are dependencies on unresolved decisions understood?
 - Is the component safe to implement independently while other decisions remain open?
+- Are the applicable security, content-rights, and operational constraints understood?
 
 If a critical decision remains unresolved, implementation of the affected capability should wait.
 
@@ -523,6 +577,7 @@ The following principles govern architecture decisions throughout the project:
 12. Proposed technology choices must not be treated as mandatory before approval.
 13. Governance effort should be proportional to architectural risk and project scale.
 14. Acceptance, implementation, and verification must be tracked as distinct activities.
+15. Document publication must not be confused with decision approval.
 
 ## 15. Definition of Done
 
@@ -534,27 +589,33 @@ The ADR governance process is considered operational when:
 - Individual decisions have unique identifiers.
 - Approval records are explicit.
 - Relevant implementation dependencies are tracked.
-- Superseded decisions remain historically available.
+- Superseded and withdrawn decisions remain historically available.
 - Architecture review is part of the development process.
 - No implementation is represented as an approved architectural decision without the required approval.
 - Registry links and document paths are verified against the repository.
+- ADR lifecycle statuses are consistent between this document, individual ADRs, and the ADR registry.
+- Overall documentation availability is tracked separately in the documentation registry.
 
 ## 16. Current Governance State
 
-At the time of this document revision:
+According to the project documentation inventory snapshot dated 2026-11-17:
 
-- The ADR governance document exists as a draft under architecture review.
-- The ADR template exists.
-- The ADR registry exists.
+- The ADR governance document exists in the shared repository.
+- The ADR template exists in the shared repository.
+- The ADR registry exists in the shared repository.
 - Eighteen initial architectural decision topics have been identified.
-- ADR-001 exists in the committed repository with status `Proposed`.
-- ADR-002, ADR-006, ADR-008, ADR-011, and ADR-013 have been prepared as individual draft files in the local working tree but have not yet been committed to the repository.
-- The remaining registered topics do not yet have individual ADR files in the current working tree.
-- No Proposed ADR should be interpreted as an Accepted architectural decision.
+- Six individual ADR documents exist in the local project working directory.
+- `GENI-ADR-001` exists in the shared repository with status `Proposed`.
+- `GENI-ADR-002`, `GENI-ADR-006`, `GENI-ADR-008`, `GENI-ADR-011`, and `GENI-ADR-013` have been prepared as individual draft files in the local working tree but are not yet published to the shared repository.
+- The remaining twelve registered topics do not yet have individual ADR files in the recorded local working-tree inventory.
+- All six existing individual ADRs have status `Proposed`.
+- No individual ADR is recorded as `Accepted` in the current registry snapshot.
 - Existing architectural descriptions that depend on unresolved ADRs remain provisional where applicable.
 - Implementation must not treat unresolved proposals as finalized architectural decisions.
 
-The next steps are to complete the documentation review, synchronize the ADR registry with the working tree and committed repository state, and publish the approved documentation changes.
+These statements describe the recorded project snapshot and must be rechecked against the actual working tree and repository before a later publication or approval.
+
+The next steps are to complete the documentation review, synchronize the ADR registry with the working tree and committed repository state, and publish the authorized documentation changes.
 
 The governance process becomes effective for an individual decision only when the required approval is explicitly recorded.
 
@@ -562,7 +623,7 @@ The governance process becomes effective for an individual decision only when th
 
 **End of Document**
 
-**Document ID:** GENI-GOV-005
-**Version:** 1.2
-**Status:** Draft — Under Architecture Review
+**Document ID:** GENI-GOV-005  
+**Version:** 1.3  
+**Status:** Draft — Under Architecture Review  
 **Last Updated:** 2026-11-17

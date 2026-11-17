@@ -3,7 +3,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-17
 
@@ -11,7 +11,7 @@
 
 # 1. Purpose
 
-This directory contains the official product, architecture, data design, implementation planning, architectural decision, and technical reference documentation for the Global Economic News Intelligence project.
+This directory contains the official product, architecture, data design, implementation planning, architectural decision, documentation governance, and technical reference documentation for the Global Economic News Intelligence project.
 
 It provides a structured documentation baseline for:
 
@@ -21,13 +21,12 @@ It provides a structured documentation baseline for:
 - Implementation stages and development priorities.
 - Architectural decision records and governance.
 - Documentation governance and change management.
+- Documentation inventory and lifecycle management.
 - Reusable engineering and technical references.
 
 This documentation supports consistent project planning, architecture review, implementation, and maintenance.
 
 Documentation must be treated as a controlled project asset. Proposed designs and recommendations must not be interpreted as approved requirements unless their approval status explicitly confirms that.
-
----
 
 # 2. Documentation Structure
 
@@ -49,13 +48,20 @@ docs/
 |-- 03-data-model-and-storage-design.md
 |-- 04-implementation-plan-and-roadmap.md
 |-- 05-architecture-decision-records.md
+|-- 06-documentation-governance-and-change-management.md
+|-- 07-documentation-registry.md
 |
 |-- adr/
 |   |-- README.md
 |   |-- adr-template.md
 |   |
 |   +-- decisions/
-|       +-- GENI-ADR-001-event-centric-intelligence-architecture.md
+|       |-- GENI-ADR-001-event-centric-intelligence-architecture.md
+|       |-- GENI-ADR-002-article-deduplication-and-event-matching.md
+|       |-- GENI-ADR-006-provider-independent-llm-execution-architecture.md
+|       |-- GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md
+|       |-- GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md
+|       +-- GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md
 |
 +-- references/
     |
@@ -65,9 +71,9 @@ docs/
         +-- agent-template-implementation-specification.md
 ```
 
-Additional governance documents and individual ADRs are being prepared. They must be added to this structure only after review and approval for publication.
+This structure represents the published documentation baseline in the shared repository.
 
----
+New documents and directories must be reflected in this index and in the relevant documentation registry.
 
 # 3. Core Product and Architecture Documentation
 
@@ -180,7 +186,48 @@ It distinguishes recommendations, proposed decisions, and formally accepted deci
 
 **Authority:** Primary architectural decision governance reference.
 
----
+## 3.6 Documentation Governance and Change Management
+
+**File:** `06-documentation-governance-and-change-management.md`  
+**Document ID:** `GENI-GOV-006`
+
+**Purpose:**
+
+Defines how project documentation is created, reviewed, approved, versioned, changed, and maintained.
+
+It establishes documentation lifecycle rules, responsibilities, metadata requirements, change control, and cross-document consistency requirements.
+
+**Consult this document when:**
+
+- Creating a new project document.
+- Updating an existing document.
+- Changing document status or version.
+- Reviewing documentation quality.
+- Coordinating changes across multiple documents.
+- Maintaining historical documentation records.
+
+**Authority:** Primary documentation governance and change-management reference.
+
+## 3.7 Documentation Registry
+
+**File:** `07-documentation-registry.md`  
+**Document ID:** `GENI-GOV-007`
+
+**Purpose:**
+
+Provides the central inventory of project documentation.
+
+It records document identifiers, titles, file paths, versions, statuses, responsibilities, and relationships.
+
+**Consult this document when:**
+
+- Finding the authoritative document for a topic.
+- Checking document publication and review status.
+- Identifying missing documentation.
+- Reviewing document dependencies.
+- Verifying the current documentation inventory.
+
+**Authority:** Primary documentation inventory and registry reference.
 
 # 4. Architectural Decision Records
 
@@ -196,17 +243,20 @@ Each ADR should describe the problem, relevant context, alternatives, evaluation
 
 **Purpose:**
 
-Provides the central index of ADR topics, identifiers, priorities, dependencies, and current statuses.
+Provides the central index of architectural decision topics, identifiers, priorities, dependencies, and current statuses.
 
-The registry must distinguish:
+The registry distinguishes between:
 
-- Published ADRs.
-- Proposed ADRs.
-- Accepted ADRs.
-- Rejected or superseded ADRs.
-- Planned ADR topics that have not yet been drafted.
+- Published ADR documents.
+- Proposed decisions.
+- Accepted decisions.
+- Rejected decisions.
+- Deprecated or superseded decisions.
+- Planned topics without individual ADR documents.
 
-The registry must reflect the actual repository state and must not present unpublished drafts as existing repository files.
+The ADR registry is the primary reference for ADR inventory and status.
+
+The documentation index must not duplicate the full ADR inventory or independently maintain ADR statuses.
 
 ## 4.2 ADR Template
 
@@ -216,88 +266,73 @@ The registry must reflect the actual repository state and must not present unpub
 
 Defines the standard structure for individual ADRs.
 
-It provides a consistent format for documenting context, alternatives, evaluation, recommendations, consequences, decision records, and implementation implications.
+It provides a consistent format for documenting:
 
-## 4.3 Individual ADRs
+- Context and problem statement.
+- Decision drivers.
+- Alternatives considered.
+- Evaluation and recommendation.
+- Decision status.
+- Positive and negative consequences.
+- Implementation implications.
+- Related decisions and references.
+
+## 4.3 Individual ADR Documents
 
 **Directory:** `adr/decisions/`
 
-Individual architectural decisions are stored in this directory.
+Individual architectural decision records are stored in this directory.
 
-### Published ADR
+The published repository currently contains six individual ADR documents:
 
-**GENI-ADR-001 — Event-Centric Intelligence Architecture**
+| ADR ID | Subject | File |
+|---|---|---|
+| GENI-ADR-001 | Event-Centric Intelligence Architecture | `GENI-ADR-001-event-centric-intelligence-architecture.md` |
+| GENI-ADR-002 | Article Deduplication and Event Matching | `GENI-ADR-002-article-deduplication-and-event-matching.md` |
+| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `GENI-ADR-006-provider-independent-llm-execution-architecture.md` |
+| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` |
+| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` |
+| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` |
 
-File:
+The existence of an ADR document does not imply that its proposal has been formally accepted.
 
-`adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md`
+The current decision status, priority, and implementation state must be checked in the individual ADR and the ADR registry.
 
-This ADR proposes an event-centric intelligence architecture in which Articles and Events remain distinct domain entities connected through explicit relationships.
-
-Its key architectural concerns include:
-
-- Separation of Article and Event identities.
-- Many-to-many Article–Event relationships.
-- Event dossier construction.
-- Uncertain event matching.
-- Event history and traceability.
-- Separation of evidence, claims, and analysis.
-
-Its status must be checked in the ADR itself and the ADR registry before treating its recommendations as formally accepted decisions.
-
-### Additional ADR Drafts
-
-The following ADRs have been prepared as drafts but are not yet part of the published repository baseline:
-
-- **GENI-ADR-002:** Article Deduplication and Event Matching.
-- **GENI-ADR-008:** Evidence Provenance and Uncertainty Representation.
-
-They must not be treated as published or accepted decisions until their publication and approval status has been formally updated.
-
-Other planned architectural topics are tracked through the ADR planning process.
-
-**Important ADR rules:**
+### Important ADR Rules
 
 - A Proposed ADR is not an approved architectural decision.
 - A recommendation is not equivalent to a final decision.
-- Accepted does not automatically mean implemented.
+- Publication does not imply acceptance.
+- Acceptance does not imply implementation.
 - Implementation status must be tracked separately.
 - Superseded decisions must remain traceable.
-- The registry and individual ADR files must remain consistent.
-
----
+- The ADR registry and individual ADR files must remain consistent.
 
 # 5. Documentation Governance
 
 Documentation governance defines how project documentation is created, reviewed, approved, versioned, and maintained.
 
-The following governance documents are planned:
+The following governance documents are published:
 
 ## 5.1 Documentation Governance and Change Management
 
-**Planned file:** `06-documentation-governance-and-change-management.md`  
+**File:** `06-documentation-governance-and-change-management.md`  
 **Document ID:** `GENI-GOV-006`
 
-**Purpose:**
+This document defines document ownership, metadata, lifecycle, versioning, change control, review responsibilities, and cross-document consistency requirements.
 
-Defines document ownership, metadata, lifecycle, versioning, change control, review responsibilities, and cross-document consistency requirements.
-
-**Status:** Draft prepared; pending project owner approval and publication.
+**Repository Status:** Published.
 
 ## 5.2 Documentation Registry
 
-**Planned file:** `07-documentation-registry.md`  
+**File:** `07-documentation-registry.md`  
 **Document ID:** `GENI-GOV-007`
 
-**Purpose:**
+This document provides a structured inventory of project documentation, including document identifiers, file paths, versions, statuses, and relationships.
 
-Provides a structured inventory of project documentation, including document identifiers, file paths, versions, statuses, and relationships.
+**Repository Status:** Published.
 
-**Status:** Draft prepared; pending project owner approval and publication.
-
-Until these documents are published, this README and the existing ADR registry remain part of the current documentation index.
-
----
+These documents are part of the current documentation baseline. Their publication does not mean that every governance process or document has received final project-owner approval.
 
 # 6. Technical Reference Documentation
 
@@ -349,8 +384,6 @@ Each capability must be justified by a concrete product requirement and reviewed
 
 Product-specific architecture and formally accepted ADRs take precedence over generic reference material.
 
----
-
 # 7. Recommended Reading Order
 
 New contributors should follow this reading sequence:
@@ -360,15 +393,13 @@ New contributors should follow this reading sequence:
 3. `03-data-model-and-storage-design.md`
 4. `04-implementation-plan-and-roadmap.md`
 5. `05-architecture-decision-records.md`
-6. `adr/README.md`
-7. Relevant individual ADRs.
-8. Technical references relevant to the assigned implementation task.
-
-Documentation governance documents should also be reviewed when they become approved and published.
+6. `06-documentation-governance-and-change-management.md`
+7. `07-documentation-registry.md`
+8. `adr/README.md`
+9. Relevant individual ADRs.
+10. Technical references relevant to the assigned implementation task.
 
 The reading order may be adjusted according to the task, but contributors should understand the product architecture and relevant accepted decisions before implementing major changes.
-
----
 
 # 8. Documentation Authority and Source of Truth
 
@@ -384,9 +415,10 @@ Each document has a defined responsibility.
 | Why was an architectural decision made? | Relevant ADR |
 | Which ADRs exist and what is their status? | ADR Registry |
 | How should documentation changes be managed? | Documentation Governance |
+| Which documents exist and what is their status? | Documentation Registry |
 | Which generic engineering practices may be reused? | Technical References |
 
-The GitHub repository's approved and published files constitute the project documentation baseline.
+The shared GitHub repository contains the published project documentation baseline.
 
 A draft prepared outside the repository does not become part of that baseline merely because it has been written or reviewed.
 
@@ -398,11 +430,11 @@ When documents conflict:
 4. Determine whether an ADR change is required.
 5. Prepare coordinated documentation updates.
 6. Obtain the required approval.
-7. Update the affected documents together.
+7. Publish the approved changes.
+8. Update the relevant registries.
+9. Verify cross-document consistency.
 
 Conflicts must not be silently resolved by choosing whichever document is more convenient.
-
----
 
 # 9. Documentation Change Policy
 
@@ -427,8 +459,6 @@ Changes affecting multiple architecture documents should be reviewed together.
 
 Documentation must not silently introduce unreviewed architectural decisions.
 
----
-
 # 10. Documentation Maintenance Rules
 
 The documentation set must remain consistent with the actual project state.
@@ -446,7 +476,7 @@ The following information must be maintained:
 When a document is added, renamed, moved, or removed:
 
 - Update this README.
-- Update the documentation registry when published.
+- Update the documentation registry.
 - Update affected internal references.
 - Verify all relative links.
 - Review cross-document consistency.
@@ -457,7 +487,7 @@ When an ADR is created or its status changes:
 - Update the ADR registry.
 - Review affected product and architecture documents.
 
----
+The documentation index, documentation registry, and ADR registry must not contain conflicting publication or status information.
 
 # 11. Documentation Rules
 
@@ -477,8 +507,6 @@ All official project documentation must follow these rules:
 - Preserve consistency across architecture, data models, interfaces, and implementation plans.
 - Do not claim that a document is published unless it exists in the repository.
 - Do not claim that an architectural decision is accepted unless its status confirms approval.
-
----
 
 # 12. Planned Future Documentation
 
@@ -517,8 +545,6 @@ A new document should be created only when it has a distinct responsibility and 
 
 Its scope, ownership, dependencies, and relationship with existing documents should be reviewed before creation.
 
----
-
 # 13. Documentation Review Checklist
 
 Before considering a documentation baseline ready for implementation, verify that:
@@ -533,6 +559,7 @@ Before considering a documentation baseline ready for implementation, verify tha
 - Implementation stages reflect architectural dependencies.
 - Proposed and accepted decisions are clearly distinguished.
 - ADR registry statuses match the individual ADR files.
+- Documentation registry entries match the actual repository.
 - Unresolved questions are explicitly documented.
 - Obsolete or duplicated content has been identified.
 - Cross-document changes have been reviewed together.
@@ -545,6 +572,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `README.md`  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-17

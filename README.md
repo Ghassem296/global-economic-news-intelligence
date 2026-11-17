@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Repository:** [Ghassem296/global-economic-news-intelligence](https://github.com/Ghassem296/global-economic-news-intelligence)  
 **Documentation:** [docs/README.md](docs/README.md)  
-**Project Status:** Architecture Design and Documentation
+**Project Status:** Architecture Design and Documentation Review
 
 ---
 
@@ -23,7 +23,7 @@ The main objectives are:
 
 - Collect relevant news from international sources.
 - Normalize and structure incoming news content.
-- Identify duplicate articles and related reporting.
+- Identify duplicate and near-duplicate articles.
 - Detect significant economic and geopolitical events.
 - Connect multiple articles to the same underlying event.
 - Extract relevant entities, claims, and supporting evidence.
@@ -119,28 +119,56 @@ These are product development phases. Engineering milestones and implementation 
 
 ## 7. Documentation
 
-The documentation directory contains the project's architecture specifications, implementation planning, data design, and architecture governance materials.
+The `docs/` directory contains the project's product architecture, component specifications, data model, implementation roadmap, architecture governance, documentation governance, and technical references.
 
 Start here:
 
 **[Documentation Index](docs/README.md)**
 
-The documentation is organized around:
+The main documentation includes:
 
-- Product and system architecture
-- Component architecture and interface contracts
-- Data model and storage design
-- Implementation plan and development roadmap
-- Architecture Decision Records
-- Generic Agent Template reference material
+| Document | Purpose |
+|---|---|
+| [01 — Product and System Architecture](docs/01-product-and-system-architecture.md) | Product vision, scope, system boundaries, and high-level architecture |
+| [02 — Component Architecture and Interfaces](docs/02-component-architecture-and-interfaces.md) | Component responsibilities, dependencies, and interface contracts |
+| [03 — Data Model and Storage Design](docs/03-data-model-and-storage-design.md) | Domain entities, relationships, persistence, and data lifecycle |
+| [04 — Implementation Plan and Roadmap](docs/04-implementation-plan-and-roadmap.md) | Development stages, dependencies, and acceptance criteria |
+| [05 — Architecture Decision Governance](docs/05-architecture-decision-records.md) | ADR lifecycle, decision approval, and architectural change control |
+| [06 — Documentation Governance and Change Management](docs/06-documentation-governance-and-change-management.md) | Documentation ownership, review, versioning, and change management |
+| [07 — Documentation Registry](docs/07-documentation-registry.md) | Central inventory of project documents and their status |
 
-Architecture decisions are tracked separately so that proposed recommendations are not confused with formally accepted decisions.
+### Architecture Decision Records
+
+Individual Architecture Decision Records are maintained in [`docs/adr/`](docs/adr/README.md).
+
+The ADR registry identifies decision topics, priorities, dependencies, and current statuses.
+
+The repository currently contains six individual ADR documents:
+
+- GENI-ADR-001 — Event-Centric Intelligence Architecture
+- GENI-ADR-002 — Article Deduplication and Event Matching
+- GENI-ADR-006 — Provider-Independent LLM Execution Architecture
+- GENI-ADR-008 — Evidence Provenance and Uncertainty Representation
+- GENI-ADR-011 — Event Identity, Matching, Continuation, Merging, and Splitting
+- GENI-ADR-013 — News Content Access, Full-Text Retention, Licensing, and Republishing
+
+The existence or publication of an ADR does not imply that its proposal has been formally accepted.
+
+Decision status and implementation status must be checked separately in the individual ADR and registry.
+
+### Technical Reference Material
+
+Generic Agent Template material is maintained under:
+
+[`docs/references/agent-template/`](docs/references/agent-template/README.md)
+
+These documents are reference material. They do not automatically impose implementation requirements on the product.
 
 ## 8. Current Project Status
 
-The repository currently establishes the initial project documentation and architecture baseline.
+The repository establishes the initial product, architecture, data design, implementation planning, and documentation governance baseline.
 
-The project is in the architecture design and review stage.
+The project is currently in the architecture design and review stage. The documentation is published as a proposed design baseline and remains subject to review, reconciliation, and formal architectural decisions.
 
 The following items should not be assumed to be finalized or implemented:
 
@@ -156,9 +184,11 @@ The following items should not be assumed to be finalized or implemented:
 
 These decisions and implementation details will be established through the relevant specifications, implementation work, and Architecture Decision Records.
 
+A published document is not necessarily an accepted architectural decision. An accepted decision is not necessarily implemented. These states must remain distinct throughout the project lifecycle.
+
 ## 9. Repository Structure
 
-The current documentation structure is:
+The current documentation structure in the shared repository is:
 
 ```text
 global-economic-news-intelligence/
@@ -166,18 +196,28 @@ global-economic-news-intelligence/
 ├── README.md
 │
 └── docs/
+    │
     ├── README.md
+    │
     ├── 01-product-and-system-architecture.md
     ├── 02-component-architecture-and-interfaces.md
     ├── 03-data-model-and-storage-design.md
     ├── 04-implementation-plan-and-roadmap.md
     ├── 05-architecture-decision-records.md
+    ├── 06-documentation-governance-and-change-management.md
+    ├── 07-documentation-registry.md
     │
     ├── adr/
     │   ├── README.md
     │   ├── adr-template.md
+    │   │
     │   └── decisions/
-    │       └── GENI-ADR-001-event-centric-intelligence-architecture.md
+    │       ├── GENI-ADR-001-event-centric-intelligence-architecture.md
+    │       ├── GENI-ADR-002-article-deduplication-and-event-matching.md
+    │       ├── GENI-ADR-006-provider-independent-llm-execution-architecture.md
+    │       ├── GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md
+    │       ├── GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md
+    │       └── GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md
     │
     └── references/
         └── agent-template/
@@ -186,7 +226,7 @@ global-economic-news-intelligence/
             └── agent-template-implementation-specification.md
 ```
 
-This tree describes the documented repository structure and may evolve as implementation begins.
+This tree reflects the documented structure of the repository at the time of this revision. It must be updated when files or directories are added, moved, renamed, or removed.
 
 ## 10. Development and Contribution
 
@@ -209,6 +249,8 @@ Contributions should prioritize:
 - Evidence traceability.
 - Security and responsible handling of source content.
 - Measurable quality and evaluation criteria.
+
+Documentation changes must follow the project's documentation governance and change-management rules.
 
 ## 11. Responsible Intelligence and Limitations
 

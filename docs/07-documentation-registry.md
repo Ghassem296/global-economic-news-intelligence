@@ -2,130 +2,235 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-17  
-**Registry Scope:** Documentation in the local working tree and the `main` branch  
+**Registry Scope:** Local Working Tree and GitHub `main` branch  
 **Language:** English
 
 ---
 
 ## 1. Purpose
 
-This document provides the central inventory of project documentation.
+This document provides the central inventory of controlled project documentation.
 
-It identifies controlled documentation files, their locations, document identifiers, versions, lifecycle statuses, publication states, and relationships.
+It identifies documentation files, their locations, document identifiers, versions, lifecycle statuses, publication states, and relationships.
 
 The registry is intended to:
 
-- Provide a reliable overview of project documentation.
-- Distinguish locally available files from files recorded in the Git repository.
+- Provide a reliable overview of all project documentation.
+- Distinguish locally available files from committed and published files.
 - Track document approval and review status.
 - Identify missing, outdated, or inconsistent documentation.
 - Support cross-document impact analysis.
+- Track planned documentation that has not yet been created.
 - Provide a starting point for periodic documentation reviews.
+- Support controlled documentation maintenance as the project evolves.
 
 This registry records documentation status. It does not independently approve any document or architectural decision.
 
 ## 2. Registry Authority and Scope
 
-The GitHub repository is the authoritative source for published documentation.
+### 2.1 Repository Information
 
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Branch:** `main`  
 **Documentation Root:** `docs/`
 
-This registry distinguishes two repository states:
+The GitHub repository is the authoritative location for published project documentation.
 
-- **Working Tree:** Files currently available in the local project directory, including modified and untracked files.
-- **HEAD:** Files recorded in the latest local Git commit on the inspected branch.
+The registry must distinguish the following states.
 
-A file present in the Working Tree is not necessarily present in HEAD or published to GitHub.
+| State | Definition |
+|---|---|
+| Planned | The document topic has been identified, but no document file is available |
+| Locally Available | The file exists in the local Working Tree |
+| Modified | A tracked file has local changes not yet committed |
+| Untracked | A local file is not yet recorded in the current Git commit |
+| Committed | The file is recorded in the relevant Git commit |
+| Published | The file is available in the designated GitHub repository and branch |
 
-A modified tracked file is already part of the repository history, but its current local changes are not published until committed and pushed.
+### 2.2 Working Tree and Repository State
 
-The registry must be updated whenever a controlled document is added, removed, renamed, materially revised, approved, rejected, or superseded.
+The following concepts must not be confused:
 
-A draft prepared outside the repository must not be listed as a repository file.
+**Working Tree**
 
-## 3. Status Definitions
+Files currently available in the local project directory, including modified and untracked files.
 
-The following lifecycle statuses are used in this registry.
+**HEAD**
+
+Files recorded in the latest local Git commit on the inspected branch.
+
+**Remote Branch**
+
+Files recorded in the corresponding branch on GitHub.
+
+**Published Documentation**
+
+Files available in the designated GitHub repository and branch.
+
+A file present in the Working Tree is not necessarily committed or published.
+
+A locally modified file may have a published baseline while its latest changes remain unpublished.
+
+A document may be published while its lifecycle status remains Proposed or Under Review.
+
+### 2.3 Registry Snapshot
+
+Every inventory snapshot must identify:
+
+- Inspection date.
+- Repository and branch.
+- Local branch and commit, when available.
+- Remote branch and commit, when available.
+- Whether the Working Tree was inspected.
+- Any limitations affecting the inventory.
+
+Registry findings describe the inspected state only.
+
+They must be refreshed before formal approval, major implementation milestones, or repository publication.
+
+## 3. Document Status Definitions
+
+Lifecycle status and repository publication status are separate attributes.
+
+### 3.1 General Document Lifecycle
 
 | Status | Meaning |
 |---|---|
 | Accepted | Explicitly approved by the Project Owner |
-| Draft — Under Architecture Review | Published draft awaiting architecture review |
-| Draft — Under Documentation Review | Published draft awaiting documentation review |
-| Proposed | Proposal awaiting approval |
-| Proposed — Pending Project Owner Approval | Document prepared but awaiting explicit Project Owner approval |
-| Reference | Supporting material, not an approved project specification |
-| Superseded | Replaced by a later approved document |
+| Draft — Under Architecture Review | Draft undergoing architecture review |
+| Draft — Under Documentation Review | Draft undergoing documentation review |
+| Proposed | Proposal awaiting review or approval |
+| Proposed — Pending Project Owner Approval | Document prepared and awaiting explicit Project Owner approval |
+| Rejected | Proposal formally rejected |
+| Superseded | Replaced by a newer approved document |
 | Retired | No longer applicable |
 
-Lifecycle status and repository publication status are separate attributes.
+### 3.2 ADR Decision Status
 
-For example, a document can be locally available, not yet committed, and still have the lifecycle status Proposed.
+Individual ADRs use their own decision lifecycle.
 
-The status recorded here must match the document's actual metadata and approval evidence.
+| Status | Meaning |
+|---|---|
+| Proposed | Decision recommendation awaiting approval |
+| Accepted | Decision formally approved |
+| Rejected | Decision formally rejected |
+| Superseded | Decision replaced by a later accepted ADR |
+| Withdrawn | Proposal withdrawn before acceptance |
+
+The ADR governance document, `docs/05-architecture-decision-records.md`, defines the authoritative ADR lifecycle and transition rules.
+
+### 3.3 Supporting Material Classification
+
+The following are document classifications rather than approval statuses:
+
+- Reference
+- Template
+- Index
+- Registry
+
+They identify the purpose of a file and do not imply formal architectural approval.
+
+### 3.4 Status Accuracy
+
+The status recorded in this registry must match the document's actual metadata and available approval evidence.
+
+The following statements are not equivalent:
+
+- A document exists.
+- A document is committed.
+- A document is published.
+- A document is reviewed.
+- A document is approved.
+- A decision has been implemented.
+
+Each must be tracked independently.
 
 ## 4. Core Documentation Inventory
 
-The following documents constitute the main product, architecture, data, planning, and architecture-governance specifications.
+The following inventory records the primary product, architecture, data, planning, and architectural governance documents.
 
-| Document ID | Title | Repository Path | Version | Lifecycle Status |
+The versions below represent the documented baseline recorded in the inspected registry information. They must be verified against the actual file headers during each inventory refresh.
+
+| Document ID | Title | Repository Path | Recorded Version | Lifecycle Status |
 |---|---|---|---|---|
-| GENI-ARCH-001 | Product & System Architecture | `docs/01-product-and-system-architecture.md` | 1.1 | Draft — Under Architecture Review |
-| GENI-ARCH-002 | Component Architecture & Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.1 | Draft — Under Architecture Review |
-| GENI-DATA-003 | Data Model & Storage Design | `docs/03-data-model-and-storage-design.md` | 1.2 | Draft — Under Architecture Review |
-| GENI-PLAN-004 | Implementation Plan & Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.1 | Draft — Under Architecture Review |
+| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.1 | Draft — Under Architecture Review |
+| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.1 | Draft — Under Architecture Review |
+| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.2 | Draft — Under Architecture Review |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.1 | Draft — Under Architecture Review |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.2 | Draft — Under Architecture Review |
 
-These identifiers, versions, and statuses were read from the actual document headers.
+**Important:** A proposed revision prepared during documentation review does not change the published version until the revised file is actually committed and published.
 
-## 5. Documentation Governance and Index Files
+## 5. Documentation Governance and Index Inventory
 
-| Document | Document ID | Repository Path | Version | Lifecycle Status |
+| Document ID | Document | Repository Path | Recorded Version | Lifecycle Status |
 |---|---|---|---|---|
-| Documentation Governance and Change Management | GENI-GOV-006 | `docs/06-documentation-governance-and-change-management.md` | 1.0 | Proposed — Pending Project Owner Approval |
-| Documentation Registry | GENI-GOV-007 | `docs/07-documentation-registry.md` | 1.1 | Proposed — Pending Project Owner Approval |
-| Documentation Index | GENI-DOC-INDEX-001 | `docs/README.md` | 1.5 | Draft — Under Documentation Review |
-| ADR Registry | GENI-ADR-REGISTRY-001 | `docs/adr/README.md` | 1.5 | Draft — Under Documentation Review |
-| ADR Template | N/A | `docs/adr/adr-template.md` | 1.0 | Template |
+| GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.0 | Proposed — Pending Project Owner Approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.1 | Proposed — Pending Project Owner Approval |
+| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.5 | Draft — Under Documentation Review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.5 | Draft — Under Documentation Review |
+| N/A | ADR Template | `docs/adr/adr-template.md` | 1.0 | Template |
 
-The ADR Registry is an index for individual decision records. Its existence does not mean that all listed or proposed architectural decisions are accepted.
+The version and lifecycle information must be refreshed from the actual document headers.
 
-The ADR template is a reusable document template rather than an architectural decision.
+### 5.1 Document Responsibilities
 
-Documents 06 and 07 are available in the local Working Tree but are not yet recorded in HEAD.
+The following authority boundaries apply:
+
+| Document | Authoritative Responsibility |
+|---|---|
+| `docs/README.md` | Documentation navigation, reading order, and document descriptions |
+| `docs/05-architecture-decision-records.md` | ADR governance policy |
+| `docs/06-documentation-governance-and-change-management.md` | General documentation governance and change control |
+| `docs/07-documentation-registry.md` | Central inventory of all controlled project documents |
+| `docs/adr/README.md` | ADR topic inventory and individual ADR tracking |
+| `docs/adr/adr-template.md` | Standard ADR structure |
+
+These documents must reference one another without maintaining conflicting inventories or policies.
 
 ## 6. Architecture Decision Records Inventory
 
-The following six individual ADR files are available in the local `docs/adr/decisions/` directory.
+The ADR registry and individual ADR files are the authoritative sources for ADR details.
 
-| ADR ID | Title | Repository Path | Version | Lifecycle Status | Local File | In HEAD |
-|---|---|---|---|---|---|---|
-| GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.0 | Proposed | Yes | Yes |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.0 | Proposed | Yes | No |
-| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.0 | Proposed | Yes | No |
-| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.0 | Proposed | Yes | No |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.0 | Proposed | Yes | No |
-| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.0 | Proposed | Yes | No |
+The following six individual ADRs were recorded in the inspected local inventory.
 
-### 6.1 Current ADR Status
+| ADR ID | Title | Repository Path | Version | Lifecycle Status |
+|---|---|---|---|---|
+| GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.0 | Proposed |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.0 | Proposed |
+| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.0 | Proposed |
+| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.0 | Proposed |
+| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.0 | Proposed |
+| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.0 | Proposed |
 
-Six individual ADR files are currently available in the local Working Tree.
+### 6.1 ADR Publication and Availability
 
-Only `GENI-ADR-001` is recorded in the inspected HEAD commit.
+The inspected inventory recorded the following state:
 
-The other five ADR files are locally prepared and await repository publication.
+- Six individual ADR files were available in the local Working Tree.
+- `GENI-ADR-001` was recorded in the inspected repository commit.
+- Five additional ADR files were locally prepared but not recorded in that inspected commit.
+- All six ADRs had the lifecycle status Proposed.
+- None of the six represented a formally accepted architectural decision.
 
-All six ADRs currently have the lifecycle status Proposed.
+The repository state must be rechecked before relying on these publication findings.
 
-None of these statuses represents Project Owner approval.
+### 6.2 ADR Governance Rules
 
-An ADR must not be treated as an accepted architectural decision until explicit approval has been recorded.
+- Every ADR must have a unique identifier.
+- Every ADR must have an individual lifecycle status.
+- Proposed ADRs must not be treated as accepted decisions.
+- Publication does not imply acceptance.
+- Acceptance does not automatically imply implementation.
+- Superseded and withdrawn decisions must remain traceable.
+- ADR changes must be reflected in the ADR registry.
+- Material changes to accepted decisions require a new ADR.
+
+The ADR registry must also track planned ADR topics that do not yet have individual files.
 
 ## 7. Reference Documentation Inventory
 
@@ -133,44 +238,61 @@ Reference materials provide supporting architectural or implementation context.
 
 They are not automatically binding project specifications.
 
-The following reference files were identified in the documentation inventory:
-
 | Title | Repository Path | Classification |
 |---|---|---|
 | Agent Template Reference Guide | `docs/references/agent-template/README.md` | Reference |
 | Agent Template Architecture | `docs/references/agent-template/agent-template-architecture.md` | Reference |
 | Agent Template Implementation Specification | `docs/references/agent-template/agent-template-implementation-specification.md` | Reference |
 
-Reference material may inform project design, but project-specific requirements and accepted decisions must be documented in the appropriate authoritative project documents.
+Reference material may inform project design, but product-specific requirements and accepted decisions must be documented in the appropriate authoritative project documents.
 
-## 8. Locally Prepared Documents Pending Repository Publication
+## 8. Planned Documentation Topics
 
-The following files are available in the local Working Tree but are not recorded in the inspected HEAD commit.
+Planned documentation must be tracked separately from existing files.
 
-| Document ID | Title | Intended Repository Path | Version | Lifecycle Status |
-|---|---|---|---|---|
-| GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.0 | Proposed — Pending Project Owner Approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.1 | Proposed — Pending Project Owner Approval |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.0 | Proposed |
-| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.0 | Proposed |
-| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.0 | Proposed |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.0 | Proposed |
-| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.0 | Proposed |
+A planned topic does not represent an existing document.
 
-These files exist locally; they must not be described as published repository documents until they have been committed and pushed.
+Potential future documents include:
 
-Publication does not automatically imply approval. Each document retains its own lifecycle status and approval requirements.
+### 8.1 Product and Domain Specifications
+
+- Event Intelligence and Correlation Specification.
+- News Sources, Content Acquisition, and Rights Policy.
+- Economic Taxonomy Specification.
+- Evidence and Claim Validation Specification.
+- Reporting and Publication Specification.
+
+### 8.2 Technical and Operational Specifications
+
+- API Specification.
+- Security and Threat Model.
+- Deployment and Operations Guide.
+- Testing and Evaluation Strategy.
+- Observability and Monitoring Specification.
+- Data Retention and Recovery Policy.
+
+### 8.3 Future Intelligence Capabilities
+
+- Audio Intelligence Architecture.
+- Video Intelligence Architecture.
+- Advanced Intelligence and Personalization Specification.
+
+These topics are candidates for future documentation.
+
+They must not be assigned final document identifiers or treated as approved deliverables until their scope and necessity have been reviewed.
+
+The ADR registry separately tracks architectural decision topics. ADR topics must not be confused with planned technical specification documents.
 
 ## 9. Document Dependency Overview
 
-The following relationships provide a high-level guide for impact analysis.
+The following relationships provide a high-level guide for change impact analysis.
 
 | Primary Document | Main Dependencies and Related Documents |
 |---|---|
 | GENI-ARCH-001 | GENI-ARCH-002, GENI-DATA-003, GENI-PLAN-004, relevant ADRs |
 | GENI-ARCH-002 | GENI-ARCH-001, GENI-DATA-003, relevant ADRs |
 | GENI-DATA-003 | GENI-ARCH-001, GENI-ARCH-002, relevant data and evidence ADRs |
-| GENI-PLAN-004 | All approved product and architecture specifications |
+| GENI-PLAN-004 | Approved product and architecture specifications |
 | GENI-GOV-005 | ADR Template, ADR Registry, individual ADRs |
 | GENI-GOV-006 | Documentation Index, Documentation Registry, all controlled documents |
 | GENI-GOV-007 | Documentation Index, Documentation Governance, ADR Registry, all controlled documents |
@@ -182,20 +304,23 @@ Specific dependencies must be verified during each change impact analysis.
 
 ## 10. Registry Maintenance Rules
 
-The registry must be maintained under the following rules.
+The registry must be maintained whenever the documentation set changes.
 
 ### 10.1 Adding a Document
 
 When a new controlled document is prepared or published:
 
 1. Assign or verify its Document ID.
-2. Confirm its repository path.
-3. Record its version.
-4. Record its actual lifecycle status.
-5. Record whether it exists locally and whether it is present in HEAD.
-6. Identify related documents.
-7. Add it to the appropriate registry section.
-8. Update the relevant documentation index.
+2. Confirm its official title.
+3. Confirm its repository path.
+4. Record its version.
+5. Record its actual lifecycle status.
+6. Record its local availability.
+7. Record its Git commit and publication state.
+8. Identify related documents.
+9. Add it to the appropriate registry section.
+10. Update the documentation index.
+11. Verify internal links.
 
 ### 10.2 Updating a Document
 
@@ -207,22 +332,30 @@ When an existing document changes:
 4. Update the registry when tracked metadata changes.
 5. Review dependent documents.
 6. Distinguish local modifications from committed and published changes.
+7. Verify that the document index remains accurate.
 
 ### 10.3 Renaming or Moving a Document
 
 When a document is moved or renamed:
 
-1. Preserve its Document ID.
+1. Preserve its Document ID unless a formal identity change is justified.
 2. Update its registry path.
 3. Update internal references and links.
 4. Verify that no broken references remain.
 5. Check the Git change history and publication state.
+6. Update the documentation index.
 
 ### 10.4 Retiring or Superseding a Document
 
 Do not remove historical records from the registry without explanation.
 
-Record the final status and the replacement document, if applicable.
+Record:
+
+- The final lifecycle status.
+- The reason for the change.
+- The replacement document, if applicable.
+- The date of the transition.
+- Relevant approval information.
 
 ### 10.5 Repository Publication
 
@@ -234,8 +367,14 @@ Before publication:
 4. Confirm that its lifecycle status is accurate.
 5. Review the complete Git diff.
 6. Obtain the required Project Owner authorization.
+7. Confirm that related registry and index updates are included.
 
-After publication, update the registry to reflect the committed repository state.
+After publication:
+
+- Verify that the file exists in the intended GitHub branch.
+- Update the publication state.
+- Update the registry snapshot.
+- Verify the published version and document metadata.
 
 Publication must never be interpreted as automatic architectural or project approval.
 
@@ -249,27 +388,71 @@ The registry must be reviewed:
 - Whenever a document is committed, published, renamed, or retired.
 - During periodic documentation consistency reviews.
 - Before starting a major implementation phase.
+- Before a formal documentation baseline is approved.
 
-A periodic review should verify that the registry matches both the actual local documentation inventory and the repository's committed state.
+A periodic review should verify that the registry matches:
+
+1. The actual local documentation inventory.
+2. The current local Git commit.
+3. The current remote GitHub branch.
+4. The metadata inside the actual document files.
+5. The relevant approval records.
 
 ## 12. Current Documentation Findings
 
-Based on the local Working Tree and the inspected HEAD commit on 2026-11-17:
+### 12.1 Snapshot Information
 
-1. Five primary product, architecture, data, planning, and architecture-governance documents are present locally and represented in the repository.
-2. `GENI-GOV-005` is currently at version 1.2 in the local Working Tree.
-3. `GENI-GOV-006` and `GENI-GOV-007` are present locally but are not recorded in HEAD.
-4. The Documentation Index is at version 1.5.
-5. The ADR Registry is at version 1.5 in the local Working Tree.
-6. The ADR template is present.
-7. Six individual ADR files are present locally.
-8. Only `GENI-ADR-001` is recorded in the inspected HEAD commit.
-9. `GENI-ADR-002`, `GENI-ADR-006`, `GENI-ADR-008`, `GENI-ADR-011`, and `GENI-ADR-013` are locally prepared but not yet recorded in HEAD.
-10. All six individual ADRs have the lifecycle status Proposed.
-11. Three Agent Template reference documents are listed in the reference inventory.
-12. This registry itself is locally prepared and is not yet recorded in HEAD.
+**Inspection Date:** 2026-11-17  
+**Repository:** `Ghassem296/global-economic-news-intelligence`  
+**Reference Branch:** `main`
 
-These findings describe the inspected snapshot. They must be refreshed before any later approval or publication.
+The following findings are based on the inspected repository content and previously recorded local Working Tree inventory.
+
+They are a snapshot, not permanent project facts.
+
+### 12.2 Core Documents
+
+Five primary product, architecture, data, planning, and architecture-governance documents are included in the documentation baseline.
+
+Their versions and statuses must be verified against their current file headers before approval or publication of a new registry snapshot.
+
+### 12.3 Governance Documents
+
+Documents 06 and 07 have individual files and are classified as Proposed — Pending Project Owner Approval.
+
+Their publication state must be checked independently from their lifecycle status.
+
+### 12.4 ADR Inventory
+
+The previously inspected local inventory identified six individual ADR files.
+
+All six were classified as Proposed.
+
+Only `GENI-ADR-001` was recorded in the inspected commit at that time.
+
+The other five were recorded as locally prepared files.
+
+This information must be refreshed before claiming that any of these files are currently unpublished.
+
+### 12.5 Documentation Index and ADR Registry
+
+The Documentation Index and ADR Registry have their own versions and lifecycle statuses.
+
+Their inventories must be reconciled with this central registry.
+
+### 12.6 Snapshot Limitations
+
+The findings above must not be treated as a substitute for a fresh Git and repository inspection.
+
+Before approving this registry, verify:
+
+- Current local branch and Working Tree status.
+- Current local HEAD.
+- Current remote `main` branch.
+- Actual file availability.
+- Actual document headers.
+- Current ADR file availability.
+- Current publication and approval states.
 
 ## 13. Acceptance Criteria
 
@@ -279,11 +462,14 @@ This registry may be considered ready for operational adoption when:
 2. All listed repository paths are verified.
 3. Document identifiers, versions, and lifecycle statuses match the actual files.
 4. Local file availability and committed repository availability are clearly distinguished.
-5. Unpublished local files are clearly separated from documents recorded in HEAD.
-6. Cross-document references are reviewed.
-7. The registry maintenance process is established.
-8. The documentation index references this registry.
-9. The inventory is checked again before publication.
+5. Unpublished local files are clearly separated from published documents.
+6. ADR statuses match the individual ADR files.
+7. Cross-document references are reviewed.
+8. The registry maintenance process is established.
+9. The documentation index references this registry.
+10. The inventory is checked again before publication.
+11. The snapshot date and inspected repository state are recorded.
+12. No document is incorrectly represented as approved, published, or implemented.
 
 ## 14. Final Decision
 
@@ -293,4 +479,10 @@ This registry may be considered ready for operational adoption when:
 
 **Final Approval:** Pending explicit Project Owner approval.
 
-This registry is an inventory and tracking mechanism. It does not replace the individual documents, ADR governance, or the Project Owner's approval authority.
+This registry is an inventory and tracking mechanism.
+
+It does not replace individual documents, ADR governance, documentation change management, or the Project Owner's approval authority.
+
+Every controlled document and architectural decision must retain its own lifecycle status, publication state, and approval history.
+
+**End of Document**

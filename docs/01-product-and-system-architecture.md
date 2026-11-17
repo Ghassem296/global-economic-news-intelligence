@@ -1,17 +1,17 @@
 # Global Economic News Intelligence
-## Product & System Architecture
+## Product and System Architecture
 
-**Document ID:** GENI-ARCH-001
-**Version:** 1.1
-**Status:** Draft — Under Architecture Review
-**Project:** Global Economic News Intelligence
-**Last Updated:** 2026-11-16
+**Document ID:** GENI-ARCH-001  
+**Version:** 1.2  
+**Status:** Draft — Under Architecture Review  
+**Project:** Global Economic News Intelligence  
+**Last Updated:** 2026-11-17
 
 ---
 
 ## 1. Purpose
 
-This document defines the product architecture and high-level system design of Global Economic News Intelligence.
+This document defines the product architecture and high-level system design of Global Economic News Intelligence (GENI).
 
 The system collects international economic news, identifies related developments, correlates articles into events, evaluates their significance, and generates structured intelligence reports.
 
@@ -23,13 +23,13 @@ The initial product release focuses on text-based intelligence.
 
 Audio and video generation are future product capabilities and must not introduce unnecessary complexity into the initial architecture.
 
-This document establishes the architectural direction. Decisions that require formal approval through Architecture Decision Records (ADRs) remain provisional until their corresponding ADRs are accepted.
+This document establishes the proposed architectural direction. Architectural decisions requiring formal approval through Architecture Decision Records (ADRs) remain provisional until their corresponding ADRs are accepted.
 
 ## 2. Product Vision
 
 Global Economic News Intelligence is an automated economic news intelligence platform.
 
-It continuously monitors international news sources and transforms unstructured news content into structured, traceable, and useful economic intelligence.
+It monitors international news sources and transforms unstructured news content into structured, traceable, and useful economic intelligence.
 
 The platform should help users understand:
 
@@ -64,7 +64,7 @@ The initial release includes:
 - Evidence collection and source attribution.
 - Economic relevance assessment.
 - Economic impact analysis.
-- Importance ranking.
+- Importance assessment.
 - Event dossier generation.
 - Structured text reports.
 - Publication quality gates.
@@ -72,7 +72,7 @@ The initial release includes:
 - Review handling for reports that cannot be safely published automatically.
 - Basic monitoring, evaluation, and observability.
 
-The initial release must be operationally simple and must not require audio, video, advanced personalization, or mandatory cloud infrastructure.
+The initial release must remain operationally simple and must not require audio, video, advanced personalization, or mandatory cloud infrastructure.
 
 ### 3.2 Future Product Releases
 
@@ -103,7 +103,7 @@ The initial release must be operationally simple and must not require audio, vid
 
 These capabilities must not become mandatory dependencies of the initial release.
 
-Product releases describe user-facing capability increments. Development phases describe engineering execution steps. These two concepts must not be treated as interchangeable.
+Product releases describe user-facing capability increments. Development phases describe engineering execution steps. These concepts must not be treated as interchangeable.
 
 ## 4. Product Principles
 
@@ -123,7 +123,7 @@ The system must maintain a clear distinction between:
 - Event history.
 - Event analysis versions.
 
-Event identity must remain stable when additional articles or analytical updates are associated with the event.
+Event identity must remain stable when additional articles or analytical updates are associated with an event.
 
 ### 4.2 Economic Priority
 
@@ -143,7 +143,7 @@ Political and geopolitical developments are included when they affect or may mat
 
 ### 4.3 Source Traceability
 
-Every factual statement in a published report must be traceable to one or more source articles or evidence records, to the extent supported by the available source material.
+Every factual statement in a published report must be traceable to one or more source articles or evidence records, to the extent supported by available source material.
 
 The system must preserve:
 
@@ -161,7 +161,7 @@ A generated statement must not be presented as an independently verified fact me
 
 ### 4.4 Controlled Automation
 
-The target operating mode is automatic processing and publication.
+The target operating mode is automatic processing and publication for reports that satisfy defined requirements.
 
 Automation does not mean treating every generated conclusion as verified.
 
@@ -192,7 +192,7 @@ Its processing stages, state transitions, and publication rules must be explicit
 
 LLM-based reasoning is used for tasks that benefit from language understanding and analytical synthesis.
 
-General-purpose autonomous agent behavior must not be introduced without a clearly justified product requirement.
+General-purpose autonomous agent behavior must not be introduced without a clearly justified product requirement and an accepted architectural decision.
 
 ## 5. System Architecture
 
@@ -211,7 +211,12 @@ The system consists of the following major subsystems:
 11. Scheduling and Workflow Orchestration
 12. Platform Services
 
-Subsystem boundaries must remain explicit. Detailed contracts and data ownership are defined in the Component Architecture and Data Model documents.
+Subsystem boundaries must remain explicit.
+
+Detailed component responsibilities, interface contracts, and data ownership are defined in:
+
+- `docs/02-component-architecture-and-interfaces.md`
+- `docs/03-data-model-and-storage-design.md`
 
 ### 5.1 Source Management
 
@@ -268,9 +273,17 @@ Acquisition must distinguish between:
 
 Technical accessibility does not imply permission to store, reproduce, or republish content.
 
-The system must follow applicable source terms, licenses, and content restrictions. Full-text acquisition and retention policies require a separate documented decision.
+The system must follow applicable source terms, licenses, and content restrictions.
 
-External URL fetching must use defensive controls against server-side request forgery (SSRF), unsafe redirects, private network access, oversized responses, and excessive connection times.
+Full-text acquisition and retention policies are governed by the relevant content-access ADR and applicable project requirements.
+
+External URL fetching must use defensive controls against:
+
+- Server-side request forgery (SSRF).
+- Unsafe redirects.
+- Private network access.
+- Oversized responses.
+- Excessive connection times.
 
 ### 5.3 News Processing
 
@@ -291,11 +304,13 @@ Responsibilities:
 
 Article deduplication and event matching are separate operations.
 
-Article deduplication identifies repeated or substantially equivalent publications. Event matching determines whether different articles describe the same real-world development.
+Article deduplication identifies repeated or substantially equivalent publications.
 
-The processing system must support multilingual source content from the initial release. Language identification and preservation of the original content are initial-release requirements.
+Event matching determines whether different articles describe the same real-world development.
 
-Translation may be used as an intermediate processing aid, but translated text must not silently replace the original source content.
+The processing system must support multilingual source content from the initial release. Language identification and preservation of original content are initial-release requirements.
+
+Translation may be used as an intermediate processing aid, but translated text must not silently replace original source content.
 
 ### 5.4 Event Intelligence
 
@@ -312,7 +327,7 @@ Responsibilities:
 
 Event matching must not rely exclusively on exact text similarity or an LLM judgment.
 
-The intended architecture is a hybrid approach combining:
+The proposed approach is a hybrid method combining:
 
 - Deterministic matching rules.
 - Entity and attribute comparisons.
@@ -328,7 +343,7 @@ Likewise, similar wording alone must not cause unrelated developments to be merg
 
 Event matching decisions must preserve the ability to review ambiguous cases and correct earlier associations.
 
-The detailed event identity, matching, merge, split, and semantic retrieval policy belongs in the Event Intelligence and Correlation Specification and the corresponding ADRs.
+Detailed event identity, matching, continuation, merging, and splitting policies are governed by the corresponding ADRs and the component and data-model specifications.
 
 ### 5.5 Event Management
 
@@ -407,7 +422,9 @@ The layer must not own economic news domain logic, event identity, article proce
 
 LLM outputs are untrusted until validated against the required schema and business rules.
 
-Autonomous tool execution, general conversation memory, MCP integration, and conversational agent loops are not initial-release requirements. They may be introduced only through a documented requirement and an accepted architectural decision.
+Autonomous tool execution, general conversation memory, MCP integration, and conversational agent loops are not initial-release requirements.
+
+They may be introduced only through a documented requirement and an accepted architectural decision.
 
 ### 5.8 Analysis and Scoring
 
@@ -427,7 +444,7 @@ Importance measures the overall significance of an event.
 
 Economic impact describes the nature and potential magnitude of its economic consequences.
 
-Analysis must distinguish at least three categories of market and economic impact:
+The system must distinguish at least three categories of market and economic impact:
 
 1. **Observed Market Reaction:** A reaction supported by actual market data available to the system.
 2. **Source-Reported Reaction:** A reaction reported by a news source but not independently verified by integrated market data.
@@ -468,7 +485,7 @@ Responsibilities:
 
 Reports must be reproducible to the extent supported by retained inputs, model configuration, prompts, and processing metadata.
 
-A revised report must create a new version rather than silently overwriting the previously generated content.
+A revised report must create a new version rather than silently overwriting previously generated content.
 
 ### 5.10 Publication and Delivery
 
@@ -498,9 +515,13 @@ The publication policy must support:
 
 A held report must be associated with a review record or queue entry containing its status, reason, timestamps, and eventual outcome.
 
-The initial implementation must define who or what consumes the review queue. If no human reviewer is available, the system must not silently publish held content.
+The initial implementation must define who or what consumes the review queue.
 
-Published reports must support correction, supersession, and withdrawal. Previous versions and publication history must remain traceable.
+If no authorized reviewer is available, the system must not silently publish held content.
+
+Published reports must support correction, supersession, and withdrawal.
+
+Previous versions and publication history must remain traceable.
 
 Delivery operations must be idempotent so that retries do not produce unintended duplicate publications.
 
@@ -674,9 +695,9 @@ The initial taxonomy includes:
 | Monetary Policy | Central banks, interest rates, inflation policy |
 | Financial Markets | Equities, bonds, currencies, credit, liquidity |
 | Macroeconomics | GDP, inflation, employment, growth, recession |
-| Trade & Industry | International trade, tariffs, manufacturing, supply chains |
-| Energy & Resources | Oil, gas, electricity, commodities, critical minerals |
-| Fiscal Policy & Public Debt | Government budgets, taxation, sovereign debt |
+| Trade and Industry | International trade, tariffs, manufacturing, supply chains |
+| Energy and Resources | Oil, gas, electricity, commodities, critical minerals |
+| Fiscal Policy and Public Debt | Government budgets, taxation, sovereign debt |
 | Geopolitical Economic Risk | Sanctions, conflict, political instability affecting economies |
 
 The taxonomy must be extensible.
@@ -719,7 +740,7 @@ The system must distinguish measured data from qualitative analysis and model-ge
 
 Scoring must have a documented scale, methodology, version, and evaluation process.
 
-Scores must not imply a level of precision unsupported by the available evidence.
+Scores must not imply a level of precision unsupported by available evidence.
 
 Missing information must be represented as unknown or unavailable rather than automatically converted to zero.
 
@@ -751,7 +772,7 @@ State transitions must be validated against an explicit transition policy.
 
 Event history must preserve relevant transitions, updates, corrections, and resolution information.
 
-The complete transition rules and event identity policy require formal specification.
+The complete transition rules and event identity policy are subject to the relevant ADRs and detailed specifications.
 
 ## 11. Publication Policy
 
@@ -787,6 +808,8 @@ A rejected report must retain its decision and reason for auditability.
 Published reports must support correction, supersession, and withdrawal.
 
 Automatic publication must never bypass security, quality, or provenance requirements.
+
+The detailed publication, quality-gate, human-review, correction, and withdrawal policies must remain consistent with their corresponding ADRs and governance documents.
 
 ## 12. Report Structure
 
@@ -833,7 +856,7 @@ Reasons include:
 - Suitability for an initial single-instance deployment.
 - Simple backup and migration workflows.
 
-The SQLite decision remains subject to formal approval through its ADR.
+The SQLite decision remains subject to formal architectural approval.
 
 Persistence must be accessed through repository interfaces.
 
@@ -946,7 +969,9 @@ Evaluation datasets, acceptance thresholds, and regression procedures must be do
 
 Development phases describe engineering execution and are separate from product release numbers.
 
-The detailed development roadmap is maintained in the Implementation Plan and Development Roadmap document.
+The detailed development roadmap is maintained in:
+
+`docs/04-implementation-plan-and-roadmap.md`
 
 The high-level implementation sequence is:
 
@@ -1056,24 +1081,42 @@ The implementation must preserve these constraints:
 - Full-text acquisition and storage must respect applicable rights and restrictions.
 - Advanced infrastructure is deferred until justified by requirements.
 
+These constraints describe the current proposed architecture. Any change to an accepted architectural constraint must follow the applicable ADR and documentation governance processes.
+
 ## 18. Architecture Governance and Open Decisions
 
-The following decisions must be formally reviewed and recorded through ADRs before the corresponding implementation choices are treated as approved:
+Architectural decisions must be documented and tracked through the ADR governance process.
 
-1. Workflow-first architecture and the scope of the shared LLM execution layer.
-2. Event identity, matching, creation, merging, and splitting.
-3. Article deduplication and event correlation separation.
-4. Semantic search, embedding generation, and vector storage.
-5. News acquisition, full-text access, content retention, and licensing.
-6. Publication quality gates, human review, correction, and withdrawal.
-7. Market data integration and market-impact classification.
-8. Persistence technology, SQLite concurrency, and migration strategy.
-9. Recovery, idempotency, and workflow execution guarantees.
-10. LLM budgets, cost tracking, and evaluation methodology.
+The following individual ADR documents are currently published in the project documentation set:
+
+| ADR | Subject | Current Status |
+|---|---|---|
+| GENI-ADR-001 | Event-Centric Intelligence Architecture | Proposed |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | Proposed |
+| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | Proposed |
+| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | Proposed |
+| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | Proposed |
+| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | Proposed |
+
+The project has identified eighteen architectural decision topics. Six currently have individual ADR documents. The remaining twelve topics are tracked in the ADR Registry and do not yet have individual decision documents.
+
+All six published ADRs currently have the status Proposed. None must be treated as an accepted architectural decision until explicit approval is recorded.
+
+Other architectural topics requiring formal decisions include:
+
+- Semantic search, embedding generation, and vector storage.
+- Publication quality gates and automated publishing policy.
+- Human review, corrections, and withdrawals.
+- Persistence technology, SQLite concurrency, and migration strategy.
+- Recovery, idempotency, and workflow execution guarantees.
+- Market data integration and market-impact classification.
+- LLM budgets, cost tracking, and evaluation methodology.
+
+The complete list of decision topics and their current tracking status is maintained in:
+
+`docs/adr/README.md`
 
 Until the relevant ADRs are accepted, related architectural statements in this document represent the current proposed direction rather than formally approved implementation decisions.
-
-The ADR registry is maintained in `docs/adr/README.md`.
 
 ## 19. Final Architecture Statement
 
