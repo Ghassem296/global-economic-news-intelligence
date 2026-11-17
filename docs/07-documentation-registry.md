@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-17  
@@ -196,7 +196,7 @@ These documents must reference one another without maintaining conflicting inven
 
 The ADR registry and individual ADR files are the authoritative sources for ADR details.
 
-The following six individual ADRs were recorded in the inspected local inventory.
+The following six individual ADRs are published in the inspected GitHub `main` branch.
 
 | ADR ID | Title | Repository Path | Version | Lifecycle Status |
 |---|---|---|---|---|
@@ -209,15 +209,16 @@ The following six individual ADRs were recorded in the inspected local inventory
 
 ### 6.1 ADR Publication and Availability
 
-The inspected inventory recorded the following state:
+The inspected GitHub `main` branch contains all six individual ADR files listed above.
 
-- Six individual ADR files were available in the local Working Tree.
-- `GENI-ADR-001` was recorded in the inspected repository commit.
-- Five additional ADR files were locally prepared but not recorded in that inspected commit.
-- All six ADRs had the lifecycle status Proposed.
-- None of the six represented a formally accepted architectural decision.
+- All six ADR files are published in the shared repository.
+- All six ADRs have the lifecycle status Proposed.
+- None of the six represents a formally accepted architectural decision.
+- The remaining twelve registered ADR topics do not have individual ADR files in the inspected repository snapshot.
 
-The repository state must be rechecked before relying on these publication findings.
+Publication status and decision status are independent. The presence of an ADR file in GitHub does not imply that its proposal has been accepted.
+
+This is a repository-only snapshot; the local Working Tree was not inspected.
 
 ### 6.2 ADR Governance Rules
 
@@ -406,9 +407,9 @@ A periodic review should verify that the registry matches:
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`
 
-The following findings are based on the inspected repository content and previously recorded local Working Tree inventory.
+The following findings are based exclusively on the GitHub `main` branch inspected on 2026-11-17. The local Working Tree was not inspected.
 
-They are a snapshot, not permanent project facts.
+They are a repository snapshot, not permanent project facts.
 
 ### 12.2 Core Documents
 
@@ -424,15 +425,11 @@ Their publication state must be checked independently from their lifecycle statu
 
 ### 12.4 ADR Inventory
 
-The previously inspected local inventory identified six individual ADR files.
+The inspected GitHub `main` branch contains six individual ADR files: `GENI-ADR-001`, `GENI-ADR-002`, `GENI-ADR-006`, `GENI-ADR-008`, `GENI-ADR-011`, and `GENI-ADR-013`.
 
-All six were classified as Proposed.
+All six are classified as Proposed. None is recorded as Accepted.
 
-Only `GENI-ADR-001` was recorded in the inspected commit at that time.
-
-The other five were recorded as locally prepared files.
-
-This information must be refreshed before claiming that any of these files are currently unpublished.
+The remaining twelve registered ADR topics do not have individual ADR files in this repository snapshot.
 
 ### 12.5 Documentation Index and ADR Registry
 
@@ -446,13 +443,13 @@ The findings above must not be treated as a substitute for a fresh Git and repos
 
 Before approving this registry, verify:
 
-- Current local branch and Working Tree status.
-- Current local HEAD.
-- Current remote `main` branch.
+- Current GitHub `main` branch and commit.
 - Actual file availability.
-- Actual document headers.
-- Current ADR file availability.
+- Actual document headers and versions.
+- Current ADR file availability and lifecycle statuses.
 - Current publication and approval states.
+
+A local Working Tree snapshot must be recorded separately if local publication status is relevant.
 
 ## 13. Acceptance Criteria
 
