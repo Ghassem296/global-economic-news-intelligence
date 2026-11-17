@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-17  
-**Registry Scope:** Local Working Tree and GitHub `main` branch  
+**Registry Scope:** Published GitHub `main` branch snapshot  
 **Language:** English
 
 ---
@@ -171,8 +171,8 @@ The versions below represent the documented baseline recorded in the inspected r
 
 | Document ID | Document | Repository Path | Recorded Version | Lifecycle Status |
 |---|---|---|---|---|
-| GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.1 | Proposed — Pending Project Owner Approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.4 | Proposed — Pending Project Owner Approval |
+| GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.5 | Proposed — Pending Project Owner Approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.6 | Draft — Under Documentation Review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.7 | Draft — Under Documentation Review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.0 | Template |
