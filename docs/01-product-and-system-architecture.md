@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -649,13 +649,13 @@ An article preserves source identity, publication metadata, collection metadata,
 
 Article identity is independent of event identity.
 
-### 7.3 ArticleRevision
+### 7.2 ArticleRevision
 
 Represents an immutable, meaningful observed version of an Article's published content.
 
 Each ArticleRevision belongs to exactly one Article and preserves the content/version metadata used by downstream extraction, evidence, and event matching. A material change to the publication creates a new revision; unchanged repeated collection does not. An EventMatchCase must reference the exact ArticleRevision it evaluates. Later revisions must not silently rewrite or reuse the earlier revision's cases, evidence spans, or decisions.
 
-### 7.2 Event
+### 7.3 Event
 
 Represents a real-world development or a connected sequence of developments.
 
@@ -671,7 +671,7 @@ An immutable EventMatchDecision records the authoritative outcome for one case. 
 
 ### 7.5 ArticleEventLink
 
-Represents an applied association between an ArticleRevision and an Event. Every link must reference the exact EventMatchDecision with outcome MATCH that authorized its creation.
+Represents an applied association between an ArticleRevision and an Event. Every link must reference the exact EventMatchCase and EventMatchDecision with outcome MATCH that authorized its creation.
 
 A link must not be created from a candidate score, a review comment, or a non-MATCH outcome. Corrections deactivate the previous link with an explicit superseding decision and preserve the original association history. An article revision may have multiple event links when separate matching cases justify them.
 
