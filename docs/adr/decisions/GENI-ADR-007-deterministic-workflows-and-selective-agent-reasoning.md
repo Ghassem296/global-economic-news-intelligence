@@ -164,7 +164,7 @@ A recommendation is not an approval. The authorized decision owner must explicit
 
 **Selected Alternative:** Pending formal approval  
 **Decision Status:** Proposed  
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
@@ -297,7 +297,7 @@ Any quantitative threshold must be grounded in representative datasets, operatio
 
 ### 12.2 Review Schedule
 **Review Date:** Not scheduled  
-**Review Owner:** Product Owner
+**Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
 A concrete multi-step task cannot be expressed cleanly through the workflow model. A bounded agent prototype demonstrates measurable benefit without weakening authority controls. Security or provider capabilities materially change.
