@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.18
+**Version:** 1.19
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -987,7 +987,7 @@ Historical event records must not be silently deleted or rewritten.
 - Every active ArticleEventLink references its EventMatchCase and effective MATCH decision.
 - Human corrections create successor decisions and preserve prior link history.
 - Merge inputs include the selected survivor and the single output is that same survivor; split operations create at least two distinct successor outputs.
-- Operation status/effect history is append-only; an applied identity change remains in reconciliation until required downstream work completes.
+- Operation status/effect history is append-only. `RECONCILIATION_REQUIRED` is the explicit operation status while the core identity effect is unknown or downstream reconciliation remains incomplete; an applied identity change remains in this state until all required downstream work completes.
 - No identity operation directly repoints/deletes ArticleEventLink; every replacement link is authorized by a successor EventMatchDecision.
 - False merges and event fragmentation are measured.
 
