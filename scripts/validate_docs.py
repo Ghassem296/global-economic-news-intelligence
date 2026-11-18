@@ -692,7 +692,7 @@ def validate_roadmap_document_inventory() -> None:
         while len(directory_stack) > depth + 1:
             directory_stack.pop()
         parent = directory_stack[: depth + 1]
-        full_path = "/".join(parent + [name])
+        full_path = "/".join(parent[1:] + [name])
         if is_directory:
             directory_stack = parent + [name]
         else:
