@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.9
+**Version:** 1.10
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -1120,7 +1120,7 @@ The system must preserve a correction or withdrawal history and maintain links b
 
 ### Exit Criteria
 
-- Reports retain event, article, analysis, and evidence references.
+- Reports retain event, exact ArticleRevision, analysis-version, and evidence references; later Article revisions do not change the provenance of an existing report.
 - Multi-event report scope is supported where required.
 - Reports distinguish facts from analysis.
 - Uncertainty is disclosed.
