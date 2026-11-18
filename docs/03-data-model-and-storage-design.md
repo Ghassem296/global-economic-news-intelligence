@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.29
+**Version:** 1.30
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1862,7 +1862,8 @@ Fields:
 - `channel`
 - `destination_reference`
 - `distribution_authorization_decision_id` — required exact effective authorization reference
-- `content_scope_fingerprint` — required deterministic fingerprint of the exact outbound content scope/payload; must match the referenced authorization decision
+- `content_scope_fingerprint` — required SHA-256 fingerprint of the versioned canonical ContentScopeManifest; must equal the referenced decision's `authorized_content_scope_fingerprint`.
+- `outbound_payload_sha256` — required SHA-256 digest of the exact serialized outbound request bytes immediately before dispatch; distinct from the content-scope fingerprint.
 - `idempotency_key`
 - `status`
 - `external_reference`
@@ -1943,8 +1944,8 @@ Fields:
 - `authorized_content_scope`
 - `decision` — `ALLOW`, `DENY`, or `REQUIRES_REVIEW`
 - `distribution_policy_version`
-- `authorized_content_scope_fingerprint` — required deterministic fingerprint of the exact content scope the decision permits
-- `rights_assessment_set_fingerprint` — required when source-derived content is included; fingerprint of the complete immutable DistributionAuthorizationRightsLink set
+- `authorized_content_scope_fingerprint` — required SHA-256 digest of the versioned canonical ContentScopeManifest
+- `rights_assessment_set_fingerprint` — required when source-derived content is included; SHA-256 digest of the complete immutable RightsAssessment reference set represented by DistributionAuthorizationRightsLink records
 - `idempotency_key` — required and unique within the exact report/recipient/destination authorization scope
 - `decided_by_type`
 - `decided_by_reference`
@@ -1959,10 +1960,12 @@ Constraints:
 - The decision is immutable; correction or revocation is represented by a successor decision (normally a DENY outcome) that supersedes the prior decision. The prior decision remains queryable and must not be edited.
 - `ALLOW` is valid only for the exact report version, recipient, destination, delivery mode, channel, and content scope it names.
 - The applicable content-rights assessment must authorize customer distribution of the relevant source-derived content; it does not replace recipient-specific authorization.
-- Dispatch must re-check that the referenced decision remains effective, unexpired, and allowed and that every linked RightsAssessment remains effective for its exact source-derived content scope.
+- Dispatch must re-check that the referenced decision remains effective, unexpired, and allowed; every linked RightsAssessment remains effective for its exact source-derived content scope; and every upstream permission dependency recorded in the DerivedArtifact provenance remains effective. Revocation, expiry, or material policy change invalidates the affected derived scope until ContentRightsService re-evaluates the complete dependency chain and issues a current allowed assessment. The prior decision remains immutable and cannot be revived.
 - An authorization decision is not evidence that delivery occurred.
 - An `ALLOW` decision for a composite report must link every source-derived content scope in its authorized payload to an exact `CUSTOMER_DISTRIBUTION` RightsAssessment with outcome `ALLOWED`. A missing, unknown, expired, revoked, denied, or review-required assessment prevents authorization of the affected scope. A reduced scope is permitted only when the restricted content is actually excluded and the reduced content-scope fingerprint is recorded.
-- The `rights_assessment_set_fingerprint` must be deterministically reproducible from the sorted immutable DistributionAuthorizationRightsLink set. The decision and all links are committed atomically.
+- The `authorized_content_scope_fingerprint` must be reproducible from the canonical ContentScopeManifest using RFC 8785 JCS, UTF-8, and SHA-256; set-valued arrays are sorted by stable identifiers before serialization.
+- The `rights_assessment_set_fingerprint` must be reproducible from the complete sorted immutable RightsAssessment reference set using the same canonicalization and hashing rules. The decision and all links are committed atomically.
+- The `DeliveryRecord.content_scope_fingerprint` must equal the authorized manifest fingerprint. `outbound_payload_sha256` records the exact serialized request bytes and must not be confused with the manifest fingerprint.
 
 ### 12.3.1 DistributionAuthorizationRightsLink
 
@@ -2485,6 +2488,7 @@ The following composite relationships must be enforced by database constraints w
 - Every EventIdentityOperationInput.expected_event_history_version must be checked against the exact input Event's current EventHistory version inside the core identity UnitOfWork transaction.
 - `DistributionAuthorizationDecision.report_id` must reference the exact immutable Report version it authorizes.
 - Every DistributionAuthorizationRightsLink must reference its parent DistributionAuthorizationDecision and an existing RightsAssessment whose operation is `CUSTOMER_DISTRIBUTION`, whose outcome is `ALLOWED`, and whose subject/content scope matches the link's typed scope reference.
+- Every source-derived manifest item must have complete typed provenance to the source/article revision and derived-artifact versions used to create it; each required upstream RightsAssessment must remain effective at dispatch, or the item must be excluded and a successor authorization decision created for the reduced manifest.
 - The DistributionAuthorizationDecision.rights_assessment_set_fingerprint must be reproducible from the exact linked set; source-derived content in its authorized scope cannot be omitted from that set.
 - `DeliveryRecord.distribution_authorization_decision_id` must reference an effective, unexpired `ALLOW` decision whose report, recipient, destination, delivery mode, channel, and content-scope fingerprint exactly match the DeliveryRecord and actual outbound payload. A `PUBLICATION_LINK` delivery must additionally reference a confirmed successful and currently effective PublicationRecord.
 - A link may be active only while its authorizing MATCH decision is the effective decision for that case.
