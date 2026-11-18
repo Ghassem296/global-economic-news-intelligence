@@ -48,6 +48,7 @@ class DocumentationValidatorTests(unittest.TestCase):
 
     def test_privacy_architecture_is_aligned_across_documents(self) -> None:
         validator.validate_privacy_specification_contract()
+        validator.validate_repository_inventory_alignment()
 
     def test_expected_adr_inventory_includes_adr_020(self) -> None:
         self.assertIn("GENI-ADR-020", validator.EXPECTED_ADR_IDS)
