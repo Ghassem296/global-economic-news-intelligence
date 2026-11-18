@@ -2202,8 +2202,6 @@ Method-level interface signatures and typed DTO schemas must be completed at the
 
 Future expansion must not compromise the simplicity, reliability, and explicit boundaries of the initial product release.
 
----
-
 ## 19. Privacy Domain and Execution Contracts
 
 This section operationalizes GENI-ADR-020 and GENI-PRIV-014. It remains proposed until the ADR and affected specifications are approved.
@@ -2227,5 +2225,9 @@ Before every provider request, SharedLLMExecutionLayer independently evaluates p
 ### 19.5 Ownership
 
 PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction lifecycle writes. Privacy policy administration owns ProcessingPurpose, PrivacyProcessingBasis, ProcessorRegister, InternationalTransferAssessment and PrivacyImpactAssessment. A restricted subject-linkage repository resolves DataSubjectReference. PersonalDataLineageRepository records processing-to-derived-artifact relationships. The coordinator issues domain commands; it does not bypass aggregate-owned writes. Privacy repositories are `PrivacyRequestRepository`, `PersonalDataLineageRepository`, `PrivacyPolicyRepository` and `DataSubjectReferenceRepository`; their ownership and transaction boundaries are mapped in Section 6.3. Physical tables and public transport remain open.
+
+---
+
+
 
 ---
