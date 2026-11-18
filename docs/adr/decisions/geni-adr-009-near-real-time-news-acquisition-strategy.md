@@ -3,9 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-009  
 **Title:** Near-Real-Time News Acquisition Strategy  
-**Version:** 0.2  
 **Status:** Proposed  
-**Priority:** P1  
+**Version:** 1.0  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -16,119 +15,137 @@
 
 ## 1. Context and Problem Statement
 
-The platform depends on heterogeneous news sources. They differ in update cadence, access mechanism, rate limits, reliability, terms of use, and latency. A uniform high-frequency polling strategy wastes resources and can violate source constraints; manual-only collection cannot support the intended monitoring workflow.
+Sources differ in update frequency, access method, rate limits, publication timestamp quality, reliability, and latency. Fixed high-frequency polling wastes requests and may violate source restrictions, while manual or batch-only collection may miss time-sensitive economic developments. The platform needs measurable freshness without claiming that all sources provide real-time or complete coverage.
 
-This ADR is a proposal for formal review. It does not approve an implementation or override another decision. The existence of this document does not imply acceptance.
+This ADR is a proposal for formal review; it does not approve a production implementation.
 
 ## 2. Decision Question
 
-Which acquisition model provides useful freshness while preserving source-specific access rules, checkpoint correctness, and operational isolation?
+How should sources be acquired with useful freshness while respecting source capabilities, access rights, rate limits, reliability, and operating cost?
 
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-
-- Source-specific access capability and contractual restrictions.
-- Freshness requirements must be measurable per source rather than expressed as an unsupported global real-time promise.
-- Incremental and idempotent ingestion.
-- Failure isolation, rate-limit compliance, and observability.
-- Low operational complexity for the initial deployment.
+- Source-specific acquisition adapters and configurable schedules.
+- Use authorized push/change notifications where provider semantics are reliable; otherwise use polling.
+- Persist checkpoints, pagination state, and collection provenance.
+- Record publication, observation, retrieval, and processing timestamps independently.
+- Apply bounded retries, backoff, per-source limits, and replay/reconciliation where supported.
+- Detect delayed, revised, missing, and duplicated publications without losing source identity.
 
 ### 3.2 Technical Constraints
-
-- Domain contracts must not depend on a specific external provider unless explicitly approved.
-- All relevant policies, schemas, and derived outputs must be versioned.
-- Critical state transitions must be auditable and testable.
-- Missing or unavailable information must remain explicit.
+- No universal polling interval or freshness guarantee is assumed.
+- RSS, APIs, web pages, and webhooks have different permissions and delivery semantics.
+- Collection must be idempotent and resumable.
+- Rights restrictions defined by ADR-013 apply before retrieval and retention.
 
 ### 3.3 Business and Product Constraints
-
-- The initial product must remain operationally simple.
-- Implementation sequencing must follow documented dependencies.
-- Product claims must not exceed the capability or evidence actually available.
+- The initial product remains text-based economic intelligence.
+- The architecture must support incremental delivery and traceable evaluation.
+- Proposed decisions remain provisional until explicitly approved.
 
 ### 3.4 Security and Privacy Constraints
-
-- External source content and model output are untrusted input.
-- Credentials and sensitive operational data must not be exposed in ordinary logs.
-- Access to privileged actions must follow least-privilege authorization.
+- External source content and generated model output are untrusted until validated.
+- Least-privilege access, secret protection, and explicit external permissions are mandatory.
+- Operational logs must avoid unnecessary protected content.
 
 ### 3.5 Operational and Cost Constraints
-
-- Concurrency, retries, resource usage, and external service calls must be bounded.
-- Operational metrics must make failure and uncertainty visible.
-- Numeric thresholds must be based on measurements or explicit policy approval.
+- Avoid unnecessary distributed infrastructure in the initial release.
+- Measure operational complexity and cost against expected workload.
+- Timeouts, retries, recovery, and observability must be explicit.
 
 ### 3.6 Legal and Content-Rights Constraints
-
-- Technical access does not imply permission to store, process, transform, or republish content.
-- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed where applicable.
+- Technical access does not imply permission to store, process externally, transform, quote, or republish source content.
+- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed before production use.
 
 ### 3.7 Explicit Non-Goals
-
-- This ADR does not set unmeasured numeric service levels or model-quality thresholds.
-- This ADR does not select a vendor or provider where comparative evidence is unavailable.
-- This ADR does not approve its recommendation; explicit Project Owner approval remains required.
+- No unmeasured numerical threshold or performance guarantee is established by this proposal.
+- No provider or infrastructure technology is mandatory solely because it appears as an alternative.
+- This ADR does not replace the formal approval process.
 
 ## 4. Alternatives Considered
 
-### 4.1 A — Uniform frequent polling
+### 4.1 Alternative A — Uniform frequent polling
 
-**Advantages:** Simple scheduler and consistent behavior.
+**Description:** Poll every source at one fixed short interval.
 
-**Disadvantages:** Wasteful for slow sources; may exceed source limits and still miss push updates.
+**Advantages:**
+- Simple scheduling model.
 
-**Risk:** High
+**Disadvantages:**
+- Wasteful and may violate provider limits
+- does not guarantee freshness.
 
-### 4.2 B — Manual or infrequent batch collection
+**Risks:**
+- Rate limiting, source blocking, and noisy collection.
 
-**Advantages:** Low operational load and easy to control.
+**Estimated Complexity:** Low
 
-**Disadvantages:** Insufficient freshness and weak continuous monitoring.
+### 4.2 Alternative B — Source-specific polling
 
-**Risk:** Medium
+**Description:** Configure polling intervals and checkpoints per source.
 
-### 4.3 C — Source-aware polling with optional supported push
+**Advantages:**
+- Simple and source-aware
+- low adapter complexity.
 
-**Advantages:** Adapts cadence to source capabilities; supports incremental checkpoints and failure isolation.
+**Disadvantages:**
+- Can still miss rapid updates and needs manual tuning.
 
-**Disadvantages:** Requires source metadata, scheduler policy, and per-adapter tests.
+**Risks:**
+- Configuration may become stale.
 
-**Risk:** Medium
+**Estimated Complexity:** Low to Medium
 
+### 4.3 Alternative C — Hybrid push and adaptive polling
+
+**Description:** Use reliable authorized push where available and source-specific polling elsewhere, with reconciliation and backoff.
+
+**Advantages:**
+- Better freshness potential and request efficiency.
+
+**Disadvantages:**
+- More adapter and operational complexity.
+
+**Risks:**
+- Push gaps or poor tuning create blind spots.
+
+**Estimated Complexity:** Medium
 
 ## 5. Evaluation and Comparison
 
-The following qualitative comparison is an architectural assessment, not a measured benchmark.
+The comparison is qualitative and reflects architectural fit, not measured performance or cost.
 
-| Criterion | Alternative A | Alternative B | Alternative C |
+| Evaluation Criterion | Uniform frequent polling | Source-specific polling | Hybrid push and adaptive polling |
 |---|---|---|---|
-| Fit with product requirements | Limited / context-dependent | Partial | Strongest overall fit |
-| Operational complexity | Low | Medium | Medium |
-| Auditability and traceability | Limited | Partial | Strong |
-| Ability to evolve | Low to Medium | Medium | High |
-| Principal trade-off | Simplicity or incomplete capability | Partial separation | More explicit contracts and governance |
+| Freshness potential | Medium | Medium | High where supported |
+| Request efficiency | Low | Medium | High potential |
+| Source-limit compliance | Variable | High with configuration | High with adapter policy |
+| Operational simplicity | High | High | Medium |
 
-The recommendation favors Alternative C because it preserves the domain distinctions and operational controls required by the product. Any quantitative comparison must be performed against representative workload and evaluation data.
+The requirements in Section 3 are the evaluation criteria. Unmeasured latency, quality, throughput, and costs are intentionally left unspecified.
 
 ## 6. Recommended Decision
 
-Adopt source-aware scheduled polling as the baseline. Each SourceAdapter declares supported acquisition methods and operational constraints. Use incremental checkpoints, per-source schedules, bounded concurrency, rate limiting, backoff, and health monitoring. Add webhooks or push feeds only where the source officially supports them and the integration has been validated. Do not label the product real-time unless the source and measured end-to-end latency support that claim.
+**Recommended Alternative:** Alternative C — Hybrid push and source-specific polling, with explicit freshness measurement.
 
-### 6.1 Decision Boundaries
+Define an acquisition adapter contract that declares supported modes, replay semantics, authentication, rate limits, timestamp quality, and access restrictions. Prefer authorized push notifications only when their delivery and replay behavior are understood. Otherwise use source-specific polling, durable checkpoints, bounded retries, backoff, and periodic reconciliation when permitted. The system records publication time, observation time, retrieval time, and processing time separately. No universal freshness SLA is established by this ADR.
 
-- SourceAdapter contract exposes capabilities, fetch window, checkpoint format, rate limits, and content-access restrictions.
-- CollectionScheduler selects due sources and applies per-source concurrency and freshness policy.
-- CollectionCheckpoint advances only after acquired records are durably persisted and deduplicated.
-- SourceHealthRecord tracks success, errors, latency, rate limiting, and consecutive failures.
-- Retry policy distinguishes transient network errors, rate limits, permanent access denial, malformed payloads, and rights restrictions.
-- Collection metrics report last successful fetch, oldest unprocessed item, observed lag, and source availability.
+**Rationale:**
+- Avoids unnecessary high-frequency polling.
+- Makes source limitations explicit and auditable.
+- Supports measured freshness by source rather than unsupported global promises.
 
-### 6.2 Assumptions and Open Questions
+**Deferred Questions:**
+- Initial source list and adapter mode per source.
+- Source-specific freshness objectives and alert thresholds.
+- Whether adaptive polling is automatic or operator-configured.
+- Provider-specific webhook replay and authentication guarantees.
 
-- The recommendation is based on the current product and architecture documents.
-- Any numeric threshold, provider selection, or legal interpretation not supported by evidence remains open.
-- The Project Owner may accept, reject, or request revision of this recommendation.
+**Recommendation Prepared By:** AI Architecture Assistant  
+**Recommendation Date:** 2026-11-18
+
+A recommendation is not an approval. The Project Owner must explicitly accept or reject this proposal.
 
 ## 7. Final Decision
 
@@ -138,160 +155,149 @@ Adopt source-aware scheduled polling as the baseline. Each SourceAdapter declare
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded. The recommendation in Section 6 is awaiting review.
+**Decision Rationale:** Pending formal review; see Section 6 for the recommendation.
 
 **Conditions or Restrictions:**
-
-- Do not treat this proposal as an accepted architectural constraint.
-- Do not implement irreversible changes solely on the basis of this recommendation.
-- Record any interim implementation assumption and its review trigger.
+- Keep this ADR Proposed until explicit approval is recorded.
+- Do not treat deferred questions as settled implementation details.
+- Any interim implementation choice must be reversible, documented, and assigned a review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-
-- Makes the relevant domain or operational boundary explicit.
-- Improves traceability and repeatability.
-- Provides a basis for measurable verification and future revision.
+- Better freshness where supported by sources.
+- Reduced unnecessary polling.
+- Measurable source reliability and freshness.
 
 ### 8.2 Negative Consequences
-
-- Adds implementation and documentation work.
-- Some policy details remain open pending data, legal review, or operational measurements.
-- Dependent components may need coordinated changes after approval.
+- Additional adapter types and monitoring.
+- Push delivery may still be incomplete or delayed.
 
 ### 8.3 Technical Trade-Offs
-
-Alternative C favors explicit contracts and traceability over the smallest possible implementation. Provider-specific behavior or domain-specific exceptions must remain visible rather than being hidden behind an abstraction that implies guarantees the system does not have.
+Prefer source capability-aware acquisition over a universal short polling interval. Push notifications are not assumed reliable without documented authentication, replay, and reconciliation semantics.
 
 ### 8.4 Operational Consequences
-
-The implementation will require monitoring, recovery, and review procedures appropriate to the selected capability. Failure modes and unknown outcomes must be observable.
+Per-source health, freshness, limit consumption, checkpoint age, and adapter failures must be observable. Configuration changes are versioned.
 
 ### 8.5 Product and Business Consequences
-
-The recommendation is intended to support the product's evidence-based economic intelligence purpose. It must not create user-facing promises that exceed actual source coverage, data quality, or review capacity.
+Users get timely intelligence where source capabilities permit it; the product does not promise universal real-time coverage.
 
 ### 8.6 Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Proposal mistaken for approval | Keep status Proposed until explicit approval is recorded. |
-| Over-specification without evidence | Leave thresholds and provider choices open until measured. |
-| Cross-document inconsistency | Synchronize affected documents and registry after approval. |
-| Implementation cannot satisfy a proposed guarantee | Report the conflict and revise the ADR rather than silently weakening the contract. |
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Rate-limit violation | Medium | High | Per-source budgets, backoff, and alerts. |
+| Missed push notification | Medium | High | Provider replay or permitted periodic reconciliation. |
+| Unreliable publication timestamp | Medium | Medium | Preserve raw timestamp and record quality/provenance. |
+| Uncontrolled collection cost | Medium | Medium | Measure marginal value and tune source schedules. |
 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-
-- SourceAdapter contract exposes capabilities, fetch window, checkpoint format, rate limits, and content-access restrictions.
-- CollectionScheduler selects due sources and applies per-source concurrency and freshness policy.
-- CollectionCheckpoint advances only after acquired records are durably persisted and deduplicated.
-- SourceHealthRecord tracks success, errors, latency, rate limiting, and consecutive failures.
-- Retry policy distinguishes transient network errors, rate limits, permanent access denial, malformed payloads, and rights restrictions.
-- Collection metrics report last successful fetch, oldest unprocessed item, observed lag, and source availability.
+- SourceRegistry
+- NewsCollector
+- SourceHealthService
+- WorkflowOrchestrator
+- ObservabilityService
 
 ### 9.2 Affected Data Models and Interfaces
-
-The relevant interfaces, persistence fields, constraints, and version metadata must be updated only after the proposal is approved and the implementation design is reviewed.
+- Source configuration and rights profile
+- CollectionCheckpoint
+- AcquisitionRecord
+- SourceHealthRecord
+- ProcessingRun
 
 ### 9.3 Affected Documents
-
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
+- docs/01-product-and-system-architecture.md
+- docs/02-component-architecture-and-interfaces.md
+- docs/03-data-model-and-storage-design.md
+- docs/04-implementation-plan-and-roadmap.md
 
 ### 9.4 Related ADRs
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-013 | Depends on | Defines access and content-rights restrictions. |
+| GENI-ADR-016 | Depends on / Related to | Defines durable checkpoints, idempotency, retries, and recovery. |
+| GENI-ADR-002 | Related to | Defines article identity and duplicate handling after acquisition. |
 
-See the related ADR references in the registry. These dependencies do not imply that related Proposed ADRs have been accepted.
+These relationships do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-
-- SourceAdapter contract exposes capabilities, fetch window, checkpoint format, rate limits, and content-access restrictions.
-- CollectionScheduler selects due sources and applies per-source concurrency and freshness policy.
-- CollectionCheckpoint advances only after acquired records are durably persisted and deduplicated.
-- SourceHealthRecord tracks success, errors, latency, rate limiting, and consecutive failures.
-- Retry policy distinguishes transient network errors, rate limits, permanent access denial, malformed payloads, and rights restrictions.
-- Collection metrics report last successful fetch, oldest unprocessed item, observed lag, and source availability.
+- Inventory interfaces, terms, authentication, rate limits, replay support, and timestamp semantics per source.
+- Implement checkpointed polling for the first source set.
+- Add push adapters only when their semantics and authorization are documented.
+- Measure source-level freshness, completeness, request failures, and rate-limit events.
+- Implement safe backoff, replay, and duplicate acquisition prevention.
 
 ### 10.2 Migration or Compatibility Requirements
-
-No runtime or database migration is authorized by this proposal. If accepted, existing records and historical provenance must be inspected before a migration is designed. Migration must preserve audit history and must be tested from the current baseline.
+Inspect the current implementation and data before designing any migration. This ADR does not claim that a migration has been executed. Any transition must preserve provenance and historical state.
 
 ### 10.3 Dependencies
-
-Implementation sequencing must respect the dependencies recorded in the ADR Registry and the related decision documents.
+- GENI-ADR-013 — Defines access and content-rights restrictions.
+- GENI-ADR-016 — Defines durable checkpoints, idempotency, retries, and recovery.
+- GENI-ADR-002 — Defines article identity and duplicate handling after acquisition.
 
 ### 10.4 Implementation Sequence
-
-1. Obtain explicit Project Owner approval.
-2. Update affected architecture and data-model contracts.
-3. Define versioned interfaces and migration requirements.
-4. Implement the smallest end-to-end slice.
-5. Add focused automated and integration tests.
-6. Validate operational behavior and update implementation status separately from ADR status.
+1. Simulate delayed, duplicated, missing, and out-of-order notifications.
+2. Verify source rate limits and retry backoff.
+3. Verify replay does not create duplicate acquisition records.
+4. Verify checkpoints advance only after durable processing.
+5. Measure publication-to-observation delay on a representative source dataset.
 
 ### 10.5 Verification Requirements
+- Simulate delayed, duplicated, missing, and out-of-order notifications.
+- Verify source rate limits and retry backoff.
+- Verify replay does not create duplicate acquisition records.
+- Verify checkpoints advance only after durable processing.
+- Measure publication-to-observation delay on a representative source dataset.
 
-- Repeated collection with the same checkpoint and input does not create duplicate Article records.
-- A rate-limited source is backed off without blocking unrelated sources.
-- Checkpoint advancement is atomic with successful persistence of the corresponding ingestion batch.
-- Unsupported push mechanisms are not enabled by configuration alone.
-- Source access restrictions and permitted content fields are retained in acquisition provenance.
-- Collection lag and source failures are observable per source.
+Implementation verification remains deferred until the ADR is accepted and the capability is implemented.
 
 ## 11. Acceptance Criteria
-
-| ID | Acceptance Criterion | Verification |
+| ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | Repeated collection with the same checkpoint and input does not create duplicate Article records. | Architecture review and automated tests where applicable |
-| AC-02 | A rate-limited source is backed off without blocking unrelated sources. | Architecture review and automated tests where applicable |
-| AC-03 | Checkpoint advancement is atomic with successful persistence of the corresponding ingestion batch. | Architecture review and automated tests where applicable |
-| AC-04 | Unsupported push mechanisms are not enabled by configuration alone. | Architecture review and automated tests where applicable |
-| AC-05 | Source access restrictions and permitted content fields are retained in acquisition provenance. | Architecture review and automated tests where applicable |
-| AC-06 | Collection lag and source failures are observable per source. | Architecture review and automated tests where applicable |
+| AC-01 | Every source declares its acquisition mode, restrictions, and limits. | Configuration/contract inspection |
+| AC-02 | Publication, observation, retrieval, and processing timestamps remain distinct. | Data-model tests |
+| AC-03 | Polling/push retries do not create duplicate domain effects. | Idempotency tests |
+| AC-04 | Rate-limit handling and backoff are observable. | Integration tests |
+| AC-05 | Freshness metrics are available per source without unsupported guarantees. | Operational test |
 
-Quantitative thresholds must be established using representative evaluation data or operational measurements. This ADR intentionally does not invent numerical targets.
+Quantitative thresholds require representative datasets, operational measurements, or formal policy review.
 
 ## 12. Review and Reconsideration
 
 ### 12.1 Review Triggers
-
-- A source changes its API/feed or access terms.
-- Measured freshness is outside a product-defined service objective.
-- Source volume makes polling cost or latency unacceptable.
-- The project introduces a new source class with push/webhook capability.
+- Before implementing the dependent capability.
+- Material changes in product scope, legal constraints, provider capabilities, workload, or operational scale.
+- Evaluation evidence shows that the recommendation does not meet requirements.
 
 ### 12.2 Review Schedule
-
 **Review Date:** Not scheduled  
 **Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
-
-Reconsider this proposal if its assumptions become invalid, evaluation results contradict the recommendation, or product/legal/operational requirements materially change. A replacement of an accepted decision requires a new ADR or an explicitly approved superseding record.
+Reconsider this proposal when its assumptions are invalidated or measured evidence shows that it fails project requirements. Replacements must be recorded through the ADR lifecycle.
 
 ## 13. References and Supporting Evidence
 
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/05-architecture-decision-records.md`
-- `docs/adr/README.md`
-- Related decision topics are listed in the ADR Registry.
+References are internal project documents used to establish documented context. They are not empirical benchmarks or legal opinions.
 
-The current internal documents establish architectural context. They do not substitute for external legal advice, provider capability verification, or empirical performance measurements.
+| Reference | Type | Relevance |
+|---|---|---|
+| `docs/01-product-and-system-architecture.md` | Internal | Acquisition and processing pipeline. |
+| `docs/02-component-architecture-and-interfaces.md` | Internal | NewsCollector and SourceRegistry boundaries. |
+| `docs/03-data-model-and-storage-design.md` | Internal | Checkpoint and acquisition provenance model. |
+| `docs/04-implementation-plan-and-roadmap.md` | Internal | Initial source strategy and acquisition stage. |
+| `GENI-ADR-013` | Internal | Source access and content rights. |
+| `GENI-ADR-016` | Internal | Idempotency and recovery. |
+
+External legal, provider, and measured performance evidence must be added where material during formal review.
 
 ## 14. Decision History
 
-| Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
-| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+| Date | Version | Status | Change |
+|---|---|---|---|
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 
 **End of ADR**
