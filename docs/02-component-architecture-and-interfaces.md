@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.39  
+**Version:** 1.40  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -627,7 +627,7 @@ Responsibilities:
 
 It must not generate report content, determine publication eligibility, or execute public publication, replacement, or withdrawal operations. A delivery containing a publication link must reference a confirmed successful PublicationRecord. Delivery outcomes must not change publication state.
 
-Before dispatch, ReportDelivery must obtain and validate an effective `DistributionAuthorizationDecision` for the exact report version, recipient, destination, delivery mode, channel, and content scope. Where source-derived content is delivered, the decision must reference the applicable allowed `CUSTOMER_DISTRIBUTION` RightsAssessment. The delivery operation must persist the exact authorization-decision reference; a general subscription, publication decision, or source-rights assessment alone is insufficient. A revoked or expired authorization blocks unsent work; already completed external delivery is preserved as history and handled through a separate correction/withdrawal process where applicable.
+ReportDelivery coordinates the versioned DistributionAuthorizationPolicy and persists its immutable DistributionAuthorizationDecision through DistributionAuthorizationRepository before dispatch. The decision must bind the exact report version, recipient, destination, delivery mode, channel, authorized content scope, and deterministic content-scope fingerprint. For every source-derived item included in that scope, the decision must preserve an exact allowed `CUSTOMER_DISTRIBUTION` RightsAssessment through a DistributionAuthorizationRightsLink; a multi-source report therefore requires the complete set of applicable assessments, not one representative assessment. The set fingerprint must be reproducible from the immutable links. At dispatch, ReportDelivery must verify that the decision is still effective and unexpired, every linked RightsAssessment still permits its exact scope, and the outbound payload's fingerprint exactly matches the authorized fingerprint. An incomplete, stale, revoked, or mismatched authorization blocks dispatch. A general subscription, publication decision, or a single source-rights assessment alone is insufficient. Already completed external delivery is preserved as history and handled through a separate correction/withdrawal process where applicable.
 
 Delivery operations must use stable idempotency keys.
 
@@ -1117,12 +1117,35 @@ It must preserve:
 - Delivery mode.
 - Destination and recipient reference.
 - Optional successful PublicationRecord reference when delivering a publication link.
-- Idempotency key.
+- Required `distribution_authorization_decision_id` referencing the exact effective DistributionAuthorizationDecision.
+- Required `content_scope_fingerprint` identifying the exact content scope/payload being delivered; it must equal the fingerprint authorized by the referenced decision.
+- Idempotency key scoped to the report version, recipient, destination, delivery mode, channel, and content-scope fingerprint.
 - Delivery status and attempt information.
 - External delivery reference where available.
 - Execution timestamps.
 
 Delivery status is independent of publication status. A delivery operation must not create, replace, withdraw, or otherwise mutate a publication.
+
+### 5.18.1 DistributionAuthorizationDecision
+
+Represents an immutable, recipient- and operation-specific authorization for one exact delivery scope. It is separate from PublicationDecision and from source-content RightsAssessment records.
+
+The logical record must preserve:
+
+- Exact immutable report-version reference.
+- Recipient and destination references.
+- Delivery mode and channel.
+- Authorized content scope and its deterministic `authorized_content_scope_fingerprint`.
+- Decision outcome (`ALLOW`, `DENY`, or `REQUIRES_REVIEW`).
+- Distribution-policy version and decision idempotency key.
+- A deterministic `rights_assessment_set_fingerprint` when source-derived content is in scope.
+- Decision actor, authorization/consent context, reason codes, decision time, validity/expiry, and supersession reference.
+
+An `ALLOW` decision must cover the complete authorized content scope. For source-derived content, it must reference the complete immutable set of allowed `CUSTOMER_DISTRIBUTION` RightsAssessments through DistributionAuthorizationRightsLink records. If a source-derived item is not authorized, it must be excluded from the actual authorized payload or the request must be denied/reviewed; an incomplete rights set must never authorize the larger scope.
+
+### 5.18.2 DistributionAuthorizationRightsLink
+
+Connects one DistributionAuthorizationDecision to one exact RightsAssessment and the precise source-derived content scope that assessment authorizes. Each link is immutable and must preserve the decision, RightsAssessment, typed content-scope reference, and creation metadata. All links and their set fingerprint are persisted atomically with the authorization decision.
 
 ### 5.19 ProcessingRun
 
@@ -1236,6 +1259,7 @@ Initial repository interfaces include the following logical contracts. This inve
 - `PublicationAttemptRepository`
 - `DeliveryRepository`
 - `DeliveryAttemptRepository`
+- `DistributionAuthorizationRepository` (stores DistributionAuthorizationDecision and its immutable DistributionAuthorizationRightsLink set as one aggregate)
 - `ProcessingRunRepository`
 - `ProcessingStepRepository`
 - `CollectionCheckpointRepository`
@@ -1289,7 +1313,8 @@ The following map identifies proposed writers for domain-state groups; it is not
 | PublicationDecision | `PublicationPolicy` through Publication Decision Workflow | Eligibility only; no external side effect. |
 | ReviewRecord and ReviewAction | `ReviewService` | Task lifecycle and reviewer audit only; no domain-decision override. |
 | PublicationRecord and PublicationAttempt | `PublicationService` | External publication operations and reconciliation. |
-| DeliveryRecord and DeliveryAttempt | `ReportDelivery` | Recipient delivery only; cannot mutate publication state. |
+| DeliveryRecord and DeliveryAttempt | `ReportDelivery` | Recipient delivery only; cannot mutate publication state. Every dispatch references the exact effective DistributionAuthorizationDecision and the authorized content-scope fingerprint. |
+| DistributionAuthorizationDecision and DistributionAuthorizationRightsLink | `ReportDelivery` through the Distribution Authorization Workflow, using ContentRightsService assessments | Persists the immutable decision and the complete source-rights assessment set atomically; only a complete, effective, unexpired ALLOW scope may authorize dispatch. |
 | ProcessingRun, ProcessingStep, Schedule, and ScheduledExecution | `WorkflowOrchestrator` | Execution state remains separate from domain state. |
 | LLMUsageRecord | `SharedLLMExecutionLayer` | Records provider usage/cost where available. |
 | TranslationArtifact | `TranslationService` (optional) | Immutable derived translation; original ArticleRevision remains authoritative. |
@@ -1354,8 +1379,9 @@ The following crosswalk assigns every repository in the initial Document 03 inve
 | `ReviewContextLinkRepository` | ReviewContextLink | ReviewService | Task and immutable context-reference transaction |
 | `PublicationRepository` | PublicationRecord | PublicationService | Logical external publication operation transaction |
 | `PublicationAttemptRepository` | PublicationAttempt | PublicationService | Attempt result and reconciliation-state transaction |
-| `DeliveryRepository` | DeliveryRecord | ReportDelivery | Logical recipient-delivery operation transaction |
+| `DeliveryRepository` | DeliveryRecord | ReportDelivery | Logical recipient-delivery operation transaction, including exact authorization reference and content-scope fingerprint |
 | `DeliveryAttemptRepository` | DeliveryAttempt | ReportDelivery | Attempt result transaction; delivery remains separate from publication |
+| `DistributionAuthorizationRepository` | DistributionAuthorizationDecision and DistributionAuthorizationRightsLink | ReportDelivery through Distribution Authorization Workflow | Decision, authorized content-scope fingerprint, complete rights-assessment link set/fingerprint, validity, and supersession in one transaction |
 | `ProcessingRunRepository` | ProcessingRun | WorkflowOrchestrator | Run lifecycle/lease state transaction |
 | `ProcessingStepRepository` | ProcessingStep | WorkflowOrchestrator | Step state/idempotency transaction |
 | `CollectionCheckpointRepository` | CollectionCheckpoint | NewsCollector with WorkflowOrchestrator | Checkpoint and collection progress transaction |
@@ -1736,24 +1762,27 @@ Reprocessing must not silently overwrite published or historical records.
 - Recipient and destination references.
 - Delivery mode and channel.
 - Requested content scope and delivery purpose.
-- Applicable content-rights assessment, including an allowed `CUSTOMER_DISTRIBUTION` assessment where source-derived content is delivered.
-- Distribution policy version, actor/consent context, and requested validity period.
+- Applicable `CUSTOMER_DISTRIBUTION` RightsAssessments for every source-derived content scope included in the request; a composite report may require multiple assessments.
+- Deterministic fingerprint of the exact requested content scope/payload.
+- Distribution policy version, actor/consent context, stable idempotency key, and requested validity period.
 
 **Output:**
 
 - An immutable `DistributionAuthorizationDecision` with `ALLOW`, `DENY`, or `REQUIRES_REVIEW` outcome.
-- Exact report, recipient, destination, operation, scope, policy-version, rights-assessment, decision-time, and expiry references.
-- A traceable reason/basis and supersession link when a decision is replaced.
+- Exact report, recipient, destination, delivery mode, channel, authorized content scope, content-scope fingerprint, policy version, decision idempotency key, decision time, expiry, and supersession references.
+- An immutable DistributionAuthorizationRightsLink for each source-derived content scope and its allowed RightsAssessment, plus a reproducible rights-assessment-set fingerprint.
 
 **Workflow invariants:**
 
 - Authorization is bound to the exact recipient, destination, report version, delivery mode, channel, and content scope; it cannot be silently reused for another target or report.
-- Dispatch requires the effective, unexpired `ALLOW` decision and all applicable content-rights permissions.
+- Every source-derived content scope included in an `ALLOW` decision must have an exact linked `CUSTOMER_DISTRIBUTION` RightsAssessment with outcome `ALLOWED`; all links and their fingerprint are immutable and complete.
+- A report with multiple source-derived inputs must preserve all applicable RightsAssessments. Missing or non-allowed permission blocks that scope; only an explicitly reduced scope may be authorized.
+- Dispatch requires the effective, unexpired `ALLOW` decision, a matching outbound content-scope fingerprint, and all linked rights permissions still in force.
 - Unknown, denied, expired, revoked, or review-required outcomes fail closed.
 - Publication eligibility, source-content rights, and recipient-distribution authorization are independent gates.
 - A publication-link delivery additionally requires a confirmed successful and still-effective PublicationRecord.
 - Revocation blocks future dispatch but does not rewrite completed delivery history.
-- The DeliveryRecord and its authorization reference must be persisted before an external side effect.
+- The DistributionAuthorizationDecision and complete rights-link set must be persisted before dispatch. The DeliveryRecord must reference that exact decision and carry the matching content-scope fingerprint before an external side effect.
 
 ## 8. Execution and Error Contracts
 

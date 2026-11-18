@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.28
+**Version:** 1.29
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -905,6 +905,7 @@ The event input and output relationships must be stored through explicit relatio
 - `id`
 - `operation_id`
 - `event_id`
+- `expected_event_history_version` — required version observed when the operation was prepared; the core transaction must compare it with the current EventHistory version before applying the identity effect
 - `role`
 - `position`
 
@@ -1861,6 +1862,7 @@ Fields:
 - `channel`
 - `destination_reference`
 - `distribution_authorization_decision_id` — required exact effective authorization reference
+- `content_scope_fingerprint` — required deterministic fingerprint of the exact outbound content scope/payload; must match the referenced authorization decision
 - `idempotency_key`
 - `status`
 - `external_reference`
@@ -1895,7 +1897,8 @@ Constraints:
 - Retries must not create duplicate external deliveries when the destination supports idempotency.
 - Delivery attempts must remain traceable.
 - Every outbound DeliveryRecord must reference exactly one `DistributionAuthorizationDecision` whose outcome is `ALLOW`, which is effective and unexpired at dispatch time.
-- The decision must match the exact report version, recipient, destination, delivery mode, channel, and authorized content scope. It must not be reused for a different recipient, destination, or report version.
+- The decision must match the exact report version, recipient, destination, delivery mode, channel, and authorized content scope. It must not be reused for a different recipient, destination, report version, or content scope.
+- The DeliveryRecord.content_scope_fingerprint must equal the authorized_content_scope_fingerprint of the referenced DistributionAuthorizationDecision; dispatch must validate the actual payload against that fingerprint.
 - A `PUBLICATION_LINK` delivery must reference a PublicationRecord whose publication operation is confirmed successful and still effective for that target.
 - `REPORT_CONTENT` or `NOTIFICATION` delivery may reference a PublicationRecord when relevant, but must be independently authorized by the applicable distribution policy.
 - Where source-derived content is distributed, the DistributionAuthorizationDecision must reference the applicable allowed `CUSTOMER_DISTRIBUTION` RightsAssessment; publication approval or source permission alone is insufficient.
@@ -1940,7 +1943,9 @@ Fields:
 - `authorized_content_scope`
 - `decision` — `ALLOW`, `DENY`, or `REQUIRES_REVIEW`
 - `distribution_policy_version`
-- `content_rights_assessment_reference` nullable, but required when source-derived content is delivered
+- `authorized_content_scope_fingerprint` — required deterministic fingerprint of the exact content scope the decision permits
+- `rights_assessment_set_fingerprint` — required when source-derived content is included; fingerprint of the complete immutable DistributionAuthorizationRightsLink set
+- `idempotency_key` — required and unique within the exact report/recipient/destination authorization scope
 - `decided_by_type`
 - `decided_by_reference`
 - `reason_codes`
@@ -1954,8 +1959,31 @@ Constraints:
 - The decision is immutable; correction or revocation is represented by a successor decision (normally a DENY outcome) that supersedes the prior decision. The prior decision remains queryable and must not be edited.
 - `ALLOW` is valid only for the exact report version, recipient, destination, delivery mode, channel, and content scope it names.
 - The applicable content-rights assessment must authorize customer distribution of the relevant source-derived content; it does not replace recipient-specific authorization.
-- Dispatch must re-check that the referenced decision remains effective, unexpired, and allowed.
+- Dispatch must re-check that the referenced decision remains effective, unexpired, and allowed and that every linked RightsAssessment remains effective for its exact source-derived content scope.
 - An authorization decision is not evidence that delivery occurred.
+- An `ALLOW` decision for a composite report must link every source-derived content scope in its authorized payload to an exact `CUSTOMER_DISTRIBUTION` RightsAssessment with outcome `ALLOWED`. A missing, unknown, expired, revoked, denied, or review-required assessment prevents authorization of the affected scope. A reduced scope is permitted only when the restricted content is actually excluded and the reduced content-scope fingerprint is recorded.
+- The `rights_assessment_set_fingerprint` must be deterministically reproducible from the sorted immutable DistributionAuthorizationRightsLink set. The decision and all links are committed atomically.
+
+### 12.3.1 DistributionAuthorizationRightsLink
+
+Connects one DistributionAuthorizationDecision to one exact RightsAssessment and the precise source-derived content scope that assessment authorizes.
+
+Fields:
+
+- `id`
+- `distribution_authorization_decision_id`
+- `rights_assessment_id`
+- `content_scope_type` — typed scope reference such as a ReportArticleLink or DerivedArtifact
+- `content_scope_reference` — exact scope-item identifier
+- `created_at`
+- `metadata`
+
+Constraints:
+
+- The referenced RightsAssessment must identify `CUSTOMER_DISTRIBUTION`, have outcome `ALLOWED`, and apply to the exact source/content scope represented by the link.
+- Every source-derived scope included in the authorization decision must be covered by one or more exact links; a link for one source or artifact cannot authorize another.
+- Links are immutable. A changed source-rights result or authorized content scope creates a successor DistributionAuthorizationDecision and a new complete link set.
+- The link set and its deterministic fingerprint are persisted in the same transaction as the parent decision.
 
 ### 12.4 Delivery State Consistency
 
@@ -2295,8 +2323,9 @@ The logical table inventory is:
 | `event_history` | Event change history |
 | `event_relationships` | Relationships between events |
 | `event_identity_operations` | Event merge and split operations |
-| `event_identity_operation_inputs` | Input events to identity operations |
+| `event_identity_operation_inputs` | Input events and expected EventHistory versions for identity operations |
 | `event_identity_operation_outputs` | Result events from identity operations |
+| `event_identity_operation_histories` | Append-only operation status/effect transitions and reconciliation actions |
 | `event_entity_links` | Event entities |
 | `claims` | Logical claims and current assessment projection |
 | `event_claim_links` | Claim-event relationships |
@@ -2324,6 +2353,7 @@ The logical table inventory is:
 | `publication_attempts` | External publication attempt and reconciliation history |
 | `delivery_records` | Logical delivery operations |
 | `distribution_authorization_decisions` | Immutable recipient- and operation-specific delivery authorization outcomes |
+| `distribution_authorization_rights_links` | Exact source-rights assessments covering each source-derived content scope in an authorization decision |
 | `delivery_attempts` | Delivery retry history |
 | `processing_runs` | Workflow execution records |
 | `processing_steps` | Workflow step records |
@@ -2357,6 +2387,7 @@ Indexes should support:
 - Event match case lookup by ArticleRevision and development key.
 - Event match candidate lookup by case, status, and score.
 - Event match decision lookup by case and decision time.
+- EventIdentityOperationHistory lookup by operation and sequence.
 - Event match review lookup by status, assignment, and due date.
 - Duplicate candidate lookup.
 - Claim lookup by event and observation.
@@ -2370,6 +2401,8 @@ Indexes should support:
 - Review queue lookup by status, assignment, due date, and creation time.
 - Delivery lookup by status, target, and scheduled time.
 - Delivery lookup by referenced publication where applicable.
+- DistributionAuthorizationDecision lookup by exact report, recipient, destination, decision, and expiry.
+- DistributionAuthorizationRightsLink lookup by authorization decision and content scope.
 - Delivery attempt lookup by delivery operation.
 - Processing run lookup by type, status, target, and lease expiry.
 - Processing step lookup by run and status.
@@ -2412,6 +2445,10 @@ Where applicable, enforce:
 - Delivery idempotency key uniqueness within its scope.
 - Schedule occurrence uniqueness.
 - Event identity operation input/output uniqueness.
+- EventIdentityOperationHistory sequence uniqueness within an operation and idempotency-key uniqueness within its operation scope.
+- DistributionAuthorizationDecision idempotency-key uniqueness within its exact report/recipient/destination scope.
+- At most one direct successor per superseded DistributionAuthorizationDecision.
+- DistributionAuthorizationRightsLink uniqueness by decision, RightsAssessment, and typed content-scope reference.
 - EventMatchDecision selected-candidate and case consistency.
 - EventMatchDecision supersession-chain consistency.
 - EventMatchCase.effective_decision_id must reference a decision belonging to that same case.
@@ -2444,6 +2481,12 @@ The following composite relationships must be enforced by database constraints w
 - `ArticleEventLink(event_match_case_id, article_revision_id)` must resolve to the case's exact ArticleRevision.
 - The linked `event_id` must equal the `candidate_event_id` selected by the referenced MATCH decision.
 - `EventHistory(event_match_case_id, source_event_match_decision_id)`, when both are present, must reference the same case and its NEW_EVENT_CANDIDATE decision.
+- `EventIdentityOperationHistory.operation_id` must reference an existing EventIdentityOperation; the operation projection and append-only history transition must be committed atomically.
+- Every EventIdentityOperationInput.expected_event_history_version must be checked against the exact input Event's current EventHistory version inside the core identity UnitOfWork transaction.
+- `DistributionAuthorizationDecision.report_id` must reference the exact immutable Report version it authorizes.
+- Every DistributionAuthorizationRightsLink must reference its parent DistributionAuthorizationDecision and an existing RightsAssessment whose operation is `CUSTOMER_DISTRIBUTION`, whose outcome is `ALLOWED`, and whose subject/content scope matches the link's typed scope reference.
+- The DistributionAuthorizationDecision.rights_assessment_set_fingerprint must be reproducible from the exact linked set; source-derived content in its authorized scope cannot be omitted from that set.
+- `DeliveryRecord.distribution_authorization_decision_id` must reference an effective, unexpired `ALLOW` decision whose report, recipient, destination, delivery mode, channel, and content-scope fingerprint exactly match the DeliveryRecord and actual outbound payload. A `PUBLICATION_LINK` delivery must additionally reference a confirmed successful and currently effective PublicationRecord.
 - A link may be active only while its authorizing MATCH decision is the effective decision for that case.
 
 The corresponding database constraints and application checks must be covered by repository contract and transactional integration tests. If composite/deferred foreign keys are used, their migration and behavior must be verified against the selected engine.
@@ -2723,6 +2766,7 @@ Initial repository contracts include:
 - `EventHistoryRepository`
 - `EventRelationshipRepository`
 - `EventIdentityOperationRepository`
+- `EventIdentityOperationHistoryRepository`
 - `ClaimRepository`
 - `ClaimObservationRepository`
 - `EvidenceRepository`
@@ -2747,6 +2791,7 @@ Initial repository contracts include:
 - `PublicationAttemptRepository`
 - `DeliveryRepository`
 - `DeliveryAttemptRepository`
+- `DistributionAuthorizationRepository` (persists DistributionAuthorizationDecision and its complete immutable DistributionAuthorizationRightsLink set as one aggregate)
 - `ProcessingRunRepository`
 - `ProcessingStepRepository`
 - `CollectionCheckpointRepository`
@@ -2845,6 +2890,9 @@ Data-layer tests must cover:
 - Publication-key isolation so independent items can publish concurrently to the same target.
 - Prevention of concurrent conflicting publication operations within the same target/publication-key chain.
 - Delivery idempotency and delivery attempt history.
+- Distribution authorization decisions bound to exact recipient, destination, report version, delivery mode, channel, and content scope.
+- Complete per-source `CUSTOMER_DISTRIBUTION` RightsAssessment coverage for every source-derived item in an authorized delivery scope.
+- Immutable rights-link set and fingerprint consistency between authorization decisions and DeliveryRecords.
 - Verification that delivery state changes do not mutate publication state.
 - Validation that publication-link delivery references a confirmed effective publication.
 - Processing run and step recovery.
@@ -2890,6 +2938,7 @@ The initial implementation requires:
 - Publication operation records for publish, replace, and withdraw.
 - Publication attempt and reconciliation history.
 - Delivery records with idempotency and explicit delivery mode.
+- DistributionAuthorizationDecision records with immutable per-source RightsAssessment links for every source-derived content scope.
 - Delivery attempt history.
 - Processing runs and processing steps.
 - Basic LLM usage records.
