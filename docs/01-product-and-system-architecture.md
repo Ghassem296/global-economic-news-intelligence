@@ -593,17 +593,20 @@ The main processing pipeline is:
 7. Entity extraction.
 8. Candidate claim extraction.
 9. Candidate event detection.
-10. Event matching.
-11. Event association or new event creation.
-12. Evidence enrichment and verification.
-13. Economic relevance assessment.
-14. Event importance assessment.
-15. Economic impact analysis.
-16. Event dossier generation.
-17. Publication policy evaluation.
-18. Review routing when required.
-19. Report publication and delivery.
-20. Event monitoring and subsequent updates.
+10. Create an EventMatchCase for each distinct development identified in an ArticleRevision.
+11. Generate and evaluate EventMatchCandidate records within each case.
+12. Record an immutable EventMatchDecision for each resolved case, or route the case for authorized human review.
+13. Apply an eligible MATCH decision through EventService and create the corresponding ArticleEventLink.
+14. Propose new event creation only through the approved event-creation workflow.
+15. Evidence enrichment and verification.
+16. Economic relevance assessment.
+17. Event importance assessment.
+18. Economic impact analysis.
+19. Event dossier generation.
+20. Publication policy evaluation.
+21. Review routing when required.
+22. Report publication and delivery.
+23. Event monitoring and subsequent updates.
 
 Importance, economic relevance, and economic impact assessments must remain separate outputs even when they share source evidence or analytical execution resources.
 
@@ -618,6 +621,10 @@ The primary domain entities include:
 - Source
 - Article
 - ArticleProcessingRecord
+- ArticleRevision
+- EventMatchCase
+- EventMatchCandidate
+- EventMatchDecision
 - Event
 - ArticleEventLink
 - Entity
@@ -650,20 +657,17 @@ An event may be associated with multiple articles.
 
 Event identity must be stable and must not be derived solely from a headline or article URL.
 
-### 7.3 ArticleEventLink
+### 7.3 Event Matching Case and Decision
 
-Represents the relationship between an article and an event.
+Event matching is performed independently for each development identified within an immutable ArticleRevision. Each EventMatchCase may contain multiple EventMatchCandidate records, but candidates are proposals for evaluation and are not decisions.
 
-The relationship may include:
+An immutable EventMatchDecision records the authoritative outcome for one case. A single article revision may therefore produce multiple independent matching decisions. Ambiguous cases are routed for authorized human review; the review outcome must be recorded as a new decision that supersedes the previous effective decision.
 
-- Relevance.
-- Association confidence.
-- Relationship type.
-- Association timestamp.
-- Matching method and version.
-- Review or correction metadata where applicable.
+### 7.4 ArticleEventLink
 
-An article may be associated with more than one event when justified.
+Represents an applied association between an ArticleRevision and an Event. Every link must reference the exact EventMatchDecision with outcome MATCH that authorized its creation.
+
+A link must not be created from a candidate score, a review comment, or a non-MATCH outcome. Corrections deactivate the previous link with an explicit superseding decision and preserve the original association history. An article revision may have multiple event links when separate matching cases justify them.
 
 ### 7.4 Claim and Evidence
 
