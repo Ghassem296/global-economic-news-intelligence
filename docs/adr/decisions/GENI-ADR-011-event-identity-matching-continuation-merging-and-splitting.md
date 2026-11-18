@@ -652,7 +652,7 @@ This ADR is currently **Proposed**.
 
 **Decision Status:** Proposed
 
-**Decision Owner:** Product Owner
+**Decision Owner:** Project Owner
 
 **Approved By:** Not yet approved
 
@@ -664,7 +664,7 @@ Alternative C is recommended because it supports automated event intelligence wh
 
 The recommendation separates candidate similarity from confirmed event identity and treats merging and splitting as explicit domain operations.
 
-The Product Owner must explicitly accept or reject this recommendation.
+The Project Owner must explicitly accept or reject this recommendation.
 
 **Conditions or Restrictions:**
 
@@ -943,7 +943,7 @@ This ADR should be reviewed when:
 
 **Review Date:** Not scheduled
 
-**Review Owner:** Product Owner
+**Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
 
