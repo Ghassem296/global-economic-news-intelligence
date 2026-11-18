@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.23
+**Version:** 1.24
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -221,13 +221,19 @@ global-economic-news-intelligence/
 │   ├── 05-architecture-decision-records.md
 │   ├── 06-documentation-governance-and-change-management.md
 │   ├── 07-documentation-registry.md
+│   ├── 08-security-architecture-and-threat-model.md
+│   ├── 09-api-and-integration-contracts.md
+│   ├── 10-source-credibility-and-independence.md
+│   ├── 11-economic-taxonomy-specification.md
+│   ├── 12-testing-and-evaluation-strategy.md
+│   ├── 13-deployment-operations-and-observability.md
 │   │
 │   ├── adr/
 │   │   ├── README.md
 │   │   ├── adr-template.md
 │   │   └── decisions/
-│       │       ├── GENI-ADR-001-event-centric-intelligence-architecture.md
-│       │       ├── GENI-ADR-002-article-deduplication-and-event-matching.md
+│   │       ├── GENI-ADR-001-event-centric-intelligence-architecture.md
+│   │       ├── GENI-ADR-002-article-deduplication-and-event-matching.md
 │   │       ├── GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md
 │   │       ├── GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md
 │   │       ├── GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md
@@ -251,7 +257,7 @@ global-economic-news-intelligence/
 │           ├── README.md
 │           ├── agent-template-architecture.md
 │           └── agent-template-implementation-specification.md
-│
+
 ├── evals/
 │   ├── datasets/
 │   ├── runners/
@@ -485,7 +491,7 @@ The first implementation slice should introduce the minimum required concepts, i
 - Report with immutable version lineage.
 - PublicationDecision, typed ReviewRecord, immutable ReviewContextLink, and append-only ReviewAction.
 - DeliveryRecord and DeliveryAttempt, with recipient-specific distribution authorization implemented in the delivery stage.
-- ProcessingRun/ProcessingStep and LLMUsageRecord as runtime execution and usage records.
+- LLMUsageRecord for model execution and usage records.
 - Versioned, human-reviewed evaluation datasets and EvaluationRun/EvaluationResult artifacts.
 
 Additional concepts from the approved data model should be introduced when required by a concrete workflow.
@@ -1806,5 +1812,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.23
+**Version:** 1.24
 **Status:** Draft — Under Architecture Review

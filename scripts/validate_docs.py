@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
+import subprocess
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -623,6 +624,109 @@ def validate_distribution_authorization_contract() -> None:
 
 
 
+def validate_registry_snapshot_provenance() -> None:
+    """Verify that the registry's inspected baseline is a real commit in this checkout's history."""
+    registry = read_text(DOC_REGISTRY)
+    matches = re.findall(
+        r"^\\*\\*Baseline Commit Inspected:\\*\\*\\s+`([0-9a-f]{40})`\\s*$",
+        registry,
+        re.MULTILINE,
+    )
+    if len(matches) != 1:
+        fail(
+            "Documentation registry must contain exactly one full 40-character "
+            "Baseline Commit Inspected value"
+        )
+    baseline = matches[0]
+    exists = subprocess.run(
+        ["git", "cat-file", "-e", f"{baseline}^{{commit}}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if exists.returncode != 0:
+        fail(f"Registry snapshot commit is not available in Git history: {baseline}")
+    ancestor = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", baseline, "HEAD"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if ancestor.returncode != 0:
+        fail(
+            "Registry snapshot commit is not an ancestor of the checked-out revision: "
+            f"{baseline}"
+        )
+
+
+def validate_roadmap_document_inventory() -> None:
+    """Ensure the proposed docs tree lists every Markdown document currently in docs/."""
+    roadmap = read_text(ROOT / "docs/04-implementation-plan-and-roadmap.md")
+    structure = extract_section(
+        roadmap,
+        "## 5. Project Structure",
+        "## 6. Development Stage 0",
+        "Roadmap project structure",
+    )
+    code_block = re.search(r"```text\\s*\\n([\\s\\S]*?)\\n```", structure)
+    if not code_block:
+        fail("Roadmap project structure text tree is missing")
+    lines = code_block.group(1).splitlines()
+    root_line = next(
+        (line.strip().rstrip("/") for line in lines
+         if line.strip() == "global-economic-news-intelligence/"),
+        None,
+    )
+    if root_line is None:
+        fail("Roadmap project structure root is missing")
+    directory_stack = [root_line]
+    listed_files: set[str] = set()
+    for line in lines:
+        match = re.match(r"^([│ ]*)(?:├──|└──)\\s+(.+?)\\s*$", line)
+        if not match:
+            continue
+        depth = len(match.group(1)) // 4
+        name = match.group(2).strip()
+        is_directory = name.endswith("/")
+        name = name.rstrip("/")
+        while len(directory_stack) > depth + 1:
+            directory_stack.pop()
+        parent = directory_stack[: depth + 1]
+        full_path = "/".join(parent + [name])
+        if is_directory:
+            directory_stack = parent + [name]
+        else:
+            listed_files.add(full_path)
+
+    expected_files = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "docs").rglob("*.md")
+    }
+    missing = sorted(expected_files - listed_files)
+    if missing:
+        fail(
+            "Roadmap project structure omits published Markdown documents: "
+            f"{missing}"
+        )
+
+    initial_concepts = extract_section(
+        roadmap,
+        "### Initial Domain Concepts",
+        "### Domain Rules",
+        "Roadmap Stage 2 initial domain concepts",
+    )
+    for bullet in (
+        "- ProcessingRun and ProcessingStep.",
+        "- LLMUsageRecord for model execution and usage records.",
+    ):
+        count = initial_concepts.splitlines().count(bullet)
+        if count != 1:
+            fail(
+                "Roadmap Stage 2 must list each runtime concept exactly once; "
+                f"{bullet!r} occurs {count} times"
+            )
+
+
 def validate_cross_document_contracts() -> None:
     readme = read_text(ROOT / "README.md")
     data_model = read_text(ROOT / "docs/03-data-model-and-storage-design.md")
@@ -712,6 +816,8 @@ def validate_cross_document_contracts() -> None:
 
 
 def main() -> None:
+    validate_registry_snapshot_provenance()
+    validate_roadmap_document_inventory()
     validate_cross_document_contracts()
     validate_document_versions()
     validate_adrs()
@@ -729,7 +835,7 @@ def main() -> None:
         "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled and duplicate versions, "
         "all 19 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
         "local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
-        "event identity-operation history/recovery, and multi-source distribution authorization."
+        "event identity-operation history/recovery, multi-source distribution authorization, registry snapshot provenance, and roadmap/document inventory parity."
     )
 
 
