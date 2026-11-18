@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.28  
+**Version:** 1.29  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -169,7 +169,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-17 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.28 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.29 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.9 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.12 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -190,7 +190,7 @@ The published `main` branch contains all nineteen individual ADR documents. The 
 | GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.5 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.6 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | `docs/adr/decisions/GENI-ADR-009-near-real-time-news-acquisition-strategy.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-010 | Phased Text, Audio, and Video Delivery | `docs/adr/decisions/GENI-ADR-010-phased-text-audio-and-video-delivery.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.6 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
