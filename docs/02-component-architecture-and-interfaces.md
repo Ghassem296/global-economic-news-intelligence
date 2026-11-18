@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.32  
+**Version:** 1.33  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1049,7 +1049,7 @@ It must preserve:
 - `id`, `review_type`, `subject_type`, and `subject_reference`.
 - Related decision reference, when applicable.
 - Report and PublicationDecision references when the review concerns a report.
-- Review status, priority, reason, notes, and outcome.
+- Review status, required priority and `priority_policy_version`, reason, notes, and outcome.
 - Assignee and reviewer references.
 - Assignment, due, creation, and completion timestamps.
 - Metadata and authorization context.
