@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.10
+**Version:** 1.11
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -529,7 +529,9 @@ Constraints:
 - The link's event_id must equal the Event selected by the referenced MATCH decision.
 - A link is active only while its authorizing MATCH decision remains the effective decision for that case.
 - Association confidence must use documented semantics and must not be copied from candidate similarity without an explicit calibration rule.
-- Deactivation must preserve the original link and identify the decision that deactivated it.
+- Deactivation must preserve the original link and identify the successor EventMatchDecision in the same case that deactivated it.
+- An inactive link must have both `deactivated_at` and `deactivated_by_decision_id`; an active link must have neither.
+- `deactivated_by_decision_id` must reference a decision in the same case whose `supersedes_decision_id` identifies the link's authorizing decision.
 - A correction creates a new decision and a new association where appropriate; it must not rewrite historical decisions or silently repoint an existing link.
 - A rejected, ambiguous, or review-required match must not be represented as an active association.
 
