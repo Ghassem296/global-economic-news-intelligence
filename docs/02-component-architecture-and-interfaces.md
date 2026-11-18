@@ -1413,6 +1413,10 @@ The following crosswalk assigns every repository in the initial Document 03 inve
 | `ScheduleRepository` | Schedule | WorkflowOrchestrator | Versioned schedule configuration transaction |
 | `ScheduledExecutionRepository` | ScheduledExecution | WorkflowOrchestrator | Idempotent schedule-occurrence creation and execution-state transaction |
 | `EmbeddingRepository` | EmbeddingRecord / retrieval index (optional) | SemanticRetrievalAdapter (ADR-012) | Derived embedding/index version transaction; no domain identity write |
+| `PrivacyRequestRepository` | DataSubjectRequest, DataSubjectRequestAction, PrivacyDeletionRecord | PrivacyManagementService | Request/action state and target-level deletion evidence transaction; no direct writes to target aggregates |
+| `PersonalDataLineageRepository` | PersonalDataLineage edges | PrivacyManagementService through lineage service | Append-only lineage edge transaction with restricted subject linkage |
+| `PrivacyPolicyRepository` | PersonalDataInventory, ProcessingPurpose, PrivacyProcessingBasis, ProcessorRegister, InternationalTransferAssessment, PrivacyImpactAssessment | Authorized privacy policy administration | Versioned policy/register record transaction with approval provenance |
+| `DataSubjectReferenceRepository` | DataSubjectReference and restricted identity mapping | Authorized identity/verification workflow | Restricted subject-linkage transaction with access audit |
 
 The rights-related repositories are conditional on GENI-ADR-013; `MarketObservationRepository` is conditional on GENI-ADR-015; `EmbeddingRepository` is conditional on GENI-ADR-012. External provider effects are never included in a database transaction; they require idempotency, attempt records, and reconciliation as defined by the relevant workflow.
 
