@@ -397,7 +397,7 @@ A periodic review should verify that the registry matches:
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
 **Baseline Commit Inspected:** `4c1b7b6242ca407243551737e7e1ae06555bc97d`  
-**Registry Refresh:** This inventory was checked against the published `main` branch at the baseline commit above, after the preceding architecture, ADR, and governance-metadata corrections, including the clarified semantic-retrieval approval gate claim/evidence contract alignment, and the exhaustive repository write-ownership matrix. This registry revision is committed as the next change on `main`.
+**Registry Refresh:** This inventory was checked against the published `main` branch at the baseline commit above, after the preceding architecture, ADR, and governance-metadata corrections, including the clarified semantic-retrieval approval gate, claim/evidence contract alignment, and the exhaustive repository write-ownership matrix. This registry revision is committed as the next change on `main`.
 
 This refresh was performed against the published GitHub `main` branch after Pull Request #1 had been merged. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
