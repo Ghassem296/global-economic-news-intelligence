@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.33  
+**Version:** 1.34  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1060,7 +1060,23 @@ Review completion records who reviewed the task, when, and with what outcome. It
 
 Review subject types must support `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, `CLAIM_ASSESSMENT`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` reviews. A typed subject must resolve to the exact immutable assessment, decision, report version, or rights operation under review. The exact review-type/subject-type mapping, priority scale, triggers, and authorization matrix remain governed by ADR-014 and must be approved before a review can authorize a material decision.
 
-### 5.17.1 ReviewAction
+### 5.17.1 ReviewContextLink
+
+Connects a ReviewRecord to exact evidence and domain context required for a reviewer to understand the task without copying restricted source content into the review record.
+
+Fields:
+
+- `id`
+- `review_record_id`
+- `context_type`
+- `context_reference`
+- `context_role`
+- `created_at`
+- `metadata`
+
+The context type must identify a supported typed reference such as Evidence, ClaimAssessment, DuplicateDecision, EventMatchDecision, ReportVersion, PublicationOperation, or RightsAssessment. The application layer validates the reference, its relationship to the review subject, and reviewer access. Completed review context is immutable.
+
+### 5.17.2 ReviewAction
 
 Represents one immutable action in the lifecycle of a ReviewRecord.
 
@@ -1262,6 +1278,74 @@ The following map identifies proposed writers for domain-state groups; it is not
 | EmbeddingRecord and retrieval runs | `SemanticRetrievalAdapter` (optional) | Retrieval only; no final event decision or association. |
 
 Where a capability is not yet defined or its ADR remains Proposed, this map describes a proposed ownership boundary and is not approval to implement it.
+
+## 6.3 Repository-to-Aggregate, Writer, and Transaction Crosswalk
+
+The following crosswalk assigns every repository in the initial Document 03 inventory to its aggregate, authoritative writer/coordinator, and minimum transaction boundary. It is a proposed implementation contract, not evidence that the repositories have already been implemented. Optional repositories remain conditional on their ADRs.
+
+| Repository | Aggregate / records | Authoritative writer / coordinator | Minimum transaction boundary |
+|---|---|---|---|
+| `SourceRepository` | Source / SourceRelationship identity | SourceRegistry | Source identity and configuration transaction |
+| `SourceRightsProfileRepository` | SourceRightsProfile | ContentRightsService | Versioned rights-profile transaction (ADR-013) |
+| `SourceLicenseRepository` | SourceLicense | ContentRightsService | License reference/version transaction (ADR-013) |
+| `ContentAccessRepository` | ContentAccessRecord | ContentRightsService with NewsCollector | Access record and authorization reference transaction (ADR-013) |
+| `RightsAssessmentRepository` | RightsAssessment | ContentRightsService | One operation-specific assessment transaction (ADR-013) |
+| `ContentRetentionPolicyRepository` | ContentRetentionPolicy | ContentRightsService | Policy version transaction (ADR-013) |
+| `ContentDeletionRepository` | ContentDeletionRequest / ContentDeletionRecord | ContentRightsService with deletion workflow | Request state and each verified execution update (ADR-013) |
+| `DerivedArtifactRepository` | DerivedArtifact | Processing workflow with ContentRightsService enforcement | Artifact/version plus source and rights provenance transaction (ADR-013) |
+| `ContentUsageAuditRepository` | ContentUsageAuditRecord | ContentRightsService | Append-only operation audit transaction (ADR-013) |
+| `SourceHealthRepository` | SourceHealthRecord | NewsCollector | One source-health observation transaction |
+| `SourceRelationshipRepository` | SourceRelationship | SourceRegistry | Source relationship update transaction |
+| `ArticleRepository` | Article current projection | ArticleRevisionService | Atomic Article projection and revision transaction |
+| `ArticleRevisionRepository` | ArticleRevision | ArticleRevisionService | Atomic immutable revision and current-projection transaction |
+| `ArticleProcessingRepository` | ArticleProcessingRecord | Article Processing Workflow | One idempotent processing-stage state transition |
+| `ArticleClassificationRepository` | ArticleClassification | TopicClassifier | Immutable classification result transaction |
+| `DuplicateCandidateRepository` | DuplicateCandidate | ArticleDeduplicator | Immutable pairwise candidate evaluation transaction |
+| `DuplicateDecisionRepository` | DuplicateDecision | Article Deduplication Workflow | Decision, supersession, and effective-pointer transaction |
+| `EntityRepository` | Entity | EntityResolver | Canonical entity identity transaction |
+| `EntityAliasRepository` | EntityAlias | EntityResolver | Alias resolution/update transaction |
+| `ArticleEntityMentionRepository` | ArticleEntityMention | EntityExtractor with EntityResolver | Source-scoped mention and resolution-reference transaction |
+| `EventRepository` | Event current state | EventService | Event state and EventHistory transaction |
+| `ArticleEventLinkRepository` | ArticleEventLink | EventService | Authorizing decision and association activation/deactivation transaction |
+| `EventMatchCaseRepository` | EventMatchCase | Event Resolution Workflow | Case lifecycle and effective-decision pointer transaction |
+| `EventMatchCandidateRepository` | EventMatchCandidate | EventMatcher via Event Resolution Workflow | Immutable candidate evaluation transaction |
+| `EventMatchDecisionRepository` | EventMatchDecision | Event Resolution Workflow | Decision, supersession, case pointer, and link reconciliation transaction |
+| `EventHistoryRepository` | EventHistory | EventHistoryService via EventService | Append-only event state/history transaction |
+| `EventRelationshipRepository` | EventRelationship | EventService | Identity/relationship operation transaction |
+| `EventIdentityOperationRepository` | EventIdentityOperation and input/output links | EventService | Operation, inputs, outputs, and identity projection transaction |
+| `ClaimRepository` | Claim current-assessment projection | EvidenceService | Claim identity/projection update with assessment transaction |
+| `ClaimObservationRepository` | ClaimObservation | EvidenceService / claim extraction workflow | Observation and source provenance transaction |
+| `EvidenceRepository` | Evidence | EvidenceService | Evidence registration and origin provenance transaction |
+| `EvidenceLocationRepository` | EvidenceLocation | EvidenceService | Evidence location/provenance transaction |
+| `ClaimEvidenceLinkRepository` | ClaimEvidenceLink | EvidenceService | Claim-evidence relationship transaction |
+| `ClaimAssessmentRepository` | ClaimAssessment | EvidenceService / Claim Assessment Workflow | Assessment and Claim current-assessment projection transaction |
+| `ClaimAssessmentEvidenceLinkRepository` | ClaimAssessmentEvidenceLink | EvidenceService / Claim Assessment Workflow | Atomic assessment plus exact evidence-link set transaction |
+| `AssessmentHistoryRepository` | AssessmentHistory | EvidenceService | Append-only assessment lifecycle transaction |
+| `AnalysisRepository` | Analysis | Event Intelligence Workflow | Immutable analysis completion transaction |
+| `AnalysisInputRepository` | AnalysisInput | Event Intelligence Workflow | Analysis result and exact input provenance transaction |
+| `AnalysisEvidenceLinkRepository` | AnalysisEvidenceLink | Event Intelligence Workflow | Analysis result and evidence-link transaction |
+| `MarketObservationRepository` | MarketObservation (optional) | Market-data acquisition/normalization workflow (ADR-015) | Observation and provider provenance transaction; no implied event causality |
+| `ReportRepository` | Report / immutable report version | ReportVersionService | Report version and lineage transaction |
+| `ReportEventLinkRepository` | Report-event relationships | ReportVersionService | Report version and event-link transaction |
+| `ReportEvidenceLinkRepository` | Report-evidence relationships | ReportVersionService | Report version and evidence-link transaction |
+| `ReportArticleLinkRepository` | Report-ArticleRevision relationships | ReportVersionService | Report version and exact article-revision links transaction |
+| `ReportAnalysisLinkRepository` | Report-analysis relationships | ReportVersionService | Report version and analysis-link transaction |
+| `PublicationDecisionRepository` | PublicationDecision | PublicationPolicy through Publication Decision Workflow | Eligibility decision transaction only; no external side effect |
+| `ReviewRepository` | ReviewRecord and ReviewAction | ReviewService | Task/action state and append-only action transaction |
+| `ReviewContextLinkRepository` | ReviewContextLink | ReviewService | Task and immutable context-reference transaction |
+| `PublicationRepository` | PublicationRecord | PublicationService | Logical external publication operation transaction |
+| `PublicationAttemptRepository` | PublicationAttempt | PublicationService | Attempt result and reconciliation-state transaction |
+| `DeliveryRepository` | DeliveryRecord | ReportDelivery | Logical recipient-delivery operation transaction |
+| `DeliveryAttemptRepository` | DeliveryAttempt | ReportDelivery | Attempt result transaction; delivery remains separate from publication |
+| `ProcessingRunRepository` | ProcessingRun | WorkflowOrchestrator | Run lifecycle/lease state transaction |
+| `ProcessingStepRepository` | ProcessingStep | WorkflowOrchestrator | Step state/idempotency transaction |
+| `CollectionCheckpointRepository` | CollectionCheckpoint | NewsCollector with WorkflowOrchestrator | Checkpoint and collection progress transaction |
+| `LLMUsageRepository` | LLMUsageRecord | SharedLLMExecutionLayer | Append-only provider usage/cost record transaction |
+| `ScheduleRepository` | Schedule | WorkflowOrchestrator | Versioned schedule configuration transaction |
+| `ScheduledExecutionRepository` | ScheduledExecution | WorkflowOrchestrator | Idempotent schedule-occurrence creation and execution-state transaction |
+| `EmbeddingRepository` | EmbeddingRecord / retrieval index (optional) | SemanticRetrievalAdapter (ADR-012) | Derived embedding/index version transaction; no domain identity write |
+
+The rights-related repositories are conditional on GENI-ADR-013; `MarketObservationRepository` is conditional on GENI-ADR-015; `EmbeddingRepository` is conditional on GENI-ADR-012. External provider effects are never included in a database transaction; they require idempotency, attempt records, and reconciliation as defined by the relevant workflow.
 
 ## 7. Workflow Contracts
 
