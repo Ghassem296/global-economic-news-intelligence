@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.12
+**Version:** 1.13
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence
@@ -443,6 +443,7 @@ The first implementation slice should introduce the minimum required concepts, i
 - Source.
 - Article.
 - ArticleRevision as an immutable content version.
+- DuplicateCandidate evaluations and immutable DuplicateDecision history.
 - Topic classification.
 - Entity and entity mention.
 - Event.
@@ -450,9 +451,10 @@ The first implementation slice should introduce the minimum required concepts, i
 - ArticleEventLink as a decision-authorized association.
 - ProcessingRun and ProcessingStep.
 - Evidence and evidence references.
+- ClaimAssessment, ClaimAssessmentEvidenceLink, and append-only AssessmentHistory.
 - Separate Analysis records for each assessment type.
 - Report with immutable version lineage.
-- PublicationDecision and typed ReviewRecord.
+- PublicationDecision, typed ReviewRecord, and append-only ReviewAction.
 - DeliveryRecord and DeliveryAttempt.
 
 Additional concepts from the approved data model should be introduced when required by a concrete workflow.
@@ -465,6 +467,7 @@ Implement and test:
 
 - Article identity and revision behavior.
 - Article deduplication boundaries.
+- Immutable DuplicateCandidate evaluation and separate DuplicateDecision/supersession.
 - Per-ArticleRevision EventMatchCase creation and uniqueness.
 - Candidate evaluation separate from case-level EventMatchDecision.
 - MATCH-only ArticleEventLink creation with exact case and decision references.
@@ -472,10 +475,11 @@ Implement and test:
 - Event lifecycle transitions.
 - Event history append-only behavior.
 - Claim and evidence relationships.
+- Immutable ClaimAssessment versions, exact assessment evidence links, and append-only AssessmentHistory.
 - Analysis versioning.
 - Report versioning.
 - Publication decision rules.
-- Review task transitions.
+- Review task transitions and append-only ReviewAction history for article-deduplication, event-matching, and publication review types.
 - Delivery idempotency boundaries.
 
 ### Initial Evaluation Work
@@ -545,7 +549,10 @@ The persistence layer must support:
 - Idempotent reruns.
 - Processing status and error records.
 - Recovery after interruption.
-- Auditability of publication and review decisions.
+- Auditability of publication, duplicate, claim-assessment, and review decisions.
+- DuplicateDecision supersession and at most one effective decision per DuplicateCandidate.
+- ClaimAssessment sequence, supersession, and current-assessment referential integrity.
+- Append-only ReviewAction identity and idempotency.
 - Unique EventMatchCase identity per ArticleRevision and development key.
 - Versioned, immutable candidate evaluations with deterministic input fingerprints.
 - Atomic EventMatchDecision creation and EventMatchCase.effective_decision_id updates.
@@ -820,7 +827,7 @@ A similarity score alone must not cause irreversible deletion or merging.
 
 - Normalized article records.
 - Article revision support, including ArticleRevisionService and repository contract tests.
-- Duplicate candidate records.
+- Immutable duplicate candidate evaluations and DuplicateDecision history.
 - Topic classifications.
 - Extracted entities and mentions.
 - Processing metadata.
@@ -829,7 +836,9 @@ A similarity score alone must not cause irreversible deletion or merging.
 
 - Articles are normalized consistently.
 - Exact duplicates are handled deterministically.
-- Near-duplicate candidates retain their similarity and decision provenance.
+- Near-duplicate candidates retain their similarity and policy provenance.
+- DuplicateDecision outcomes are immutable, versioned, and corrected only through successor decisions.
+- Duplicate confirmation never deletes or merges the underlying Article or ArticleRevision records.
 - Related but distinct publications are preserved.
 - Topic classifications include method and confidence metadata.
 - Entity mentions retain enough provenance to be reviewed.
@@ -959,8 +968,8 @@ Produce evidence-based economic intelligence.
 2. Implement EvidenceService.
 3. Implement evidence spans or equivalent precise source locators.
 4. Implement ClaimEvidenceLink.
-5. Implement claim assessment.
-6. Implement source attribution.
+5. Implement immutable ClaimAssessment records and ClaimAssessmentEvidenceLink records.
+6. Implement source attribution and append-only AssessmentHistory.
 7. Implement contradictory claim detection.
 8. Implement source independence assessment.
 9. Implement uncertainty representation.
@@ -1023,7 +1032,8 @@ Source independence must account for syndication and shared origin. Multiple cop
 
 - Claims.
 - Evidence records and precise source references.
-- Claim assessments.
+- Immutable, versioned ClaimAssessment records with exact evidence-set references.
+- Append-only AssessmentHistory and current-assessment projection integrity.
 - Contradiction and uncertainty records.
 - Separate versioned Event Importance, Economic Relevance, and Economic Impact Analysis outputs.
 - Optional market-reaction assessments backed by actual market observations.
@@ -1032,6 +1042,8 @@ Source independence must account for syndication and shared origin. Multiple cop
 ### Exit Criteria
 
 - Claims are linked to supporting or contradicting evidence.
+- Each effective ClaimAssessment identifies its exact evidence set, method/policy version, rationale, and superseded assessment where applicable.
+- Claim current-assessment projections are updated atomically and prior assessments remain immutable.
 - Material assertions have traceable provenance.
 - Source attribution is retained.
 - Conflicting information is represented.
@@ -1109,6 +1121,8 @@ Publication decisions must be recorded independently from report content and del
 ### Human Review
 
 `HOLD_FOR_REVIEW` must create a persistent review task or equivalent queue record.
+
+The review workflow must support article-deduplication review, event-matching review, and publication review as distinct typed subjects. A material review result must create the applicable successor DuplicateDecision, EventMatchDecision, or PublicationDecision; a ReviewRecord alone never authorizes a domain change.
 
 The review workflow must support:
 

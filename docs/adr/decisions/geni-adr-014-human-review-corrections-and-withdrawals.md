@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-014  
 **Title:** Human Review, Corrections, and Withdrawals  
 **Status:** Proposed  
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -26,12 +26,13 @@ How should human review be triggered, authorized, recorded, and applied to event
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-- Define triggers for ambiguity, low confidence, high impact, rights restrictions, policy exceptions, and reported errors.
+- Define triggers for duplicate ambiguity, event-matching ambiguity, low confidence, high impact, rights restrictions, policy exceptions, and reported errors.
 - Persist review tasks with typed subject references, reason, priority, assignment, timestamps, and status.
 - Record reviewer identity and authorization through the security layer.
 - Separate review outcome from the authoritative successor domain decision.
 - Use immutable successor decisions for material corrections.
 - Preserve incorrect article-event links as deactivated historical associations rather than deleting them.
+- Support review of DuplicateCandidate outcomes requiring human judgment and create immutable successor DuplicateDecision records for material corrections.
 - Coordinate report correction, publication replacement, and withdrawal through explicit operations.
 - Support escalation, reassignment, overdue detection, and audit.
 
@@ -197,6 +198,7 @@ Ambiguous or high-risk items may be delayed, but corrections become explainable 
 
 ### 9.1 Affected Components
 - ReviewService
+- ArticleDeduplicator and Article Deduplication Workflow
 - EventService
 - PublicationPolicy
 - ReportVersionService
@@ -205,6 +207,9 @@ Ambiguous or high-risk items may be delayed, but corrections become explainable 
 
 ### 9.2 Affected Data Models and Interfaces
 - ReviewRecord
+- ReviewAction
+- DuplicateCandidate
+- DuplicateDecision
 - EventMatchDecision
 - ArticleEventLink
 - ReportVersion
@@ -220,7 +225,7 @@ Ambiguous or high-risk items may be delayed, but corrections become explainable 
 ### 9.4 Related ADRs
 | ADR ID | Relationship | Explanation |
 |---|---|---|
-| GENI-ADR-002 | Related to | Defines matching ambiguity and decision history. |
+| GENI-ADR-002 | Related to | Defines event-matching ambiguity and, with the data model, candidate/decision history; this ADR defines the human review operation for duplicate decisions. |
 | GENI-ADR-004 | Depends on / Related to | Defines publication gates that may route reports to review. |
 | GENI-ADR-008 | Related to | Provides evidence and uncertainty context. |
 | GENI-ADR-011 | Depends on / Related to | Defines event identity and association correction semantics. |
@@ -236,7 +241,7 @@ These relationships do not imply that related Proposed ADRs have been accepted.
 - Persist review tasks and assignment history.
 - Expose only evidence and source content permitted by rights policy.
 - Enforce reviewer authorization and separation of duties where required.
-- Apply outcomes through EventService, PublicationPolicy, ReportVersionService, or PublicationService.
+- Apply article-deduplication outcomes through the Article Deduplication Workflow, event-matching outcomes through EventService/Event Resolution Workflow, and report outcomes through PublicationPolicy, ReportVersionService, or PublicationService.
 - Preserve old decisions, links, and report versions; create successor lineage.
 - Monitor overdue, abandoned, conflicting, and failed corrective tasks.
 
@@ -254,14 +259,16 @@ Inspect the actual implementation and data before defining migration. This propo
 ### 10.4 Implementation Sequence
 1. Define reviewer roles and authorization boundaries.
 2. Implement persistent review queue and task lifecycle.
-3. Integrate event-match review with Event Resolution workflow and EventService.
-4. Integrate report review with PublicationPolicy and ReportVersionService.
-5. Integrate correction, replacement, and withdrawal with PublicationService.
-6. Add audit, escalation, and incident exercises.
+3. Integrate duplicate-candidate review with the Article Deduplication Workflow and immutable DuplicateDecision supersession.
+4. Integrate event-match review with Event Resolution workflow and EventService.
+5. Integrate report review with PublicationPolicy and ReportVersionService.
+6. Integrate correction, replacement, and withdrawal with PublicationService.
+7. Add audit, escalation, and incident exercises.
 
 ### 10.5 Verification Requirements
 - Test unauthorized actors cannot complete or approve reviews.
 - Test a review record alone cannot create an event association or publish a report.
+- Test article-deduplication review creates a successor DuplicateDecision for the same candidate.
 - Test material review outcomes create successor decisions without mutating originals.
 - Test corrected links preserve the old inactive link and create a traceable successor.
 - Test report correction creates a new version and separate publication replacement operation.
@@ -275,6 +282,7 @@ Implementation verification remains deferred until formal acceptance and impleme
 | AC-01 | Review tasks are persistent and queryable by status, assignee, due date, and subject. | Repository tests |
 | AC-02 | Reviewer identity and permissions are validated. | Security tests |
 | AC-03 | Material review outcomes create immutable successor decisions. | Lineage tests |
+| AC-07 | Duplicate-candidate review creates a successor DuplicateDecision without mutating the prior decision or source articles. | Duplicate-decision lineage tests |
 | AC-04 | Association corrections retain the deactivated prior link. | Integration tests |
 | AC-05 | Report correction and external publication withdrawal are distinct operations. | Lifecycle tests |
 | AC-06 | Review backlog, overdue items, and failed corrective actions are observable. | Operational tests |
@@ -316,5 +324,6 @@ External legal, provider, and empirical evidence must be added during formal rev
 |---|---|---|---|
 | 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 | 2026-11-18 | 1.1 | Proposed | Aligned event-matching review records and workflow references with the component architecture; removed undefined service and record types. |
+| 2026-11-18 | 1.2 | Proposed | Extended typed human review to article-deduplication decisions and defined successor DuplicateDecision handling. |
 
 **End of ADR**
