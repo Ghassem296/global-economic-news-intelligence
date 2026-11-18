@@ -133,7 +133,7 @@ The main documentation includes:
 | [02 — Component Architecture and Interfaces](docs/02-component-architecture-and-interfaces.md) | Component responsibilities, dependencies, and interface contracts |
 | [03 — Data Model and Storage Design](docs/03-data-model-and-storage-design.md) | Domain entities, relationships, persistence, and data lifecycle |
 | [04 — Implementation Plan and Roadmap](docs/04-implementation-plan-and-roadmap.md) | Development stages, dependencies, and acceptance criteria |
-| [05 — Architecture Decision Governance](docs/05-architecture-decision-records.md) | ADR lifecycle, decision approval, and architectural change control |
+| [05 — Architecture Decision Records Governance](docs/05-architecture-decision-records.md) | ADR lifecycle, decision approval, and architectural change control |
 | [06 — Documentation Governance and Change Management](docs/06-documentation-governance-and-change-management.md) | Documentation ownership, review, versioning, and change management |
 | [07 — Documentation Registry](docs/07-documentation-registry.md) | Central inventory of project documents and their status |
 

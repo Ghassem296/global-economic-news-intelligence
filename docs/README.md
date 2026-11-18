@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.10
+**Version:** 1.11
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -179,7 +179,7 @@ The roadmap should prioritize an early end-to-end product workflow and measurabl
 
 **Authority:** Primary implementation planning reference.
 
-## 3.5 Architecture Decision Governance
+## 3.5 Architecture Decision Records Governance
 
 **File:** `05-architecture-decision-records.md`  
 **Document ID:** `GENI-GOV-005`
@@ -436,7 +436,7 @@ Each document has a defined responsibility.
 | How is the system structured? | Component Architecture |
 | How is information represented and stored? | Data Model and Storage Design |
 | In what order should we build it? | Implementation Plan |
-| How are architectural decisions governed? | Architecture Decision Governance |
+| How are architectural decisions governed? | Architecture Decision Records Governance |
 | Why was an architectural decision made? | Relevant ADR |
 | Which ADRs exist and what is their status? | ADR Registry |
 | How should documentation changes be managed? | Documentation Governance |
