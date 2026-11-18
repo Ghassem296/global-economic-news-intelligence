@@ -519,7 +519,7 @@ The publication policy must support:
 
 A held report must be associated with a review record or queue entry containing its status, reason, timestamps, and eventual outcome. An authorized review outcome must be recorded. Approval after review must result in a new publication decision; the earlier decision and review history must not be overwritten.
 
-The publication execution workflow must create a durable publication-operation record before making an external side effect. The operation must identify the report version, target, operation type, applicable publication decision, and idempotency key. Each external attempt must be recorded separately.
+The publication execution workflow must create a durable publication-operation record before making an external side effect. The operation must identify the report version, publication target, stable publication key (the logical publication slot within that target), operation type, applicable publication decision, and idempotency key. Each external attempt must be recorded separately. A single target may host many independent publication keys; replacement and withdrawal must operate only within the referenced key.
 
 Publication operations must distinguish:
 
@@ -527,7 +527,7 @@ Publication operations must distinguish:
 - `REPLACE`: publish a corrected or superseding report version in place of an earlier publication.
 - `WITHDRAW`: remove or formally withdraw an existing publication where the target supports it.
 
-A replacement must reference the earlier publication it supersedes. The previous publication remains the effective publication until the replacement is confirmed successful. A failed replacement must not silently invalidate the previous publication.
+A replacement must reference the earlier publication it supersedes and use the same publication target and publication key. The previous publication remains the effective publication for that key until the replacement is confirmed successful. A failed replacement must not silently invalidate the previous publication.
 
 A withdrawal must reference the publication being withdrawn and preserve its reason and authorization context. If a target cannot physically remove content, the system must record the limitation and apply the approved withdrawal or tombstone procedure.
 
@@ -836,11 +836,11 @@ Each logical publication operation must record:
 - External references and outcome information.
 - Each individual attempt and any recovery or reconciliation action.
 
-A successful publication operation is the evidence that the report version became available at the specified target. The publication state for a target must be derived from the history of successful publication operations, not inferred from the policy decision or from a delivery record.
+A successful publication operation is the evidence that the report version became available at the specified target and publication key. The effective publication state must be derived from the successful operation chain for that target and key, not inferred from the policy decision or from a delivery record.
 
 A new corrected report must be a new immutable report version. Publishing it as a replacement must reference the earlier publication. The earlier publication remains effective if replacement fails; it becomes superseded only after the target confirms the replacement.
 
-A withdrawal must reference an existing publication and retain the reason and authorization context. A failed or uncertain withdrawal must not be represented as completed.
+A withdrawal must reference the currently effective publication for the same target and publication key and retain its reason and authorization context. A failed or uncertain withdrawal must not be represented as completed.
 
 If an external request times out after it may have succeeded, the operation must be marked for reconciliation. The system must query or otherwise reconcile the target before retrying a side effect. Where the target does not support idempotency or status lookup, the duplicate-publication risk and manual reconciliation path must be documented.
 
