@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-19
@@ -466,11 +466,11 @@ This inventory distinguishes defined state vocabulary from defined transition be
 | EventMatchCandidate | Illustrative GENERATED, EVALUATED, INELIGIBLE | Candidate evaluation is immutable after EVALUATED/INELIGIBLE and re-evaluation creates a successor record; complete enum, creation/evaluation boundary, and interrupted-generation semantics remain open. | **Partially specified** |
 | EventMatchDecision | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED | Immutable append/supersession; one effective decision pointer; outcome-specific invariants specified. These are outcomes, not mutable lifecycle states. | **Outcome contract specified; authorization/policy remains gated** |
 | ArticleEventLink | is_active true/false | Active only while authorizing MATCH decision is effective; successor decision deactivates/activates atomically. | **Derived transition contract specified** |
-| PublicationDecision | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT | Immutable decisions; material change creates successor; exact effective-predecessor selection rule not fully specified. | **Partially specified; provenance mismatch open** |
+| PublicationDecision | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT | Immutable decisions and successor lineage are defined; unique effective-decision algorithm, concurrent-successor guard, and actor/authorization provenance schema remain unresolved. | **Partially specified; provenance mismatch open** |
 | ProcessingRun | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED | Vocabulary only. Initial-state, allowed transitions, terminal/reopen rules, PARTIALLY_COMPLETED semantics, step aggregation, recovery identity, and transition-history requirements are not defined. | **Blocked** |
 | ProcessingStep | A status field exists; no closed vocabulary, initial state, transition graph, terminal rules, or run-aggregation semantics are defined. | Lease/fencing rules exist; they govern ownership and stale-writer rejection, not the missing status lifecycle. | **Blocked** |
 | PublicationRecord | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED | Expected operation lifecycle and reconciliation semantics defined in Document 03 §11.8. | **Specified at logical level; target adapter contract remains gated** |
-| PublicationAttempt | EXECUTE/RECONCILE; CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, RECONCILED_NOT_APPLIED | Attempt records are traceable; mapping from each attempt outcome to operation transition requires a formal table. | **Partially specified** |
+| PublicationAttempt | EXECUTE/RECONCILE; CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, RECONCILED_NOT_APPLIED | Attempt outcomes are enumerated; outcome-to-PublicationRecord transition mapping, retryable/terminal behavior, and post-reconciliation state require a formal table. | **Partially specified** |
 | DeliveryRecord | PENDING, IN_PROGRESS, DELIVERED, FAILED, CANCELLED | Status vocabulary and idempotent retry requirement exist in Document 03 §12.1; allowed transitions, terminal/retry semantics, and DeliveryAttempt outcome mapping are not defined. | **Partially specified; transition contract required before delivery implementation** |
 | ExecutionLease | ACTIVE, RELEASED, EXPIRED | Exclusive acquisition, monotonic fencing, owner/token-bound renewal/release and stale-worker rejection specified in Document 03 §13.2.1. | **Specified at logical level; numeric lease policy is operational TBD** |
 | IdempotencyRecord | IN_PROGRESS, COMPLETED, FAILED, RECONCILIATION_REQUIRED | Same-fingerprint replay, different-fingerprint conflict, external reconciliation semantics specified in Document 03 §13.2.2. | **Specified at logical level; exact retry/expiry policy TBD** |
@@ -485,8 +485,8 @@ The following must be completed from approved policy and reconciled across Docum
 3. ProcessingRun/ProcessingStep aggregation and recovery contract: how step outcomes determine run status; whether recovery resumes the same run or creates a successor; how completed outputs are reused; how cancellation/deadline races are resolved; and whether a separate append-only transition history is required.
 4. EventMatchCase lifecycle contract, including initial state, allowed transitions, decision/review-to-status mapping, close/cancel guards, terminal states, reopening by successor decision, and atomic coordination with effective-decision and ArticleEventLink changes.
 5. EventMatchCandidate complete status vocabulary and creation/evaluation contract, including eligibility guards, interrupted generation, idempotent evaluation, and immutable successor-record behavior for changed inputs/policy.
-6. PublicationDecision effective-successor algorithm and actor/authorization provenance reconciliation.
-7. PublicationAttempt outcome-to-PublicationRecord transition matrix, including unknown outcome and reconciliation.
+6. PublicationDecision effective-successor algorithm, concurrent-append guard, and actor/authorization provenance reconciliation.
+7. PublicationAttempt outcome-to-PublicationRecord transition matrix, including confirmed failure, unknown outcome, reconciliation-not-applied, retry eligibility, and terminal/cancelled behavior.
 8. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014.
 9. DeliveryRecord transition matrix, including retry/cancellation semantics, and DeliveryAttempt outcome mapping.
 10. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
@@ -527,6 +527,24 @@ EventMatchCase and EventMatchCandidate must be specified together with EventMatc
 
 Candidate evaluation status must never encode case-level acceptance/rejection or a final event identity decision. Candidate scores remain distinct from decision confidence. A review task remains distinct from the authoritative EventMatchDecision. The case's effective-decision pointer remains a projection, and a new decision plus its association reconciliation must preserve the immutable history.
 
+### 10.10.3 Publication decision and attempt closure questions
+
+PublicationDecision, ReviewRecord, PublicationRecord, and PublicationAttempt are separate records with different authority. The publication policy decision authorizes an eligible operation; it does not prove external success. The remaining blockers are:
+
+| Decision | Required contract | Why it cannot be inferred |
+|---|---|---|
+| Effective decision | Deterministic selection of the one effective decision for an exact immutable Report version; predecessor validation; behavior for first decision; concurrent append/branch prevention. | Document 03 requires an explicit supersession rule but does not define the full algorithm or concurrency guard. |
+| Decision provenance | Exact actor identity, actor type, authorization reference, and authoritative validation/source; field ownership between command, result, and persisted record. | Document 15 §4.12 requires provenance, while Document 03 §11.6 omits corresponding fields. |
+| Decision-to-workflow mapping | Exact operational handling for each outcome, including review task creation/closure and the permitted next action after PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, or REJECT. | Outcomes are defined, but a complete transition/workflow mapping and all review triggers are not closed. |
+| Caveat enforcement | Required structure and validation for PUBLISH_WITH_CAVEATS, and proof that the exact caveats are included in the publication representation. | The requirement is stated, but DTO representation and validation are TBD. |
+| Attempt outcome mapping | Exact PublicationRecord status and permitted next action for each EXECUTE/RECONCILE outcome. | Attempt outcomes are enumerated, but the full mapping is not specified. |
+| Confirmed failure | Whether CONFIRMED_FAILURE is terminal, retryable under the same logical operation, or requires an explicitly authorized successor operation; classification/guard requirements. | No complete failure/retry policy is defined. |
+| Reconciled not applied | Exact PublicationRecord state after RECONCILED_NOT_APPLIED and the guard for another EXECUTE attempt using the original operation/idempotency key. | Same-operation retry is described, but the status transition and eligibility guard are not tabulated. |
+| Reconciled success | Required evidence and atomic state update when reconciliation confirms the external effect; treatment of late/duplicate attempt results. | Reconciliation is required, but all persistence and concurrency outcomes are not mapped. |
+| Cancellation | Whether and when an in-flight operation may become CANCELLED; handling when the external side effect may already have occurred. | Cancellation is a listed operation status but its transition guards and unknown-outcome interaction are not defined. |
+
+The effective PublicationDecision must be scoped to the exact report version. A new decision must not create competing effective successors. PublicationAttempt records are immutable attempt evidence; changing the logical PublicationRecord state must not rewrite an attempt. Unknown external outcomes require reconciliation before any further side-effecting attempt. These constraints do not authorize implementation until the missing mappings and provenance contract are resolved.
+
 No implementation may invent missing transitions or treat timestamps as substitutes for state.
 
 ## 11. Related documents
@@ -545,10 +563,10 @@ No implementation may invent missing transitions or treat timestamps as substitu
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-19
 
-**Revision Note (v1.5):** Expanded EventMatchCase and EventMatchCandidate lifecycle blockers into an explicit cross-document decision checklist, including decision/review status mapping, reopening, atomic association updates, candidate evaluation immutability, and supersession. No new statuses or transition rules were invented; implementation remains blocked pending resolution and Project Owner approval.
+**Revision Note (v1.6):** Expanded PublicationDecision and PublicationAttempt blockers into an explicit contract-closure checklist covering effective-successor selection, concurrency, actor/authorization provenance, caveat enforcement, attempt-outcome mapping, retry, reconciliation, and cancellation. No new statuses or transition rules were invented; implementation remains blocked pending resolution and Project Owner approval.
 
 **End of Document**
