@@ -196,7 +196,7 @@ Ambiguous or high-risk items may be delayed, but corrections become explainable 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-- EventMatchReviewService
+- ReviewService
 - ReviewService
 - EventService
 - PublicationPolicy
@@ -205,7 +205,7 @@ Ambiguous or high-risk items may be delayed, but corrections become explainable 
 - Authorization service
 
 ### 9.2 Affected Data Models and Interfaces
-- EventMatchReviewRecord
+- ReviewRecord
 - ReviewRecord
 - EventMatchDecision
 - ArticleEventLink
@@ -256,7 +256,7 @@ Inspect the actual implementation and data before defining migration. This propo
 ### 10.4 Implementation Sequence
 1. Define reviewer roles and authorization boundaries.
 2. Implement persistent review queue and task lifecycle.
-3. Integrate event-match review with EventMatchDecisionService and EventService.
+3. Integrate event-match review with Event Resolution workflow and EventService.
 4. Integrate report review with PublicationPolicy and ReportVersionService.
 5. Integrate correction, replacement, and withdrawal with PublicationService.
 6. Add audit, escalation, and incident exercises.
@@ -304,7 +304,7 @@ The references below are internal project sources used to establish documented c
 | Reference | Type | Relevance |
 |---|---|---|
 | `docs/01-product-and-system-architecture.md` | Internal | Defines review, publication, and correction boundaries. |
-| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines ReviewService and EventMatchReviewService. |
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines ReviewService and ReviewService. |
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines review records and immutable decisions. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines review and correction stages. |
 | `GENI-ADR-004` | Internal | Publication decisions and quality gates. |
