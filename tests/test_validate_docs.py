@@ -84,6 +84,9 @@ docs/
         validator.validate_privacy_specification_contract()
         validator.validate_repository_inventory_alignment()
 
+    def test_repeated_document_metadata_matches_header(self) -> None:
+        validator.validate_repeated_document_metadata()
+
     def test_expected_adr_inventory_includes_adr_020(self) -> None:
         self.assertIn("GENI-ADR-020", validator.EXPECTED_ADR_IDS)
         self.assertEqual(len(validator.EXPECTED_ADR_IDS), 20)
