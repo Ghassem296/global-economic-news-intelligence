@@ -3,9 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-018  
 **Title:** Multilingual Source Processing, Translation, and Language Policy  
-**Version:** 0.2  
 **Status:** Proposed  
-**Priority:** P2  
+**Version:** 1.0  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -16,123 +15,141 @@
 
 ## 1. Context and Problem Statement
 
-International news sources publish in many languages. Translation can improve retrieval and reporting but can alter nuance, named entities, dates, quantities, negation, attribution, and quotations. The original source and its permitted content references must remain the provenance anchor. The initial report language is documented as English, but source language and output language are separate concerns.
+International economic news is published in multiple languages and scripts. Translation can change nuance, entity names, dates, units, quotation meaning, negation, and legal or policy terminology. The original source content and language must remain authoritative for provenance. The system needs a language policy that supports original-language processing where feasible, optional traceable translations, and language-specific evaluation without silently replacing the source.
 
-This ADR is a proposal for formal review. It does not approve an implementation or override another decision.
+This ADR is a proposal for formal review; it does not authorize implementation as accepted architecture.
 
 ## 2. Decision Question
 
-How should the platform detect source language, preserve original content, generate translations, and use multilingual material in analysis and reporting?
+How should the system identify, preserve, translate, and use multilingual source content in processing, matching, analysis, and reporting?
 
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-
-- Preserve original source language and provenance.
-- Treat translation as a derived artifact, not an authoritative replacement.
-- Maintain exact alignment between translated statements and original source spans where feasible.
-- Detect and represent uncertainty in language identification and translation quality.
-- Keep output-language policy explicit and independently versioned.
+- Preserve original language, script, source references, and permitted source content.
+- Record language identification result, method, confidence/quality, and uncertainty.
+- Treat translation as a derived, versioned artifact linked to the exact source revision.
+- Never replace original text with translated text as the only stored representation.
+- Preserve names, numbers, dates, units, negation, quotation boundaries, and attribution where possible.
+- Allow original-language analysis and cross-language retrieval when quality is demonstrated.
+- Apply rights checks before external translation or processing.
+- Evaluate supported languages separately and expose unsupported/low-quality cases.
 
 ### 3.2 Technical Constraints
-
-- Domain contracts must not depend on a specific external provider unless explicitly approved.
-- Derived artifacts must identify their exact input version and generation configuration.
-- Historical provenance must remain available for review and correction.
-- Unknown or unavailable information must remain explicit.
+- Language identification and translation quality vary by language, script, domain, and provider.
+- Source rights for translation and external processing are governed by ADR-013.
+- Cross-language retrieval is related to ADR-012.
+- Initial supported-language set remains undecided.
 
 ### 3.3 Business and Product Constraints
-
-- The initial release remains focused on the core text intelligence workflow.
-- Additional channels and languages must be introduced only when justified by product requirements.
-- User-facing claims must reflect validated capability and actual source coverage.
+- The initial product remains event-centric economic intelligence with text reports as its first release.
+- The design must support incremental implementation and explicit evaluation.
+- Proposals remain provisional until the decision owner records approval.
 
 ### 3.4 Security and Privacy Constraints
-
-- External source content is untrusted input.
-- External processing must comply with applicable privacy and data-protection requirements.
-- Provider credentials and sensitive content must not be exposed in logs.
+- Source content and model output are untrusted until validated.
+- Only authorized application services and reviewers may change authoritative state.
+- Secrets and unnecessary protected content must not appear in ordinary logs.
 
 ### 3.5 Operational and Cost Constraints
-
-- Processing concurrency, media generation, translation calls, and storage must be bounded.
-- Provider failures must not corrupt authoritative report or source records.
-- Cost and quality must be observable separately.
+- Avoid unnecessary distributed infrastructure in the initial release.
+- Measure cost and complexity against workload and reliability requirements.
+- Failures, retries, recovery, and audit must be observable.
 
 ### 3.6 Legal and Content-Rights Constraints
-
-- Access to source material does not imply permission to translate, store, transform, or republish it.
-- Media and translation outputs may have additional provider/platform terms.
-- Legal review may be required for jurisdiction-specific obligations.
+- Access does not itself authorize retention, external processing, transformation, quotation, or republication.
+- Source terms, licensing, privacy, and jurisdictional restrictions must be reviewed before production use.
 
 ### 3.7 Explicit Non-Goals
-
-- This ADR does not select a specific TTS, video, or translation vendor.
-- This ADR does not establish unmeasured language-quality or media-quality thresholds.
-- This ADR does not authorize expansion beyond the approved product scope.
+- This ADR does not invent unmeasured numerical thresholds or performance guarantees.
+- This ADR does not approve a provider, database, or model merely by listing it as an alternative.
+- This proposal does not supersede the ADR approval process.
 
 ## 4. Alternatives Considered
 
-### 4.1 A — Translate all content immediately and discard originals
+### 4.1 Alternative A — Translate all content to a pivot language
 
-**Advantages:** Simplifies downstream processing around one language.
+**Description:** Translate every source before classification and analysis, then de-emphasize the original.
 
-**Disadvantages:** Destroys source fidelity and makes translation errors difficult to audit or correct.
+**Advantages:**
+- Simplifies downstream language handling.
 
-**Risk:** Very High
+**Disadvantages:**
+- May lose nuance and provenance
+- multiplies rights and cost.
 
-### 4.2 B — Process every language independently with no translation
+**Risks:**
+- Translation errors become invisible and hard to audit.
 
-**Advantages:** Preserves source language and avoids translation errors.
+**Estimated Complexity:** Medium
 
-**Disadvantages:** Limits cross-language retrieval, comparison, and reporting capabilities.
+### 4.2 Alternative B — Process each language independently
 
-**Risk:** Medium
+**Description:** Build separate processing pipelines for every language.
 
-### 4.3 C — Preserve originals and create traceable optional translations
+**Advantages:**
+- Preserves linguistic fidelity.
 
-**Advantages:** Supports multilingual retrieval while retaining original evidence and reviewability.
+**Disadvantages:**
+- Large model/rule maintenance burden
+- weak cross-language aggregation.
 
-**Disadvantages:** Requires translation lineage, quality checks, and language-aware evaluation.
+**Risks:**
+- Coverage fragmentation and inconsistent results.
 
-**Risk:** Medium
+**Estimated Complexity:** High
 
+### 4.3 Alternative C — Preserve originals with optional traceable translations
+
+**Description:** Keep source language authoritative and create versioned translations only where justified and permitted.
+
+**Advantages:**
+- Traceable and incremental
+- supports cross-language use without losing originals.
+
+**Disadvantages:**
+- Requires language metadata, translation lineage, and evaluation.
+
+**Risks:**
+- Quality may vary and require review.
+
+**Estimated Complexity:** Medium
 
 ## 5. Evaluation and Comparison
 
-The comparison is qualitative and reflects architectural fit, not measured cost or output quality.
+The comparison is qualitative and reflects architectural fit, not measured performance or cost.
 
-| Criterion | Alternative A | Alternative B | Alternative C |
+| Evaluation Criterion | Translate all content to a pivot language | Process each language independently | Preserve originals with optional traceable translations |
 |---|---|---|---|
-| Initial scope control | Low | High | High |
-| Provenance preservation | Low | High | High |
-| Future extensibility | High but premature | Low | High |
-| Operational complexity | High | Low | Medium |
-| Quality and rights governance | Difficult to coordinate | Simple but limited | Explicit per derived artifact |
+| Original-source fidelity | Low | High | High |
+| Cross-language aggregation | High via pivot | Low to Medium | High where validated |
+| Operational burden | Medium | High | Medium |
+| Translation error visibility | Low | High | High |
 
-Alternative C is recommended because it separates the core intelligence model from channel-specific presentation while preserving future extensibility.
+The requirements in Section 3 are the primary decision drivers. Unmeasured cost and performance values are intentionally left unspecified.
 
 ## 6. Recommended Decision
 
-Preserve original source-language metadata and permitted content references as primary provenance. Language identification and translation are separate, versioned derived artifacts. Each translation records provider/model, version, source revision, source/target language, generation time, and quality metadata. Translation may support retrieval and analysis but must not replace original evidence. Important claims should retain original-language spans and, where feasible, be checked against the original for names, quantities, dates, negation, and quotations. Keep report output language as a separate product policy; English remains the initial proposed output language unless explicitly changed.
+**Recommended Alternative:** Alternative C — Preserve original source content and create traceable optional translations.
 
-### 6.1 Decision Boundaries
+The original source language and revision remain authoritative. Language identification is stored with method and uncertainty. Translation is an optional derived artifact linked to its source revision, translator/model/provider, configuration version, output language, and quality status. Downstream components must know whether they consume original text or a translation. Cross-language matching and analysis may use translations only after evaluation on representative domain-specific datasets. This ADR does not approve a translation provider or universal supported-language promise.
 
-- Define language detection result, confidence, method, and model version; permit UNKNOWN or mixed-language outcomes.
-- Preserve original source text or permitted references according to content-rights policy.
-- Define translation artifacts keyed to exact ArticleRevision and target language.
-- Record translation provider/model/version, prompt/configuration, timestamps, and quality status.
-- Preserve sentence/segment alignment to original source spans where technically feasible.
-- Use multilingual entity aliases and transliteration carefully; do not merge entities solely on transliterated similarity.
-- Build language-specific and cross-language evaluation datasets.
-- Require original-source verification for high-impact quotations, quantities, dates, and disputed claims where possible.
-- Separate source-language policy from report-language and user-interface localization policy.
+**Rationale:**
+- Preserves source provenance and verification against original language.
+- Allows incremental language coverage.
+- Makes translation error and lineage visible.
 
-### 6.2 Assumptions and Open Questions
+**Deferred Questions:**
+- Initial supported languages and scripts.
+- Translation provider and local-versus-external processing policy.
+- Domain-specific translation quality thresholds.
+- Languages with limited evaluation data.
+- Transliteration and entity-alias normalization policy.
 
-- The initial output language and supported media formats remain product-level policy choices.
-- Provider selection requires comparative quality, cost, rights, and operational review.
-- Legal and platform-specific requirements must be validated before production use.
+**Recommendation Prepared By:** AI Architecture Assistant  
+**Recommendation Date:** 2026-11-18
+
+A recommendation is not an approval. The Project Owner must explicitly accept or reject this proposal.
 
 ## 7. Final Decision
 
@@ -142,163 +159,161 @@ Preserve original source-language metadata and permitted content references as p
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded; the recommendation is awaiting Project Owner review.
+**Decision Rationale:** Pending formal review; Section 6 contains the recommendation.
+
+**Conditions or Restrictions:**
+- Maintain Proposed status until explicit approval is recorded.
+- Do not treat deferred questions or example values as settled implementation details.
+- Any temporary implementation assumption must be reversible and documented with a review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-
-- Preserves source/report lineage for derived outputs.
-- Keeps the core event and report model independent of presentation technology.
-- Allows channel or language expansion to be phased and evaluated.
+- Preserves original source integrity.
+- Allows incremental multilingual capability.
+- Improves traceability and cross-language evaluation.
 
 ### 8.2 Negative Consequences
-
-- Requires separate artifact records and quality checks.
-- Adds translation/media-specific storage and lifecycle management.
-- Some capabilities remain deferred until demand and quality are demonstrated.
+- Adds translation artifacts and quality checks.
+- Some languages may remain unsupported or require human review.
 
 ### 8.3 Technical Trade-Offs
-
-The recommendation favors derived, versioned artifacts over a single mutable multi-format report. This increases traceability and storage requirements but prevents generated media from silently diverging from the authoritative report version.
+Translation increases access but adds uncertainty. Original-language evidence remains authoritative; translated text must not silently become the canonical source.
 
 ### 8.4 Operational Consequences
-
-Every enabled adapter needs monitoring, retries, cost controls, rights checks, and a correction/withdrawal procedure. Failures must be isolated from the core text pipeline.
+Monitor language detection confidence, translation latency/cost, quality by language, provider errors, and rights denials.
 
 ### 8.5 Product and Business Consequences
-
-New channels and languages may increase reach but must not weaken factual quality, accessibility, source attribution, or editorial control.
+The product can cover more sources without hiding language or translation limits behind fluent output.
 
 ### 8.6 Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Media or translation diverges from corrected source report | Maintain exact lineage and trigger downstream review on report supersession. |
-| Provider output introduces factual errors | Review transcripts/translations and retain source references. |
-| Rights are assumed rather than verified | Apply source and output-specific rights checks before generation and publication. |
-| Premature expansion increases cost | Use phased acceptance gates and task-level budgets. |
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Translation changes meaning | Medium | High | Preserve original, evaluate domain terminology, and review low-quality cases. |
+| Entity/number corruption | Medium | High | Structured checks, normalization, and source-span traceability. |
+| External rights violation | Medium | Critical | Check translation/external-processing permissions before transmission. |
+| Uneven language coverage | High | Medium | Publish supported-language scope and track gaps. |
 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-
-- Define language detection result, confidence, method, and model version; permit UNKNOWN or mixed-language outcomes.
-- Preserve original source text or permitted references according to content-rights policy.
-- Define translation artifacts keyed to exact ArticleRevision and target language.
-- Record translation provider/model/version, prompt/configuration, timestamps, and quality status.
-- Preserve sentence/segment alignment to original source spans where technically feasible.
-- Use multilingual entity aliases and transliteration carefully; do not merge entities solely on transliterated similarity.
-- Build language-specific and cross-language evaluation datasets.
-- Require original-source verification for high-impact quotations, quantities, dates, and disputed claims where possible.
-- Separate source-language policy from report-language and user-interface localization policy.
+- ArticleNormalizer
+- LanguageIdentifier
+- TranslationService
+- EntityExtractor
+- EventMatcher
+- ClaimExtractor
+- ReportGenerator
 
 ### 9.2 Affected Data Models and Interfaces
-
-If accepted, define derived artifact records, source/report lineage, provider metadata, output format, quality state, and supersession references. Keep them separate from Article, Event, Analysis, and Report authoritative records.
+- ArticleRevision
+- LanguageDetectionRecord
+- TranslationArtifact
+- EntityAlias
+- ProcessingRun
+- Analysis
 
 ### 9.3 Affected Documents
-
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
+- docs/01-product-and-system-architecture.md
+- docs/02-component-architecture-and-interfaces.md
+- docs/03-data-model-and-storage-design.md
+- docs/04-implementation-plan-and-roadmap.md
 
 ### 9.4 Related ADRs
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-002 | Related to | Defines duplicate detection and matching across article revisions. |
+| GENI-ADR-006 | Related to | Defines provider-independent execution for translation tasks. |
+| GENI-ADR-008 | Related to | Defines provenance and uncertainty for translated evidence. |
+| GENI-ADR-012 | Related to | Defines semantic retrieval and cross-language embedding options. |
+| GENI-ADR-013 | Depends on | Defines translation and external-processing rights. |
 
-- GENI-ADR-004 — Publication decisions and quality gates.
-- GENI-ADR-013 — Content access, licensing, retention, and republication.
-- GENI-ADR-014 — Human review, corrections, and withdrawals.
-- GENI-ADR-017 — LLM budgets, usage tracking, and evaluation.
+These relationships do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-
-- Define language detection result, confidence, method, and model version; permit UNKNOWN or mixed-language outcomes.
-- Preserve original source text or permitted references according to content-rights policy.
-- Define translation artifacts keyed to exact ArticleRevision and target language.
-- Record translation provider/model/version, prompt/configuration, timestamps, and quality status.
-- Preserve sentence/segment alignment to original source spans where technically feasible.
-- Use multilingual entity aliases and transliteration carefully; do not merge entities solely on transliterated similarity.
-- Build language-specific and cross-language evaluation datasets.
-- Require original-source verification for high-impact quotations, quantities, dates, and disputed claims where possible.
-- Separate source-language policy from report-language and user-interface localization policy.
+- Preserve source-language and script metadata on every article revision.
+- Implement language identification with explicit unknown/ambiguous outcomes.
+- Define translation artifact lineage and immutable version metadata.
+- Separate original and translated text in component interfaces.
+- Build language-specific and cross-language test sets.
+- Evaluate numbers, units, names, negation, quotations, and policy terms.
+- Gate unsupported languages or low-quality translations from material claims.
 
 ### 10.2 Migration or Compatibility Requirements
-
-No runtime or database migration is authorized by this proposal. If accepted, any existing content references or report records must be inspected before a migration is designed. Preserve existing source and report versions.
+Inspect the actual implementation and data before defining migration. This proposal does not claim that a migration or implementation is complete. Any migration must preserve applicable history, provenance, and compatibility.
 
 ### 10.3 Dependencies
-
-Implementation sequencing must follow the related ADRs and the product roadmap. Proposed related ADRs are not approved merely because they are referenced here.
+- GENI-ADR-002 — Defines duplicate detection and matching across article revisions.
+- GENI-ADR-006 — Defines provider-independent execution for translation tasks.
+- GENI-ADR-008 — Defines provenance and uncertainty for translated evidence.
+- GENI-ADR-012 — Defines semantic retrieval and cross-language embedding options.
+- GENI-ADR-013 — Defines translation and external-processing rights.
 
 ### 10.4 Implementation Sequence
-
-1. Obtain explicit Project Owner approval.
-2. Validate product demand, rights, and provider capabilities.
-3. Define artifact contracts and lineage.
-4. Implement one bounded adapter as a pilot.
-5. Evaluate quality, accessibility, cost, and operational behavior.
-6. Expand only after acceptance criteria are met.
+1. Define language metadata and supported-language policy.
+2. Preserve originals and implement language identification.
+3. Define translation artifact schema and rights gate.
+4. Build representative language-specific evaluation cases.
+5. Introduce optional translation for selected languages.
+6. Extend cross-language matching only after evaluation.
 
 ### 10.5 Verification Requirements
+- Verify original content remains available subject to rights policy after translation.
+- Test language detection on mixed-language, short, and noisy text.
+- Test preservation of dates, units, values, names, negation, and attribution.
+- Compare extraction from original and translation on reviewed cases.
+- Verify external processing is blocked when source rights do not permit it.
+- Verify translation changes create new artifacts without overwriting prior versions.
 
-- Original language and detection provenance remain available for every ArticleRevision.
-- A translation is traceable to an exact source revision and target language.
-- Updating a translation does not overwrite the original source artifact.
-- Important claims retain original-source references or explicitly disclose when alignment is unavailable.
-- Unknown or mixed language is not forced into an incorrect language label.
-- Translation quality and downstream extraction quality are evaluated separately by language.
-- The report-language policy does not alter the source-language provenance.
+Implementation verification remains deferred until formal acceptance and implementation of the dependent capability.
 
 ## 11. Acceptance Criteria
-
-| ID | Acceptance Criterion | Verification |
+| ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | Original language and detection provenance remain available for every ArticleRevision. | Architecture review and automated tests where applicable |
-| AC-02 | A translation is traceable to an exact source revision and target language. | Architecture review and automated tests where applicable |
-| AC-03 | Updating a translation does not overwrite the original source artifact. | Architecture review and automated tests where applicable |
-| AC-04 | Important claims retain original-source references or explicitly disclose when alignment is unavailable. | Architecture review and automated tests where applicable |
-| AC-05 | Unknown or mixed language is not forced into an incorrect language label. | Architecture review and automated tests where applicable |
-| AC-06 | Translation quality and downstream extraction quality are evaluated separately by language. | Architecture review and automated tests where applicable |
-| AC-07 | The report-language policy does not alter the source-language provenance. | Architecture review and automated tests where applicable |
+| AC-01 | Original language and source revision remain authoritative. | Persistence tests |
+| AC-02 | Translation artifacts are versioned and linked to source revisions. | Lineage tests |
+| AC-03 | Language detection exposes unknown/ambiguous outcomes. | Component tests |
+| AC-04 | Material analysis cannot silently rely on unvalidated translation. | Workflow policy tests |
+| AC-05 | Supported-language quality is measured separately. | Evaluation report |
+| AC-06 | Rights checks precede external translation. | Rights integration tests |
 
-Quantitative quality and cost thresholds must be established through representative evaluation, not invented in this ADR.
+Any quantitative threshold must be supported by representative datasets, measurements, or formal policy review.
 
 ## 12. Review and Reconsideration
 
 ### 12.1 Review Triggers
-
-- The product adds new target languages or markets.
-- A translation provider/model changes materially.
-- Evaluation shows language-specific extraction or translation failures.
-- Legal or content-rights rules change for translation or external processing.
+- New source languages materially expand product scope.
+- Evaluation reveals systematic translation errors in economic terminology.
+- Provider or rights restrictions change.
 
 ### 12.2 Review Schedule
-
 **Review Date:** Not scheduled  
 **Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
-
-Reconsider this proposal when product scope, provider capabilities, rights, or measured quality/cost materially change. A replacement of an accepted decision requires a new or explicitly superseding ADR.
+Reconsider when assumptions are invalidated or measurements show the proposal fails project requirements. A replacement must be recorded through the ADR lifecycle.
 
 ## 13. References and Supporting Evidence
 
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
-- Related decision records listed in the ADR Registry.
+The references below are internal project sources used to establish documented context. They are not empirical performance benchmarks or legal opinions.
+
+| Reference | Type | Relevance |
+|---|---|---|
+| `docs/01-product-and-system-architecture.md` | Internal | Defines language identification and international source processing. |
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines normalization and shared LLM execution. |
+| `docs/03-data-model-and-storage-design.md` | Internal | Defines article revision and derived analysis provenance. |
+| `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines multilingual capability roadmap. |
+| `GENI-ADR-008` | Internal | Evidence provenance and uncertainty. |
+| `GENI-ADR-013` | Internal | Content rights. |
+
+External legal, provider, and empirical evidence must be added during formal review where relevant.
 
 ## 14. Decision History
 
-| Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
-| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+| Date | Version | Status | Change |
+|---|---|---|---|
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 
 **End of ADR**
