@@ -1055,7 +1055,7 @@ def main() -> None:
     print(
         "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled versions and document ID/version/status registry parity, ADR title alignment and single-source inventory, duplicate versions, "
         "all 20 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
-        "local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
+        "root and index README tree parity, local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
         "event identity-operation history/recovery, multi-source distribution authorization, privacy specification coverage, validator source integrity, registry snapshot provenance, and exact roadmap/document inventory parity."
     )
 
