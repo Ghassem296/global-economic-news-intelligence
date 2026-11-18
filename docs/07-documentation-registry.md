@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.18  
+**Version:** 1.19  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -169,8 +169,8 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-17 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.18 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.8 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review | Published |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.19 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.8 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.11 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.1 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
@@ -231,7 +231,7 @@ They are not automatically binding project specifications.
 
 | Title | Repository Path | Classification | Publication State |
 |---|---|---|---|
-| Agent Template Reference Guide | `docs/references/agent-template/README.md` | Reference |
+| Agent Template Reference Guide | `docs/references/agent-template/README.md` | Reference | Published |
 | Agent Template Architecture | `docs/references/agent-template/agent-template-architecture.md` | Reference | Published |
 | Agent Template Implementation Specification | `docs/references/agent-template/agent-template-implementation-specification.md` | Reference | Published |
 
@@ -396,7 +396,7 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `2848f7b1aa354dff5b460a81a379352bb53c0e63`  
+**Baseline Commit Inspected:** `8f4867ae45db035f94ae3939ee0e47da1cd564ac`  
 **Registry Refresh:** This inventory was checked against the published `main` branch at the baseline commit above, after the preceding architecture, ADR, and governance-metadata corrections, including the clarified semantic-retrieval approval gate and claim/evidence contract alignment. This registry revision is committed as the next change on `main`.
 
 This refresh was performed against the published GitHub `main` branch after Pull Request #1 had been merged. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
