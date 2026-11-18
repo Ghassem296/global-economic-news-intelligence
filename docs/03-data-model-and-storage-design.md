@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.38
+**Version:** 1.39
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -799,6 +799,8 @@ Fields:
 
 Case states may include `OPEN`, `PENDING_REVIEW`, `RESOLVED`, `CLOSED`, and `CANCELLED`. The case is the unit of candidate evaluation, final decision, and human review. A case must not be reused for a materially different article revision or development scope. Reprocessing the same ArticleRevision and same development scope must reuse the same development_key and case. The effective-decision pointer is a mutable current-state projection; historical EventMatchDecision records remain immutable.
 
+The listed case states are a vocabulary, not a complete lifecycle contract. The allowed transitions, initial-state rule, terminal states, reopening/cancellation authority, and derivation of `case_status` from the effective EventMatchDecision and ReviewRecord are not defined here. In particular, no mapping from individual decision outcomes to case status may be inferred from the outcome names. A case-status change and any effective-decision/link reconciliation must be coordinated atomically under the approved application contract. These omissions are explicit implementation blockers.
+
 ### 7.2 EventMatchCandidate
 
 Represents one existing Event considered as a possible match within an EventMatchCase. Candidate generation and evaluation do not establish an association.
@@ -827,6 +829,8 @@ Fields:
 Each candidate record represents one versioned evaluation of one candidate Event within one case. An evaluated candidate record is immutable. A changed matching policy or changed evaluation input creates a new candidate record rather than overwriting the earlier evaluation. Repeating an identical evaluation input must resolve to the same logical candidate record through its fingerprint.
 
 Candidate status describes candidate-evaluation processing only (for example `GENERATED`, `EVALUATED`, or `INELIGIBLE`). `ACCEPTED`, `REJECTED`, and `SUPERSEDED` are not candidate statuses: acceptance/rejection are case-level decisions, and supersession is represented by a new immutable candidate record referencing the prior evaluation. After reaching `EVALUATED` or `INELIGIBLE`, a candidate evaluation is immutable.
+
+The examples above are illustrative and do not close the complete candidate-status enum or define a mutable status-transition graph. The precise creation/evaluation boundary, eligibility guards, and treatment of interrupted candidate generation remain to be specified. Once an evaluation is persisted as `EVALUATED` or `INELIGIBLE`, it is immutable; changed inputs or policy create a successor evaluation record rather than mutating the evaluated record.
 
 Every candidate score is nullable when its signal was not evaluated; a missing signal must remain null and must never be defaulted to zero. Every non-null score must use the scale, direction, normalization, and comparability rules defined by its recorded matching-policy/model version. `semantic_similarity` must remain null when semantic retrieval is disabled. Scores from different model or policy versions must not be compared as though they shared a calibrated scale. A candidate score is not a decision confidence and must not be interpreted as one.
 
