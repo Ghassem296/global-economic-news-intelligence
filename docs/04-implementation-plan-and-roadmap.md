@@ -436,17 +436,17 @@ Implement only the domain concepts needed for the first end-to-end workflow, whi
 The first implementation slice should introduce the minimum required concepts, including:
 
 - Source.
-- Article and ArticleRevision.
+- Article.
+- ArticleRevision as an immutable content version.
 - Topic classification.
 - Entity and entity mention.
 - Event.
-- ArticleRevision as an immutable content version.
 - EventMatchCase, EventMatchCandidate, and EventMatchDecision as separate matching records.
 - ArticleEventLink as a decision-authorized association.
 - ProcessingRun and ProcessingStep.
 - Evidence and evidence references.
 - Separate Analysis records for each assessment type.
-- Report and immutable ReportVersion.
+- Report with immutable version lineage.
 - PublicationDecision and typed ReviewRecord.
 - DeliveryRecord and DeliveryAttempt.
 
@@ -620,8 +620,18 @@ Evaluate EventMatchCandidate records
        v
 Record EventMatchDecision
        |
+       +---- AMBIGUOUS / REVIEW_REQUIRED ---> Authorized Review
+       |
+       +---- NEW_EVENT_CANDIDATE ----------> Authorized Event Creation
+       |                                      |
+       |                                      v
+       |                               Persist New Candidate
+       |                                      |
+       |                                      v
+       |                               Record MATCH Decision
+       |
        v
-Apply ArticleEventLink only for MATCH
+Apply ArticleEventLink only for effective MATCH
        |
        v
 Attach Initial Evidence
