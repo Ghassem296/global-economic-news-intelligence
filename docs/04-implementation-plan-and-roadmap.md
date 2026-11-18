@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.6
+**Version:** 1.7
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -140,7 +140,7 @@ The following technologies are candidates for the initial implementation. Choice
 | Package management | uv |
 | Data validation | Pydantic |
 | LLM integration | Provider-independent adapter, with LiteLLM as a candidate |
-| Database | Relational database; SQLite is a candidate for the initial deployment |
+| Database | Relational database; SQLite and PostgreSQL are candidates pending the GENI-ADR-005 workload proof-of-concept |
 | Database access | SQLAlchemy or an equivalent repository-backed approach |
 | Migrations | Alembic or an equivalent migration mechanism |
 | Testing | pytest |
@@ -169,7 +169,7 @@ If SQLite is selected for the initial deployment, its implementation must explic
 
 The system must not assume that SQLite provides the same concurrency characteristics as a client-server database.
 
-PostgreSQL may be considered as a future deployment option, but migration must not be assumed to be automatic merely because repositories are used.
+PostgreSQL may be selected for the initial deployment if the GENI-ADR-005 proof-of-concept demonstrates that SQLite does not meet the workload or operational constraints; it may also be considered for a later deployment. Migration must not be assumed to be automatic merely because repositories are used.
 
 ### 4.3 Development Tools
 
