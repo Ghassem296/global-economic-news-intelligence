@@ -104,7 +104,7 @@ Track target-level completion and discovery coverage. Unit tests do not prove pr
 ---
 
 **Document ID:** GENI-EVAL-012  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft — Under Architecture Review  
 
 
