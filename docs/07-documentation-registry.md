@@ -156,14 +156,14 @@ The versions and lifecycle states below were read from the actual file headers i
 
 | Document ID | Title | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
-| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.23 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.24 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.47 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.35 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.26 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.8 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-API-009 | API and Integration Contracts | `docs/09-api-and-integration-contracts.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-SRC-010 | Source Credibility and Independence Specification | `docs/10-source-credibility-and-independence.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-SRC-010 | Source Credibility and Independence Specification | `docs/10-source-credibility-and-independence.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-TAX-011 | Economic Taxonomy Specification | `docs/11-economic-taxonomy-specification.md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-EVAL-012 | Testing and Evaluation Strategy | `docs/12-testing-and-evaluation-strategy.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
@@ -286,18 +286,18 @@ The following relationships provide a high-level guide for change impact analysi
 
 | Primary Document | Main Dependencies and Related Documents |
 |---|---|
-| GENI-ARCH-001 | GENI-ARCH-002, GENI-DATA-003, GENI-PLAN-004, relevant ADRs |
-| GENI-ARCH-002 | GENI-ARCH-001, GENI-DATA-003, relevant ADRs |
-| GENI-DATA-003 | GENI-ARCH-001, GENI-ARCH-002, relevant data and evidence ADRs |
-| GENI-PLAN-004 | Approved product and architecture specifications |
+| GENI-ARCH-001 | GENI-ARCH-002, GENI-DATA-003, GENI-PLAN-004, GENI-PRIV-014, GENI-ADR-020, relevant ADRs |
+| GENI-ARCH-002 | GENI-ARCH-001, GENI-DATA-003, GENI-SEC-008, GENI-API-009, GENI-PRIV-014, GENI-ADR-020 |
+| GENI-DATA-003 | GENI-ARCH-001, GENI-ARCH-002, GENI-SEC-008, GENI-API-009, GENI-PRIV-014, GENI-ADR-020 |
+| GENI-PLAN-004 | Documents 01–14 as applicable; GENI-ADR-020 privacy implementation gate |
 | GENI-GOV-005 | ADR Template, ADR Registry, individual ADRs |
 | GENI-GOV-006 | Documentation Index, Documentation Registry, all controlled documents |
 | GENI-GOV-007 | Documentation Index, Documentation Governance, ADR Registry, all controlled documents |
 | GENI-SEC-008 | Documents 02, 03, 09, 10, 12, 13, and 14; GENI-ADR-020 and security-related ADRs |
 | GENI-API-009 | Documents 02, 03, 08, 12, 13, and 14; GENI-ADR-020 and integration/persistence ADRs |
-| GENI-SRC-010 | Documents 02, 03, 12; GENI-ADR-008 and GENI-ADR-019 |
+| GENI-SRC-010 | Documents 02, 03, 08, 12, and 14; GENI-ADR-008, 019, and 020 |
 | GENI-TAX-011 | Documents 01, 02, 03, and 12; GENI-ADR-003, 018, and 019 |
-| GENI-EVAL-012 | Documents 04, 08, 10, 11, and 13; GENI-ADR-017 |
+| GENI-EVAL-012 | Documents 04, 08, 10, 11, 13, and 14; GENI-ADR-017 and 020 |
 | GENI-OPS-013 | Documents 04, 08, 09, 12, and 14; GENI-ADR-005, 013, 016, 017, and 020 |
 | Individual ADRs | All documents and components affected by the decision |
 
