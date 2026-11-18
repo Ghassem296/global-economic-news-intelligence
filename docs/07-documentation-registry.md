@@ -162,7 +162,7 @@ The versions below represent the documented baseline recorded in the inspected r
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.2 | Draft — Under Architecture Review |
 | GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.2 | Draft — Under Architecture Review |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.2 | Draft — Under Architecture Review |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.2 | Draft — Under Architecture Review |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.1 | Draft — Under Architecture Review |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.4 | Draft — Under Architecture Review |
 
 **Important:** A proposed revision prepared during documentation review does not change the published version until the revised file is actually committed and published.
