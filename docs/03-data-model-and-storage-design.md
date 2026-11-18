@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.8
+**Version:** 1.9
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -765,7 +765,7 @@ Fields:
 - `case_id`
 - `outcome`
 - `selected_candidate_id` — required only for `MATCH`
-- `proposed_event_reference` — optional reference for `NEW_EVENT_CANDIDATE`
+- `proposed_event_reference` — required stable, preassigned Event identifier for `NEW_EVENT_CANDIDATE`; used to make authorized Event creation idempotent
 - `decision_method`
 - `decision_confidence` — optional and distinct from candidate similarity
 - `decision_rationale`
@@ -796,7 +796,10 @@ Constraints:
 
 - `MATCH` must reference exactly one eligible candidate belonging to the same case.
 - Non-`MATCH` outcomes must not authorize an active ArticleEventLink.
-- `NEW_EVENT_CANDIDATE` proposes event creation but does not itself create an Event.
+- `NEW_EVENT_CANDIDATE` must carry a stable `proposed_event_reference`; it proposes event creation but does not itself create an Event or authorize an ArticleEventLink.
+- Event creation is permitted only when this is the effective case decision and the versioned EventCreationPolicy authorizes it (including any required human review).
+- The proposed Event identifier is used as the idempotency key for creation. Retrying the same authorized creation must resolve to the same Event and must not create a duplicate.
+- After creation, the Event is persisted as an EventMatchCandidate in the same case and a new MATCH EventMatchDecision must supersede the NEW_EVENT_CANDIDATE decision before an ArticleEventLink can be activated.
 - A later reassessment or human correction creates a new decision and references the decision it supersedes.
 - Historical decisions are immutable.
 - A review record is not a decision; an authorized review outcome must be materialized as a new EventMatchDecision.
