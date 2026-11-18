@@ -322,7 +322,6 @@ External legal, provider, and empirical evidence must be added during formal rev
 
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
-|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Expanded ADR proposal prepared for architecture review. | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Aligned event-matching review records and workflow references with the component architecture; removed undefined service and record types. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Extended typed human review to article-deduplication decisions and defined successor DuplicateDecision handling. | AI Architecture Assistant |
