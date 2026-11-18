@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.11
+**Version:** 1.12
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -596,7 +596,7 @@ A documentation baseline should be approved only after these checks have been co
 **End of Document**
 
 **Document ID:** `GENI-DOC-INDEX-001`  
-**Document:** `README.md`  
-**Version:** 1.8  
+**Document:** `docs/README.md`  
+**Version:** 1.12  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18

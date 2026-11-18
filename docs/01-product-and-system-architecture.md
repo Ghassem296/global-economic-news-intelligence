@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.21  
+**Version:** 1.22  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -937,7 +937,7 @@ If an external request times out after it may have succeeded, the operation must
 
 Delivery is the separate act of sending report content, a confirmed publication link, or a notification to a recipient or delivery destination.
 
-Delivery may occur after publication or independently when an approved delivery policy permits direct distribution of report content. A delivery that contains a publication link must reference a confirmed successful publication operation.
+Delivery may occur after publication or independently when an approved delivery policy permits direct distribution of report content. A delivery that contains a publication link must reference a confirmed successful and currently effective publication operation. Every outbound DeliveryRecord must reference an immutable, effective, unexpired DistributionAuthorizationDecision bound to the exact report version, recipient, destination, delivery mode, channel, and content-scope fingerprint. The fingerprint of the actual outbound payload must match the fingerprint authorized by that decision. Where the delivered scope contains source-derived content, the decision must preserve a complete set of allowed `CUSTOMER_DISTRIBUTION` RightsAssessments covering every source-derived content scope; one source's permission must never be reused as permission for another source. ReportDelivery must revalidate the decision and its linked rights-assessment set at dispatch time. A missing, incomplete, unknown, expired, revoked, denied, or review-required assessment blocks the affected content scope; only an explicitly reduced payload with a matching authorization may be delivered.
 
 Delivery status and history must not change publication status. Publication status and history must not be inferred from delivery status. Each operation must have its own idempotency key, attempts, external reference, and recovery handling.
 

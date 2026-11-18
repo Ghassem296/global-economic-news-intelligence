@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-013  
 **Title:** News Content Access, Full-Text Retention, Licensing, and Republishing  
-**Version:** 1.3
+**Version:** 1.4
 **Status:** Proposed  
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
@@ -454,6 +454,8 @@ The system must distinguish the following activities:
 | `CONTENT_REPUBLICATION` | Reproducing original or substantial source content. |
 
 Permission for one activity must not automatically grant permission for another. The operation catalog is canonical across Documents 02 and 03: rights assessments must use these exact operation identifiers, and each request must identify the operation, content scope, policy version, and enforcement point. `DISCOVERY` is distinct from `METADATA_ACCESS`; translation and embedding generation are distinct from generic derived-output generation; audio and video transformation are separate operations. External transmission for translation or embedding generation must additionally pass `EXTERNAL_LLM_PROCESSING` or the applicable external-provider permission check.
+
+For a report, briefing, or other composite output containing source-derived material from multiple articles or providers, `CUSTOMER_DISTRIBUTION` permission must be established for every exact source-derived content scope included in the outbound representation. A RightsAssessment for one source, article, license, or derived artifact does not authorize material from another. The distribution decision must preserve the complete set of exact allowed RightsAssessment references used to authorize that scope. If any included source-derived item has missing, unknown, expired, revoked, denied, or review-required permission, that item must be excluded from the authorized payload or the requested distribution must be denied/routed for review. A reduced payload may be authorized only when its actual content is reduced to the same explicit scope recorded by the authorization decision. This rule applies to text, audio, video, and other customer-facing transformations.
 
 For example, permission for `INTERNAL_ANALYSIS` does not automatically authorize `CONTENT_REPUBLICATION`.
 
@@ -1149,6 +1151,7 @@ Source-specific rights and legal requirements must be verified before production
 | 1.1 | 2026-11-18 | Proposed | Synchronized version history and end-of-document metadata with the current Proposed ADR revision; no approval status changed. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Canonicalized operation permissions, separated translation, embedding, audio, and video transformations, and aligned decision/review authority with the Project Owner role. | AI Architecture Assistant |
+| 1.4 | 2026-11-18 | Proposed | Defined complete per-source CUSTOMER_DISTRIBUTION rights coverage for composite reports and other multi-source derived outputs; clarified reduced-scope authorization. | AI Architecture Assistant |
 
 ---
 
@@ -1156,5 +1159,5 @@ Source-specific rights and legal requirements must be verified before production
 
 **ADR ID:** `GENI-ADR-013`  
 **File:** `GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md`  
-**Version:** 1.2  
+**Version:** 1.4  
 **Status:** Proposed

@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.20
+**Version:** 1.21
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -1219,20 +1219,21 @@ Enable controlled automated processing and text report delivery.
 ### Tasks
 
 1. Implement ReportDelivery as a recipient/destination delivery capability, separate from public publication execution.
-2. Define delivery destination interfaces and the versioned distribution-authorization policy.
-3. Persist immutable DistributionAuthorizationDecision records bound to the exact report version, recipient, destination, mode, channel, content scope, and policy version.
-4. Require an applicable CUSTOMER_DISTRIBUTION RightsAssessment and an effective, unexpired ALLOW decision before dispatch.
-5. Implement delivery intent records.
-6. Implement delivery attempt history.
-7. Implement idempotent delivery operations.
-8. Re-check authorization expiry/revocation before dispatch and preserve completed delivery history.
-9. Implement scheduled collection.
-10. Implement scheduled processing.
-11. Implement event monitoring.
-12. Implement update detection.
-13. Implement operational status reporting.
-14. Implement retry and reconciliation behavior.
-15. Add delivery and scheduling integration tests.
+2. Define delivery destination interfaces and the versioned DistributionAuthorizationPolicy.
+3. Implement DistributionAuthorizationRepository and persist an immutable DistributionAuthorizationDecision plus its complete DistributionAuthorizationRightsLink set and rights-assessment-set fingerprint in one transaction.
+4. Bind each decision to the exact report version, recipient, destination, delivery mode, channel, authorized content scope, and content-scope fingerprint. For every source-derived content item, require an exact allowed CUSTOMER_DISTRIBUTION RightsAssessment; composite reports may require multiple assessments.
+5. Persist each DeliveryRecord with the exact authorization-decision reference and matching content-scope fingerprint before dispatch.
+6. Implement delivery intent records.
+7. Implement delivery attempt history.
+8. Implement idempotent delivery operations.
+9. Re-check decision expiry/revocation, every linked RightsAssessment, and the actual outbound content-scope fingerprint before dispatch; preserve completed delivery history.
+10. Implement scheduled collection.
+11. Implement scheduled processing.
+12. Implement event monitoring.
+13. Implement update detection.
+14. Implement operational status reporting.
+15. Implement retry and reconciliation behavior.
+16. Add delivery and scheduling integration tests.
 
 ### Scheduling Strategy
 
@@ -1277,9 +1278,13 @@ Publication-link delivery requires a confirmed successful and currently effectiv
 
 - Collection and processing can run automatically.
 - New information can update existing events.
-- Every recipient-delivery operation is authorized by its applicable distribution policy and content-rights constraints.
+- Every recipient-delivery operation is authorized by its exact effective DistributionAuthorizationDecision and all applicable content-rights constraints.
+- Every source-derived content scope in an authorized report payload is covered by an exact allowed CUSTOMER_DISTRIBUTION RightsAssessment linked to that decision.
+- The rights-assessment-set fingerprint is reproducible from the complete immutable link set; no source or artifact permission is reused for a different content scope.
+- The DeliveryRecord content-scope fingerprint matches the actual outbound payload and the referenced decision; altered or expanded payloads are blocked.
 - `PUBLICATION_LINK` delivery requires a confirmed successful and currently effective PublicationRecord.
 - `REPORT_CONTENT` delivery may occur without public publication only when separately authorized; it must not change or imply publication state.
+- A multi-source report cannot be distributed under a single representative source assessment; all included source-derived scopes must be covered or explicitly excluded from the authorized payload.
 - Duplicate delivery is controlled within documented guarantees.
 - Failed operations are visible and recoverable.
 - Scheduled execution can resume after interruption.
@@ -1790,5 +1795,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.16
+**Version:** 1.21
 **Status:** Draft — Under Architecture Review

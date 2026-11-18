@@ -918,5 +918,5 @@ No provider benchmark or cost comparison is claimed by this proposal.
 
 **ADR ID:** `GENI-ADR-006`  
 **File:** `GENI-ADR-006-provider-independent-llm-execution-architecture.md`  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Proposed
