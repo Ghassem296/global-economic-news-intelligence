@@ -131,11 +131,6 @@ Before production, resolve operating entity and jurisdictions; controller/proces
 
 Documents 01–13, especially Documents 02, 03, 08, 09, 12, and 13; GENI-ADR-013 (content access, retention, licensing, and republication); and GENI-ADR-018 (multilingual processing and language policy). Related documents and ADRs retain their own lifecycle and approval status. This specification does not accept them.
 
----
-
-**Document ID:** GENI-PRIV-014  
-**Version:** 1.1  
-**Status:** Draft — Under Architecture Review  
 ## 13. Executable Privacy Architecture Mapping
 
 This specification is operationalized through GENI-ADR-020 and the following contracts:
@@ -150,6 +145,12 @@ This specification is operationalized through GENI-ADR-020 and the following con
 Content Rights and Privacy Processing Authorization are independently evaluated; neither is a proxy for the other. PersonalDataLineage is distinct from article provenance and content-rights lineage. Logical records do not mandate physical tables. Legal bases, controller/processor roles, applicable rights, deadlines, exceptions, transfer mechanisms and retention periods remain unresolved pending qualified jurisdiction-specific legal/privacy review.
 
 Publication of these contracts is not evidence of implementation, operational effectiveness or legal compliance.
+
+---
+
+**Document ID:** GENI-PRIV-014  
+**Version:** 1.1  
+**Status:** Draft — Under Architecture Review  
 
 
 **End of Document**
