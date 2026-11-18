@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.3  
+**Version:** 1.4  
 **Date:** 2026-11-18  
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -554,6 +554,9 @@ The merge operation should:
 8. Record the operation's actor, time, policy version, and affected records.
 9. Update current identity resolution.
 10. Trigger controlled downstream reconciliation where required.
+11. Identify affected EventMatchCase and ArticleEventLink records.
+12. Where an association must be redirected to the surviving Event, resolve the affected case through a new EventMatchDecision and apply the successor ArticleEventLink through EventService.
+13. Preserve the prior link as inactive history; identity operations must not silently repoint ArticleEventLink.event_id.
 
 The surviving identity should be selected according to a documented policy. The system must not assume that the newest or oldest event is always the correct survivor.
 
@@ -586,6 +589,9 @@ A split operation should:
 8. Reconcile existing reports and analyses through controlled versioning.
 9. Record the operation's actor, time, and affected records.
 10. Make the split operation auditable and recoverable.
+11. Re-evaluate each affected EventMatchCase against the successor Event identities.
+12. Record successor EventMatchDecision records for resolved cases and apply any new ArticleEventLinks through EventService.
+13. Deactivate prior associations only through their successor decision in the same case. If the correct successor cannot be established, preserve the case as unresolved and do not invent a replacement link.
 
 The original event identity must not simply be deleted and replaced.
 
@@ -970,6 +976,7 @@ Such measurements must be obtained through a representative evaluation dataset b
 | 1.1 | 2026-11-18 | Proposed | Defined per-revision matching cases, immutable case-level decisions, candidate boundaries, review supersession, and decision-authorized ArticleEventLink creation. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Clarified case-level NO_MATCH semantics and immutable, fingerprinted candidate-evaluation history. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Defined preassigned event identity, versioned EventCreationPolicy, creation provenance/idempotency, and the successor MATCH requirement. | AI Architecture Assistant |
+| 1.4 | 2026-11-18 | Proposed | Defined case-level re-resolution and successor-decision requirements for article-event associations affected by merge and split operations. | AI Architecture Assistant |
 
 ---
 
