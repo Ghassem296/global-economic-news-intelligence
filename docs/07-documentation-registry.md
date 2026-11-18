@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -170,8 +170,8 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status |
 |---|---|---|---:|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.8 | Proposed — Pending Project Owner Approval |
-| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.6 | Draft — Under Documentation Review |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.9 | Proposed — Pending Project Owner Approval |
+| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.7 | Draft — Under Documentation Review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.10 | Draft — Under Documentation Review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.0 | Template |
 
