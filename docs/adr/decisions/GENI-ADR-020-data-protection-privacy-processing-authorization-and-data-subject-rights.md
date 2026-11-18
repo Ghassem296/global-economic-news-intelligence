@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-020  
 **Title:** Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture  
 **Status:** Proposed  
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -53,7 +53,7 @@ Adopt the following proposed architecture:
 
 1. **Independent authorization gates.** For an operation involving source content and personal data, ContentRightsService evaluates content permissions and PrivacyProcessingAuthorization evaluates personal-data permissions. Both must independently authorize the exact operation, purpose, recipient/provider, region and policy version. Neither service may grant the other's permission.
 2. **PrivacyManagementService.** Owns the data-subject request lifecycle, identity/authority verification coordination, discovery orchestration, legal-hold/exception review, execution coordination, verification evidence and response status. It does not itself decide unresolved legal questions.
-3. **Logical privacy records.** Define PersonalDataInventory, ProcessingPurpose, PrivacyProcessingBasis, DataSubjectReference, DataSubjectRequest, DataSubjectRequestAction, PrivacyDeletionRecord, ProcessorRegister, InternationalTransferAssessment and PrivacyImpactAssessment. These are logical records/value objects/aggregates; storage may normalize or combine them according to approved persistence design.
+3. **Logical privacy records.** Define PersonalDataInventory, ProcessingPurpose, PrivacyProcessingBasis, PrivacyAuthorizationDecision, DataSubjectReference, DataSubjectRequest, DataSubjectRequestAction, PrivacyDeletionRecord, ProcessorRegister, InternationalTransferAssessment and PrivacyImpactAssessment. These are logical records/value objects/aggregates; storage may normalize or combine them according to approved persistence design.
 4. **Personal Data Lineage.** Maintain traceable links from personal-data source/reference through processing runs, prompts/requests, provider destinations and derived artifacts/outputs. Use opaque subject linkage tokens with restricted access; do not place direct identifiers in general-purpose telemetry.
 5. **Derived-data propagation.** Access, correction, restriction and deletion workflows discover and evaluate dependent derived artifacts, embeddings, reports, evaluation artifacts, caches and provider-side copies. Each target records requested, attempted, completed, unavailable, legally excepted or unverifiable outcomes. A request is not marked complete merely because a source row was deleted.
 6. **Processor and transfer register.** Maintain approved processor/subprocessor, service, purpose, data categories, processing region, retention, training-use posture, deletion capability, contract/safeguard references, review date and approval state. Unknown posture blocks the affected external processing.
@@ -115,7 +115,7 @@ No production personal-data processing is authorized merely by publishing or acc
 ## 11. Acceptance Criteria
 
 - Content Rights and Privacy Processing Authorization have separate interfaces, decisions and negative tests.
-- Every external LLM/provider request is bound to a current privacy decision and applicable content-rights decision.
+- Every external LLM/provider request involving personal data is bound to a current, immutable, purpose/operation/category/provider/model/region-scoped PrivacyAuthorizationDecision and applicable content-rights decision.
 - Personal-data lineage can discover source and derived records for a test subject without broad direct-identifier exposure.
 - Rights-request state transitions, idempotency, exception handling and completion evidence are tested.
 - Processor/transfer records are required for relevant external processing; unknown posture fails closed.
@@ -143,5 +143,6 @@ Reconsider if legal review changes the applicable roles/rights, provider capabil
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Initial privacy execution architecture proposal | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Added immutable scoped privacy authorization decision and repository contract | AI Architecture Assistant |
 
 **End of ADR**
