@@ -163,7 +163,7 @@ def markdown_heading_anchors(content: str) -> set[str]:
         if not match:
             continue
         heading = match.group(1)
-        heading = re.sub(r"!?[[]([^]]+)[]][(][^)]+[)]", r"\1", heading)
+        heading = re.sub(r"!?" + re.escape("[") + r"([^]]+)" + re.escape("]") + re.escape("(") + r"[^)]+" + re.escape(")"), r"\1", heading)
         heading = re.sub(re.escape(tick) + r"([^" + re.escape(tick) + r"]+)" + re.escape(tick), r"\1", heading)
         heading = re.sub(r"<[^>]+>", "", heading)
         heading = re.sub(r"[!*_~]", "", heading)
@@ -178,7 +178,7 @@ def markdown_heading_anchors(content: str) -> set[str]:
 
 def validate_markdown_links() -> None:
     """Verify local Markdown file paths and fragment targets."""
-    link_pattern = re.compile(r"!?[[][^]]*[]][(]([^)]+)[)]")
+    link_pattern = re.compile(r"!?" + re.escape("[") + r"[^]]*" + re.escape("]") + re.escape("(") + r"([^)]+)" + re.escape(")"))
     for source in sorted(ROOT.rglob("*.md")):
         if ".git" in source.parts:
             continue
