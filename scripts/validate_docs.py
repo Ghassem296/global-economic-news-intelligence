@@ -52,16 +52,19 @@ def document_version(path: Path) -> str:
 
 def version_in_registry(relative_path: str) -> str:
     registry_lines = read_text(DOC_REGISTRY).splitlines()
-    matching_rows = [line for line in registry_lines if f"`{relative_path}`" in line]
+    matching_rows: list[list[str]] = []
+    for line in registry_lines:
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) >= 4 and cells[2] == f"`{relative_path}`":
+            matching_rows.append(cells)
     if len(matching_rows) != 1:
         fail(
-            f"Expected exactly one registry row for {relative_path}; "
+            f"Expected exactly one table row for {relative_path}; "
             f"found {len(matching_rows)}"
         )
-    cells = [cell.strip() for cell in matching_rows[0].strip().strip("|").split("|")]
-    if len(cells) < 4:
-        fail(f"Malformed registry row for {relative_path}")
-    return cells[3]
+    return matching_rows[0][3]
 
 
 def validate_document_versions() -> None:
