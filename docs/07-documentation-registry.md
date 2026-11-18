@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.41
+**Version:** 1.42
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -175,7 +175,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.41 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.42 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.13 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.14 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -291,6 +291,12 @@ The following relationships provide a high-level guide for change impact analysi
 | GENI-GOV-005 | ADR Template, ADR Registry, individual ADRs |
 | GENI-GOV-006 | Documentation Index, Documentation Registry, all controlled documents |
 | GENI-GOV-007 | Documentation Index, Documentation Governance, ADR Registry, all controlled documents |
+| GENI-SEC-008 | Documents 02, 03, 09, 10, 12, and 13; security-related ADRs |
+| GENI-API-009 | Documents 02, 03, 08, and 12; integration and persistence ADRs |
+| GENI-SRC-010 | Documents 02, 03, 12; GENI-ADR-008 and GENI-ADR-019 |
+| GENI-TAX-011 | Documents 01, 02, 03, and 12; GENI-ADR-003, 018, and 019 |
+| GENI-EVAL-012 | Documents 04, 08, 10, 11, and 13; GENI-ADR-017 |
+| GENI-OPS-013 | Documents 04, 08, 09, and 12; GENI-ADR-005, 013, 016, and 017 |
 | Individual ADRs | All documents and components affected by the decision |
 
 This is a high-level dependency guide, not a complete technical dependency graph.
@@ -400,8 +406,8 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `f64decd0211f16cc63d2076f55ffd9ba15105e06`  
-**Registry Refresh:** This snapshot was inspected at commit f64decd0211f16cc63d2076f55ffd9ba15105e06. It includes six proposed technical specifications (security, API/integration contracts, source credibility/independence, economic taxonomy, testing/evaluation, and deployment/operations/observability), synchronizes their inventory and index entries, aligns component/data/roadmap versions, and extends documentation CI to verify all controlled specification versions against this registry. The documents remain proposed and do not imply architecture approval or implementation.
+**Baseline Commit Inspected:** `68e60d1b0bbe9ae007bcc2f4ceb42a5ed62e25e3`  
+**Registry Refresh:** This snapshot was inspected at commit 68e60d1b0bbe9ae007bcc2f4ceb42a5ed62e25e3. It includes six proposed technical specifications (security, API/integration contracts, source credibility/independence, economic taxonomy, testing/evaluation, and deployment/operations/observability), synchronizes their inventory and index entries, aligns component/data/roadmap versions, and extends documentation CI to verify all controlled specification versions against this registry. The dependency overview now includes the six specifications. The documents remain proposed and do not imply architecture approval or implementation.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
