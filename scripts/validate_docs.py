@@ -163,7 +163,7 @@ def markdown_heading_anchors(content: str) -> set[str]:
         if not match:
             continue
         heading = match.group(1)
-        heading = re.sub(r"!?\\[([^\\]]+)\\]\\([^)]+\\)", r"\1", heading)
+        heading = re.sub(r"!?[[]([^]]+)[]][(][^)]+[)]", r"\1", heading)
         heading = re.sub(re.escape(tick) + r"([^" + re.escape(tick) + r"]+)" + re.escape(tick), r"\1", heading)
         heading = re.sub(r"<[^>]+>", "", heading)
         heading = re.sub(r"[!*_~]", "", heading)
@@ -178,7 +178,7 @@ def markdown_heading_anchors(content: str) -> set[str]:
 
 def validate_markdown_links() -> None:
     """Verify local Markdown file paths and fragment targets."""
-    link_pattern = re.compile(r"!?\\[[^\\]]*\\]\\(([^)]+)\\)")
+    link_pattern = re.compile(r"!?[[][^]]*[]][(]([^)]+)[)]")
     for source in sorted(ROOT.rglob("*.md")):
         if ".git" in source.parts:
             continue
@@ -218,7 +218,7 @@ def validate_markdown_links() -> None:
 def validate_markdown_table_structure() -> None:
     """Validate Markdown table header/separator widths and every data-row width."""
     separator_pattern = re.compile(
-        r"^\\|\\s*:?-{3,}:?\\s*(?:\\|\\s*:?-{3,}:?\\s*)+\\|$"
+        r"^[|]\s*:?-{3,}:?\s*(?:[|]\s*:?-{3,}:?\s*)+[|]$"
     )
     for source in sorted(ROOT.rglob("*.md")):
         if ".git" in source.parts:
@@ -607,6 +607,10 @@ def validate_distribution_authorization_contract() -> None:
             "outbound_payload_sha256",
             "upstream permission dependency",
             "fail closed",
+            "RFC 8785 JSON Canonicalization Scheme",
+            "outbound_payload_sha256",
+            "upstream permission dependency",
+            "fail closed",
         ),
     }
     for relative, required_terms in required_by_document.items():
@@ -623,6 +627,7 @@ def main() -> None:
     validate_document_footer_metadata()
     validate_adr_history_versions()
     validate_markdown_links()
+    validate_markdown_table_structure()
     validate_markdown_table_structure()
     validate_review_contract_alignment()
     validate_first_slice_review_set()
