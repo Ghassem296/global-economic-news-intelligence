@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -40,10 +40,23 @@ docs/
     └── decisions/
         ├── GENI-ADR-001-event-centric-intelligence-architecture.md
         ├── GENI-ADR-002-article-deduplication-and-event-matching.md
+        ├── GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md
+        ├── GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md
+        ├── GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md
         ├── GENI-ADR-006-provider-independent-llm-execution-architecture.md
+        ├── GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md
         ├── GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md
+        ├── GENI-ADR-009-near-real-time-news-acquisition-strategy.md
+        ├── GENI-ADR-010-phased-text-audio-and-video-delivery.md
         ├── GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md
-        └── GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md
+        ├── GENI-ADR-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md
+        ├── GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md
+        ├── GENI-ADR-014-human-review-corrections-and-withdrawals.md
+        ├── GENI-ADR-015-market-data-integration-and-economic-impact-classification.md
+        ├── GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md
+        ├── GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md
+        ├── GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md
+        └── GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md
 ```
 
 ### 2.1 Directory Responsibilities
@@ -94,16 +107,29 @@ These are separate properties and must not be confused.
 
 ### 4.1 Individual ADR Documents
 
-The following individual ADR documents are published in the shared repository.
+The following nineteen individual ADR documents are committed to the current pull-request branch. All nineteen have status Proposed; none is an approved architectural decision.
 
 | ADR ID | Title | Document Availability | Decision Status | Repository Path |
 |---|---|---|---|---|
 | GENI-ADR-001 | Event-Centric Intelligence Architecture | Published | Proposed | `decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` |
 | GENI-ADR-002 | Article Deduplication and Event Matching Separation | Published | Proposed | `decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` |
+| GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | Published | Proposed | `decisions/geni-adr-003-economic-intelligence-as-primary-editorial-focus.md` |
+| GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | Published | Proposed | `decisions/geni-adr-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | Published | Proposed | `decisions/geni-adr-005-initial-persistence-technology-and-migration-strategy.md` |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | Published | Proposed | `decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` |
+| GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | Published | Proposed | `decisions/geni-adr-007-deterministic-workflows-and-selective-agent-reasoning.md` |
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | Published | Proposed | `decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` |
+| GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | Published | Proposed | `decisions/geni-adr-009-near-real-time-news-acquisition-strategy.md` |
+| GENI-ADR-010 | Phased Text, Audio, and Video Delivery | Published | Proposed | `decisions/geni-adr-010-phased-text-audio-and-video-delivery.md` |
 | GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | Published | Proposed | `decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` |
+| GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | Published | Proposed | `decisions/geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` |
 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | Published | Proposed | `decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` |
+| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | Published | Proposed | `decisions/geni-adr-014-human-review-corrections-and-withdrawals.md` |
+| GENI-ADR-015 | Market Data Integration and Economic Impact Classification | Published | Proposed | `decisions/geni-adr-015-market-data-integration-and-economic-impact-classification.md` |
+| GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | Published | Proposed | `decisions/geni-adr-016-persistence-async-execution-idempotency-and-recovery.md` |
+| GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | Published | Proposed | `decisions/geni-adr-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` |
+| GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | Published | Proposed | `decisions/geni-adr-018-multilingual-source-processing-translation-and-language-policy.md` |
+| GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | Published | Proposed | `decisions/geni-adr-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` |
 
 **Publication terminology:**
 
@@ -118,25 +144,11 @@ The publication of an ADR does not imply that its proposal has been accepted.
 
 The existence of an ADR file does not imply that its implementation is complete.
 
-### 4.2 Remaining Decision Backlog
+### 4.2 Decision Topics Without Individual ADR Documents
 
-The following decision topics have been identified but do not yet have individual ADR documents in the shared repository.
+All nineteen registered decision topics currently have individual ADR files in this pull-request branch. There are no remaining uncreated topics in the current registry.
 
-| ADR ID | Title | Priority | Document Availability |
-|---|---|---|---|
-| GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | P2 | Not created |
-| GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | P0 | Not created |
-| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | P1 | Not created |
-| GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | P1 | Not created |
-| GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | P1 | Not created |
-| GENI-ADR-010 | Phased Text, Audio, and Video Delivery | P2 | Not created |
-| GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | P1 | Not created |
-| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | P0 | Not created |
-| GENI-ADR-015 | Market Data Integration and Economic Impact Classification | P1 | Not created |
-| GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | P1 | Not created |
-| GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | P1 | Not created |
-| GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | P2 | Not created |
-| GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | P1 | Not created |
+Document publication does not imply approval. All nineteen ADRs remain Proposed pending explicit Project Owner decisions.
 
 ### 4.3 Inventory Rules
 
