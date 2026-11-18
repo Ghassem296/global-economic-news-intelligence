@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.23  
+**Version:** 1.24  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1269,3 +1269,7 @@ The architecture prioritizes:
 The initial implementation must remain operationally simple while preserving clear boundaries for future audio, video, analytics, market-data integrations, and advanced intelligence capabilities.
 
 The system must never confuse a source claim with an established fact, an analytical inference with an observed market reaction, or an automated output with verified truth.
+
+## 19. Privacy and Personal Data Boundary
+
+Personal-data processing, data-subject rights, privacy authorization, processor governance and international-transfer controls are governed by [Document 14 — Data Protection and Privacy Specification](14-data-protection-and-privacy-specification.md) and the proposed [GENI-ADR-020](adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md). Privacy Processing Authorization is independent of source Content Rights; where both apply, both must authorize the exact operation. Publication of the architecture does not establish implementation or legal compliance.
