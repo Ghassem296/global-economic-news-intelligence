@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-18
+**Last Updated:** 2026-11-19
 
 ---
 
@@ -507,8 +507,10 @@ No implementation may invent missing transitions or treat timestamps as substitu
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Proposed — Pending Project Owner Approval  
-**Last Updated:** 2026-11-18
+**Last Updated:** 2026-11-19
+
+**Revision Note (v1.3):** Expanded the state-machine inventory to include the already-defined EventIdentityOperation lifecycle and the separately modeled DeliveryRecord lifecycle. Added the missing delivery transition/attempt mapping to the pre-implementation checklist. No new domain states or transition rules were invented; unresolved contracts remain explicitly blocked.
 
 **End of Document**
