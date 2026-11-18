@@ -3,9 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-010  
 **Title:** Phased Text, Audio, and Video Delivery  
-**Version:** 0.2  
 **Status:** Proposed  
-**Priority:** P2  
+**Version:** 1.0  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -16,121 +15,136 @@
 
 ## 1. Context and Problem Statement
 
-The product's core value is evidence-based event intelligence and reports. Audio and video may broaden reach, but they introduce new content transformation, media storage, licensing, accessibility, localization, moderation, and distribution concerns. The initial product scope is text-first, and media must not bypass the same review, rights, correction, and publication controls.
+The product's initial value is structured text intelligence. Audio and video may improve accessibility and distribution, but introduce additional content-rights, production, quality, storage, accessibility, and delivery requirements. Treating all formats as initial-release requirements would increase scope and create dependencies before the text intelligence workflow is validated.
 
-This ADR is a proposal for formal review. It does not approve an implementation or override another decision.
+This ADR is a proposal for formal review; it does not approve a production implementation.
 
 ## 2. Decision Question
 
-How should text, audio, and video capabilities be sequenced and governed so that media remains a derived presentation of approved report content?
+How should text, audio, and video capabilities be sequenced, and what architectural boundaries should keep media production independent from the initial text product?
 
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-
-- Protect the quality and stability of the core text intelligence workflow.
-- Keep reports and analyses as authoritative sources rather than generated media.
-- Preserve exact report-version lineage for each media artifact.
-- Apply rights, review, correction, and withdrawal rules across all channels.
-- Avoid premature media infrastructure and vendor lock-in.
+- Initial release delivers structured text reports.
+- Audio and video are later, independently deployable output capabilities.
+- Media must be generated from approved, versioned report content rather than raw unverified source content.
+- Apply format-specific rights checks to narration, quotations, images, clips, music, and distribution.
+- Preserve lineage from media artifacts to exact report and analysis versions.
+- Support format-specific quality, accessibility, retention, correction, and delivery handling.
 
 ### 3.2 Technical Constraints
-
-- Domain contracts must not depend on a specific external provider unless explicitly approved.
-- Derived artifacts must identify their exact input version and generation configuration.
-- Historical provenance must remain available for review and correction.
-- Unknown or unavailable information must remain explicit.
+- Text is the initial product release.
+- Text-analysis permission does not automatically authorize narration or video transformation.
+- Media provider, codecs, visual asset licensing, and distribution targets remain undecided.
+- Rights requirements from ADR-013 apply.
 
 ### 3.3 Business and Product Constraints
-
-- The initial release remains focused on the core text intelligence workflow.
-- Additional channels and languages must be introduced only when justified by product requirements.
-- User-facing claims must reflect validated capability and actual source coverage.
+- The initial product remains text-based economic intelligence.
+- The architecture must support incremental delivery and traceable evaluation.
+- Proposed decisions remain provisional until explicitly approved.
 
 ### 3.4 Security and Privacy Constraints
-
-- External source content is untrusted input.
-- External processing must comply with applicable privacy and data-protection requirements.
-- Provider credentials and sensitive content must not be exposed in logs.
+- External source content and generated model output are untrusted until validated.
+- Least-privilege access, secret protection, and explicit external permissions are mandatory.
+- Operational logs must avoid unnecessary protected content.
 
 ### 3.5 Operational and Cost Constraints
-
-- Processing concurrency, media generation, translation calls, and storage must be bounded.
-- Provider failures must not corrupt authoritative report or source records.
-- Cost and quality must be observable separately.
+- Avoid unnecessary distributed infrastructure in the initial release.
+- Measure operational complexity and cost against expected workload.
+- Timeouts, retries, recovery, and observability must be explicit.
 
 ### 3.6 Legal and Content-Rights Constraints
-
-- Access to source material does not imply permission to translate, store, transform, or republish it.
-- Media and translation outputs may have additional provider/platform terms.
-- Legal review may be required for jurisdiction-specific obligations.
+- Technical access does not imply permission to store, process externally, transform, quote, or republish source content.
+- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed before production use.
 
 ### 3.7 Explicit Non-Goals
-
-- This ADR does not select a specific TTS, video, or translation vendor.
-- This ADR does not establish unmeasured language-quality or media-quality thresholds.
-- This ADR does not authorize expansion beyond the approved product scope.
+- No unmeasured numerical threshold or performance guarantee is established by this proposal.
+- No provider or infrastructure technology is mandatory solely because it appears as an alternative.
+- This ADR does not replace the formal approval process.
 
 ## 4. Alternatives Considered
 
-### 4.1 A — Build text, audio, and video simultaneously
+### 4.1 Alternative A — All formats in initial release
 
-**Advantages:** Provides multi-channel capability early.
+**Description:** Build text, audio, and video at launch.
 
-**Disadvantages:** Multiplies production, review, rights, storage, and operational complexity before the core product is validated.
+**Advantages:**
+- Broad launch capability.
 
-**Risk:** High
+**Disadvantages:**
+- Large scope and multiple rights/quality dependencies.
 
-### 4.2 B — Text-only permanently
+**Risks:**
+- Delays core intelligence and multiplies failure modes.
 
-**Advantages:** Keeps scope and operations minimal.
+**Estimated Complexity:** High
 
-**Disadvantages:** Precludes future channel expansion even if product demand is demonstrated.
+### 4.2 Alternative B — Text only with no extension boundary
 
-**Risk:** Low
+**Description:** Implement text and defer all media design.
 
-### 4.3 C — Phased text-first delivery with downstream channel adapters
+**Advantages:**
+- Smallest initial scope.
 
-**Advantages:** Validates core intelligence first while preserving channel extensibility.
+**Disadvantages:**
+- Could require redesign of artifact lineage and rights controls later.
 
-**Disadvantages:** Requires explicit artifact lineage and channel-specific quality controls.
+**Risks:**
+- Future media may be coupled to report internals.
 
-**Risk:** Medium
+**Estimated Complexity:** Low initially
 
+### 4.3 Alternative C — Text-first phased delivery
+
+**Description:** Ship text first and introduce separate audio/video pipelines after measurable gates.
+
+**Advantages:**
+- Protects the core product and isolates media requirements.
+
+**Disadvantages:**
+- Requires future extension contracts and separate phase investment.
+
+**Risks:**
+- Later capability depends on rights/provider validation.
+
+**Estimated Complexity:** Medium
 
 ## 5. Evaluation and Comparison
 
-The comparison is qualitative and reflects architectural fit, not measured cost or output quality.
+The comparison is qualitative and reflects architectural fit, not measured performance or cost.
 
-| Criterion | Alternative A | Alternative B | Alternative C |
+| Evaluation Criterion | All formats in initial release | Text only with no extension boundary | Text-first phased delivery |
 |---|---|---|---|
-| Initial scope control | Low | High | High |
-| Provenance preservation | Low | High | High |
-| Future extensibility | High but premature | Low | High |
-| Operational complexity | High | Low | Medium |
-| Quality and rights governance | Difficult to coordinate | Simple but limited | Explicit per derived artifact |
+| Initial release feasibility | Low | High | High |
+| Core product focus | Low | High | High |
+| Future extensibility | High | Low to Medium | High |
+| Rights isolation | Medium | Medium | High if gated |
+| Initial operating burden | High | Low | Low to Medium |
 
-Alternative C is recommended because it separates the core intelligence model from channel-specific presentation while preserving future extensibility.
+The requirements in Section 3 are the evaluation criteria. Unmeasured latency, quality, throughput, and costs are intentionally left unspecified.
 
 ## 6. Recommended Decision
 
-Deliver text reports first. Treat audio and video as downstream, versioned presentation artifacts generated only from an eligible, approved report version. Add audio after text quality, publication, rights, and correction workflows are operationally reliable. Add video only after audio generation, media asset provenance, and channel review are validated. Every artifact must reference the exact source report version and generation configuration. A corrected or withdrawn report must trigger an explicit assessment of dependent media artifacts; they must not remain silently presented as current.
+**Recommended Alternative:** Alternative C — Text-first phased delivery with isolated media pipelines.
 
-### 6.1 Decision Boundaries
+The initial release should deliver structured text intelligence only. Audio and video should be introduced as separate product phases after report quality, provenance, publication, and rights controls are validated. Media production must consume approved immutable report versions and enforce permissions specific to the transformation and destination. A right to analyze text must not be interpreted as permission to narrate, visualize, quote, or redistribute it.
 
-- Keep media rendering outside Event Intelligence, Analysis, and ReportGenerator domain responsibilities.
-- Define a channel adapter interface that consumes an immutable report version and returns a versioned media artifact.
-- Record TTS/voice provider, model, voice, language, script/transcript, asset hashes, generation time, and output format.
-- Preserve transcript and caption alignment for accessibility and review.
-- Apply source-content rights and derived-output policy before generating media.
-- Apply publication and delivery decisions independently for each channel.
-- Maintain dependency links from media artifacts to report versions and supersession/withdrawal events.
+**Rationale:**
+- Protects the initial product from premature multimedia complexity.
+- Reuses validated event dossiers and report versions.
+- Makes format-specific rights and quality controls explicit.
 
-### 6.2 Assumptions and Open Questions
+**Deferred Questions:**
+- Audio provider/voice, language coverage, accessibility requirements.
+- Video generation and rights for images, footage, and music.
+- Media storage, streaming, retention, and distribution targets.
+- Quality and cost thresholds for each media phase.
 
-- The initial output language and supported media formats remain product-level policy choices.
-- Provider selection requires comparative quality, cost, rights, and operational review.
-- Legal and platform-specific requirements must be validated before production use.
+**Recommendation Prepared By:** AI Architecture Assistant  
+**Recommendation Date:** 2026-11-18
+
+A recommendation is not an approval. The Project Owner must explicitly accept or reject this proposal.
 
 ## 7. Final Decision
 
@@ -140,157 +154,150 @@ Deliver text reports first. Treat audio and video as downstream, versioned prese
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded; the recommendation is awaiting Project Owner review.
+**Decision Rationale:** Pending formal review; see Section 6 for the recommendation.
+
+**Conditions or Restrictions:**
+- Keep this ADR Proposed until explicit approval is recorded.
+- Do not treat deferred questions as settled implementation details.
+- Any interim implementation choice must be reversible, documented, and assigned a review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-
-- Preserves source/report lineage for derived outputs.
-- Keeps the core event and report model independent of presentation technology.
-- Allows channel or language expansion to be phased and evaluated.
+- Keeps core product focused.
+- Allows future media without binding core report model to one format.
+- Makes rights and correction dependencies explicit.
 
 ### 8.2 Negative Consequences
-
-- Requires separate artifact records and quality checks.
-- Adds translation/media-specific storage and lifecycle management.
-- Some capabilities remain deferred until demand and quality are demonstrated.
+- Media capabilities are deliberately delayed.
+- Later phases need separate infrastructure and quality work.
 
 ### 8.3 Technical Trade-Offs
-
-The recommendation favors derived, versioned artifacts over a single mutable multi-format report. This increases traceability and storage requirements but prevents generated media from silently diverging from the authoritative report version.
+Phasing reduces initial risk but does not guarantee future media viability. Each phase must demonstrate audience value, rights coverage, quality, accessibility, and acceptable cost.
 
 ### 8.4 Operational Consequences
-
-Every enabled adapter needs monitoring, retries, cost controls, rights checks, and a correction/withdrawal procedure. Failures must be isolated from the core text pipeline.
+Media workflows require their own queues, storage, provider monitoring, retention, and delivery recovery. Failure must not corrupt the source report.
 
 ### 8.5 Product and Business Consequences
-
-New channels and languages may increase reach but must not weaken factual quality, accessibility, source attribution, or editorial control.
+Users receive dependable text intelligence first; audio/video remain optional future channels.
 
 ### 8.6 Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Media or translation diverges from corrected source report | Maintain exact lineage and trigger downstream review on report supersession. |
-| Provider output introduces factual errors | Review transcripts/translations and retain source references. |
-| Rights are assumed rather than verified | Apply source and output-specific rights checks before generation and publication. |
-| Premature expansion increases cost | Use phased acceptance gates and task-level budgets. |
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Premature scope expansion | Medium | High | Keep media outside initial release acceptance criteria. |
+| Unauthorized transformation/distribution | Medium | Critical | Require format-specific permissions and policy checks. |
+| Media/report version drift | Medium | High | Bind each artifact to immutable report version. |
+| Unknown media economics | High | Medium | Run bounded pilot with measured cost and quality. |
 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-
-- Keep media rendering outside Event Intelligence, Analysis, and ReportGenerator domain responsibilities.
-- Define a channel adapter interface that consumes an immutable report version and returns a versioned media artifact.
-- Record TTS/voice provider, model, voice, language, script/transcript, asset hashes, generation time, and output format.
-- Preserve transcript and caption alignment for accessibility and review.
-- Apply source-content rights and derived-output policy before generating media.
-- Apply publication and delivery decisions independently for each channel.
-- Maintain dependency links from media artifacts to report versions and supersession/withdrawal events.
+- ReportGenerator
+- ReportVersionService
+- Future MediaProductionWorkflow
+- PublicationService
+- ReportDelivery
 
 ### 9.2 Affected Data Models and Interfaces
-
-If accepted, define derived artifact records, source/report lineage, provider metadata, output format, quality state, and supersession references. Keep them separate from Article, Event, Analysis, and Report authoritative records.
+- ReportVersion
+- Future MediaArtifact
+- PublicationRecord
+- DeliveryRecord
+- ContentRightsProfile
 
 ### 9.3 Affected Documents
-
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
+- docs/01-product-and-system-architecture.md
+- docs/02-component-architecture-and-interfaces.md
+- docs/03-data-model-and-storage-design.md
+- docs/04-implementation-plan-and-roadmap.md
 
 ### 9.4 Related ADRs
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-013 | Depends on | Controls content transformation, retention, and distribution rights. |
+| GENI-ADR-004 | Related to | Publication quality gates also apply to media outputs. |
+| GENI-ADR-014 | Related to | Review/correction may be required for generated media. |
+| GENI-ADR-017 | Related to | Media production may materially affect model and provider costs. |
 
-- GENI-ADR-004 — Publication decisions and quality gates.
-- GENI-ADR-013 — Content access, licensing, retention, and republication.
-- GENI-ADR-014 — Human review, corrections, and withdrawals.
-- GENI-ADR-017 — LLM budgets, usage tracking, and evaluation.
+These relationships do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-
-- Keep media rendering outside Event Intelligence, Analysis, and ReportGenerator domain responsibilities.
-- Define a channel adapter interface that consumes an immutable report version and returns a versioned media artifact.
-- Record TTS/voice provider, model, voice, language, script/transcript, asset hashes, generation time, and output format.
-- Preserve transcript and caption alignment for accessibility and review.
-- Apply source-content rights and derived-output policy before generating media.
-- Apply publication and delivery decisions independently for each channel.
-- Maintain dependency links from media artifacts to report versions and supersession/withdrawal events.
+- Keep report content and provenance independent of media formats.
+- Define future media artifact lineage and format-specific permission interfaces.
+- Add audio only after text quality and rights gates are established.
+- Add video only after visual asset rights, quality, and economics are evaluated.
+- Propagate corrections/withdrawals to dependent media where policy requires.
 
 ### 10.2 Migration or Compatibility Requirements
-
-No runtime or database migration is authorized by this proposal. If accepted, any existing content references or report records must be inspected before a migration is designed. Preserve existing source and report versions.
+Inspect the current implementation and data before designing any migration. This ADR does not claim that a migration has been executed. Any transition must preserve provenance and historical state.
 
 ### 10.3 Dependencies
-
-Implementation sequencing must follow the related ADRs and the product roadmap. Proposed related ADRs are not approved merely because they are referenced here.
+- GENI-ADR-013 — Controls content transformation, retention, and distribution rights.
+- GENI-ADR-004 — Publication quality gates also apply to media outputs.
+- GENI-ADR-014 — Review/correction may be required for generated media.
+- GENI-ADR-017 — Media production may materially affect model and provider costs.
 
 ### 10.4 Implementation Sequence
-
-1. Obtain explicit Project Owner approval.
-2. Validate product demand, rights, and provider capabilities.
-3. Define artifact contracts and lineage.
-4. Implement one bounded adapter as a pilot.
-5. Evaluate quality, accessibility, cost, and operational behavior.
-6. Expand only after acceptance criteria are met.
+1. Verify text release operates without media services.
+2. Verify each media artifact references exact report and analysis versions.
+3. Verify rights restrictions block media generation or distribution as applicable.
+4. Verify report correction identifies dependent media for review/replacement/withdrawal.
+5. Evaluate narration fidelity, accessibility, and production cost before launch.
 
 ### 10.5 Verification Requirements
+- Verify text release operates without media services.
+- Verify each media artifact references exact report and analysis versions.
+- Verify rights restrictions block media generation or distribution as applicable.
+- Verify report correction identifies dependent media for review/replacement/withdrawal.
+- Evaluate narration fidelity, accessibility, and production cost before launch.
 
-- Initial release acceptance does not require audio or video.
-- A media artifact references one exact report version and generation configuration.
-- A corrected report causes dependent media to be marked for review, replacement, or withdrawal according to policy.
-- Media publication cannot bypass report publication and content-rights requirements.
-- Transcript/caption content can be inspected and reviewed before release where policy requires.
-- Failure in a media adapter does not corrupt or block the core text report workflow.
+Implementation verification remains deferred until the ADR is accepted and the capability is implemented.
 
 ## 11. Acceptance Criteria
-
-| ID | Acceptance Criterion | Verification |
+| ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | Initial release acceptance does not require audio or video. | Architecture review and automated tests where applicable |
-| AC-02 | A media artifact references one exact report version and generation configuration. | Architecture review and automated tests where applicable |
-| AC-03 | A corrected report causes dependent media to be marked for review, replacement, or withdrawal according to policy. | Architecture review and automated tests where applicable |
-| AC-04 | Media publication cannot bypass report publication and content-rights requirements. | Architecture review and automated tests where applicable |
-| AC-05 | Transcript/caption content can be inspected and reviewed before release where policy requires. | Architecture review and automated tests where applicable |
-| AC-06 | Failure in a media adapter does not corrupt or block the core text report workflow. | Architecture review and automated tests where applicable |
+| AC-01 | Initial text product works without audio/video dependencies. | Release scope test |
+| AC-02 | Media artifacts retain report-version and provenance lineage. | Persistence tests |
+| AC-03 | Media rights are checked separately from text-analysis permission. | Rights-policy tests |
+| AC-04 | Corrections and withdrawals identify dependent media artifacts. | Lifecycle tests |
+| AC-05 | Each media phase has independent quality and exit criteria. | Stage-gate review |
 
-Quantitative quality and cost thresholds must be established through representative evaluation, not invented in this ADR.
+Quantitative thresholds require representative datasets, operational measurements, or formal policy review.
 
 ## 12. Review and Reconsideration
 
 ### 12.1 Review Triggers
-
-- Text reporting and review workflows meet their approved quality requirements.
-- A documented product requirement justifies an audio or video channel.
-- Rights or platform rules change for media content.
-- Media generation cost or quality changes materially.
+- Before implementing the dependent capability.
+- Material changes in product scope, legal constraints, provider capabilities, workload, or operational scale.
+- Evaluation evidence shows that the recommendation does not meet requirements.
 
 ### 12.2 Review Schedule
-
 **Review Date:** Not scheduled  
 **Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
-
-Reconsider this proposal when product scope, provider capabilities, rights, or measured quality/cost materially change. A replacement of an accepted decision requires a new or explicitly superseding ADR.
+Reconsider this proposal when its assumptions are invalidated or measured evidence shows that it fails project requirements. Replacements must be recorded through the ADR lifecycle.
 
 ## 13. References and Supporting Evidence
 
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
-- Related decision records listed in the ADR Registry.
+References are internal project documents used to establish documented context. They are not empirical benchmarks or legal opinions.
+
+| Reference | Type | Relevance |
+|---|---|---|
+| `docs/01-product-and-system-architecture.md` | Internal | Defines initial text scope and later product releases. |
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines report and delivery boundaries. |
+| `docs/03-data-model-and-storage-design.md` | Internal | Defines report versions, rights, and artifact lineage. |
+| `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines phased product capabilities. |
+| `GENI-ADR-013` | Internal | Defines rights controls. |
+
+External legal, provider, and measured performance evidence must be added where material during formal review.
 
 ## 14. Decision History
 
-| Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
-| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+| Date | Version | Status | Change |
+|---|---|---|---|
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 
 **End of ADR**
