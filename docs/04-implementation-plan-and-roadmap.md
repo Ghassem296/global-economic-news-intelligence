@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.3
+**Version:** 1.4
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -779,7 +779,7 @@ Transform collected publications into normalized article records.
 9. Implement TopicClassifier.
 10. Implement EntityExtractor.
 11. Implement entity resolution foundations.
-12. Implement article revision handling.
+12. Implement ArticleRevisionService and ArticleRevisionRepository; create immutable revisions only for material content changes and atomically update the Article current projection.
 13. Implement processing status management.
 14. Implement translation support only where required by the approved language policy.
 15. Add processing evaluation cases.
@@ -803,7 +803,7 @@ A similarity score alone must not cause irreversible deletion or merging.
 ### Deliverables
 
 - Normalized article records.
-- Article revision support.
+- Article revision support, including ArticleRevisionService and repository contract tests.
 - Duplicate candidate records.
 - Topic classifications.
 - Extracted entities and mentions.
@@ -818,6 +818,8 @@ A similarity score alone must not cause irreversible deletion or merging.
 - Topic classifications include method and confidence metadata.
 - Entity mentions retain enough provenance to be reviewed.
 - Processing can be repeated safely.
+- Repeated collection of unchanged content does not create a new ArticleRevision.
+- A material content change creates a new immutable ArticleRevision and atomically updates the Article current projection.
 
 ---
 
