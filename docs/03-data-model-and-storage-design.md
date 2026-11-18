@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.15
+**Version:** 1.16
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -1993,6 +1993,14 @@ The logical table inventory is:
 | Table | Purpose |
 |---|---|
 | `sources` | Source configuration |
+| `source_rights_profiles` | Versioned source rights and license context |
+| `content_access_records` | Source/content access and retrieval provenance |
+| `rights_assessments` | Operation-specific permission outcomes |
+| `content_retention_policies` | Versioned content retention rules |
+| `content_deletion_requests` | Requested content restriction/deletion work |
+| `content_deletion_records` | Deletion execution and verification history |
+| `content_usage_audit_records` | Audit trail for content use and external transmission |
+| `derived_artifacts` | Versioned derived outputs with source-rights provenance |
 | `source_health_records` | Source health history |
 | `source_relationships` | Known source relationships |
 | `articles` | Current normalized article projection |
@@ -2091,6 +2099,9 @@ Indexes should support:
 Where applicable, enforce:
 
 - Source-scoped external article identity.
+- Source rights-profile version uniqueness within a source.
+- Content-access and rights-assessment identifiers must be unique and auditable.
+- Content-deletion request/record identity and idempotency keys must be unique within their defined operation scope.
 - Article revision number uniqueness.
 - Composite uniqueness of `(article_id, id)` on ArticleRevision for same-Article current-revision references.
 - Event match case uniqueness by ArticleRevision and development key.
@@ -2128,6 +2139,10 @@ Foreign keys should protect ordinary relational relationships.
 
 The following composite relationships must be enforced by database constraints where supported, or by application validation inside the same UnitOfWork transaction when the selected database cannot express them directly:
 
+- `SourceRightsProfile.source_id` must reference an existing Source; a rights assessment must reference the exact rights-profile/policy version used for its operation.
+- `ContentAccessRecord` must reference the source and, where applicable, the exact Article/ArticleRevision and RightsAssessment that authorized access.
+- A `DerivedArtifact` must retain typed provenance references to the source content/revision and processing/rights assessment records on which it depends.
+- A `ContentDeletionRecord` must reference its request and the affected content/artifact scope, and record whether deletion was confirmed or remains incomplete.
 - `Article(current_revision_id, id)` must resolve to an ArticleRevision whose `article_id` is that same Article.
 - `EventMatchCase(id, effective_decision_id)` must resolve to `EventMatchDecision(case_id, id)`; the referenced decision must belong to that case.
 - `EventMatchDecision(case_id, selected_candidate_id)` must resolve to `EventMatchCandidate(case_id, id)`; a decision cannot select a candidate from another case.
@@ -2338,13 +2353,54 @@ Deletion or withdrawal requests must not be silently ignored. The system needs a
 
 Where content must be deleted, the system should preserve legally permissible metadata and audit information without retaining prohibited content.
 
-## 23. Repository Contracts
+### 22.1 Content Rights Records and Enforcement Boundaries
+
+The following are proposed logical records aligned with GENI-ADR-013. Their final fields, permission vocabulary, retention/deletion mechanics, and physical persistence design remain subject to formal ADR acceptance and detailed implementation design.
+
+**SourceRightsProfile / SourceLicense**
+
+A versioned profile linked to a Source. It should preserve the applicable license/contract reference, rights-document reference, profile status, permitted and restricted operation categories, content types, effective dates, verification date, retention-policy reference, supersession lineage, and the reviewer/authority that recorded the profile. Source defaults must not override more restrictive content-specific terms.
+
+**ContentAccessRecord**
+
+An immutable record of a retrieval/access event. It should identify the Source, content and exact ArticleRevision where available, acquisition method, metadata/full-text/temporary-access mode, time, applicable rights profile, and resulting content reference or access limitation. It must not itself imply a continuing permission to retain or redistribute the content.
+
+**RightsAssessment**
+
+An immutable, operation-specific assessment. It should identify the subject/content, requested operation, outcome (`ALLOWED`, `DENIED`, `UNKNOWN`, `EXPIRED`, `REVOKED`, or `REQUIRES_REVIEW`), rights-policy and source-profile versions, supporting basis/reference, evaluator/actor, timestamp, and reason codes. Each materially different operation requires its own assessment; an allowed metadata read does not authorize full-text storage or external LLM processing.
+
+**ContentRetentionPolicy**
+
+A versioned policy definition for permitted retention mode, purpose, duration/expiry, deletion behavior, backup treatment, and treatment of derived artifacts. A policy definition must not be confused with a per-content RightsAssessment.
+
+**DerivedArtifact**
+
+A versioned output derived from source content, such as a translation, embedding, extracted passage, or analytical artifact. It should preserve the exact source revision/content references, processing method/version, rights assessment(s), and applicable retention/distribution restrictions. Derived content is not automatically unrestricted merely because it is system-generated.
+
+**ContentDeletionRequest / ContentDeletionRecord**
+
+A request and its execution history for restriction or deletion across primary content storage, temporary files, caches, indexes, queues, backups, and external processors where required and supported. The records must distinguish requested, in-progress, confirmed, partially completed, and failed outcomes; a request must not be marked complete without verification evidence.
+
+**ContentUsageAuditRecord**
+
+An append-only record of material content-use operations, including operation type, subject, actor, destination/provider where relevant, RightsAssessment and policy version, timestamp, outcome, and audit reference. Sensitive source content and credentials must not be copied into the audit record.
+
+**Fail-closed invariant:** absent, unknown, expired, revoked, denied, or review-required permission must not authorize a restricted operation. Technical access, public availability, or an earlier permission for a different operation is insufficient. Rights authorization is separate from publication eligibility and recipient-distribution authorization.
+
+The `rights_status` field on Article/ArticleRevision is only a summary projection. It is not a substitute for versioned, operation-specific RightsAssessment records. Exact schema and policy rules remain provisional until GENI-ADR-013 is accepted.
 
 The application layer should depend on domain-oriented repository interfaces.
 
 Initial repository contracts include:
 
 - `SourceRepository`
+- `SourceRightsProfileRepository` (when GENI-ADR-013 is accepted)
+- `ContentAccessRepository` (when GENI-ADR-013 is accepted)
+- `RightsAssessmentRepository` (when GENI-ADR-013 is accepted)
+- `ContentRetentionPolicyRepository` (when GENI-ADR-013 is accepted)
+- `ContentDeletionRepository` (when GENI-ADR-013 is accepted)
+- `DerivedArtifactRepository` (when GENI-ADR-013 is accepted)
+- `ContentUsageAuditRepository` (when GENI-ADR-013 is accepted)
 - `SourceHealthRepository`
 - `SourceRelationshipRepository`
 - `ArticleRepository`
@@ -2444,6 +2500,11 @@ Data-layer tests must cover:
 
 - Foreign key enforcement.
 - Unique constraints.
+- Operation-specific rights assessment and fail-closed permission handling.
+- Source rights-profile versioning and content-access provenance.
+- Content retention expiry and deletion request/verification lifecycle.
+- Derived-artifact provenance and rights inheritance/restriction checks.
+- Content usage audit completeness without sensitive-content leakage.
 - Article ingestion idempotency.
 - Article revision creation.
 - Current article projection consistency.
@@ -2618,6 +2679,7 @@ The data model is acceptable for implementation when:
 32. Scores and assessment confidence have distinct semantics, methodology/schema versions, and calibration metadata where applicable.
 33. Scheduled workflow execution can be tracked and made idempotent where scheduling is implemented.
 34. The model is consistent with Document 02 component and interface contracts.
+35. Content access, processing, storage, external transmission, quotation, and distribution can be authorized independently under versioned rights policies; unknown rights do not authorize restricted operations.
 
 ## 30. Final Design Statement
 
