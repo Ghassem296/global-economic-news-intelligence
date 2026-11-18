@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.36  
+**Version:** 1.37  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -420,6 +420,8 @@ Responsibilities:
 
 Source assessment is contextual input to evidence evaluation, not proof that a claim is true or false.
 
+The service returns a typed, non-authoritative `SourceAssessmentResult` containing the source identifier, source-metadata fingerprint, reliability-profile version, known ownership/syndication context, assessment timestamp, and explicit unknown/missing indicators. It is a deterministic contextual evaluation over versioned Source metadata/configuration; it is not a separately persisted domain entity or an independently authoritative numeric truth score. The exact result or its stable fingerprint must be captured in the input provenance of the ClaimAssessment that consumes it, so later source-profile changes do not rewrite prior assessments. Source reliability must not be confused with claim verification, evidence relevance, or source health.
+
 ### 4.14 EvidenceService
 
 Responsibilities:
@@ -550,20 +552,32 @@ A publication decision is an authorization outcome, not an instruction that an e
 
 Responsibilities:
 
-- Create typed review tasks for DuplicateCandidate records requiring human judgment, EventMatchCase records, held reports, and other policy-defined review subjects.
-- Maintain review queue status, priority, assignment, due dates, and escalation metadata.
-- Record review reasons, reviewer identity, authorized role, timestamps, and immutable review outcomes.
-- Link each review to the exact subject and decision under review.
-- Route article-deduplication review outcomes to the Article Deduplication Workflow for a successor DuplicateDecision.
-- Route event-matching review outcomes to the Event Resolution workflow.
-- Route publication review outcomes back to PublicationPolicy for a new PublicationDecision.
-- Preserve review actions and reassignment history.
+- Create a typed review task for exactly one supported subject family and exact subject/decision/assessment/operation reference.
+- Maintain queue status, priority, assignment, due dates, escalation metadata, and append-only review actions.
+- Record reason codes, reviewer identity, authorized role, authorization reference, timestamps, rationale, and immutable review outcomes.
+- Attach exact evidence and domain context through ReviewContextLink without copying restricted source content into the task.
+- Enforce the canonical six-family subject vocabulary and route every material outcome through its designated successor workflow.
+- Reject a review type/subject-type mismatch and reject a task whose referenced decision, assessment, report version, or operation is not the exact item under review.
+- Preserve reassignment, priority changes, completion, cancellation, and reopening history.
 
-ReviewService manages review tasks and reviewer actions; it does not own event identity or publication eligibility decisions.
+Canonical subject-family to successor-workflow mapping:
 
-For article deduplication, a material review outcome must create a successor DuplicateDecision for the same DuplicateCandidate. For event matching, a material review outcome must create a new EventMatchDecision that supersedes the prior effective decision. For publication, a material review outcome must create a new effective PublicationDecision. ReviewService must not mutate either prior decision, bypass EventService or PublicationPolicy, or directly call an external publication target.
+| Subject family | Required subject reference | Material successor workflow |
+|---|---|---|
+| `ARTICLE_DEDUPLICATION` | DuplicateCandidate and the DuplicateDecision under review | Article Deduplication Workflow creates a successor DuplicateDecision for the same candidate. |
+| `EVENT_MATCHING` | EventMatchCase and the EventMatchDecision under review | Event Resolution Workflow creates a successor EventMatchDecision; EventService applies only its effective MATCH outcome. |
+| `CLAIM_ASSESSMENT` | Claim and the exact ClaimAssessment under review | EvidenceService creates a successor ClaimAssessment with exact ClaimAssessmentEvidenceLink records, appends AssessmentHistory, and atomically refreshes the Claim projection. |
+| `REPORT_VERSION` | Exact immutable Report version | ReportVersionService creates a new immutable corrected/superseding version; PublicationPolicy must issue a new decision before any replacement publication. |
+| `PUBLICATION_OPERATION` | Exact PublicationRecord and its current operation/reconciliation state | PublicationService reconciles an unknown external outcome or creates an explicitly authorized successor REPLACE/WITHDRAW operation; the prior operation and attempts remain immutable. |
+| `CONTENT_RIGHTS` | Exact RightsAssessment or versioned SourceRightsProfile | ContentRightsService issues a successor RightsAssessment or profile revision and triggers applicable restriction/retention/deletion workflows; it does not silently rewrite prior external delivery or publication history. |
 
-Reviewer identity and authorization must be enforced by the application's security layer. The initial implementation must define the authorized decision-maker and review mechanism for each review type.
+ReviewService manages the review task and reviewer action only. It does not own event identity, claim verification, report version content, rights interpretation, publication eligibility, or external side effects.
+
+A review completion is not itself a domain decision or external-operation authorization. The designated domain service must validate reviewer authority and policy, create the immutable successor record, and preserve supersession lineage. A publication-operation review must enter reconciliation when the external outcome is unknown; it must not assume that a timed-out operation failed.
+
+The architecture supports all six subject families, but the first implementation slice enables only `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and publication review. Claim-assessment, report-version, and content-rights review remain disabled until their service-level successor workflows, authorization rules, and integration tests are implemented.
+
+Reviewer identity and authorization must be enforced by the application's security layer.
 
 ### 4.23 ReportVersionService
 
@@ -612,6 +626,8 @@ Responsibilities:
 - Handle retryable delivery failures.
 
 It must not generate report content, determine publication eligibility, or execute public publication, replacement, or withdrawal operations. A delivery containing a publication link must reference a confirmed successful PublicationRecord. Delivery outcomes must not change publication state.
+
+Before dispatch, ReportDelivery must obtain and validate an effective `DistributionAuthorizationDecision` for the exact report version, recipient, destination, delivery mode, channel, and content scope. Where source-derived content is delivered, the decision must reference the applicable allowed `CUSTOMER_DISTRIBUTION` RightsAssessment. The delivery operation must persist the exact authorization-decision reference; a general subscription, publication decision, or source-rights assessment alone is insufficient. A revoked or expired authorization blocks unsent work; already completed external delivery is preserved as history and handled through a separate correction/withdrawal process where applicable.
 
 Delivery operations must use stable idempotency keys.
 
@@ -1649,7 +1665,7 @@ Reprocessing must not silently overwrite published or historical records.
 **Input:**
 
 - Source, Article, ArticleRevision, or derived-artifact reference.
-- Requested operation, such as metadata access, full-text access, temporary processing, persistent storage, internal analysis, external LLM processing, embedding, quotation, customer distribution, or republication.
+- Exactly one canonical operation: `DISCOVERY`, `METADATA_ACCESS`, `FULL_TEXT_ACCESS`, `TEMPORARY_PROCESSING`, `PERSISTENT_STORAGE`, `INTERNAL_ANALYSIS`, `EXTERNAL_LLM_PROCESSING`, `DERIVED_OUTPUT_GENERATION`, `TRANSLATION`, `EMBEDDING_GENERATION`, `QUOTATION`, `AUDIO_TRANSFORMATION`, `VIDEO_TRANSFORMATION`, `CUSTOMER_DISTRIBUTION`, or `CONTENT_REPUBLICATION`.
 - Applicable source/content rights-profile reference and policy version where known.
 - Actor, destination/provider, retention context, and execution context.
 
@@ -1669,6 +1685,33 @@ Reprocessing must not silently overwrite published or historical records.
 - Rights/profile changes and deletion requests trigger the applicable restriction, expiry, deletion, and verification workflows.
 - A rights decision does not replace publication eligibility or recipient-distribution authorization; these controls remain separate.
 - Detailed rights schemas and legal/contractual interpretations remain subject to GENI-ADR-013 approval.
+
+### 7.12 Distribution Authorization and Delivery Workflow
+
+**Input:**
+
+- Exact immutable report-version identifier.
+- Recipient and destination references.
+- Delivery mode and channel.
+- Requested content scope and delivery purpose.
+- Applicable content-rights assessment, including an allowed `CUSTOMER_DISTRIBUTION` assessment where source-derived content is delivered.
+- Distribution policy version, actor/consent context, and requested validity period.
+
+**Output:**
+
+- An immutable `DistributionAuthorizationDecision` with `ALLOW`, `DENY`, or `REQUIRES_REVIEW` outcome.
+- Exact report, recipient, destination, operation, scope, policy-version, rights-assessment, decision-time, and expiry references.
+- A traceable reason/basis and supersession link when a decision is replaced.
+
+**Workflow invariants:**
+
+- Authorization is bound to the exact recipient, destination, report version, delivery mode, channel, and content scope; it cannot be silently reused for another target or report.
+- Dispatch requires the effective, unexpired `ALLOW` decision and all applicable content-rights permissions.
+- Unknown, denied, expired, revoked, or review-required outcomes fail closed.
+- Publication eligibility, source-content rights, and recipient-distribution authorization are independent gates.
+- A publication-link delivery additionally requires a confirmed successful and still-effective PublicationRecord.
+- Revocation blocks future dispatch but does not rewrite completed delivery history.
+- The DeliveryRecord and its authorization reference must be persisted before an external side effect.
 
 ## 8. Execution and Error Contracts
 
