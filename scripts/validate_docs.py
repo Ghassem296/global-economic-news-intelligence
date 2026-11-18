@@ -694,8 +694,8 @@ def validate_cross_document_contracts() -> None:
         fail("ADR-008 must distinguish source roles from relationship edges")
     if "SourceRightsProfile" not in adr_010 or "ContentRightsProfile" in adr_010:
         fail("ADR-010 rights-profile name must match the canonical SourceRightsProfile model")
-    if "ArticleProcessingRecord" not in adr_018 or "LanguageDetectionRecord" in adr_018:
-        fail("ADR-018 language detection must use the ArticleProcessingRecord model unless a separate entity is approved")
+    if "ArticleProcessingRecord" not in adr_018 or "- LanguageDetectionRecord" in adr_018 or "not a separate persistent domain entity" not in adr_018:
+        fail("ADR-018 language detection must use ArticleProcessingRecord; a standalone LanguageDetectionRecord is not part of the current model")
 
     deferred = adr_011.split("**Deferred Questions:**", 1)
     if len(deferred) != 2:
