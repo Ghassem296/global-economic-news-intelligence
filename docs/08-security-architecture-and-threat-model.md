@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SEC-008  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
