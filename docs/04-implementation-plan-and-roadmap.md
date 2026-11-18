@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.22
+**Version:** 1.23
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -1426,6 +1426,12 @@ Critical metrics should include:
 
 Thresholds must not be invented without a baseline or reference dataset.
 
+### Specification Readiness Dependencies
+
+Before first-slice or production-bound implementation, reconcile the applicable controls in Documents 08–13: security threats and authorization ownership; method-level repository/workflow contracts; source-independence semantics; versioned topic identifiers; reviewed datasets and metric definitions; and deployment, observability, backup/restore, runbooks, and measured operational objectives.
+
+These documents are proposed specifications. Publication does not constitute approval, and specification presence does not mean implementation or verification is complete.
+
 ### Deliverables
 
 - Versioned evaluation datasets.
@@ -1471,6 +1477,9 @@ Prepare the initial product for controlled operation.
 15. Review content rights and retention controls, including rights-profile expiry/revocation and derived-artifact restrictions.
 16. Test content deletion/restriction requests across storage, caches, indexes, queues, backups, and supported external processors, and verify completion evidence.
 17. Prepare release and rollback procedures.
+18. Verify the production-readiness evidence defined in GENI-OPS-013.
+19. Verify threat-linked controls and release-blocking tests defined in GENI-SEC-008.
+20. Confirm runbooks, alert ownership, backup/restore evidence, and recovery exercises; document presence is not tested operational evidence.
 
 ### Deliverables
 
@@ -1797,5 +1806,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.22
+**Version:** 1.23
 **Status:** Draft — Under Architecture Review

@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.42  
+**Version:** 1.43  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1289,7 +1289,7 @@ The repository list above is an inventory, not a method-level, code-ready API sp
 
 The same requirement applies to application workflows. Each workflow must have typed input/output contracts, explicit state transitions, side effects, failure outcomes, and recovery behavior. The prose contracts in Section 7 establish responsibilities and invariants but are not substitutes for executable DTO and method definitions.
 
-At minimum, the first vertical slice requires method-level contracts and repository tests for `SourceRepository`, `ArticleRepository`, `ArticleRevisionRepository`, `EventRepository`, `EventMatchCaseRepository`, `EventMatchCandidateRepository`, `EventMatchDecisionRepository`, `ArticleEventLinkRepository`, `EvidenceRepository`, `AnalysisRepository`, `ReportRepository`, `PublicationDecisionRepository`, and `ProcessingRunRepository`. Additional interfaces must be specified before their dependent stage begins.
+At minimum, the first vertical slice requires method-level contracts and repository tests for `SourceRepository`, `ArticleRepository`, `ArticleRevisionRepository`, `EventRepository`, `EventMatchCaseRepository`, `EventMatchCandidateRepository`, `EventMatchDecisionRepository`, `ArticleEventLinkRepository`, `EvidenceRepository`, `AnalysisRepository`, `ReportRepository`, `PublicationDecisionRepository`, and `ProcessingRunRepository`. Additional interfaces must be specified before their dependent stage begins. Contract fields and cross-boundary rules are consolidated in GENI-API-009, API and Integration Contracts; exact method signatures and DTOs must still be defined for the actual first-slice implementation.
 
 ### 6.2 Data and Write Ownership
 

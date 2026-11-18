@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.31
+**Version:** 1.32
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -2985,22 +2985,22 @@ The logical model may contain additional entities that are implemented later.
 
 ## 28. Open Architecture Decisions
 
-The following topics require formal ADRs or explicit approval before their implementation is treated as fixed:
+The following topics have published ADRs or supporting specifications, but publication does not mean that the underlying proposal has been accepted:
 
-1. Initial relational database engine and its engine-specific operating configuration.
-2. Event identity, matching thresholds, merge, and split policy.
-3. Embedding generation and semantic search storage.
-4. Article full-text acquisition, retention, and licensing.
-5. Source reliability assessment and calibration.
-6. Publication review, target-adapter capabilities, idempotency/reconciliation guarantees, correction, replacement, and withdrawal workflow.
-7. Market data sources and observed impact classification.
-8. Reprocessing, checkpoint, and workflow recovery guarantees.
-9. Multilingual content storage, translation, and reporting policy.
-10. Retention, archival, and deletion requirements.
-11. Separate methodology, scales, calibration, and evaluation for event importance, economic relevance, and economic impact (GENI-ADR-019).
-12. Scheduling and worker execution strategy.
+1. Initial relational database engine and engine-specific operating configuration — GENI-ADR-005.
+2. Event identity, matching thresholds, merge, and split policy — GENI-ADR-011.
+3. Embedding generation and semantic search storage — GENI-ADR-012.
+4. Article full-text acquisition, retention, and licensing — GENI-ADR-013.
+5. Source reliability context and source-independence assessment — GENI-ADR-008 and GENI-SRC-010. Calibration remains an evidence/evaluation task, not an uncreated ADR topic.
+6. Publication review, target-adapter capabilities, idempotency/reconciliation, correction, replacement, and withdrawal — GENI-ADR-004, GENI-ADR-014, and GENI-ADR-016.
+7. Market data sources and observed impact classification — GENI-ADR-015.
+8. Reprocessing, checkpoint, and workflow recovery guarantees — GENI-ADR-016.
+9. Multilingual content storage, translation, and reporting policy — GENI-ADR-018.
+10. Retention, archival, and deletion requirements — GENI-ADR-013 and its rights/retention contracts.
+11. Separate methodology, scales, calibration, and evaluation for event importance, economic relevance, and economic impact — GENI-ADR-019.
+12. Scheduling and worker execution strategy — an implementation/deployment decision to be resolved against workload evidence and GENI-OPS-013.
 
-Until the relevant decisions are accepted, implementation choices must remain replaceable and must not be presented as approved architecture.
+Before implementation, the relevant ADR must be formally accepted where it governs an architectural decision, and the corresponding detailed contract or policy must be completed. The existence of an ADR file is not a substitute for approval. Conversely, an existing Proposed ADR must not be described as a missing ADR or trigger duplicate ADR creation.
 
 ## 29. Acceptance Criteria
 
