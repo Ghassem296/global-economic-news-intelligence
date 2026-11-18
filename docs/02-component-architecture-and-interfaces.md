@@ -801,6 +801,7 @@ Fields:
 
 - `id`
 - `article_revision_id`
+- `event_match_case_id` — the EventMatchCase that authorized this specific association
 - `event_id`
 - `relationship_type`
 - `association_confidence`
@@ -817,8 +818,8 @@ Relationship types may include INITIAL_REPORT, FOLLOW_UP, CONFIRMATION, CONTEXT,
 
 Constraints:
 
-- Every association must reference the exact EventMatchDecision that authorized its creation.
-- The referenced decision must have outcome MATCH and must identify the linked event through its selected candidate.
+- Every association must reference the exact EventMatchCase and EventMatchDecision that authorized its creation.
+- The referenced EventMatchDecision must belong to the referenced EventMatchCase, have outcome MATCH and must identify the linked event through its selected candidate.
 - An active association must not be duplicated for the same article revision, event, and relationship role.
 - Deactivation must preserve the original link and identify the decision or authorized correction that deactivated it.
 - A correction creates a new decision and a new association where appropriate; it must not rewrite the historical decision or silently repoint an existing link.
