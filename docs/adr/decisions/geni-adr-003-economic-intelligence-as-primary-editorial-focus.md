@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-003  
 **Title:** Economic Intelligence as the Primary Editorial Focus  
 **Status:** Proposed  
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-11-18  
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -139,7 +139,7 @@ Unmeasured latency, throughput, quality, and cost are intentionally left unspeci
 
 **Recommended Alternative:** Alternative C — Economic intelligence as the editorial focus.
 
-The product should prioritize developments according to their economic relevance and analytical usefulness. Non-economic subject matter may be included when a demonstrated or plausible transmission pathway connects it to economic activity, policy, institutions, or markets. The system must label the strength and uncertainty of that connection and must not infer realized impact from relevance alone.
+The product should determine editorial inclusion according to economic relevance and analytical usefulness. This is an editorial-scope assessment, not an overall event-importance ranking: Event Importance remains a separate assessment of the event's general significance and monitoring priority, while Economic Impact remains a separate assessment of realized or potential consequences. Non-economic subject matter may be included when a demonstrated or plausible transmission pathway connects it to economic activity, policy, institutions, or markets. The system must label the strength and uncertainty of that connection and must not infer realized impact or overall importance from relevance alone.
 
 **Rationale:**
 - Aligns source selection, analysis, reporting, and evaluation with one product purpose.
@@ -313,5 +313,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | Date | Version | Status | Change |
 |---|---|---|---|
 | 2026-11-18 | 1.0 | Proposed | Initial proposal prepared for architecture review |
+| 2026-11-18 | 1.1 | Proposed | Clarified editorial inclusion versus Event Importance and Economic Impact to align with GENI-ADR-019. |
 
 **End of ADR**
