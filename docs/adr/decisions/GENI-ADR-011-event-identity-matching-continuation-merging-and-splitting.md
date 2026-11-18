@@ -431,7 +431,7 @@ The matching process should produce one of the following structured outcomes:
 | Outcome | Meaning |
 |---|---|
 | `MATCH` | The candidate is sufficiently supported as describing an existing event. |
-| `NEW_EVENT_CANDIDATE` | No existing event is sufficiently supported; a new event may be created. |
+| `NEW_EVENT_CANDIDATE` | No existing event is sufficiently supported; creation of a new event may be proposed for a separate authorized workflow. |
 | `AMBIGUOUS` | Multiple plausible event identities exist or the evidence is insufficient to distinguish them. |
 | `NO_MATCH` | The candidate does not match the evaluated event. |
 | `REVIEW_REQUIRED` | The case requires an explicit review decision under the applicable policy. |
@@ -442,24 +442,30 @@ The matching process should produce one of the following structured outcomes:
 
 `AMBIGUOUS` must not be silently converted into `MATCH`.
 
-### 6.6 Candidate Generation and Confirmation
+### 6.6 Candidate Generation, Matching Cases, and Confirmation
 
-Candidate generation and confirmed event association must be separate operations.
+Candidate generation, case-level decision, and application of an article-event association are three distinct operations.
+
+The matching unit is an EventMatchCase scoped to exactly one immutable ArticleRevision and one independently identified development within that revision. An article revision may therefore create multiple EventMatchCase records. Each case owns its own candidate set, decision history, and review context.
 
 The proposed sequence is:
 
-1. An article or new development is normalized.
-2. Relevant entities, dates, actions, locations, and event-defining information are extracted.
-3. Candidate events are retrieved using available matching signals.
-4. Candidate-event pairs are evaluated.
-5. A structured matching outcome is produced.
-6. The outcome is validated against policy.
-7. A confirmed association is persisted, or the case is deferred for further processing or review.
-8. The decision and its provenance are recorded.
+1. Normalize an ArticleRevision and identify each distinct development described in it.
+2. Create or retrieve one EventMatchCase for each development scope.
+3. Retrieve plausible existing events for that case.
+4. Persist EventMatchCandidate records with their signals, scores, method, and matching-policy version.
+5. Evaluate candidate eligibility and case-level evidence.
+6. Create an immutable EventMatchDecision for the case.
+7. If the outcome is AMBIGUOUS or REVIEW_REQUIRED, route the case to the authorized human-review workflow defined by ADR-014.
+8. Record the human outcome as a new EventMatchDecision that supersedes the previous effective decision; do not mutate the previous decision.
+9. Apply an eligible MATCH decision through EventService and create an ArticleEventLink that references that exact decision.
+10. Handle NEW_EVENT_CANDIDATE through a separate event-creation policy; the matching decision alone does not create an Event.
 
-Candidate generation must not directly modify event identity.
+EventMatchCandidate is a candidate/evaluation record, not a decision. Candidate status must describe processing and must not use ACCEPTED or REJECTED to represent the case outcome. Candidate similarity, decision confidence, and reviewer certainty are distinct values.
 
-A candidate relationship must not be treated as a confirmed article-event association.
+EventMatchDecision is the authoritative case-level outcome. MATCH must select exactly one eligible candidate from the same case. A non-MATCH outcome must not authorize an active ArticleEventLink.
+
+Candidate generation must not directly modify event identity or persistent article-event associations. A candidate relationship must never be treated as a confirmed association.
 
 ### 6.7 Event Continuation
 
@@ -516,11 +522,13 @@ The system must support many-to-many article-event relationships.
 
 For each association, the system should record:
 
-- Article identifier.
+- ArticleRevision identifier.
+- EventMatchCase identifier.
 - Event identifier.
 - Relationship type or editorial role.
-- Association status.
-- Matching decision reference.
+- Association status and active/deactivated timestamps.
+- Exact EventMatchDecision identifier authorizing the link.
+- Superseding decision identifier when deactivated.
 - Relevant article section or evidence span, where available.
 - Confidence or assessment metadata, where applicable.
 - Policy and model version.
