@@ -2,11 +2,11 @@
 # Architecture Decision Records Governance
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Draft — Under Architecture Review  
 **Document Type:** Architecture Decision Management and Governance  
 **Project:** Global Economic News Intelligence  
-**Last Updated:** 2026-11-17
+**Last Updated:** 2026-11-18
 
 ---
 
@@ -598,22 +598,20 @@ The ADR governance process is considered operational when:
 
 ## 16. Current Governance State
 
-According to the GitHub `main` repository snapshot inspected on 2026-11-17:
+According to the pull-request branch snapshot inspected on 2026-11-18:
 
 - The ADR governance document exists in the shared repository.
 - The ADR template exists in the shared repository.
 - The ADR registry exists in the shared repository.
-- Eighteen initial architectural decision topics have been identified.
-- Six individual ADR documents are published in the shared repository:
-  `GENI-ADR-001`, `GENI-ADR-002`, `GENI-ADR-006`, `GENI-ADR-008`, `GENI-ADR-011`, and `GENI-ADR-013`.
-- The remaining twelve registered topics do not yet have individual ADR files in the inspected repository snapshot.
-- All six published individual ADRs have status `Proposed`.
-- No individual ADR is recorded as `Accepted` in the inspected repository snapshot.
-- Publication does not imply approval; the six published proposals remain unapproved.
+- Nineteen architectural decision topics have been identified.
+- All nineteen registered decision topics have individual ADR documents published in the current pull-request branch.
+- All nineteen published individual ADRs have status `Proposed`.
+- No individual ADR is recorded as `Accepted` in the current pull-request branch.
+- Publication does not imply approval; all nineteen published proposals remain unapproved.
 - Existing architectural descriptions that depend on unresolved ADRs remain provisional where applicable.
 - Implementation must not treat unresolved proposals as finalized architectural decisions.
 
-This is a repository-only snapshot. It makes no claim about the current local Working Tree, which was not inspected for this review.
+This is a pull-request-branch snapshot, not a statement about the `main` branch. The documentation registry snapshot on `main` remains intentionally unchanged until the pull request is merged.
 
 The next steps are to complete the documentation review, keep the central documentation registry and ADR registry synchronized with GitHub `main`, and publish any further authorized documentation changes.
 
