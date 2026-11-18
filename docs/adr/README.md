@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.15
+**Version:** 1.16
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -347,6 +347,7 @@ The following priorities are a suggested review order based on architectural ris
 | P0 | GENI-ADR-014 | Defines human review, corrections, and withdrawals. |
 | P0 | GENI-ADR-006 | Establishes the shared provider-independent LLM execution boundary. |
 | P0 | GENI-ADR-013 | Addresses content access, retention, licensing, and republication constraints. |
+| P0 | GENI-ADR-020 | Establishes privacy processing authorization, personal-data lineage, processor governance and data-subject rights before production personal-data processing. |
 | P1 | GENI-ADR-008 | Defines evidence provenance and uncertainty representation. |
 | P1 | GENI-ADR-012 | Defines semantic retrieval and similarity calculation. |
 | P1 | GENI-ADR-015 | Distinguishes observed market reactions from source-reported and AI-inferred impact. |
