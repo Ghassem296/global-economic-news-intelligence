@@ -3,10 +3,11 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.15
+**Version:** 1.16
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
-**Project:** Global Economic News Intelligence
+**Project:** Global Economic News Intelligence  
+**Owner:** Project Owner
 
 ---
 
@@ -1777,5 +1778,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.15
+**Version:** 1.16
 **Status:** Draft — Under Architecture Review
