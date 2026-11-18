@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.14  
+**Version:** 1.15  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -1222,9 +1222,10 @@ Observed economic effects, source-reported effects, inferred potential effects, 
 
 **Input:**
 
-- Event dossier.
-- Analysis version.
-- Evidence references.
+- Event dossier or explicit multi-event report scope.
+- Exact version references for each Event Importance, Economic Relevance, and Economic Impact Analysis included in the report.
+- Optional market-reaction assessment references when supported by suitable observations.
+- Evidence and source references.
 - Report template and version.
 
 **Output:**
