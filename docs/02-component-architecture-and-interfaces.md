@@ -129,6 +129,7 @@ Contains:
 - Evidence management.
 - Evidence verification.
 - Importance assessment.
+- Economic relevance assessment.
 - Economic impact analysis.
 - Historical context retrieval.
 
@@ -411,39 +412,44 @@ An evidence assessment must distinguish insufficient evidence from evidence of a
 
 Responsibilities:
 
-- Evaluate event importance.
-- Apply the approved importance methodology.
-- Produce a normalized score where appropriate.
-- Explain the main factors behind the score.
-- Record scoring methodology and version.
-- Represent unavailable inputs explicitly.
+- Evaluate the overall significance and attention priority of an event.
+- Apply the approved importance methodology independently of the economic relevance and impact assessments.
+- Produce a qualitative rank or a numeric score only when a defined scale is approved.
+- Explain the main factors behind the result.
+- Record methodology, policy, and result-schema versions.
+- Represent unavailable, contradictory, and insufficient inputs explicitly.
 
-Importance is not equivalent to economic impact.
+Importance is not a measure of economic relevance, economic-effect magnitude, or forecast probability. It must not silently combine the other assessment outputs.
 
-The scoring methodology and thresholds must be documented and evaluated independently.
-
-### 4.17 ImpactAnalyzer
+### 4.17 EconomicRelevanceAssessor
 
 Responsibilities:
 
-- Evaluate economic transmission channels.
-- Identify potentially affected markets and sectors.
-- Analyze direct and indirect economic implications.
-- Distinguish observed effects from reported effects and inferred effects.
-- Express uncertainty.
-- Identify missing market or economic data.
+- Assess whether and how an event is connected to economic activity, policy, institutions, or markets.
+- Identify direct, indirect, and contextual economic transmission pathways.
+- Identify affected countries, institutions, sectors, industries, commodities, and markets.
+- Distinguish a demonstrated or plausible economic connection from a connection that has not been established.
+- Represent insufficient information as unknown rather than treating it as no economic relevance.
+- Record the methodology, policy, and result-schema versions used.
 
-The component must not invent precise market effects without supporting data.
+Economic relevance measures the strength and nature of the economic connection. It does not estimate the magnitude, direction, or certainty of economic consequences. The component must not reuse the ImportanceRanker result as a substitute for its own assessment.
 
-It must distinguish:
+### 4.18 ImpactAnalyzer
 
-- Observed Market Reaction.
-- Source-Reported Reaction.
-- AI-Inferred Economic Impact.
+Responsibilities:
 
-An inferred consequence must not be presented as an observed market movement.
+- Evaluate realized and potential economic consequences across relevant transmission channels.
+- Identify affected markets, sectors, institutions, countries, and groups.
+- Assess direction, magnitude or defensible range, time horizon, duration, and distribution where supported.
+- Distinguish observed economic effects, source-reported effects, inferred potential effects, and unknown effects.
+- Link conclusions to supporting and conflicting evidence.
+- Express uncertainty and identify missing market or economic data.
 
-### 4.18 HistoricalContextService
+The component must not invent precise economic effects or aggregate distinct channel-level impacts into a misleading single value. Its output is an economic-impact assessment, not an importance or economic-relevance score.
+
+Observed market reaction is a separate evidence category. The component must not infer causality merely because market data records a movement.
+
+### 4.19 HistoricalContextService
 
 Responsibilities:
 
@@ -459,7 +465,7 @@ Historical retrieval may initially use relational queries and indexed search.
 
 Semantic retrieval and vector storage are separate architectural decisions.
 
-### 4.19 ReportGenerator
+### 4.20 ReportGenerator
 
 Responsibilities:
 
@@ -472,7 +478,7 @@ Responsibilities:
 
 It must not make publication decisions, create publication operations, or deliver reports. Immutable report-version creation and lineage are managed by ReportVersionService.
 
-### 4.20 PublicationPolicy
+### 4.21 PublicationPolicy
 
 Responsibilities:
 
@@ -493,7 +499,7 @@ It returns one of:
 
 A publication decision is an authorization outcome, not an instruction that an external publication has succeeded. PublicationPolicy must not execute publication or delivery operations.
 
-### 4.21 ReviewService
+### 4.22 ReviewService
 
 Responsibilities:
 
@@ -517,7 +523,7 @@ A held report must not be automatically published without an authorized review o
 
 The initial implementation must define the actual review mechanism and the authorized decision-maker.
 
-### 4.22 ReportVersionService
+### 4.23 ReportVersionService
 
 Responsibilities:
 
@@ -530,7 +536,7 @@ Responsibilities:
 
 A correction creates a new report version; it must not overwrite a previously generated or published report. ReportVersionService manages report-version lineage only. It does not execute an external replacement or withdrawal and does not own publication-target state.
 
-### 4.23 PublicationService
+### 4.24 PublicationService
 
 Responsibilities:
 
@@ -550,7 +556,7 @@ It must not generate report content, decide publication eligibility, silently al
 
 A failed replacement must leave the previous confirmed publication effective. A failed or uncertain withdrawal must not be represented as completed. A publication operation with an uncertain external outcome must enter reconciliation rather than being blindly retried.
 
-### 4.24 ReportDelivery
+### 4.25 ReportDelivery
 
 Responsibilities:
 
@@ -566,7 +572,7 @@ It must not generate report content, determine publication eligibility, or execu
 
 Delivery operations must use stable idempotency keys.
 
-### 4.25 WorkflowOrchestrator
+### 4.26 WorkflowOrchestrator
 
 Responsibilities:
 
@@ -585,7 +591,7 @@ It must not contain domain-specific event matching or analytical algorithms.
 
 Workflow state must be distinct from article, event, analysis, publication, and delivery state.
 
-### 4.26 SharedLLMExecutionLayer
+### 4.27 SharedLLMExecutionLayer
 
 Responsibilities:
 
@@ -604,7 +610,7 @@ It must not own product-specific news intelligence logic.
 
 General conversational memory, autonomous agent loops, and unrestricted tool execution are not initial-release requirements.
 
-### 4.27 ObservabilityService
+### 4.28 ObservabilityService
 
 Responsibilities:
 
@@ -744,9 +750,9 @@ Claim-to-evidence relationships must support appropriate relationship types, inc
 
 ### 5.10 Analysis
 
-Represents a versioned analytical result.
+Represents a versioned analytical result or assessment.
 
-Analysis records must preserve references to relevant claims, evidence, processing inputs, model configuration, prompt version, and methodology version where applicable.
+Analysis records must preserve references to relevant claims, evidence, processing inputs, model configuration, prompt version, result-schema version, and methodology version where applicable. The initial assessment types must keep `IMPORTANCE_ASSESSMENT`, `ECONOMIC_RELEVANCE_ASSESSMENT`, and `ECONOMIC_IMPACT_ASSESSMENT` as separate results. A shared workflow or evidence set does not permit these assessment types to be merged into one score.
 
 ### 5.11 Report
 
@@ -974,13 +980,15 @@ New event creation and association must be coordinated through EventService.
 **Output:**
 
 - Evidence assessment.
-- Importance assessment.
-- Economic impact analysis.
+- Importance assessment as a distinct versioned result.
+- Economic relevance assessment as a distinct versioned result.
+- Economic impact analysis as a channel-based versioned result.
+- Market-reaction assessment where suitable market observations are available.
 - Updated event dossier.
-- New analytical version.
+- New analytical versions.
 - Processing metadata.
 
-Observed, source-reported, and inferred economic impacts must remain distinguishable.
+Observed economic effects, source-reported effects, inferred potential effects, and unknown effects must remain distinguishable. Market observations must not be treated as proof of causal attribution.
 
 ### 7.5 Reporting Workflow
 
@@ -1214,6 +1222,7 @@ The following dependency rules apply:
 - Event matching does not directly manipulate database tables.
 - EventService owns event-level business rules.
 - EvidenceAnalyzer evaluates evidence but does not own persistence.
+- ImportanceRanker, EconomicRelevanceAssessor, and ImpactAnalyzer produce separate assessment outputs; application workflows persist the corresponding versioned Analysis records.
 - HistoricalContextService retrieves context but does not own event lifecycle.
 - Observability is accessed through interfaces.
 - Factory or composition root wires concrete implementations.
@@ -1245,6 +1254,9 @@ Examples:
 - `event.created`
 - `event.association.corrected`
 - `event.updated`
+- `event.importance_assessed`
+- `event.economic_relevance_assessed`
+- `event.economic_impact_assessed`
 - `event.merged`
 - `event.split`
 - `evidence.assessed`
@@ -1270,6 +1282,7 @@ Observability must track:
 - Retry counts.
 - Error categories.
 - Workflow status.
+- Assessment outcomes, methodology versions, and unknown/insufficient-data rates by assessment type.
 - LLM usage when available.
 - Publication outcomes.
 - Review queue age.
@@ -1298,6 +1311,10 @@ Critical tests include:
 - Event matching with ambiguous candidates.
 - Event identity preservation.
 - Event merge and split history.
+- Importance assessment behavior independently of economic relevance and impact.
+- Economic relevance classification for direct, indirect, contextual, not-established, and unknown cases.
+- Economic impact direction and magnitude assessment by channel with explicit evidence status.
+- Separation of observed market reactions from event-causality conclusions.
 - Claim and evidence traceability.
 - Multiple claims linked to relevant evidence.
 - Conflicting evidence handling.
@@ -1320,7 +1337,7 @@ Critical tests include:
 - Prompt injection resistance tests.
 - Budget and deadline enforcement.
 
-Evaluation datasets must be used to measure classification, extraction, event matching, evidence assessment, and report quality.
+Evaluation datasets must be used to measure classification, extraction, event matching, evidence assessment, importance ranking, economic relevance classification, channel-level economic impact assessment, and report quality. The evaluation methodology must report these results separately rather than combining them into one aggregate score.
 
 ## 14. Versioning and Compatibility
 
@@ -1415,11 +1432,12 @@ The following items require formal review and corresponding ADRs or supporting s
 7. Source reliability and source independence assessment.
 8. Publication decisions and review operations.
 9. Report correction and withdrawal.
-10. Market data integration and impact classification.
-11. SQLite concurrency and asynchronous persistence strategy.
-12. Workflow recovery, idempotency, and retry guarantees.
-13. LLM budget, cost tracking, and evaluation.
-14. Source acquisition security and content retention.
+10. Market data integration and observed market-reaction classification.
+11. Separate assessment semantics, methodology, calibration, and evaluation for importance, economic relevance, and economic impact (GENI-ADR-019).
+13. SQLite concurrency and asynchronous persistence strategy.
+13. Workflow recovery, idempotency, and retry guarantees.
+14. LLM budget, cost tracking, and evaluation.
+15. Source acquisition security and content retention.
 
 The current individual ADR documents are listed in:
 
