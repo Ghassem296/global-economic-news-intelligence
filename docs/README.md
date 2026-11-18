@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.16
+**Version:** 1.17
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -292,6 +292,10 @@ Defines verification layers, dataset governance, metric definitions, AI evaluati
 Defines environment separation, runtime responsibilities, deployment controls, observability, recovery, capacity, runbooks, and readiness gates.
 
 ## 3.14 Data Protection and Privacy Specification
+
+## 3.15 Privacy Architecture Decision
+
+[GENI-ADR-020 — Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture](adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md) defines the proposed privacy execution model. See Documents 02, 03, 08, 09, 12, 13 and 14. The ADR remains Proposed pending explicit approval.
 
 **File:** 14-data-protection-and-privacy-specification.md  
 **Document ID:** GENI-PRIV-014
@@ -619,6 +623,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `docs/README.md`  
-**Version:** 1.16  
+**Version:** 1.17  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
