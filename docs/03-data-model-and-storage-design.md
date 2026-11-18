@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.22
+**Version:** 1.23
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -771,12 +771,12 @@ Fields:
 - `id`
 - `case_id`
 - `candidate_event_id`
-- `lexical_similarity`
-- `semantic_similarity`
-- `entity_overlap_score`
-- `temporal_compatibility_score`
-- `geographic_compatibility_score`
-- `overall_score`
+- `lexical_similarity` nullable
+- `semantic_similarity` nullable — null when semantic retrieval is disabled or not evaluated
+- `entity_overlap_score` nullable
+- `temporal_compatibility_score` nullable
+- `geographic_compatibility_score` nullable
+- `overall_score` nullable
 - `matching_method`
 - `matching_policy_version`
 - `candidate_input_fingerprint` — deterministic fingerprint of the ArticleRevision/development scope, candidate Event version, and evaluation inputs/configuration
@@ -1158,7 +1158,7 @@ Fields:
 - `created_at`
 - `metadata`
 
-Assessment outcomes must distinguish at least supported, contradicted, partially supported, disputed, insufficient evidence, and unresolved. A missing confidence value remains null. Confidence must not be described as probability unless calibrated for that interpretation.
+Assessment outcomes must use the canonical values `SUPPORTED`, `PARTIALLY_SUPPORTED`, `CONTRADICTED`, `DISPUTED`, `INSUFFICIENT_EVIDENCE`, and `UNRESOLVED`. `SUPERSEDED` and `WITHDRAWN` are lifecycle states/actions recorded in AssessmentHistory, not assessment outcomes. `UNVERIFIED` is not a final assessment outcome; use `INSUFFICIENT_EVIDENCE` or `UNRESOLVED` according to whether the evidence set is inadequate or has been examined without a reliable conclusion. A missing confidence value remains null. Confidence must not be described as probability unless calibrated for that interpretation.
 
 Each assessment is immutable. A new evaluation creates a new assessment that references the prior assessment it supersedes. The Claim.current_assessment_id projection and the new assessment must be committed atomically. The assessment must be reproducible from its recorded methodology/policy version and evidence-set fingerprint where source rights permit.
 
@@ -2511,7 +2511,7 @@ An immutable record of a retrieval/access event. It should identify the Source, 
 
 **RightsAssessment**
 
-An immutable, operation-specific assessment. It should identify the subject/content, requested operation, outcome (`ALLOWED`, `DENIED`, `UNKNOWN`, `EXPIRED`, `REVOKED`, or `REQUIRES_REVIEW`), rights-policy and source-profile versions, supporting basis/reference, evaluator/actor, timestamp, and reason codes. Each materially different operation requires its own assessment; an allowed metadata read does not authorize full-text storage or external LLM processing.
+An immutable, operation-specific assessment. It must identify the subject/content, exactly one `requested_operation`, outcome (`ALLOWED`, `DENIED`, `UNKNOWN`, `EXPIRED`, `REVOKED`, or `REQUIRES_REVIEW`), rights-policy and source-profile versions, supporting basis/reference, evaluator/actor, timestamp, and reason codes. The canonical operation vocabulary from GENI-ADR-013 is `DISCOVERY`, `METADATA_ACCESS`, `FULL_TEXT_ACCESS`, `TEMPORARY_PROCESSING`, `PERSISTENT_STORAGE`, `INTERNAL_ANALYSIS`, `EXTERNAL_LLM_PROCESSING`, `DERIVED_OUTPUT_GENERATION`, `TRANSLATION`, `EMBEDDING_GENERATION`, `QUOTATION`, `AUDIO_TRANSFORMATION`, `VIDEO_TRANSFORMATION`, `CUSTOMER_DISTRIBUTION`, and `CONTENT_REPUBLICATION`. The application must reject unknown operation identifiers rather than silently mapping them to a broader permission. Each materially different operation requires its own assessment; an allowed metadata read does not authorize full-text storage or external LLM processing.
 
 **ContentRetentionPolicy**
 
