@@ -1278,6 +1278,10 @@ Initial repository interfaces include the following logical contracts. This inve
 - `ScheduleRepository`
 - `ScheduledExecutionRepository`
 - `EmbeddingRepository`, when semantic storage is implemented.
+- `PrivacyRequestRepository` (GENI-ADR-020; DataSubjectRequest, DataSubjectRequestAction and PrivacyDeletionRecord)
+- `PersonalDataLineageRepository` (GENI-ADR-020)
+- `PrivacyPolicyRepository` (GENI-ADR-020; inventory, purposes, processing bases, processor/transfer/PIA records)
+- `DataSubjectReferenceRepository` (GENI-ADR-020; restricted subject linkage)
 
 `ExecutionLeaseRepository` owns atomic lease acquisition, renewal, release, and current-fencing-token validation for ProcessingRun/ProcessingStep resources. `IdempotencyRecordRepository` owns atomic claim/lookup/completion and request-fingerprint conflict detection for scoped logical operations. These operations participate in the same UnitOfWork boundary as the associated local state change.
 
@@ -1332,6 +1336,10 @@ The following map identifies proposed writers for domain-state groups; it is not
 | LLMUsageRecord | `SharedLLMExecutionLayer` | Records provider usage/cost where available. |
 | TranslationArtifact | `TranslationService` (optional) | Immutable derived translation; original ArticleRevision remains authoritative. |
 | EmbeddingRecord and retrieval runs | `SemanticRetrievalAdapter` (optional) | Retrieval only; no final event decision or association. |
+| DataSubjectRequest, DataSubjectRequestAction, and PrivacyDeletionRecord | `PrivacyManagementService` | Request/action state and deletion evidence; coordinates commands but does not bypass target aggregate writers (GENI-ADR-020). |
+| PersonalDataLineage | `PrivacyManagementService` through PersonalDataLineageRepository | Append-only subject-to-processing/derived-artifact lineage with restricted resolution and audit (GENI-ADR-020). |
+| PersonalDataInventory, ProcessingPurpose, PrivacyProcessingBasis, ProcessorRegister, InternationalTransferAssessment, and PrivacyImpactAssessment | Privacy policy administration under authorized governance | Versioned policy/register records; approval and legal-review evidence required (GENI-ADR-020). |
+| DataSubjectReference and restricted identity mapping | Authorized identity/verification workflow | Restricted subject linkage; no direct identifiers in general telemetry (GENI-ADR-020). |
 
 Where a capability is not yet defined or its ADR remains Proposed, this map describes a proposed ownership boundary and is not approval to implement it.
 
@@ -2214,6 +2222,6 @@ Before every provider request, SharedLLMExecutionLayer independently evaluates p
 
 ### 19.5 Ownership
 
-PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction lifecycle writes. Privacy policy administration owns ProcessingPurpose, PrivacyProcessingBasis, ProcessorRegister, InternationalTransferAssessment and PrivacyImpactAssessment. A restricted subject-linkage repository resolves DataSubjectReference. PersonalDataLineageRepository records processing-to-derived-artifact relationships. The coordinator issues domain commands; it does not bypass aggregate-owned writes. Physical tables and public transport remain open.
+PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction lifecycle writes. Privacy policy administration owns ProcessingPurpose, PrivacyProcessingBasis, ProcessorRegister, InternationalTransferAssessment and PrivacyImpactAssessment. A restricted subject-linkage repository resolves DataSubjectReference. PersonalDataLineageRepository records processing-to-derived-artifact relationships. The coordinator issues domain commands; it does not bypass aggregate-owned writes. Privacy repositories are `PrivacyRequestRepository`, `PersonalDataLineageRepository`, `PrivacyPolicyRepository` and `DataSubjectReferenceRepository`; their ownership and transaction boundaries are mapped in Section 6.3. Physical tables and public transport remain open.
 
 ---
