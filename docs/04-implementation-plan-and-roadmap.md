@@ -855,7 +855,7 @@ This is the core product capability.
 2. Identify distinct development scopes within each immutable ArticleRevision.
 3. Create or retrieve one EventMatchCase per ArticleRevision/development scope.
 4. Retrieve plausible existing Events for each case.
-5. Implement EventMatcher and semantic, lexical, entity, temporal, and geographic evaluation signals.
+5. Implement EventMatcher and lexical, entity, temporal, and geographic evaluation signals; semantic candidate retrieval, when enabled, must be provided through the optional SemanticRetrievalAdapter and compared with a lexical baseline under GENI-ADR-012. Do not assume a dedicated vector database or an uncalibrated numeric threshold.
 6. Persist immutable EventMatchCandidate evaluations with matching-policy versions and input fingerprints.
 7. Implement case-level EventMatchDecision creation and supersession.
 8. Implement the versioned EventCreationPolicy and authorized, idempotent creation for NEW_EVENT_CANDIDATE outcomes using the preassigned proposed_event_reference; after creation, record the new Event as a candidate and create a subsequent MATCH decision before creating an ArticleEventLink.
@@ -903,9 +903,9 @@ The system must preserve:
 
 Semantic similarity is a required matching capability, but a dedicated vector database is not automatically required.
 
-The initial implementation may use an approved embedding service and a simple storage or retrieval strategy. The exact approach must follow the relevant ADR.
+The initial implementation may use an approved embedding service and a simple storage or retrieval strategy. The exact approach must follow the relevant ADR. Semantic retrieval may be deferred while lexical candidate retrieval and case-level decision invariants are implemented and evaluated.
 
-No universal similarity threshold should be assumed without evaluation and calibration.
+No universal similarity threshold should be assumed without evaluation and calibration. The candidate-retrieval adapter must not own final decisions or article-event associations.
 
 ### Event Identity Integrity
 
@@ -1008,6 +1008,8 @@ The system must not describe market movement as observed unless it has actual ma
 If market data is unavailable, the system may describe potential implications or clearly attributed source-reported reactions.
 
 Temporal proximity alone does not establish causation.
+
+Market-data acquisition is optional and is not a prerequisite for the initial economic-analysis workflow. Do not select or integrate a provider, instrument universe, collection frequency, or retention scheme until coverage and rights have been reviewed under GENI-ADR-015. If no authorized, suitable observations exist, market reaction remains unknown/unavailable and the analysis must not imply that a market-data feed was observed. When integration is approved, a MarketDataCollector/normalizer contract and its ownership must be added to Documents 02 and 03 before implementation.
 
 ### Provenance Requirements
 
