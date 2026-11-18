@@ -421,7 +421,7 @@ This ADR is currently a proposal and has not been formally approved.
 
 **Decision Status:** Proposed
 
-**Decision Owner:** Product Owner
+**Decision Owner:** Project Owner
 
 **Approved By:** Not yet approved
 
@@ -681,7 +681,7 @@ This decision should be reviewed if:
 
 **Review Date:** Before implementation of the event-intelligence workflow.
 
-**Review Owner:** Product Owner
+**Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
 
