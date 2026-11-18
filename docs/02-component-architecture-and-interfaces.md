@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.25  
+**Version:** 1.26  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -1147,7 +1147,7 @@ Attempts must remain separately traceable. Retrying an operation must not create
 
 All persistence access must use repository interfaces.
 
-Initial interfaces include:
+Initial repository interfaces include the following logical contracts. This inventory is aligned with Document 03; conditional interfaces remain subject to their corresponding ADR and implementation stage.
 
 - `SourceRepository`
 - `SourceRightsProfileRepository` (when GENI-ADR-013 is accepted)
@@ -1158,33 +1158,55 @@ Initial interfaces include:
 - `ContentDeletionRepository` (when GENI-ADR-013 is accepted)
 - `DerivedArtifactRepository` (when GENI-ADR-013 is accepted)
 - `ContentUsageAuditRepository` (when GENI-ADR-013 is accepted)
-- `EmbeddingRepository` (when GENI-ADR-012 is accepted)
+- `SourceHealthRepository`
+- `SourceRelationshipRepository`
 - `ArticleRepository`
 - `ArticleRevisionRepository`
 - `ArticleProcessingRepository`
+- `ArticleClassificationRepository`
 - `DuplicateCandidateRepository`
 - `DuplicateDecisionRepository`
+- `EntityRepository`
+- `EntityAliasRepository`
+- `ArticleEntityMentionRepository`
 - `EventRepository`
+- `ArticleEventLinkRepository`
 - `EventMatchCaseRepository`
 - `EventMatchCandidateRepository`
 - `EventMatchDecisionRepository`
-- `ArticleEventLinkRepository`
-- `EntityRepository`
-- `EntityAliasRepository`
+- `EventHistoryRepository`
+- `EventRelationshipRepository`
+- `EventIdentityOperationRepository`
 - `ClaimRepository`
+- `ClaimObservationRepository`
 - `EvidenceRepository`
+- `EvidenceLocationRepository`
+- `ClaimEvidenceLinkRepository`
 - `ClaimAssessmentRepository`
 - `ClaimAssessmentEvidenceLinkRepository`
 - `AssessmentHistoryRepository`
 - `AnalysisRepository`
+- `AnalysisInputRepository`
+- `AnalysisEvidenceLinkRepository`
+- `MarketObservationRepository`
 - `ReportRepository`
+- `ReportEventLinkRepository`
+- `ReportEvidenceLinkRepository`
+- `ReportArticleLinkRepository`
+- `ReportAnalysisLinkRepository`
 - `PublicationDecisionRepository`
 - `ReviewRepository`
 - `PublicationRepository`
 - `PublicationAttemptRepository`
 - `DeliveryRepository`
+- `DeliveryAttemptRepository`
 - `ProcessingRunRepository`
-- `EventHistoryRepository`
+- `ProcessingStepRepository`
+- `CollectionCheckpointRepository`
+- `LLMUsageRepository`
+- `ScheduleRepository`
+- `ScheduledExecutionRepository`
+- `EmbeddingRepository`, when semantic storage is implemented.
 
 Repositories provide persistence operations and query methods.
 
