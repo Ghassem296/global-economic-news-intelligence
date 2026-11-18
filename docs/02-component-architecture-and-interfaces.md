@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.9  
+**Version:** 2.0  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -221,6 +221,19 @@ Responsibilities:
 - Produce normalized article metadata.
 
 It must not discard provenance or silently replace original content with translated content.
+
+### 4.3.1 ArticleRevisionService
+
+Responsibilities:
+
+- Compare normalized incoming content with the Article's current revision using the documented content-normalization version.
+- Detect unchanged repeated collection and avoid creating a redundant ArticleRevision.
+- Create an immutable ArticleRevision for a material content change.
+- Preserve the prior revision and its content reference subject to retention and rights policy.
+- Update the Article current_revision_id and current searchable projection atomically with revision creation.
+- Return the exact ArticleRevision identifier to downstream article processing and event-resolution workflows.
+
+It must not overwrite an existing ArticleRevision, perform article deduplication across different Article records, or perform event matching. Reprocessing the same content under the same normalization policy must be idempotent.
 
 ### 4.4 ArticleDeduplicator
 
@@ -1010,6 +1023,7 @@ Initial interfaces include:
 
 - `SourceRepository`
 - `ArticleRepository`
+- `ArticleRevisionRepository`
 - `ArticleProcessingRepository`
 - `EventRepository`
 - `EventMatchCaseRepository`
@@ -1079,7 +1093,8 @@ The workflow must preserve enough information to resume collection safely.
 
 **Output:**
 
-- Normalized article.
+- Normalized Article current projection.
+- Exact ArticleRevision created or reused by ArticleRevisionService.
 - Language identification.
 - Duplicate candidates and outcome.
 - Topic classifications.
@@ -1087,7 +1102,7 @@ The workflow must preserve enough information to resume collection safely.
 - Candidate claims.
 - Processing metadata.
 
-Processing must be idempotent for the same input and processing version where possible.
+Processing must be idempotent for the same input and processing version where possible. Unchanged normalized content must reuse the current ArticleRevision; material content changes create a new immutable revision and atomically update the Article projection.
 
 New processing versions must not silently overwrite historical results.
 
@@ -1400,6 +1415,7 @@ The following dependency rules apply:
 - Delivery adapters implement separate delivery contracts.
 - Report generation does not depend on publication or delivery implementations.
 - Publication policy does not depend on a specific delivery channel.
+- ArticleRevisionService owns immutable article revision creation and current-projection consistency; it does not perform cross-article deduplication.
 - Event matching does not directly manipulate database tables.
 - EventService owns event-level business rules.
 - EvidenceAnalyzer evaluates evidence but does not own persistence.
