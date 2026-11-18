@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -676,7 +676,7 @@ Full-text storage must comply with applicable source terms and content rights.
 
 Content availability must be represented explicitly. Article is the current searchable projection of its latest accepted ArticleRevision; it is not a second independently editable copy of revision content. Updating the current projection and creating a material new revision must be atomic.
 
-### 5.4 ArticleRevision
+### 5.3 ArticleRevision
 
 Represents an immutable, meaningful observed version of an Article's published content.
 
@@ -705,7 +705,7 @@ Constraints:
 - The Article current projection must reference the latest accepted revision and must be updated atomically with revision creation.
 - EventMatchCase must reference one exact immutable ArticleRevision; a later revision does not silently mutate or reuse the prior revision's matching cases.
 
-### 5.3 ArticleProcessingRecord
+### 5.4 ArticleProcessingRecord
 
 Represents a processing attempt or version for an article.
 
