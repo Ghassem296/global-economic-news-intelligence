@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.31  
+**Version:** 1.32  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1049,7 +1049,7 @@ It must preserve:
 - `id`, `review_type`, `subject_type`, and `subject_reference`.
 - Related decision reference, when applicable.
 - Report and PublicationDecision references when the review concerns a report.
-- Review status, reason, notes, and outcome.
+- Review status, priority, reason, notes, and outcome.
 - Assignee and reviewer references.
 - Assignment, due, creation, and completion timestamps.
 - Metadata and authorization context.
@@ -1058,7 +1058,7 @@ Exactly one typed subject must be identified. For article-deduplication review, 
 
 Review completion records who reviewed the task, when, and with what outcome. It does not mutate the related decision. A material article-deduplication outcome creates a successor DuplicateDecision; an event-matching outcome creates a successor EventMatchDecision; a publication outcome that changes eligibility creates a new PublicationDecision.
 
-Review subject types may include `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `PUBLICATION`; the exact authorization matrix and role mapping remain governed by ADR-014 and must be approved before a review can authorize a material decision.
+Review subject types must support `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, `CLAIM_ASSESSMENT`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` reviews. A typed subject must resolve to the exact immutable assessment, decision, report version, or rights operation under review. The exact review-type/subject-type mapping, priority scale, triggers, and authorization matrix remain governed by ADR-014 and must be approved before a review can authorize a material decision.
 
 ### 5.17.1 ReviewAction
 
@@ -1189,7 +1189,7 @@ Initial repository interfaces include the following logical contracts. This inve
 - `AnalysisRepository`
 - `AnalysisInputRepository`
 - `AnalysisEvidenceLinkRepository`
-- `MarketObservationRepository`
+- `MarketObservationRepository`, only if market-data integration is approved under GENI-ADR-015
 - `ReportRepository`
 - `ReportEventLinkRepository`
 - `ReportEvidenceLinkRepository`
@@ -1905,7 +1905,7 @@ Deferred unless separately justified:
 - Enterprise multi-tenancy.
 - Advanced personalization.
 
-Semantic event matching is not deferred merely because a dedicated vector database is deferred. The initial matching implementation must use an explicitly selected approach that can be evaluated and upgraded.
+Event matching is required for the initial event-centric workflow; semantic retrieval is not. The initial matching baseline must use lexical, entity, temporal, and geographic signals with explicit policy/version provenance and measurable evaluation. Semantic similarity is an optional signal behind `SemanticRetrievalAdapter` and may be null or absent when the adapter is disabled. Deferring embeddings or a dedicated vector database must not defer event matching itself. No semantic score may be fabricated, defaulted to zero, or treated as comparable across models without an approved scale and calibration.
 
 ## 16. Definition of Done
 
