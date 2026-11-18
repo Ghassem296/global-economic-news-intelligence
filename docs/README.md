@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.19
+**Version:** 1.20
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -57,6 +57,7 @@ docs/
 |-- 11-economic-taxonomy-specification.md
 |-- 12-testing-and-evaluation-strategy.md
 |-- 13-deployment-operations-and-observability.md
+|-- 14-data-protection-and-privacy-specification.md
 |
 |-- adr/
 |   |-- README.md
@@ -81,7 +82,8 @@ docs/
 |       |-- GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md
 |       |-- GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md
 |       |-- GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md
-|       +-- GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md
+|       |-- GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md
+|       +-- GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md
 |
 +-- references/
     |
