@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.12
+**Version:** 1.13
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -51,6 +51,12 @@ docs/
 |-- 05-architecture-decision-records.md
 |-- 06-documentation-governance-and-change-management.md
 |-- 07-documentation-registry.md
+|-- 08-security-architecture-and-threat-model.md
+|-- 09-api-and-integration-contracts.md
+|-- 10-source-credibility-and-independence.md
+|-- 11-economic-taxonomy-specification.md
+|-- 12-testing-and-evaluation-strategy.md
+|-- 13-deployment-operations-and-observability.md
 |
 |-- adr/
 |   |-- README.md
@@ -250,6 +256,48 @@ It records document identifiers, titles, file paths, versions, statuses, respons
 Architectural Decision Records document the reasoning behind significant architectural choices.
 
 Each ADR should describe the problem, relevant context, alternatives, evaluation criteria, recommendation, consequences, and final decision status.
+
+## 3.8 Security Architecture and Threat Model
+
+**File:** 08-security-architecture-and-threat-model.md  
+**Document ID:** GENI-SEC-008
+
+Defines trust boundaries, threats, authorization, secure processing, incident handling, and security verification.
+
+## 3.9 API and Integration Contracts
+
+**File:** 09-api-and-integration-contracts.md  
+**Document ID:** GENI-API-009
+
+Defines workflow, repository, provider, and external API contract rules, including errors, retries, idempotency, concurrency, pagination, and contract testing.
+
+## 3.10 Source Credibility and Independence
+
+**File:** 10-source-credibility-and-independence.md  
+**Document ID:** GENI-SRC-010
+
+Defines source reliability context, source relationships, information-origin independence, evidence aggregation, and provenance.
+
+## 3.11 Economic Taxonomy Specification
+
+**File:** 11-economic-taxonomy-specification.md  
+**Document ID:** GENI-TAX-011
+
+Defines proposed topic identifiers, hierarchy, multi-label classification, unknown states, versioning, and governance.
+
+## 3.12 Testing and Evaluation Strategy
+
+**File:** 12-testing-and-evaluation-strategy.md  
+**Document ID:** GENI-EVAL-012
+
+Defines verification layers, dataset governance, metric definitions, AI evaluation provenance, regression gates, and release evidence.
+
+## 3.13 Deployment, Operations, and Observability
+
+**File:** 13-deployment-operations-and-observability.md  
+**Document ID:** GENI-OPS-013
+
+Defines environment separation, runtime responsibilities, deployment controls, observability, recovery, capacity, runbooks, and readiness gates.
 
 ## 4.1 ADR Registry
 
@@ -549,14 +597,7 @@ Potential documents include:
 
 ## 12.2 Technical and Operational Specifications
 
-Potential documents include:
-
-- API Specification.
-- Security and Threat Model.
-- Deployment and Operations Guide.
-- Testing and Evaluation Strategy.
-- Observability and Monitoring Specification.
-- Data Retention and Recovery Policy.
+The API, security, source credibility, economic taxonomy, testing/evaluation, and operations topics are now tracked in Documents 08–13. Further detailed specifications should be created only for distinct requirements not covered by the existing authoritative documents.
 
 ## 12.3 Future Intelligence Capabilities
 
@@ -597,6 +638,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `docs/README.md`  
-**Version:** 1.12  
+**Version:** 1.13  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18

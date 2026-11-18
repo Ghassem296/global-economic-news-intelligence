@@ -136,6 +136,12 @@ The main documentation includes:
 | [05 — Architecture Decision Records Governance](docs/05-architecture-decision-records.md) | ADR lifecycle, decision approval, and architectural change control |
 | [06 — Documentation Governance and Change Management](docs/06-documentation-governance-and-change-management.md) | Documentation ownership, review, versioning, and change management |
 | [07 — Documentation Registry](docs/07-documentation-registry.md) | Central inventory of project documents and their status |
+| [08 — Security Architecture and Threat Model](docs/08-security-architecture-and-threat-model.md) | Trust boundaries, threats, security controls, and verification |
+| [09 — API and Integration Contracts](docs/09-api-and-integration-contracts.md) | Cross-component, repository, provider, and API contract rules |
+| [10 — Source Credibility and Independence](docs/10-source-credibility-and-independence.md) | Source relationships, reliability context, and independent corroboration |
+| [11 — Economic Taxonomy Specification](docs/11-economic-taxonomy-specification.md) | Stable subject identifiers, classification, and taxonomy governance |
+| [12 — Testing and Evaluation Strategy](docs/12-testing-and-evaluation-strategy.md) | Test layers, datasets, metrics, and release quality gates |
+| [13 — Deployment, Operations, and Observability](docs/13-deployment-operations-and-observability.md) | Runtime, deployment, monitoring, recovery, and readiness |
 
 ### Architecture Decision Records
 
@@ -219,6 +225,12 @@ global-economic-news-intelligence/
     ├── 05-architecture-decision-records.md
     ├── 06-documentation-governance-and-change-management.md
     ├── 07-documentation-registry.md
+    ├── 08-security-architecture-and-threat-model.md
+    ├── 09-api-and-integration-contracts.md
+    ├── 10-source-credibility-and-independence.md
+    ├── 11-economic-taxonomy-specification.md
+    ├── 12-testing-and-evaluation-strategy.md
+    ├── 13-deployment-operations-and-observability.md
     │
     ├── adr/
     │   ├── README.md

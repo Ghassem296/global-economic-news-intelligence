@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.39
+**Version:** 1.40
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -160,6 +160,12 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.42 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.31 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.22 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-SEC-008 | Security Architecture and Threat Model | docs/08-security-architecture-and-threat-model.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-API-009 | API and Integration Contracts | docs/09-api-and-integration-contracts.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-SRC-010 | Source Credibility and Independence Specification | docs/10-source-credibility-and-independence.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-TAX-011 | Economic Taxonomy Specification | docs/11-economic-taxonomy-specification.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-EVAL-012 | Testing and Evaluation Strategy | docs/12-testing-and-evaluation-strategy.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-OPS-013 | Deployment, Operations, and Observability | docs/13-deployment-operations-and-observability.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.7 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -243,24 +249,22 @@ Planned documentation must be tracked separately from existing files.
 
 A planned topic does not represent an existing document.
 
+The six technical specifications listed in Section 4 are now published as proposed documents. Additional future documents must be justified by a distinct requirement and checked for overlap before creation.
+
 Potential future documents include:
 
 ### 8.1 Product and Domain Specifications
 
 - Event Intelligence and Correlation Specification.
 - News Sources, Content Acquisition, and Rights Policy.
-- Economic Taxonomy Specification.
+- Additional domain-specific taxonomy extensions only if required beyond GENI-TAX-011.
 - Evidence and Claim Validation Specification.
 - Reporting and Publication Specification.
 
 ### 8.2 Technical and Operational Specifications
 
-- API Specification.
-- Security and Threat Model.
-- Deployment and Operations Guide.
-- Testing and Evaluation Strategy.
-- Observability and Monitoring Specification.
-- Data Retention and Recovery Policy.
+- Provider-specific API contracts when concrete integrations are selected.
+- Additional operational runbooks only when they require a separately governed artifact.
 
 ### 8.3 Future Intelligence Capabilities
 
@@ -396,14 +400,14 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `f8c2bb5e0811ecabf4ab3fa11dcdb461053570bf`  
-**Registry Refresh:** This revision was prepared from the exact published `main` tree identified by the baseline commit above. It completes the EventIdentityOperationHistory and multi-source DistributionAuthorizationDecision contracts; defines canonical content-scope and rights-assessment fingerprints, upstream-rights revocation propagation, fail-closed reauthorization, and atomic persistence; corrects all identified ADR history-table structures; clarifies manifest-versus-transport digest semantics and implementation sequencing; and extends CI to validate Markdown table structure and heading anchors. The resulting commit becomes the new authoritative `main` snapshot.
+**Baseline Commit Inspected:** `08ac03a86adfff2fe8f506c9fa9d009fcbb4aba6`  
+**Registry Refresh:**  This revision was prepared from the exact published `main` tree identified by the baseline commit above. It completes the EventIdentityOperationHistory and multi-source DistributionAuthorizationDecision contracts; defines canonical content-scope and rights-assessment fingerprints, upstream-rights revocation propagation, fail-closed reauthorization, and atomic persistence; corrects all identified ADR history-table structures; clarifies manifest-versus-transport digest semantics and implementation sequencing; and extends CI to validate Markdown table structure and heading anchors. The resulting commit becomes the new authoritative `main` snapshot.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
 ### 12.2 Core Documents
 
-The five primary product, architecture, data, planning, and ADR-governance documents are present in `main`. Their actual versions and lifecycle statuses are recorded in Section 4.
+The five primary product, architecture, data, planning, and ADR-governance documents and six proposed technical specifications (Documents 08–13) are present in `main`. Their actual versions and lifecycle statuses are recorded in Section 4.
 
 ### 12.3 Governance Documents
 
