@@ -1090,16 +1090,18 @@ The initial release is functionally complete when the following capabilities are
 17. Economic significance is explicitly evaluated.
 18. Importance assessment uses a documented and versioned methodology.
 19. Market reactions are not presented as observed without supporting market data.
-20. Publication policy is enforced.
-21. Held reports are routed to a defined review mechanism.
-22. Reports can be generated, versioned, corrected, and withdrawn.
-23. Reports can be delivered without unintended duplicate publication.
-24. Processing failures and recovery operations are observable.
-25. The system can restart without corrupting existing data.
-26. Reprocessing does not silently overwrite historical analytical or publication records.
-27. LLM execution respects configured budgets, deadlines, and output validation.
-28. External content is handled as untrusted input.
-29. The initial system operates without mandatory distributed or cloud infrastructure.
+20. Publication policy is enforced and publication decisions are immutable and versioned.
+21. Held reports are routed to a defined review mechanism, and review approval cannot bypass a new effective publication decision.
+22. Reports can be generated and corrected through immutable report versions with traceable report-level lineage.
+23. Publication, replacement, and withdrawal are recorded as separate idempotent operations, and publication success is confirmed by the target rather than inferred from a policy decision.
+24. Uncertain external publication outcomes are reconciled before another side-effecting attempt; a failed replacement does not invalidate the previous confirmed publication.
+25. Delivery operations are recorded separately from publication, prevent unintended duplicate delivery, and do not change publication status.
+26. Processing failures and recovery operations are observable.
+27. The system can restart without corrupting existing data.
+28. Reprocessing does not silently overwrite historical analytical, report, publication, or delivery records.
+29. LLM execution respects configured budgets, deadlines, and output validation.
+30. External content is handled as untrusted input.
+31. The initial system operates without mandatory distributed or cloud infrastructure.
 
 Quantitative acceptance thresholds for extraction quality, event matching, classification, and report quality must be established in the evaluation specification before the relevant capabilities are considered production-ready.
 
@@ -1116,8 +1118,9 @@ The implementation must preserve these constraints:
 - External content is untrusted.
 - Evidence provenance is mandatory.
 - Reports and analyses are versioned.
-- Publication is subject to explicit quality gates.
+- Publication eligibility decisions, external publication operations, and recipient delivery operations are distinct and independently traceable.
 - Held reports must not be silently published.
+- Publication replacement and withdrawal must preserve external-operation history and require confirmed outcomes.
 - Event lifecycle state is separate from event-history occurrences.
 - Processing state is separate from domain state.
 - Phase 1 is text-only.
