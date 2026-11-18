@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-PRIV-014  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -135,14 +135,14 @@ Documents 01–13, especially Documents 02, 03, 08, 09, 12, and 13; GENI-ADR-013
 
 This specification is operationalized through GENI-ADR-020 and the following contracts:
 
-- Document 02 defines PrivacyManagementService, independent PrivacyProcessingAuthorization, request workflow, provider boundary and service ownership.
-- Document 03 defines PersonalDataInventory, ProcessingPurpose, PrivacyProcessingBasis, DataSubjectReference, DataSubjectRequest, DataSubjectRequestAction, PrivacyDeletionRecord, ProcessorRegister, InternationalTransferAssessment, PrivacyImpactAssessment and PersonalDataLineage as logical records.
+- Document 02 defines PrivacyManagementService, independent PrivacyProcessingAuthorization, immutable PrivacyAuthorizationDecision ownership, request workflow, provider boundary and service ownership.
+- Document 03 defines PersonalDataInventory, ProcessingPurpose, PrivacyProcessingBasis, PrivacyAuthorizationDecision, DataSubjectReference, DataSubjectRequest, DataSubjectRequestAction, PrivacyDeletionRecord, ProcessorRegister, InternationalTransferAssessment, PrivacyImpactAssessment and PersonalDataLineage as logical records, with a dedicated PrivacyAuthorizationRepository.
 - Document 08 defines independent content-rights/privacy checks, minimization, LLM egress controls and privacy-safe telemetry.
 - Document 09 defines internal request commands/queries, authorization metadata, idempotency and target-level outcomes.
 - Document 12 defines rights lifecycle, lineage, provider, transfer, deletion, telemetry and backup-restore verification.
 - Document 13 defines DSAR, provider deletion/restriction, backup reconciliation and privacy incident/transfer runbooks.
 
-Content Rights and Privacy Processing Authorization are independently evaluated; neither is a proxy for the other. PersonalDataLineage is distinct from article provenance and content-rights lineage. Logical records do not mandate physical tables. Legal bases, controller/processor roles, applicable rights, deadlines, exceptions, transfer mechanisms and retention periods remain unresolved pending qualified jurisdiction-specific legal/privacy review.
+Content Rights and Privacy Processing Authorization are independently evaluated; neither is a proxy for the other. A PrivacyAuthorizationDecision is immutable and bound to purpose, operation, data category, provider/model, region, policy version, outcome and expiry; its repository provides auditable evidence and revocation state. PersonalDataLineage is distinct from article provenance and content-rights lineage. Logical records do not mandate physical tables. Legal bases, controller/processor roles, applicable rights, deadlines, exceptions, transfer mechanisms and retention periods remain unresolved pending qualified jurisdiction-specific legal/privacy review.
 
 Publication of these contracts is not evidence of implementation, operational effectiveness or legal compliance.
 
