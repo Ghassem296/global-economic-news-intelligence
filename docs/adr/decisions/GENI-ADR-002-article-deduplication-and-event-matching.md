@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.0  
-**Date:** 2026-11-16  
+**Version:** 1.1  
+**Date:** 2026-11-18  
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -889,3 +889,10 @@ Upon acceptance:
 - Relevant evaluation and operational specifications must define independent quality criteria.
 
 **End of ADR-002**
+
+## 20. Decision History
+
+| Version | Date | Status | Change Summary | Author or Reviewer |
+|---|---|---|---|---|
+| 1.0 | 2026-11-16 | Proposed | Initial proposal separating article deduplication and event matching. | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Clarified per-ArticleRevision EventMatchCase scope, candidate/decision separation, immutable EventMatchDecision, exact ArticleEventLink provenance, and human-review outcome handling. | AI Architecture Assistant |
