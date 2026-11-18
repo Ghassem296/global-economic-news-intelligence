@@ -1389,6 +1389,8 @@ Fields:
 - `report_id`
 - `publication_decision_id` nullable for withdrawal operations
 - `publication_target_reference`
+- `publication_key`
+- `operation_sequence`
 - `operation_type`
 - `target_publication_id` nullable
 - `status`
@@ -1423,16 +1425,19 @@ Operation statuses:
 
 Operation semantics and constraints:
 
-- `PUBLISH` requires an effective `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision and must not reference a previous publication as its target.
-- `REPLACE` requires an effective publication decision for the new report version and a reference to the earlier successful publication it intends to supersede.
-- `WITHDRAW` requires a reference to an existing publication and explicit authorization/reason information. Its publication-decision reference may be null because withdrawal is an authorized lifecycle operation rather than permission to publish content.
+- A publication key identifies one logical publication slot within a target. A target may host many independent publication keys.
+- `PUBLISH` requires an effective `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision and must not reference a previous publication as its target. It may establish a new publication chain only when that target/key has no currently effective publication.
+- `REPLACE` requires an effective publication decision for the new report version and a reference to the currently effective earlier publication it intends to supersede. The target and publication key must match the referenced operation.
+- `WITHDRAW` requires a reference to the currently effective publication for the same target and publication key and explicit authorization/reason information. Its `report_id` must match the referenced publication's report. Its publication-decision reference may be null because withdrawal is an authorized lifecycle operation rather than permission to publish content.
 - The target publication and new operation must refer to the same configured publication target.
-- A stable idempotency key must be unique within the target and operation scope.
+- The operation sequence must be assigned atomically and increase within the target/publication-key chain.
+- A stable idempotency key must be unique within the target and publication-key scope.
 - The same logical operation must reuse its idempotency key on retry.
+- Only one unresolved side-effecting operation may exist for a target/publication-key chain at a time; unrelated keys at the same target may proceed independently.
 - A successful replacement supersedes the earlier publication. A failed or uncertain replacement leaves the earlier confirmed publication effective.
 - A successful withdrawal records that the target has withdrawn the referenced publication. A failed or uncertain withdrawal must not be treated as complete.
 - A timeout or transport failure with an unknown external outcome must produce `RECONCILIATION_REQUIRED`; the operation must be reconciled before another side-effecting attempt.
-- The current effective publication for a target is derived from the chain of successful operations. Failed, cancelled, or unresolved operations must not silently replace the last confirmed effective state.
+- The current effective publication for a target/publication-key pair is derived from its ordered chain of successful operations: PUBLISH establishes the publication, REPLACE supersedes the referenced publication and establishes the replacement, and WITHDRAW removes the referenced publication from the effective state. Failed, cancelled, or unresolved operations must not silently replace the last confirmed effective state.
 - Publication operation history must remain append-oriented and auditable. Corrections must not overwrite previous report content or publication records.
 
 ### 11.9 PublicationAttempt
@@ -1878,7 +1883,7 @@ Indexes should support:
 - Report lookup by event and version.
 - Report-event lookup in both directions.
 - Publication decision lookup by report and decision.
-- Publication operation lookup by target, status, report, and creation time.
+- Publication operation lookup by target, publication key, status, report, and operation sequence.
 - Publication attempt lookup by operation and attempt number.
 - Review queue lookup by status, assignment, due date, and creation time.
 - Delivery lookup by status, target, and scheduled time.
@@ -1900,14 +1905,15 @@ Where applicable, enforce:
 - Event-specific report version uniqueness.
 - Source and checkpoint type uniqueness.
 - Processing step identity within a run.
-- Publication idempotency key uniqueness within its publication-target scope.
+- Publication operation sequence uniqueness within a target/publication-key chain.
+- Publication idempotency key uniqueness within its target/publication-key scope.
 - Publication attempt number uniqueness within a publication operation.
 - Delivery idempotency key uniqueness within its scope.
 - Schedule occurrence uniqueness.
 - Event identity operation input/output uniqueness.
 - Entity alias uniqueness where the language and alias type make it unambiguous.
 
-Only one unresolved side-effecting publication operation should be allowed to modify the same effective publication target at a time; enforce this through an appropriate transaction/locking rule or database constraint for the selected engine.
+Only one unresolved side-effecting publication operation should be allowed to modify the same target/publication-key chain at a time; enforce this through an appropriate transaction/locking rule or database constraint for the selected engine. Do not serialize unrelated publication keys merely because they share a target.
 
 All uniqueness rules involving nullable fields must be tested against the selected database engine.
 
@@ -1915,7 +1921,7 @@ All uniqueness rules involving nullable fields must be tested against the select
 
 Foreign keys should protect ordinary relational relationships.
 
-Polymorphic references must be explicitly documented and validated by the application layer.
+Polymorphic references must be explicitly documented and validated by the application layer. PublicationAttempt must reference an existing PublicationRecord. A replacement or withdrawal target_publication_id must reference an earlier successful PublicationRecord with the same publication target and publication key. A DeliveryRecord in PUBLICATION_LINK mode must reference a confirmed effective publication operation; this semantic constraint must be enforced by the application workflow even where it cannot be expressed as a simple foreign key.
 
 Deletion policies must protect historical evidence, reports, and provenance. Cascading deletion must not silently remove records referenced by published reports.
 
@@ -2229,7 +2235,8 @@ Data-layer tests must cover:
 - Replacement success and failure, including preservation of the previous effective publication on failure.
 - Withdrawal authorization, success, and failure behavior.
 - Reconciliation after an unknown external publication outcome.
-- Prevention of concurrent conflicting publication operations against the same target.
+- Publication-key isolation so independent items can publish concurrently to the same target.
+- Prevention of concurrent conflicting publication operations within the same target/publication-key chain.
 - Delivery idempotency and delivery attempt history.
 - Verification that delivery state changes do not mutate publication state.
 - Validation that publication-link delivery references a confirmed effective publication.
@@ -2354,7 +2361,7 @@ The data model is acceptable for implementation when:
 14. Multi-event reports are supported.
 15. Publication decisions are separately recorded from actual publication operations.
 16. Held reports can enter a real review workflow, and review approval cannot bypass a new effective publication decision.
-17. Publication, replacement, and withdrawal operations have immutable history, idempotency, and attempt records.
+17. Publication, replacement, and withdrawal operations have immutable history, idempotency, attempt records, and a stable key that scopes each publication chain within a target.
 18. Uncertain external publication outcomes require reconciliation before retry.
 19. Delivery operations have separate idempotency and retry history and cannot change publication state.
 20. Publication-link deliveries reference a confirmed effective publication.
