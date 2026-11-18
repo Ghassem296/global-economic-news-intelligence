@@ -624,7 +624,6 @@ def main() -> None:
     validate_adr_history_versions()
     validate_markdown_links()
     validate_markdown_table_structure()
-    validate_markdown_table_structure()
     validate_review_contract_alignment()
     validate_first_slice_review_set()
     validate_repository_inventory_alignment()
