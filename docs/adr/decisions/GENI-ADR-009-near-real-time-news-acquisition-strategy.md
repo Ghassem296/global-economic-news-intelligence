@@ -297,7 +297,7 @@ External legal, provider, and measured performance evidence must be added where 
 ## 14. Decision History
 
 | Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|
+|---|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Expanded ADR proposal prepared for architecture review | AI Architecture Assistant |
 
 **End of ADR**
