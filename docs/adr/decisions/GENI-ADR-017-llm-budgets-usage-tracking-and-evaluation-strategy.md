@@ -303,7 +303,7 @@ External legal, provider, and empirical evidence must be added during formal rev
 ## 14. Decision History
 
 | Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|
+|---|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Expanded ADR proposal prepared for architecture review | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Clarified ProcessingRun/ProcessingStep as the authoritative execution records, separated evaluation artifacts from production business tables, and strengthened provider-reported versus estimated cost provenance. | AI Architecture Assistant |
 
