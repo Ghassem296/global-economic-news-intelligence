@@ -1878,8 +1878,11 @@ Indexes should support:
 - Report lookup by event and version.
 - Report-event lookup in both directions.
 - Publication decision lookup by report and decision.
+- Publication operation lookup by target, status, report, and creation time.
+- Publication attempt lookup by operation and attempt number.
 - Review queue lookup by status, assignment, due date, and creation time.
-- Delivery lookup by status and scheduled time.
+- Delivery lookup by status, target, and scheduled time.
+- Delivery lookup by referenced publication where applicable.
 - Delivery attempt lookup by delivery operation.
 - Processing run lookup by type, status, target, and lease expiry.
 - Processing step lookup by run and status.
@@ -1897,10 +1900,14 @@ Where applicable, enforce:
 - Event-specific report version uniqueness.
 - Source and checkpoint type uniqueness.
 - Processing step identity within a run.
+- Publication idempotency key uniqueness within its publication-target scope.
+- Publication attempt number uniqueness within a publication operation.
 - Delivery idempotency key uniqueness within its scope.
 - Schedule occurrence uniqueness.
 - Event identity operation input/output uniqueness.
 - Entity alias uniqueness where the language and alias type make it unambiguous.
+
+Only one unresolved side-effecting publication operation should be allowed to modify the same effective publication target at a time; enforce this through an appropriate transaction/locking rule or database constraint for the selected engine.
 
 All uniqueness rules involving nullable fields must be tested against the selected database engine.
 
@@ -2215,14 +2222,21 @@ Data-layer tests must cover:
 - Report version uniqueness.
 - Multi-event report relationships.
 - Published report immutability.
-- Publication decision history.
-- Review queue state transitions.
-- Delivery idempotency.
-- Delivery attempt history.
+- Publication decision history and decision supersession.
+- Review queue state transitions and reviewer authorization.
+- Publication idempotency by target and operation.
+- Publication attempt history and attempt-number uniqueness.
+- Replacement success and failure, including preservation of the previous effective publication on failure.
+- Withdrawal authorization, success, and failure behavior.
+- Reconciliation after an unknown external publication outcome.
+- Prevention of concurrent conflicting publication operations against the same target.
+- Delivery idempotency and delivery attempt history.
+- Verification that delivery state changes do not mutate publication state.
+- Validation that publication-link delivery references a confirmed effective publication.
 - Processing run and step recovery.
 - Expired execution lease handling.
 - Atomic event history updates.
-- Atomic publication state changes.
+- Atomic publication-operation and attempt persistence.
 - Collection checkpoint consistency.
 - LLM usage recording.
 - Schedule execution idempotency.
@@ -2343,17 +2357,18 @@ The data model is acceptable for implementation when:
 17. Publication, replacement, and withdrawal operations have immutable history, idempotency, and attempt records.
 18. Uncertain external publication outcomes require reconciliation before retry.
 19. Delivery operations have separate idempotency and retry history and cannot change publication state.
-20. Processing runs and steps support recovery.
-19. LLM usage and known costs can be recorded.
-20. Unknown values remain distinct from zero or false.
-21. Critical state changes are transactionally consistent.
-22. Migrations are versioned and tested.
-23. Repository interfaces hide database-specific implementation details.
-24. Backup and restore procedures are documented and tested.
-25. Content retention respects applicable rights and licensing restrictions.
-26. Scores have documented semantics and versioning.
-27. Scheduled workflow execution can be tracked and made idempotent where scheduling is implemented.
-28. The model is consistent with Document 02 component and interface contracts.
+20. Publication-link deliveries reference a confirmed effective publication.
+21. Processing runs and steps support recovery.
+22. LLM usage and known costs can be recorded.
+23. Unknown values remain distinct from zero or false.
+24. Critical state changes are transactionally consistent.
+25. Migrations are versioned and tested.
+26. Repository interfaces hide database-specific implementation details.
+27. Backup and restore procedures are documented and tested.
+28. Content retention respects applicable rights and licensing restrictions.
+29. Scores have documented semantics and versioning.
+30. Scheduled workflow execution can be tracked and made idempotent where scheduling is implemented.
+31. The model is consistent with Document 02 component and interface contracts.
 
 ## 30. Final Design Statement
 
