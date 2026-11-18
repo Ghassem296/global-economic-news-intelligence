@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.30
+**Version:** 1.31
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1963,7 +1963,7 @@ Constraints:
 - Dispatch must re-check that the referenced decision remains effective, unexpired, and allowed; every linked RightsAssessment remains effective for its exact source-derived content scope; and every upstream permission dependency recorded in the DerivedArtifact provenance remains effective. Revocation, expiry, or material policy change invalidates the affected derived scope until ContentRightsService re-evaluates the complete dependency chain and issues a current allowed assessment. The prior decision remains immutable and cannot be revived.
 - An authorization decision is not evidence that delivery occurred.
 - An `ALLOW` decision for a composite report must link every source-derived content scope in its authorized payload to an exact `CUSTOMER_DISTRIBUTION` RightsAssessment with outcome `ALLOWED`. A missing, unknown, expired, revoked, denied, or review-required assessment prevents authorization of the affected scope. A reduced scope is permitted only when the restricted content is actually excluded and the reduced content-scope fingerprint is recorded.
-- The `authorized_content_scope_fingerprint` must be reproducible from the canonical ContentScopeManifest using RFC 8785 JCS, UTF-8, and SHA-256; set-valued arrays are sorted by stable identifiers before serialization.
+- The `authorized_content_scope_fingerprint` must be reproducible from the canonical ContentScopeManifest using RFC 8785 JCS, UTF-8, and SHA-256; set-valued arrays are sorted by stable identifiers before serialization. Item digests cover the exact immutable artifact bytes (UTF-8 bytes for text and exact stored bytes for binary media); any content transformation or transcoding creates a new immutable artifact version and digest.
 - The `rights_assessment_set_fingerprint` must be reproducible from the complete sorted immutable RightsAssessment reference set using the same canonicalization and hashing rules. The decision and all links are committed atomically.
 - The `DeliveryRecord.content_scope_fingerprint` must equal the authorized manifest fingerprint. `outbound_payload_sha256` records the exact serialized request bytes and must not be confused with the manifest fingerprint.
 
