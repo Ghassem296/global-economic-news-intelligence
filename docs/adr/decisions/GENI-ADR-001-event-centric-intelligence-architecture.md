@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-001
 **Title:** Event-Centric Intelligence Architecture
 **Status:** Proposed
-**Version:** 1.0
-**Date:** 2026-11-16
+**Version:** 1.1
+**Date:** 2026-11-18
 **Decision Owner:** Product Owner
 **Prepared By:** AI Architecture Assistant
 **Approved By:** Not yet approved
@@ -580,6 +580,8 @@ The generic Agent Template documents remain reference documents and are not requ
 | GENI-ADR-014 | Related to | Defines review, corrections, and withdrawals. |
 | GENI-ADR-015 | Related to | Defines market data integration and impact classification. |
 | GENI-ADR-016 | Related to | Defines processing reliability and recovery. |
+| GENI-ADR-003 | Related to | Defines the economic-intelligence editorial scope applied to event selection. |
+| GENI-ADR-019 | Related to | Defines separate importance, economic relevance, and economic impact assessments for event dossiers. |
 
 ## 10. Implementation Implications
 
