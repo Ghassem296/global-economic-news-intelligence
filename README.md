@@ -186,9 +186,9 @@ These decisions and implementation details will be established through the relev
 
 A published document is not necessarily an accepted architectural decision. An accepted decision is not necessarily implemented. These states must remain distinct throughout the project lifecycle.
 
-## 9. Repository Structure
+## 9. Documentation Repository Structure
 
-The current documentation structure in the shared repository is:
+The following tree lists the repository's Markdown documentation structure. It is not a complete inventory of non-Markdown files such as GitHub Actions workflows, validation scripts, or tests:
 
 ```text
 global-economic-news-intelligence/
@@ -272,6 +272,21 @@ Contributions should prioritize:
 - Measurable quality and evaluation criteria.
 
 Documentation changes must follow the project's documentation governance and change-management rules.
+
+### Documentation Quality Checks
+
+The repository includes automated documentation validation:
+
+- `scripts/validate_docs.py` checks document metadata, registries, ADR inventory, cross-document contracts, Markdown links, and repository documentation inventories.
+- `tests/test_validate_docs.py` contains unit tests for validator behavior.
+- `.github/workflows/docs-validation.yml` runs the unit tests and documentation validator on pushes and pull requests targeting `main`.
+
+Run the checks locally with Python 3.12:
+
+```bash
+python -m unittest discover -s tests -v
+python scripts/validate_docs.py
+```
 
 ## 11. Responsible Intelligence and Limitations
 
