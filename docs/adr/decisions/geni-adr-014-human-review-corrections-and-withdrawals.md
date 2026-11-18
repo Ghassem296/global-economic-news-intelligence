@@ -282,10 +282,10 @@ Implementation verification remains deferred until formal acceptance and impleme
 | AC-01 | Review tasks are persistent and queryable by status, assignee, due date, and subject. | Repository tests |
 | AC-02 | Reviewer identity and permissions are validated. | Security tests |
 | AC-03 | Material review outcomes create immutable successor decisions. | Lineage tests |
-| AC-07 | Duplicate-candidate review creates a successor DuplicateDecision without mutating the prior decision or source articles. | Duplicate-decision lineage tests |
 | AC-04 | Association corrections retain the deactivated prior link. | Integration tests |
 | AC-05 | Report correction and external publication withdrawal are distinct operations. | Lifecycle tests |
 | AC-06 | Review backlog, overdue items, and failed corrective actions are observable. | Operational tests |
+| AC-07 | Duplicate-candidate review creates a successor DuplicateDecision without mutating the prior decision or source articles. | Duplicate-decision lineage tests |
 
 Any quantitative threshold must be supported by representative datasets, measurements, or formal policy review.
 

@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -160,7 +160,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.11 | Draft — Under Architecture Review |
 | GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.23 | Draft — Under Architecture Review |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.18 | Draft — Under Architecture Review |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.12 | Draft — Under Architecture Review |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.13 | Draft — Under Architecture Review |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.6 | Draft — Under Architecture Review |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -170,9 +170,9 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status |
 |---|---|---|---:|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.7 | Proposed — Pending Project Owner Approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.8 | Proposed — Pending Project Owner Approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.6 | Draft — Under Documentation Review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.9 | Draft — Under Documentation Review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.10 | Draft — Under Documentation Review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.0 | Template |
 
 The actual version and status values were checked against each file header. The ADR template is supporting material, not an architectural decision.
@@ -196,7 +196,7 @@ The published `main` branch contains all nineteen individual ADR documents. The 
 | GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.4 | Proposed |
 | GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `docs/adr/decisions/geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` | 1.0 | Proposed |
 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.1 | Proposed |
-| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/geni-adr-014-human-review-corrections-and-withdrawals.md` | 1.1 | Proposed |
+| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/geni-adr-014-human-review-corrections-and-withdrawals.md` | 1.2 | Proposed |
 | GENI-ADR-015 | Market Data Integration and Economic Impact Classification | `docs/adr/decisions/geni-adr-015-market-data-integration-and-economic-impact-classification.md` | 1.0 | Proposed |
 | GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | `docs/adr/decisions/geni-adr-016-persistence-async-execution-idempotency-and-recovery.md` | 1.0 | Proposed |
 | GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `docs/adr/decisions/geni-adr-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` | 1.0 | Proposed |
