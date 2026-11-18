@@ -662,7 +662,7 @@ def parse_documentation_tree_paths(content: str, root_name: str) -> set[str]:
         if not match:
             continue
         prefix, name = match.groups()
-        depth = (len(prefix) - 1) // 4 if "|" in prefix else len(prefix) // 4
+        depth = len(prefix) // 4
         name = name.strip()
         is_directory = name.endswith("/")
         name = name.rstrip("/")
