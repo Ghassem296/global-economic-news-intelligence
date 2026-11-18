@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-013  
 **Title:** News Content Access, Full-Text Retention, Licensing, and Republishing  
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Proposed  
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
@@ -755,7 +755,7 @@ The authorized_content_scope_fingerprint is the SHA-256 digest, represented as 6
 - One entry per atomic outbound content item, with a stable item identifier.
 - Immutable ArticleRevision or DerivedArtifact/version references.
 - Transformation and output-language identifiers where applicable.
-- The SHA-256 digest of the exact UTF-8 content bytes of each item.
+- The SHA-256 digest of the exact immutable artifact bytes of each item (UTF-8 bytes for text; exact stored bytes for binary media). A content edit, normalization, transcode, or recompression creates a new immutable artifact version and digest.
 - Complete typed source-scope lineage for every source-derived item.
 
 Set-valued arrays must be sorted by stable identifiers before canonical serialization. Arrays whose order changes meaning must retain their semantic order. Content bytes must not be normalized before item-level hashing. The same manifest rules apply when the scope is reduced.
@@ -766,7 +766,7 @@ The DeliveryRecord content_scope_fingerprint must equal the authorized manifest 
 
 ### 6.15.3 Canonicalization and Transaction Requirements
 
-All services must use one shared canonicalization implementation and test vectors. They must reject unsupported schema versions, duplicate item or assessment identifiers, missing required references, invalid Unicode, non-finite numbers, and ambiguous timestamps. Timestamps included in manifests must use UTC RFC 3339 form with a fixed precision; identifiers and digest strings must use their canonical case/format. JCS object-key ordering is authoritative; application code must not invent a second JSON key-ordering rule.
+All services must use one shared canonicalization implementation and test vectors. They must reject unsupported schema versions, duplicate item or assessment identifiers, missing required references, invalid Unicode, non-finite numbers, and ambiguous timestamps. Timestamps included in manifests must use UTC RFC 3339 with exactly millisecond precision and a trailing Z (YYYY-MM-DDTHH:mm:ss.sssZ). Internal UUIDs use lowercase canonical hyphenated form; external/source identifiers preserve their exact source-defined, case-sensitive representation and include a namespace. SHA-256 digests use 64 lowercase hexadecimal characters. Unicode strings are preserved exactly as stored and are not normalized during canonicalization. JCS object-key ordering is authoritative; application code must not invent a second JSON key-ordering rule.
 
 The DistributionAuthorizationDecision and its complete immutable RightsAssessment link set must be committed in one UnitOfWork transaction. Fingerprints must be computed from the exact records committed by that transaction. A failed transaction must leave neither a partially linked decision nor an externally dispatchable authorization.
 
@@ -1192,6 +1192,7 @@ Source-specific rights and legal requirements must be verified before production
 | 1.3 | 2026-11-18 | Proposed | Canonicalized operation permissions, separated translation, embedding, audio, and video transformations, and aligned decision/review authority with the Project Owner role. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Defined complete per-source CUSTOMER_DISTRIBUTION rights coverage for composite reports and other multi-source derived outputs; clarified reduced-scope authorization. | AI Architecture Assistant |
 | 1.5 | 2026-11-18 | Proposed | Defined deterministic content-scope and rights-assessment fingerprints, upstream-rights revocation propagation, fail-closed reauthorization, and atomic persistence requirements. | AI Architecture Assistant |
+| 1.6 | 2026-11-18 | Proposed | Clarified exact immutable artifact-byte hashing for text and binary media, timestamp precision, and identifier canonicalization. | AI Architecture Assistant |
 
 ---
 
@@ -1199,5 +1200,5 @@ Source-specific rights and legal requirements must be verified before production
 
 **ADR ID:** `GENI-ADR-013`  
 **File:** `GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md`  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Proposed
