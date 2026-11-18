@@ -9,45 +9,6 @@
 
 ---
 
-## 31. Privacy Domain Records and Personal Data Lineage
-
-These are logical model contracts proposed by GENI-ADR-020 and required by GENI-PRIV-014. A logical record does not mandate one physical table; approved persistence design may use aggregates, normalized tables, immutable events or protected references.
-
-| Logical record | Conceptual fields and purpose |
-|---|---|
-| PersonalDataInventory | inventory ID, category, system/store, purpose, source/owner, classification, retention-policy reference, discovery method, review time |
-| ProcessingPurpose | stable purpose ID, description, permitted operations/categories, approval state, effective interval, policy version |
-| PrivacyProcessingBasis | basis ID, purpose, jurisdiction, basis type/reference, assessment evidence, effective interval and review state; legal basis is a qualified-review input |
-| DataSubjectReference | opaque linkage ID, verification state/reference and restricted identity-map reference; no direct identifier in ordinary lineage/telemetry |
-| DataSubjectRequest | request ID, subject reference, request type, intake channel/time, verification state, jurisdiction-policy reference, status, idempotency key, response reference |
-| DataSubjectRequestAction | action ID, request ID, target, action type/state, attempts, outcome, exception/hold reference, verification evidence and timestamps |
-| PrivacyDeletionRecord | deletion ID, request/action, target/lineage scope, tombstone/state, processor acknowledgements, backup reconciliation and exception evidence |
-| ProcessorRegister | processor/subprocessor, service/provider, role assessment, purposes, categories, region, retention, training-use posture, deletion capability, contract/safeguard references and approval/review state |
-| InternationalTransferAssessment | assessment ID, origin/destination, recipient, categories, transfer mechanism/safeguards reference, risk outcome, approver, effective interval and review state |
-| PrivacyImpactAssessment | assessment ID, processing scope, necessity/proportionality analysis, risks/mitigations, residual risk, reviewer/approval, triggers and status |
-
-### 31.1 PersonalDataLineage
-
-PersonalDataLineage is distinct from Article provenance, ArticleOriginRelationship, Content Rights lineage and generic ProcessingRun history. It links an opaque DataSubjectReference and data-category reference to source/authoritative records; ProcessingRun/Step and purpose/policy version; minimized prompt/provider request reference; destination processor/provider, model and region; derived artifacts (embeddings, translations, analyses, reports, caches, evaluation artifacts); and downstream copies/exports and deletion/restriction state. Edges record stable identifiers, edge type, timestamps, source/destination references, purpose, policy version and integrity metadata. Subject-to-record resolution is separately restricted and audited.
-
-### 31.2 Derived-data and deletion semantics
-
-Rights actions traverse lineage to discover dependent artifacts and destinations. Distinguish authoritative deletion, derived deletion/rebuild, restriction/suppression, correction propagation, processor-side request/acknowledgement, cache invalidation, backup tombstone/reconciliation and legally retained exceptions. Record outcomes per target; never claim global completion if a required target is unavailable or unverifiable.
-
-Backups may expire under an approved schedule. A deletion ledger/tombstone must survive restore; restored data must be reconciled before serving or reprocessing. Retention periods and legal-hold rules remain approved policy inputs.
-
-### 31.3 Constraints
-
-- Subject identifiers and linkage maps require restricted access and approved protection.
-- PersonalDataLineage is not ArticleLineage or ContentRightsLineage.
-- ContentRightsService and PrivacyProcessingAuthorization are independent.
-- LLM/provider requests retain authorization references, purpose, provider/region and provenance.
-- No physical schema, legal basis, retention duration or jurisdictional rule is selected here.
-
-See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
-
----
-
 ## 1. Purpose
 
 This document defines the logical domain data model, entity relationships, persistence requirements, integrity constraints, and storage contracts for Global Economic News Intelligence.
@@ -3206,3 +3167,44 @@ The initial persistence implementation should remain deliberately simple, but mu
 Database engine selection, semantic storage, content retention, and other unresolved architecture choices remain subject to formal ADR approval.
 
 This document defines the intended logical data model. Physical schema design and migration implementation must follow the approved architecture and the component contracts defined in Document 02.
+
+---
+
+## 31. Privacy Domain Records and Personal Data Lineage
+
+These are logical model contracts proposed by GENI-ADR-020 and required by GENI-PRIV-014. A logical record does not mandate one physical table; approved persistence design may use aggregates, normalized tables, immutable events or protected references.
+
+| Logical record | Conceptual fields and purpose |
+|---|---|
+| PersonalDataInventory | inventory ID, category, system/store, purpose, source/owner, classification, retention-policy reference, discovery method, review time |
+| ProcessingPurpose | stable purpose ID, description, permitted operations/categories, approval state, effective interval, policy version |
+| PrivacyProcessingBasis | basis ID, purpose, jurisdiction, basis type/reference, assessment evidence, effective interval and review state; legal basis is a qualified-review input |
+| DataSubjectReference | opaque linkage ID, verification state/reference and restricted identity-map reference; no direct identifier in ordinary lineage/telemetry |
+| DataSubjectRequest | request ID, subject reference, request type, intake channel/time, verification state, jurisdiction-policy reference, status, idempotency key, response reference |
+| DataSubjectRequestAction | action ID, request ID, target, action type/state, attempts, outcome, exception/hold reference, verification evidence and timestamps |
+| PrivacyDeletionRecord | deletion ID, request/action, target/lineage scope, tombstone/state, processor acknowledgements, backup reconciliation and exception evidence |
+| ProcessorRegister | processor/subprocessor, service/provider, role assessment, purposes, categories, region, retention, training-use posture, deletion capability, contract/safeguard references and approval/review state |
+| InternationalTransferAssessment | assessment ID, origin/destination, recipient, categories, transfer mechanism/safeguards reference, risk outcome, approver, effective interval and review state |
+| PrivacyImpactAssessment | assessment ID, processing scope, necessity/proportionality analysis, risks/mitigations, residual risk, reviewer/approval, triggers and status |
+
+### 31.1 PersonalDataLineage
+
+PersonalDataLineage is distinct from Article provenance, ArticleOriginRelationship, Content Rights lineage and generic ProcessingRun history. It links an opaque DataSubjectReference and data-category reference to source/authoritative records; ProcessingRun/Step and purpose/policy version; minimized prompt/provider request reference; destination processor/provider, model and region; derived artifacts (embeddings, translations, analyses, reports, caches, evaluation artifacts); and downstream copies/exports and deletion/restriction state. Edges record stable identifiers, edge type, timestamps, source/destination references, purpose, policy version and integrity metadata. Subject-to-record resolution is separately restricted and audited.
+
+### 31.2 Derived-data and deletion semantics
+
+Rights actions traverse lineage to discover dependent artifacts and destinations. Distinguish authoritative deletion, derived deletion/rebuild, restriction/suppression, correction propagation, processor-side request/acknowledgement, cache invalidation, backup tombstone/reconciliation and legally retained exceptions. Record outcomes per target; never claim global completion if a required target is unavailable or unverifiable.
+
+Backups may expire under an approved schedule. A deletion ledger/tombstone must survive restore; restored data must be reconciled before serving or reprocessing. Retention periods and legal-hold rules remain approved policy inputs.
+
+### 31.3 Constraints
+
+- Subject identifiers and linkage maps require restricted access and approved protection.
+- PersonalDataLineage is not ArticleLineage or ContentRightsLineage.
+- ContentRightsService and PrivacyProcessingAuthorization are independent.
+- LLM/provider requests retain authorization references, purpose, provider/region and provenance.
+- No physical schema, legal basis, retention duration or jurisdictional rule is selected here.
+
+See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
+
+---
