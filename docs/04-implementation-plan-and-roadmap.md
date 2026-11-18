@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.25
+**Version:** 1.26
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -1810,8 +1810,15 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 
 ---
 
+## Privacy Architecture Implementation Gate
+
+Privacy execution is a cross-cutting implementation dependency. Before production processing of personal data: (1) approve data inventory, categories, purposes, policy ownership and legal-review inputs; (2) implement logical privacy records, restricted subject references and PersonalDataLineage; (3) enforce independent PrivacyProcessingAuthorization and ContentRightsService checks; (4) enforce ProcessorRegister and InternationalTransferAssessment, failing closed on unknown posture; (5) implement PrivacyManagementService and idempotent internal request workflows; (6) propagate actions to derived artifacts, caches, evaluation stores, providers and backup-restore reconciliation; (7) implement minimized telemetry, audit evidence, runbooks and tested production gates.
+
+Exit criteria require executable tests and operational evidence, not document presence. Publication does not establish legal compliance. See GENI-ADR-020 and Document 14.
+
+
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.25
+**Version:** 1.26
 **Status:** Draft — Under Architecture Review
