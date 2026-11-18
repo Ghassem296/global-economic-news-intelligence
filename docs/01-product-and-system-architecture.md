@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.15  
+**Version:** 1.16  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -633,7 +633,7 @@ The pipeline must support controlled reprocessing when classification, extractio
 
 Reprocessing must preserve historical outputs and must not silently overwrite previously published reports.
 
-## 7. Event-Centric Domain Model
+## 6. Event-Centric Domain Model
 
 The primary domain entities include:
 
@@ -738,7 +738,7 @@ It includes:
 - Analysis history.
 - Report history.
 
-## 8. Economic Topic Taxonomy
+## 7. Economic Topic Taxonomy
 
 The initial taxonomy includes:
 
@@ -758,7 +758,7 @@ An article may have multiple topic classifications, each with an associated conf
 
 Classification results must be versioned so that changes in taxonomy or classification logic can be evaluated and reprocessed.
 
-## 9. Importance, Economic Relevance, and Economic Impact
+## 8. Importance, Economic Relevance, and Economic Impact
 
 ### 9.1 Event Importance
 
@@ -825,7 +825,7 @@ Unknown, unavailable, contradictory, and not-applicable inputs must remain disti
 
 The methodology and quantitative acceptance thresholds for importance, economic relevance, and economic impact must be documented and evaluated independently.
 
-## 10. Event Lifecycle
+## 9. Event Lifecycle
 
 The event lifecycle uses persistent business states:
 
@@ -855,7 +855,7 @@ Event history must preserve relevant transitions, updates, corrections, and reso
 
 The complete transition rules and event identity policy are subject to the relevant ADRs and detailed specifications.
 
-## 11. Publication Policy
+## 10. Publication Policy
 
 Every generated report receives an immutable publication decision. A publication decision describes whether a report version is eligible for publication; it does not record the external publication operation itself.
 
@@ -925,7 +925,7 @@ A rejected or held report must not be delivered through a path that bypasses its
 
 Automatic publication must never bypass security, quality, provenance, review, or content-rights requirements.
 
-## 12. Report Structure
+## 11. Report Structure
 
 A text event report should contain:
 
@@ -961,7 +961,7 @@ The language of the report is a product-level output policy and must not be conf
 
 The initial product output language is English.
 
-## 13. Persistence Strategy
+## 12. Persistence Strategy
 
 SQLite is a candidate for the initial persistence proof-of-concept, not a selected or approved database engine. ADR-005 requires the initial engine to be selected after testing the expected workload, concurrent writers, transaction behavior, backup/restore requirements, deployment model, and operational capacity.
 
@@ -988,7 +988,7 @@ Raw article content, normalized metadata, event records, evidence, analysis, rep
 
 Content retention and full-text storage must comply with applicable access rights, source terms, and licensing restrictions.
 
-## 14. Non-Functional Requirements
+## 13. Non-Functional Requirements
 
 ### 14.1 Reliability
 
@@ -1078,7 +1078,7 @@ The system must establish evaluation procedures for:
 
 Evaluation datasets, acceptance thresholds, and regression procedures must be documented separately and incorporated into development milestones.
 
-## 15. Development Phases
+## 14. Development Phases
 
 Development phases describe engineering execution and are separate from product release numbers.
 
@@ -1136,7 +1136,7 @@ The high-level implementation sequence is:
 
 The exact phase boundaries, dependencies, and acceptance criteria are governed by the development roadmap.
 
-## 16. Initial Release Acceptance Criteria
+## 15. Initial Release Acceptance Criteria
 
 The initial release is functionally complete when the following capabilities are demonstrated through repeatable tests:
 
@@ -1175,7 +1175,7 @@ The initial release is functionally complete when the following capabilities are
 
 Quantitative acceptance thresholds for extraction quality, event matching, classification, and report quality must be established in the evaluation specification before the relevant capabilities are considered production-ready.
 
-## 17. Architectural Constraints
+## 16. Architectural Constraints
 
 The implementation must preserve these constraints:
 
@@ -1203,7 +1203,7 @@ The implementation must preserve these constraints:
 
 These constraints describe the current proposed architecture. Any change to an accepted architectural constraint must follow the applicable ADR and documentation governance processes.
 
-## 18. Architecture Governance and Open Decisions
+## 17. Architecture Governance and Open Decisions
 
 Architectural decisions must be documented and tracked through the ADR governance process.
 
@@ -1228,7 +1228,7 @@ The complete list of decision topics and their current tracking status is mainta
 
 Until the relevant ADRs are accepted, related architectural statements in this document represent the current proposed direction rather than formally approved implementation decisions.
 
-## 19. Final Architecture Statement
+## 18. Final Architecture Statement
 
 Global Economic News Intelligence is an event-centric, workflow-first economic news intelligence platform.
 
