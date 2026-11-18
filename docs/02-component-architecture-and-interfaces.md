@@ -536,7 +536,8 @@ Responsibilities:
 
 - Execute authorized `PUBLISH`, `REPLACE`, and `WITHDRAW` operations.
 - Validate the effective publication decision and required review authorization.
-- Validate the report version, publication target, and any existing publication being replaced or withdrawn.
+- Validate the report version, publication target, stable publication key, and any existing publication being replaced or withdrawn.
+- Serialize conflicting operations for the same target and publication key without blocking unrelated keys at that target.
 - Persist a durable PublicationRecord before an external side effect.
 - Create and update PublicationAttempt records.
 - Generate and reuse stable idempotency keys for retries of the same logical operation.
@@ -825,6 +826,8 @@ It must preserve:
 - Report-version identity.
 - Applicable publication-decision reference.
 - Publication-target reference.
+- Stable publication key identifying the logical publication slot within that target.
+- Operation sequence within that target and publication key.
 - Operation type: `PUBLISH`, `REPLACE`, or `WITHDRAW`.
 - Reference to the earlier publication for replacement or withdrawal.
 - Stable idempotency key.
@@ -1020,6 +1023,7 @@ A held report must be routed to a defined review mechanism. An authorized review
 - Report version.
 - Effective publication decision for `PUBLISH` or `PUBLISH_WITH_CAVEATS`, when applicable.
 - Publication target reference.
+- Stable publication key identifying the logical publication slot within that target.
 - Operation type: `PUBLISH`, `REPLACE`, or `WITHDRAW`.
 - Earlier PublicationRecord reference for replacement or withdrawal.
 - Stable idempotency key and required authorization context.
@@ -1033,7 +1037,7 @@ The target-specific adapter must expose the capabilities supported by its target
 - `withdraw(request)` where the target supports removal or formal withdrawal.
 - `get_status(request)` or an equivalent reconciliation operation where the target supports status lookup.
 
-A request must include the logical operation identifier, idempotency key, target reference, report-version identity, and the exact authorized publication representation, including required caveats. It must not expose unrelated filesystem, shell, or secret-management capabilities.
+A request must include the logical operation identifier, idempotency key, target reference, publication key, report-version identity, and the exact authorized publication representation, including required caveats. It must not expose unrelated filesystem, shell, or secret-management capabilities.
 
 The adapter result must distinguish confirmed success, confirmed failure, and unknown outcome. It should return an external publication reference and URL when available. An unsupported target capability must be reported explicitly; the application must not simulate a successful replacement or withdrawal.
 
@@ -1203,8 +1207,9 @@ The following dependency rules apply:
 - Repositories are interfaces in the core and implementations in infrastructure.
 - LLM adapters implement the Shared LLM Execution Layer contract.
 - News source adapters implement source collection contracts.
-- Delivery adapters implement delivery contracts.
-- Report generation does not depend on delivery implementations.
+- Publication adapters implement explicit publication-target contracts.
+- Delivery adapters implement separate delivery contracts.
+- Report generation does not depend on publication or delivery implementations.
 - Publication policy does not depend on a specific delivery channel.
 - Event matching does not directly manipulate database tables.
 - EventService owns event-level business rules.
