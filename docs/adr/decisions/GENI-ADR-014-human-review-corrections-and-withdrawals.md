@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-014  
 **Title:** Human Review, Corrections, and Withdrawals  
 **Status:** Proposed  
-**Version:** 1.3  
+**Version:** 1.4  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -33,8 +33,9 @@ How should human review be triggered, authorized, recorded, and applied to event
 - Use immutable successor decisions for material corrections.
 - Preserve incorrect article-event links as deactivated historical associations rather than deleting them.
 - Support review of DuplicateCandidate outcomes requiring human judgment and create immutable successor DuplicateDecision records for material corrections.
-- Coordinate report correction, publication replacement, and withdrawal through explicit operations.
+- Coordinate report correction, publication replacement, withdrawal, claim-assessment correction, and rights remediation through explicit immutable successor records and authorized domain services.
 - Support escalation, reassignment, overdue detection, and audit.
+- Enable only article-deduplication, event-matching, and publication reviews in the first implementation slice; defer the other three types until their successor workflows and integration tests exist.
 
 ### 3.2 Technical Constraints
 - Reviewer identity and authorization belong to the security layer.
@@ -133,7 +134,18 @@ The requirements in Section 3 are the primary decision drivers. Unmeasured cost 
 
 **Recommended Alternative:** Alternative C — Persistent review workflow with immutable successor decisions.
 
-A review task must reference exactly one typed subject and, where applicable, the immutable decision, assessment, report version, rights assessment, or publication operation under review. It records reason, required priority, priority-policy version, evidence/context links, assignment, reviewer identity, authorization, rationale, and outcome. Canonical subject families are `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, `CLAIM_ASSESSMENT`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS`; each review type must map to one subject family and one explicit successor workflow. `ReviewContextLink` records exact evidence and domain context without duplicating restricted source content. Priority is mandatory, but its scale, thresholds, and SLA remain open until the Project Owner approves the review policy. A material outcome creates a new authoritative decision or corrective operation through the relevant domain service. The review record is not itself permission to change event identity or publish a report. Corrections preserve the original decision and association; publication replacement or withdrawal remains a separate external operation.
+A review task references exactly one typed subject and the exact immutable decision, assessment, report version, rights assessment, or publication operation under review. It records reason, mandatory priority and priority-policy version, evidence/context links, assignment, reviewer identity and authorization, rationale, and outcome. The canonical subject families are `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, `CLAIM_ASSESSMENT`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS`. Every family has one explicit successor workflow, defined below. `ReviewContextLink` records exact evidence and domain context without duplicating restricted source content.
+
+| Subject family | Required subject | Successor workflow for a material outcome |
+|---|---|---|
+| `ARTICLE_DEDUPLICATION` | DuplicateCandidate and the DuplicateDecision under review | Article Deduplication Workflow creates a successor DuplicateDecision for the same candidate. |
+| `EVENT_MATCHING` | EventMatchCase and the EventMatchDecision under review | Event Resolution Workflow creates a successor EventMatchDecision; EventService applies only an effective MATCH. |
+| `CLAIM_ASSESSMENT` | Claim and exact ClaimAssessment | EvidenceService creates a successor ClaimAssessment with exact evidence links, appends AssessmentHistory, and atomically refreshes the Claim assessment projection. |
+| `REPORT_VERSION` | Exact immutable Report version | ReportVersionService creates a new corrected/superseding version; PublicationPolicy must issue a new decision before external replacement. |
+| `PUBLICATION_OPERATION` | Exact PublicationRecord and its current operation/reconciliation state | PublicationService reconciles an unknown outcome or creates an explicitly authorized successor REPLACE/WITHDRAW operation; previous operation/attempts remain immutable. |
+| `CONTENT_RIGHTS` | Exact RightsAssessment or SourceRightsProfile version | ContentRightsService creates a successor assessment/profile revision and initiates applicable restriction, retention, or deletion workflow; past publication/delivery history is not rewritten. |
+
+A review outcome is not itself a domain decision or external-operation authorization. The relevant domain service validates reviewer authority and policy, then creates the immutable successor record. Priority scale, thresholds, SLA, and authorization matrix remain subject to Project Owner approval. The architecture defines all six families, while the first implementation slice enables only article-deduplication, event-matching, and publication review. The remaining three families stay disabled until their successor workflows and integration tests are implemented.
 
 **Rationale:**
 - Prevents unaudited edits to authoritative records.
@@ -241,7 +253,8 @@ These relationships do not imply that related Proposed ADRs have been accepted.
 - Persist review tasks and assignment history.
 - Expose only evidence and source content permitted by rights policy.
 - Enforce reviewer authorization and separation of duties where required.
-- Apply article-deduplication outcomes through the Article Deduplication Workflow, event-matching outcomes through EventService/Event Resolution Workflow, and report outcomes through PublicationPolicy, ReportVersionService, or PublicationService.
+- Apply article-deduplication, event-matching, and publication-review outcomes through their designated successor workflows.
+- Implement claim-assessment successor versions through EvidenceService, report-version correction through ReportVersionService followed by a new PublicationDecision, publication-operation reconciliation through PublicationService, and content-rights successor assessments through ContentRightsService before enabling those review types.
 - Preserve old decisions, links, and report versions; create successor lineage.
 - Monitor overdue, abandoned, conflicting, and failed corrective tasks.
 
