@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.46
+**Version:** 1.47
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -175,7 +175,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.46 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.47 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.14 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.14 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -406,8 +406,8 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `e5d58cced1e13ae6c5638494de2a92aea1b220ff`  
-**Registry Refresh:** This snapshot was inspected at commit e5d58cced1e13ae6c5638494de2a92aea1b220ff. It includes the six proposed technical specifications and the cross-document alignment of publisher/source relationships versus exact article-origin provenance, durable ExecutionLease ownership with fencing tokens, and scoped IdempotencyRecord contracts. The latest component and data-model revisions add explicit ExecutionLeaseRepository and IdempotencyRecordRepository contracts, their UnitOfWork participation, and tests for provenance direction/cardinality, stale-worker fencing, lease atomicity, idempotent replay, fingerprint conflicts, and unknown-outcome reconciliation. The README taxonomy label, ADR-008/010/011/016, source-credibility specification, documentation index, and registries are aligned with these contracts. All affected documents and ADRs remain proposed; repository publication and validator presence do not constitute formal architecture approval, successful CI execution, or implementation.
+**Baseline Commit Inspected:** `1c780a155f6605a18f988be3d7113c8c7ff38bcb`  
+**Registry Refresh:** This snapshot was inspected at commit 1c780a155f6605a18f988be3d7113c8c7ff38bcb. It includes the six proposed technical specifications and the cross-document alignment of publisher/source relationships versus exact article-origin provenance, durable ExecutionLease ownership with fencing tokens, and scoped IdempotencyRecord contracts. The component architecture and data model define the corresponding repository interfaces and responsibilities, and the repository-to-aggregate/writer/transaction crosswalk now explicitly covers ArticleOriginRelationshipRepository, ExecutionLeaseRepository, and IdempotencyRecordRepository. The data-layer verification requirements cover provenance direction/cardinality, stale-worker fencing, lease atomicity, idempotent replay, fingerprint conflicts, and unknown-outcome reconciliation. The README taxonomy label, ADR-008/010/011/016, source-credibility specification, documentation index, and registries are aligned with these contracts. The documentation validator enforces cross-document repository and recovery-contract consistency. All affected documents and ADRs remain proposed; repository publication and validator presence do not constitute formal architecture approval, successful CI execution, or implementation.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
