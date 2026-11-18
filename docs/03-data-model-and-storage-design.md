@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.12
+**Version:** 1.13
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -715,7 +715,7 @@ Fields:
 
 - `id`
 - `article_revision_id`
-- `development_key` — stable within the ArticleRevision and identifying the development being resolved
+- `development_key` — deterministic, stable within the ArticleRevision, and identifying one development scope using a stable source-span/section anchor or canonical development-scope fingerprint; it must not be a random run identifier
 - `scope_description`
 - `case_status`
 - `effective_decision_id` — nullable pointer to the current effective EventMatchDecision; a projection updated transactionally when a new decision is recorded
@@ -723,7 +723,7 @@ Fields:
 - `closed_at`
 - `metadata`
 
-Case states may include `OPEN`, `PENDING_REVIEW`, `RESOLVED`, `CLOSED`, and `CANCELLED`. The case is the unit of candidate evaluation, final decision, and human review. A case must not be reused for a materially different article revision or development scope. The effective-decision pointer is a mutable current-state projection; historical EventMatchDecision records remain immutable.
+Case states may include `OPEN`, `PENDING_REVIEW`, `RESOLVED`, `CLOSED`, and `CANCELLED`. The case is the unit of candidate evaluation, final decision, and human review. A case must not be reused for a materially different article revision or development scope. Reprocessing the same ArticleRevision and same development scope must reuse the same development_key and case. The effective-decision pointer is a mutable current-state projection; historical EventMatchDecision records remain immutable.
 
 ### 7.2 EventMatchCandidate
 
@@ -811,7 +811,7 @@ Constraints:
 - Every EventMatchCandidate must belong to exactly one EventMatchCase.
 - Every EventMatchCase must identify exactly one ArticleRevision and one development scope.
 - `(case_id, candidate_event_id, matching_policy_version, candidate_input_fingerprint)` must be unique for idempotent candidate evaluation while permitting historical evaluations under changed inputs or policy versions.
-- An evaluated EventMatchCandidate is immutable; a new evaluation creates a new candidate record whose `supersedes_candidate_id`, when present, references the prior evaluation of the same candidate Event in the same case.
+- An evaluated EventMatchCandidate is immutable; a new evaluation creates a new candidate record whose `supersedes_candidate_id`, when present, references a prior evaluation of the same candidate Event in the same case. The application must reject cross-case or cross-Event supersession references.
 - Every EventMatchDecision must belong to exactly one case.
 - A selected candidate must belong to the same case as its decision.
 - A case may have multiple historical decisions, but only one effective decision at a time; the EventMatchCase.effective_decision_id pointer identifies it.
