@@ -604,11 +604,11 @@ According to the published GitHub `main` branch snapshot inspected on 2026-11-18
 - The ADR governance document exists in `main`.
 - The ADR template exists in `main`.
 - The ADR registry exists in `main`.
-- Nineteen architectural decision topics are registered.
-- All nineteen registered topics have individual ADR documents committed to and published in `main`.
-- All nineteen individual ADRs have status `Proposed`.
+- Twenty architectural decision topics are registered.
+- All twenty registered topics have individual ADR documents committed to and published in `main`.
+- All twenty individual ADRs have status `Proposed`.
 - No individual ADR is recorded as `Accepted`.
-- Publication does not imply approval or implementation; all nineteen proposals remain unapproved.
+- Publication does not imply approval or implementation; all twenty proposals remain unapproved.
 - Architectural descriptions that depend on unresolved ADRs remain provisional where applicable.
 - Implementation must not treat unresolved proposals as finalized architectural decisions.
 
