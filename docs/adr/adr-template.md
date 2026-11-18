@@ -1,10 +1,11 @@
 # Architecture Decision Record (ADR) Template
 
 **Project:** Global Economic News Intelligence
+**Owner:** Project Owner
 **ADR ID:** GENI-ADR-NNN
 **Title:** [Short and Descriptive Decision Title]
 **Status:** Proposed
-**Version:** 1.0
+**Version:** 1.1
 **Date:** YYYY-MM-DD
 **Decision Owner:** Project Owner
 **Prepared By:** AI Architecture Assistant
