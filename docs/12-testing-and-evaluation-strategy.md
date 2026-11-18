@@ -84,11 +84,6 @@ Ready for release use when critical tasks have reviewed datasets/rubrics; metric
 
 Documents 04, 08, 10, and 11; GENI-ADR-008, 011, 017, and 019.
 
----
-
-**Document ID:** GENI-EVAL-012  
-**Version:** 1.1  
-**Status:** Draft — Under Architecture Review  
 ## 11. Privacy Verification Matrix
 
 Use synthetic fixtures unless a separately approved test basis and safeguards permit real subject data.
@@ -105,6 +100,12 @@ Use synthetic fixtures unless a separately approved test basis and safeguards pe
 | Security/audit | unauthorized subject-link resolution, audit tampering, telemetry access/redaction | unauthorized disclosure or missing audit |
 
 Track target-level completion and discovery coverage. Unit tests do not prove provider deletion or operational readiness; provider contract tests and controlled exercises are required. Legal applicability/deadlines come from approved jurisdictional policy, not invented test assumptions. See Documents 02, 03, 08, 09, 13 and 14; GENI-ADR-020.
+
+---
+
+**Document ID:** GENI-EVAL-012  
+**Version:** 1.1  
+**Status:** Draft — Under Architecture Review  
 
 
 **End of Document**
