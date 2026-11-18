@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.17
+**Version:** 1.18
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -903,9 +903,9 @@ This is the core product capability.
 10. Implement ReviewService routing and successor-decision handling for ambiguous or corrected cases.
 11. Implement the canonical EventLifecyclePolicy transition matrix, guard validation, and append-only EventHistory linkage.
 12. Implement EventRelationship using the canonical eight-type vocabulary and its direction/cycle rules.
-13. Implement EventIdentityOperation persistence with actor/authorization, status, idempotency, ordered input/output links, and EventHistory operation references.
+13. Implement EventIdentityOperation and EventIdentityOperationHistory persistence with actor/authorization, explicit core-effect state, status transitions, idempotency, expected input versions, ordered input/output links, and exact EventHistory operation references.
 14. Implement deterministic historical identity resolution returning CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED; never choose an arbitrary split successor.
-15. Keep automated merge/split execution gated until GENI-ADR-011 is accepted, identity-operation recovery is tested, and successor ArticleEventLink reconciliation is verified.
+15. Keep automated merge/split execution disabled while GENI-ADR-011 is Proposed. After acceptance, enable it only when operation-state/history transitions, expected-version concurrency checks, idempotent recovery, UNKNOWN-effect reconciliation, and successor ArticleEventLink reconciliation have passing tests.
 16. Implement event matching evaluation datasets.
 
 ### Event Identity Policy
@@ -952,7 +952,7 @@ No universal similarity threshold should be assumed without evaluation and calib
 
 ### Event Identity Integrity
 
-Event IDs must remain stable.
+Event IDs must remain stable. Merge/split disposition is identity state, not Event lifecycle state.
 
 Merge and split operations must preserve historical references and record:
 
@@ -974,7 +974,7 @@ Historical event records must not be silently deleted or rewritten.
 - Human review and association correction workflow.
 - Event creation and updates.
 - Event history and relationships.
-- Event merge and split operations.
+- Controlled event merge and split operations, enabled only after GENI-ADR-011 acceptance and the operation-recovery/reconciliation gates.
 
 ### Exit Criteria
 
@@ -986,6 +986,9 @@ Historical event records must not be silently deleted or rewritten.
 - Every resolved development has one effective case-level decision; unresolved cases remain explicit.
 - Every active ArticleEventLink references its EventMatchCase and effective MATCH decision.
 - Human corrections create successor decisions and preserve prior link history.
+- Merge inputs include the selected survivor and the single output is that same survivor; split operations create at least two distinct successor outputs.
+- Operation status/effect history is append-only; an applied identity change remains in reconciliation until required downstream work completes.
+- No identity operation directly repoints/deletes ArticleEventLink; every replacement link is authorized by a successor EventMatchDecision.
 - False merges and event fragmentation are measured.
 
 ---
@@ -1114,7 +1117,7 @@ Convert event intelligence into structured, versioned reports.
 13. Implement confirmed withdrawal and uncertain-outcome reconciliation.
 14. Implement report storage and add report evaluation datasets.
 15. Apply rights checks for source attribution, quotations, derived-output use, publication, and recipient distribution; preserve permitted source references independently of full-text retention.
-16. Implement the canonical six-family ReviewService successor routing, but enable claim-assessment, report-version, and content-rights review only after their successor workflows and authorization tests pass.
+16. Implement the canonical six-family ReviewService successor routing. The first implementation slice enables exactly ARTICLE_DEDUPLICATION, EVENT_MATCHING, and REPORT_VERSION. Keep CLAIM_ASSESSMENT, PUBLICATION_OPERATION, and CONTENT_RIGHTS disabled until their successor workflows, authorization rules, and integration tests pass.
 
 ### Initial Report Structure
 
@@ -1157,7 +1160,7 @@ Publication decisions must be recorded independently from report content and del
 
 `HOLD_FOR_REVIEW` must create a persistent review task or equivalent queue record.
 
-The review workflow must support article-deduplication review, event-matching review, and publication review as distinct typed subjects. A material review result must create the applicable successor DuplicateDecision, EventMatchDecision, or PublicationDecision; a ReviewRecord alone never authorizes a domain change.
+The review workflow must support ARTICLE_DEDUPLICATION, EVENT_MATCHING, and REPORT_VERSION as the three first-slice typed subjects. REPORT_VERSION is the pre-publication review of an exact immutable Report version and its exact effective PublicationDecision; it is not a review of an already-executed PublicationRecord. PUBLICATION_OPERATION is a separate external-operation/reconciliation review family and remains disabled in the first slice. A material review result must create the applicable successor DuplicateDecision, EventMatchDecision, corrected Report version, or PublicationDecision; a ReviewRecord alone never authorizes a domain change.
 
 The review workflow must support:
 
@@ -1169,7 +1172,7 @@ The review workflow must support:
 - Review rationale.
 - Resulting publication decision.
 
-A held report must not be treated as publishable until the required review and publication policy conditions are satisfied.
+A held report must not be treated as publishable until the required REPORT_VERSION review, where applicable, and the current publication-policy conditions are satisfied. Review of an already-created PublicationRecord or an unknown external outcome belongs to the deferred PUBLICATION_OPERATION family, not this first-slice review path.
 
 ### Corrections and Withdrawals
 

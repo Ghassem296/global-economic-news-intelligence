@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.19  
+**Version:** 1.20  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -367,9 +367,11 @@ Responsibilities:
 
 An event must remain identifiable even when its source articles, evidence, or analysis are updated.
 
-Event lifecycle status must be separated from event history.
+Event lifecycle status must be separated from event history and from event identity disposition. A merged or split identity is not a lifecycle state and must not be represented by overloading the Event lifecycle status.
 
 A material update is a recorded event-history occurrence, not necessarily a persistent lifecycle status.
+
+Merge, split, and identity-correction operations are controlled EventService domain operations. They must preserve original Event identifiers, ordered operation inputs/outputs, operation history, and EventHistory provenance. They must not delete historical Events or directly repoint ArticleEventLink records. Any affected association must be reconsidered through a successor EventMatchDecision and applied by EventService. Automated merge/split execution remains disabled until GENI-ADR-011 is accepted and operation-recovery and association-reconciliation gates are verified.
 
 ### 5.6 Evidence and Verification
 

@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.27
+**Version:** 1.28
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -867,13 +867,14 @@ Constraints:
 
 Event merging and splitting are explicit, auditable identity operations. They must preserve stable event identifiers, decision lineage, and historical traceability. They are not ordinary event updates and must not silently rewrite ArticleEventLink records.
 
-A merge operation must record all input events, the selected surviving canonical event, the rationale and supporting evidence, decision method, actor and authorization, policy version, operation status, idempotency key, timestamps, and affected records. A split operation must record the original event, all successor events, the allocation of articles/claims/evidence/observations, unresolved allocations, rationale, actor and authorization, policy version, status, idempotency key, and affected records.
+A merge operation must record every participating Event as an input, including the selected surviving canonical Event, and exactly one output that is the same survivor. The record must preserve the survivor-selection rationale, supporting evidence, decision method, actor and authorization, policy version, operation status, idempotency key, expected input versions, timestamps, and affected records. A split operation must record exactly one original input Event, at least two distinct successor output Events, the allocation of articles/claims/evidence/observations, unresolved allocations, rationale, actor and authorization, policy version, status, idempotency key, expected input version, and affected records. Identity corrections must record their policy-authorized input/output cardinality and compensating purpose.
 
 Fields:
 
 - `id`
 - `operation_type` — `MERGE`, `SPLIT`, or `IDENTITY_CORRECTION`
-- `status` — `PENDING`, `IN_PROGRESS`, `SUCCEEDED`, `FAILED`, or `RECONCILIATION_REQUIRED`
+- `status` — `PENDING`, `IN_PROGRESS`, `SUCCEEDED`, `FAILED`, `CANCELLED`, or `RECONCILIATION_REQUIRED`
+- `identity_effect_state` — `NOT_APPLIED`, `APPLIED`, or `UNKNOWN`; this records whether the core identity projection is durably applied independently of downstream reconciliation status.
 - `reason`
 - `decision_method`
 - `decision_confidence` nullable
@@ -889,7 +890,7 @@ Fields:
 - `created_at`
 - `metadata`
 
-The actor may be an authorized system policy or a human reviewer. Human-initiated or high-impact automated operations must carry an authorization reference resolvable by the security/audit layer. Status changes are append-only in operation history or EventHistory; a completed or failed operation must not be silently reopened or rewritten. A retry reuses the same idempotency key and operation identifier. An operation with an uncertain result enters `RECONCILIATION_REQUIRED` before any non-idempotent downstream action is repeated.
+The actor may be an authorized system policy or a human reviewer. Human-initiated or high-impact automated operations must carry an authorization reference resolvable by the security/audit layer. Every status/effect transition is recorded in EventIdentityOperationHistory; EventHistory separately records the resulting change to each affected Event. The current operation status and identity_effect_state are projections rebuildable from the append-only operation history. A retry reuses the same operation identifier and idempotency key. An uncertain core-transaction outcome sets identity_effect_state to `UNKNOWN` and status to `RECONCILIATION_REQUIRED` until the durable effect is established; an applied core effect with pending downstream work also remains `RECONCILIATION_REQUIRED`.
 
 Possible operation types:
 
@@ -915,14 +916,20 @@ The event input and output relationships must be stored through explicit relatio
 - `role`
 - `position`
 
+Input links must additionally preserve the expected current EventHistory version used for compare-and-swap validation. For `MERGE`, every participating Event is an input, the survivor input has role `SURVIVING_CANONICAL`, and the one output references that same Event with role `CANONICAL_SURVIVOR`. Other merge inputs use role `MERGED_SOURCE`. For `SPLIT`, the input identifies the original Event and outputs identify preallocated successor Event identifiers; no Event identifier may overlap the input and output sets. Positions are unique and define stable ordering within an operation.
+
 This avoids relying on JSON arrays as the only representation of event identity relationships.
 
 Constraints:
 
-- A MERGE requires at least two distinct input events and exactly one surviving output event.
-- A SPLIT requires exactly one original input event and at least two successor output events.
+- A MERGE requires at least two distinct input Events, including the selected survivor, and exactly one output Event equal to that survivor.
+- A SPLIT requires exactly one original input Event and at least two distinct successor output Events; the input and output sets must be disjoint.
 - An IDENTITY_CORRECTION must declare its permitted input/output cardinality in the operation policy.
-- The same event must not be both input and output of the same operation unless the operation type explicitly permits it.
+- The only permitted input/output overlap is the MERGE survivor, with the required input/output roles defined above.
+- Every input must match its expected EventHistory version; stale inputs and overlapping unresolved identity operations must be rejected or serialized.
+- Operation status/effect transitions, operation-history entries, operation links, and affected EventHistory records must be committed atomically within their UnitOfWork boundaries.
+- `FAILED` and `CANCELLED` are valid only when the core identity effect is definitively `NOT_APPLIED`; after an applied effect, incomplete downstream work remains `RECONCILIATION_REQUIRED`.
+- A completed operation is immutable. A correction after application requires a new compensating `IDENTITY_CORRECTION` operation.
 - Input/output roles and ordering must be validated by the application layer.
 - Operation creation, status transition, input/output links, and affected event-history records must be transactionally consistent.
 - External notifications and downstream report reconciliation must use durable follow-up work; they must not be executed as an untracked side effect inside the identity transaction.
@@ -930,7 +937,34 @@ Constraints:
 - ArticleEventLink changes require case-scoped successor EventMatchDecision records and EventService application; the identity operation must not directly repoint a historical link.
 - Survivor selection must use a documented, versioned policy and must not assume that the newest or oldest event is always correct.
 
-Identity resolution is a read contract as well as a storage concern. Resolving a historical identifier must return one of: `CANONICAL` (one current canonical event), `MULTIPLE_SUCCESSORS` (two or more candidate successor events after a split), or `UNRESOLVED` (no safe deterministic resolution). A merge may resolve to one survivor with its operation lineage. A split must return the complete successor set and relevant operation references; the resolver must never select an arbitrary successor. Callers must supply case/evidence context to choose among multiple successors, and unresolved associations remain unlinked.
+### 7.5.1 EventIdentityOperationHistory
+
+Represents one immutable status/effect transition or auditable action in the lifecycle of an EventIdentityOperation. It is distinct from EventHistory: operation history tracks execution/reconciliation state, while EventHistory records the affected Event's domain-state change.
+
+Fields:
+
+- `id`
+- `operation_id`
+- `sequence` — monotonically increasing within the operation
+- `action_type`
+- `previous_status` nullable
+- `new_status`
+- `previous_identity_effect_state` nullable
+- `new_identity_effect_state`
+- `actor_type`
+- `actor_reference` nullable
+- `authorization_reference` nullable
+- `reason_code` and/or `reason`
+- `processing_run_id` nullable
+- `idempotency_key` — unique within the operation
+- `created_at`
+- `metadata`
+
+Operation-history records are append-only. `(operation_id, sequence)` must be unique, and a non-null idempotency key must be unique within the operation. EventIdentityOperation.status and identity_effect_state are current projections that must be rebuildable from this history. A status transition and its history row must be written in the same transaction.
+
+The permitted operation-status transitions are `PENDING` to `IN_PROGRESS` or `CANCELLED`; `IN_PROGRESS` to `SUCCEEDED`, `FAILED`, or `RECONCILIATION_REQUIRED`; and `RECONCILIATION_REQUIRED` to `IN_PROGRESS`, `SUCCEEDED`, or `FAILED` only after reconciliation determines whether the core effect was applied. `SUCCEEDED`, `FAILED`, and `CANCELLED` are terminal. The core identity effect state moves only from `NOT_APPLIED` to `APPLIED` or `UNKNOWN`, and from `UNKNOWN` to the reconciled `APPLIED` or `NOT_APPLIED` result; it must never revert from `APPLIED` to `NOT_APPLIED`.
+
+Identity resolution is a read contract as well as a storage concern. Resolving a historical identifier must return one of: `CANONICAL` (one current canonical event), `MULTIPLE_SUCCESSORS` (two or more candidate successor events after a split), or `UNRESOLVED` (no safe deterministic resolution). A merge may resolve to one survivor with its operation lineage. A split must return the complete successor set and relevant operation references; the resolver must never select an arbitrary successor. A core identity effect with state `APPLIED` is authoritative even while downstream work remains `RECONCILIATION_REQUIRED`. If the effect is `UNKNOWN`, the resolver must return `UNRESOLVED` until reconciliation determines the durable state. Callers must supply case/evidence context to choose among multiple successors, and unresolved associations remain unlinked.
 
 ### 7.6 EventRelationship
 
@@ -1635,17 +1669,17 @@ Review types identify the subject and required follow-up. The canonical six subj
 | `ARTICLE_DEDUPLICATION` | DuplicateCandidate plus the DuplicateDecision under review | New DuplicateDecision for the same candidate through Article Deduplication Workflow. |
 | `EVENT_MATCHING` | EventMatchCase plus the EventMatchDecision under review | New EventMatchDecision through Event Resolution Workflow; EventService applies only an effective MATCH. |
 | `CLAIM_ASSESSMENT` | Claim plus the exact ClaimAssessment | New ClaimAssessment and exact evidence links; append AssessmentHistory and atomically refresh the Claim projection through EvidenceService. |
-| `REPORT_VERSION` | Exact immutable Report version | New immutable corrected Report version; new PublicationDecision before any external replacement. |
+| `REPORT_VERSION` | Exact immutable Report version plus the exact effective PublicationDecision under review | New immutable corrected Report version and, when eligibility changes, a successor PublicationDecision; external replacement remains a separate PublicationService operation. |
 | `PUBLICATION_OPERATION` | Exact PublicationRecord and operation state | Reconciliation or separately authorized successor operation through PublicationService; prior attempts remain immutable. |
 | `CONTENT_RIGHTS` | Exact RightsAssessment or SourceRightsProfile version | New RightsAssessment/profile revision and applicable restriction/deletion workflow through ContentRightsService. |
 
-Each type must resolve to exactly one subject family and exact immutable record. The canonical vocabulary, priority scale, triggers, and authorization matrix are governed by ADR-014. The initial implementation enables only article-deduplication, event-matching, and publication review; other types remain disabled until their successor workflows and authorization tests exist.
+Both `review_type` and `subject_type` must use the same canonical family value and resolve to exactly one typed subject. For `REPORT_VERSION`, the subject is the exact immutable Report version and the related decision is its exact effective PublicationDecision. For `PUBLICATION_OPERATION`, the subject is the exact PublicationRecord and its current operation/reconciliation state. The canonical vocabulary, reference cardinality, priority scale, triggers, and authorization matrix are governed by ADR-014. The first implementation slice enables exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`; `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` remain disabled until their successor workflows and authorization tests exist.
 
 Constraints and behavior:
 
 - Exactly one typed subject must be identified by `subject_type` and `subject_reference`; the reference must be validated by the application layer where a database foreign key cannot express the polymorphic relationship.
 - For article-deduplication review, the subject must identify a DuplicateCandidate and the related decision must identify the DuplicateDecision under review; a material outcome creates a successor DuplicateDecision for that same candidate.
-- For publication review, the subject and related decision must resolve to the relevant report version and PublicationDecision.
+- For `REPORT_VERSION` review, the subject and related-decision reference must resolve to the exact Report version and its exact effective PublicationDecision. `PUBLICATION_OPERATION` review instead resolves to an existing PublicationRecord and its current operation/reconciliation state.
 - For event-matching review, the subject must identify an EventMatchCase and the related decision must identify the EventMatchDecision under review.
 - Review completion records the reviewer, time, and outcome. It does not mutate the related decision.
 - An article-deduplication review outcome that changes the effective result creates a new DuplicateDecision referencing the previous effective decision for the same candidate.
@@ -1674,7 +1708,7 @@ Fields:
 - `created_at`
 - `metadata`
 
-`context_type` must identify a supported typed reference such as `EVIDENCE`, `CLAIM_ASSESSMENT`, `DUPLICATE_DECISION`, `EVENT_MATCH_DECISION`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, or `RIGHTS_ASSESSMENT`. The application layer must validate that the reference exists, belongs to the review subject where required, and is accessible to the assigned reviewer. Context links are immutable once the review is completed; corrections require a successor task or an append-only action.
+`context_type` must identify a supported typed reference such as `EVIDENCE`, `CLAIM_ASSESSMENT`, `DUPLICATE_DECISION`, `EVENT_MATCH_DECISION`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, `RIGHTS_ASSESSMENT`, or `SOURCE_RIGHTS_PROFILE_VERSION`. The application layer must validate that the reference exists, belongs to the review subject where required, and is accessible to the assigned reviewer. Context links are immutable once the review is completed; corrections require a successor task or an append-only action.
 
 ### 11.7.2 ReviewAction
 

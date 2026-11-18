@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.37  
+**Version:** 1.38  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -376,7 +376,7 @@ Responsibilities:
 - Validate event identity and lifecycle rules.
 - Update event metadata and maintain stable event identifiers.
 - Coordinate event updates and record event-history occurrences.
-- Coordinate approved merge and split operations.
+- Coordinate approved merge and split operations through the Event Identity Operation Workflow; persist the operation, ordered input/output links, and append-only EventIdentityOperationHistory; apply the core identity change and corresponding EventHistory records atomically; and enqueue downstream reconciliation durably.
 - Preserve historical relationships after corrections.
 
 EventService owns event-level business rules and the application of authorized event-association decisions. The Event Resolution workflow coordinates candidate evaluation, case-level decision creation, and review routing. EventService must reject attempts to create an active association from a non-MATCH decision.
@@ -575,7 +575,7 @@ ReviewService manages the review task and reviewer action only. It does not own 
 
 A review completion is not itself a domain decision or external-operation authorization. The designated domain service must validate reviewer authority and policy, create the immutable successor record, and preserve supersession lineage. A publication-operation review must enter reconciliation when the external outcome is unknown; it must not assume that a timed-out operation failed.
 
-The architecture supports all six subject families, but the first implementation slice enables only `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and publication review. Claim-assessment, report-version, and content-rights review remain disabled until their service-level successor workflows, authorization rules, and integration tests are implemented.
+The architecture supports all six subject families. The first implementation slice enables exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. In this context, publication review is a `REPORT_VERSION` review: it references the exact immutable report version and exact effective `PublicationDecision`, and its material outcome is applied through `ReportVersionService` and/or a successor `PublicationDecision`. `PUBLICATION_OPERATION` is a separate review family for an already-created `PublicationRecord` and its external-operation/reconciliation state; it is not enabled in the first slice. `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` remain disabled until their service-level successor workflows, authorization rules, and integration tests are implemented.
 
 Reviewer identity and authorization must be enforced by the application's security layer.
 
@@ -1070,11 +1070,11 @@ It must preserve:
 - Assignment, due, creation, and completion timestamps.
 - Metadata and authorization context.
 
-Exactly one typed subject must be identified. For article-deduplication review, the subject must resolve to the exact DuplicateCandidate and the related decision to the DuplicateDecision under review. For event-matching review, the subject must resolve to an EventMatchCase and the related decision to the EventMatchDecision under review. For publication review, the subject must resolve to the exact report version and PublicationDecision. The application/security layer must validate typed references and reviewer authority.
+Exactly one typed subject must be identified. For article-deduplication review, the subject must resolve to the exact DuplicateCandidate and the related decision to the DuplicateDecision under review. For event-matching review, the subject must resolve to an EventMatchCase and the related decision to the EventMatchDecision under review. For `REPORT_VERSION` review, the subject must resolve to the exact immutable report version and the related-decision reference must resolve to the exact effective `PublicationDecision` under review. `PUBLICATION_OPERATION` instead references a `PublicationRecord` and its current operation/reconciliation state. The application/security layer must validate typed references and reviewer authority.
 
 Review completion records who reviewed the task, when, and with what outcome. It does not mutate the related decision. A material article-deduplication outcome creates a successor DuplicateDecision; an event-matching outcome creates a successor EventMatchDecision; a publication outcome that changes eligibility creates a new PublicationDecision.
 
-Review subject types must support `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, `CLAIM_ASSESSMENT`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` reviews. A typed subject must resolve to the exact immutable assessment, decision, report version, or rights operation under review. The exact review-type/subject-type mapping, priority scale, triggers, and authorization matrix remain governed by ADR-014 and must be approved before a review can authorize a material decision.
+Both `review_type` and `subject_type` must use the same canonical family value for a review record: `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, `CLAIM_ASSESSMENT`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, or `CONTENT_RIGHTS`. A typed subject must resolve to the exact immutable assessment, decision, report version, or rights/operation record under review. The exact reference cardinality, priority scale, triggers, and authorization matrix remain governed by ADR-014 and must be approved before a review can authorize a material decision.
 
 ### 5.17.1 ReviewContextLink
 
@@ -1090,7 +1090,7 @@ Fields:
 - `created_at`
 - `metadata`
 
-The context type must identify a supported typed reference such as Evidence, ClaimAssessment, DuplicateDecision, EventMatchDecision, ReportVersion, PublicationOperation, or RightsAssessment. The application layer validates the reference, its relationship to the review subject, and reviewer access. Completed review context is immutable.
+The context type must identify a supported typed reference such as Evidence, ClaimAssessment, DuplicateDecision, EventMatchDecision, ReportVersion, PublicationOperation, RightsAssessment, or a versioned SourceRightsProfile. The application layer validates the reference, its relationship to the review subject, and reviewer access. Completed review context is immutable.
 
 ### 5.17.2 ReviewAction
 
@@ -1211,6 +1211,7 @@ Initial repository interfaces include the following logical contracts. This inve
 - `EventHistoryRepository`
 - `EventRelationshipRepository`
 - `EventIdentityOperationRepository`
+- `EventIdentityOperationHistoryRepository`
 - `ClaimRepository`
 - `ClaimObservationRepository`
 - `EvidenceRepository`
@@ -1279,7 +1280,7 @@ The following map identifies proposed writers for domain-state groups; it is not
 | ArticleEntityMention | `EntityExtractor` with `EntityResolver` | Extraction creates source-scoped mentions; resolution assigns canonical references without erasing the original mention. |
 | EventMatchCase and EventMatchCandidate | Event Resolution Workflow and `EventMatcher` | Matcher evaluates candidates; workflow owns case lifecycle and coordinates decisions. |
 | EventMatchDecision | Event Resolution Workflow, including authorized review routing | Immutable case-level decision; no direct mutation by a review task. |
-| Event, ArticleEventLink, EventRelationship, and EventIdentityOperation | `EventService` | Applies authorized decisions and identity operations transactionally. |
+| Event, ArticleEventLink, EventRelationship, EventIdentityOperation, and EventIdentityOperationHistory | `EventService` | Applies authorized decisions and identity operations transactionally; operation-history records are append-only. |
 | EventHistory | `EventHistoryService`, invoked through `EventService` | Append-only history; not a second event-state owner. |
 | Claim, ClaimObservation, Evidence, EvidenceLocation, ClaimEvidenceLink, ClaimAssessment, ClaimAssessmentEvidenceLink, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
 | Analysis, AnalysisInput, and AnalysisEvidenceLink | Event Intelligence Workflow with the relevant assessor/analyzer | Assessors produce typed outputs; workflow persists versioned results and exact inputs. |
@@ -1330,6 +1331,7 @@ The following crosswalk assigns every repository in the initial Document 03 inve
 | `EventHistoryRepository` | EventHistory | EventHistoryService via EventService | Append-only event state/history transaction |
 | `EventRelationshipRepository` | EventRelationship | EventService | Identity/relationship operation transaction |
 | `EventIdentityOperationRepository` | EventIdentityOperation and input/output links | EventService | Operation, inputs, outputs, and identity projection transaction |
+| `EventIdentityOperationHistoryRepository` | EventIdentityOperationHistory | EventService | Append-only operation status/action history transaction; operation projection and history update atomically |
 | `ClaimRepository` | Claim current-assessment projection | EvidenceService | Claim identity/projection update with assessment transaction |
 | `ClaimObservationRepository` | ClaimObservation | EvidenceService / claim extraction workflow | Observation and source provenance transaction |
 | `EvidenceRepository` | Evidence | EvidenceService | Evidence registration and origin provenance transaction |
@@ -1554,6 +1556,46 @@ EventMatcher performs candidate evaluation. Event Resolution Workflow coordinate
 - Processing metadata.
 
 Observed economic effects, source-reported effects, inferred potential effects, and unknown effects must remain distinguishable. Market observations must not be treated as proof of causal attribution.
+
+### 7.5.1 Event Identity Operation Workflow
+
+**Input:**
+
+- Operation type: `MERGE`, `SPLIT`, or `IDENTITY_CORRECTION`.
+- Ordered EventIdentityOperationInput and EventIdentityOperationOutput requests.
+- Expected current EventHistory version for every input Event.
+- Supporting evidence/context, reason, identity-policy version, actor and authorization reference.
+- Stable operation identifier and idempotency key.
+- ProcessingRun/lease context where applicable.
+
+**Output:**
+
+- One durable EventIdentityOperation and its ordered input/output links.
+- Append-only EventIdentityOperationHistory and EventHistory records.
+- An atomically applied core identity effect, or an explicit unknown/not-applied effect state.
+- Durable downstream reconciliation work for affected EventMatchCase records, associations, analyses, and reports.
+- A final operation status only when the required reconciliation state is known.
+
+**Preconditions and cardinality:**
+
+- `MERGE` requires at least two distinct input Events, including the selected survivor as one of the inputs, and exactly one output equal to that survivor. Only this survivor may appear in both input and output sets.
+- `SPLIT` requires exactly one original input Event and at least two distinct successor output Events; input and output sets must not overlap.
+- `IDENTITY_CORRECTION` must follow the cardinality and permitted transition rules of its versioned policy.
+- Every input must still have the expected EventHistory version and be eligible for the requested identity operation. Overlapping unresolved identity operations must be rejected or serialized; stale requests must not be applied.
+- The actor, authorization, policy version, evidence context, operation identifier, and idempotency key must be validated before the identity effect is applied.
+
+**Execution invariants:**
+
+1. Create the operation, ordered links, initial `PENDING` history entry, and durable execution intent atomically.
+2. Move the operation to `IN_PROGRESS` through an append-only history entry; retries reuse the same operation and idempotency key.
+3. Apply the core identity projection and append all affected EventHistory records in one UnitOfWork transaction. No ArticleEventLink is directly repointed or deleted.
+4. Persist downstream reconciliation work in the same transaction as the core identity effect. Re-evaluate affected EventMatchCase records and apply association changes only through successor EventMatchDecision records and EventService.
+5. Reconcile affected analyses/reports through new immutable versions or explicit stale-state handling; never rewrite historical report or analysis inputs.
+6. `RECONCILIATION_REQUIRED` is used while the core effect is unknown or required downstream work remains. `SUCCEEDED` is recorded only after the core effect and required reconciliation are confirmed. `FAILED` or `CANCELLED` is allowed only when the core identity effect is definitively `NOT_APPLIED`.
+7. An uncertain commit/outcome must be reconciled before any non-idempotent follow-up is repeated. The resolver uses the durable identity effect, not merely the operation's display status.
+8. A correction or reversal after an applied operation is a new authorized `IDENTITY_CORRECTION` operation; historical operation and EventHistory records are never rolled back or rewritten.
+
+EventService owns domain invariants and transactional application. WorkflowOrchestrator owns durable execution/lease recovery. EventMatchDecision and ArticleEventLink changes remain under Event Resolution Workflow and EventService respectively.
 
 ### 7.6 Reporting Workflow
 
