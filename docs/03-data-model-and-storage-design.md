@@ -2239,7 +2239,9 @@ Initial repository contracts include:
 - `ArticleEntityMentionRepository`
 - `EventRepository`
 - `ArticleEventLinkRepository`
-- `EventMatchCaseRepository`\n- `EventMatchCandidateRepository`\n- `EventMatchDecisionRepository`
+- `EventMatchCaseRepository`
+- `EventMatchCandidateRepository`
+- `EventMatchDecisionRepository`\n- `EventMatchDecisionRepository`
 - `EventHistoryRepository`
 - `EventRelationshipRepository`
 - `EventIdentityOperationRepository`
