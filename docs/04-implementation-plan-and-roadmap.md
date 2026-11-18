@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.21
+**Version:** 1.22
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -1221,6 +1221,8 @@ Enable controlled automated processing and text report delivery.
 1. Implement ReportDelivery as a recipient/destination delivery capability, separate from public publication execution.
 2. Define delivery destination interfaces and the versioned DistributionAuthorizationPolicy.
 3. Implement DistributionAuthorizationRepository and persist an immutable DistributionAuthorizationDecision plus its complete DistributionAuthorizationRightsLink set and rights-assessment-set fingerprint in one transaction.
+4. Define the versioned ContentScopeManifest and deterministic fingerprint contract using RFC 8785 JCS, UTF-8, and SHA-256; keep the manifest fingerprint distinct from the serialized outbound-payload digest.
+5. Implement complete source-lineage and upstream-rights revalidation at dispatch. Expired, revoked, or materially changed upstream permissions must fail closed until ContentRightsService re-evaluates the dependency chain and a successor authorization decision is issued.
 4. Bind each decision to the exact report version, recipient, destination, delivery mode, channel, authorized content scope, and content-scope fingerprint. For every source-derived content item, require an exact allowed CUSTOMER_DISTRIBUTION RightsAssessment; composite reports may require multiple assessments.
 5. Persist each DeliveryRecord with the exact authorization-decision reference and matching content-scope fingerprint before dispatch.
 6. Implement delivery intent records.
@@ -1795,5 +1797,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.21
+**Version:** 1.22
 **Status:** Draft — Under Architecture Review
