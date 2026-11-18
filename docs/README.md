@@ -591,7 +591,7 @@ Potential documents include:
 
 - Event Intelligence and Correlation Specification.
 - News Sources, Content Acquisition, and Rights Policy.
-- Economic Taxonomy Specification.
+- Further taxonomy extensions only where a distinct domain need remains beyond GENI-TAX-011.
 - Evidence and Claim Validation Specification.
 - Reporting and Publication Specification.
 

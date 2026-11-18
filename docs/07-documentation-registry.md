@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.40
+**Version:** 1.41
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -157,16 +157,16 @@ The versions and lifecycle states below were read from the actual file headers i
 | Document ID | Title | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.23 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.42 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.31 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.22 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-SEC-008 | Security Architecture and Threat Model | docs/08-security-architecture-and-threat-model.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-API-009 | API and Integration Contracts | docs/09-api-and-integration-contracts.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-SRC-010 | Source Credibility and Independence Specification | docs/10-source-credibility-and-independence.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-TAX-011 | Economic Taxonomy Specification | docs/11-economic-taxonomy-specification.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-EVAL-012 | Testing and Evaluation Strategy | docs/12-testing-and-evaluation-strategy.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-OPS-013 | Deployment, Operations, and Observability | docs/13-deployment-operations-and-observability.md | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.43 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.32 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.23 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.7 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model .md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-API-009 | API and Integration Contracts | `docs/09-api-and-integration-contracts .md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-SRC-010 | Source Credibility and Independence Specification | `docs/10-source-credibility-and-independence .md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-TAX-011 | Economic Taxonomy Specification | `docs/11-economic-taxonomy-specification .md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-EVAL-012 | Testing and Evaluation Strategy | `docs/12-testing-and-evaluation-strategy .md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability .md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
 
@@ -175,8 +175,8 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.39 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.12 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.41 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.13 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.14 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
@@ -400,8 +400,8 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `08ac03a86adfff2fe8f506c9fa9d009fcbb4aba6`  
-**Registry Refresh:**  This revision was prepared from the exact published `main` tree identified by the baseline commit above. It completes the EventIdentityOperationHistory and multi-source DistributionAuthorizationDecision contracts; defines canonical content-scope and rights-assessment fingerprints, upstream-rights revocation propagation, fail-closed reauthorization, and atomic persistence; corrects all identified ADR history-table structures; clarifies manifest-versus-transport digest semantics and implementation sequencing; and extends CI to validate Markdown table structure and heading anchors. The resulting commit becomes the new authoritative `main` snapshot.
+**Baseline Commit Inspected:** `f64decd0211f16cc63d2076f55ffd9ba15105e06`  
+**Registry Refresh:** This snapshot was inspected at commit f64decd0211f16cc63d2076f55ffd9ba15105e06. It includes six proposed technical specifications (security, API/integration contracts, source credibility/independence, economic taxonomy, testing/evaluation, and deployment/operations/observability), synchronizes their inventory and index entries, aligns component/data/roadmap versions, and extends documentation CI to verify all controlled specification versions against this registry. The documents remain proposed and do not imply architecture approval or implementation.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 

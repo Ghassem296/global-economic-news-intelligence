@@ -31,7 +31,7 @@ Defines governance and representation rules for GENI's economic subject taxonomy
 | GENI.TOPIC.FINANCIAL_MARKETS | Financial Markets | Equity, bond, FX, credit, derivatives, liquidity, market structure |
 | GENI.TOPIC.MACROECONOMICS | Macroeconomics | Inflation, output, employment, productivity, growth, indicators |
 | GENI.TOPIC.TRADE_INDUSTRY | Trade and Industry | Trade, supply chains, manufacturing, industrial policy, business activity |
-| GENI.TOPIC.ENERGY_NATURAL_RESOURCES | Energy and Natural Resources | Oil, gas, electricity, renewables, minerals, resource supply/demand |
+| GENI.TOPIC.ENERGY_RESOURCES | Energy and Resources | Oil, gas, electricity, renewables, minerals, resource supply/demand |
 | GENI.TOPIC.FISCAL_PUBLIC_DEBT | Fiscal Policy and Public Debt | Taxation, spending, budgets, deficits, sovereign debt |
 | GENI.TOPIC.GEOPOLITICAL_ECONOMIC_RISK | Geopolitical Economic Risk | Geopolitical events with material trade, financial, energy, sanctions, or macro channels |
 

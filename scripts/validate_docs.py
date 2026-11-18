@@ -18,6 +18,12 @@ CONTROLLED_DOCUMENTS = [
     "docs/05-architecture-decision-records.md",
     "docs/06-documentation-governance-and-change-management.md",
     "docs/07-documentation-registry.md",
+    "docs/08-security-architecture-and-threat-model.md",
+    "docs/09-api-and-integration-contracts.md",
+    "docs/10-source-credibility-and-independence.md",
+    "docs/11-economic-taxonomy-specification.md",
+    "docs/12-testing-and-evaluation-strategy.md",
+    "docs/13-deployment-operations-and-observability.md",
     "docs/README.md",
     "docs/adr/README.md",
 ]
