@@ -572,7 +572,7 @@ The recommendation is intentionally limited to a shared execution boundary. It d
 **Recommendation Prepared By:** AI Architecture Assistant  
 **Recommendation Date:** 2026-11-17
 
-> Important: This is a recommendation only. The Product Owner must explicitly accept or reject it.
+> Important: This is a recommendation only. The Project Owner must explicitly accept or reject it.
 
 ---
 
@@ -582,7 +582,7 @@ This ADR is currently a proposal.
 
 **Selected Alternative:** Not formally selected.  
 **Decision Status:** Proposed  
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
@@ -871,7 +871,7 @@ This ADR should be reviewed if:
 ### 12.2 Review Schedule
 
 **Review Date:** Not scheduled.  
-**Review Owner:** Product Owner.
+**Review Owner:** Project Owner.
 
 ### 12.3 Reconsideration Conditions
 
