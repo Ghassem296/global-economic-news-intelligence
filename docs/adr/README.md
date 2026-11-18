@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.13
+**Version:** 1.14
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
