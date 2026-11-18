@@ -1974,7 +1974,10 @@ Indexes should support:
 - Event lookup by status, topic, and update time.
 - Event lookup by occurrence time.
 - Article-event lookup in both directions.
-- Event match case lookup by ArticleRevision and development key.\n- Event match candidate lookup by case, status, and score.\n- Event match decision lookup by case and decision time.\n- Event match review lookup by status, assignment, and due date.
+- Event match case lookup by ArticleRevision and development key.
+- Event match candidate lookup by case, status, and score.
+- Event match decision lookup by case and decision time.
+- Event match review lookup by status, assignment, and due date.
 - Duplicate candidate lookup.
 - Claim lookup by event and observation.
 - Evidence lookup by source, article, and origin type.
@@ -1999,7 +2002,10 @@ Where applicable, enforce:
 
 - Source-scoped external article identity.
 - Article revision number uniqueness.
-- Event match case uniqueness by ArticleRevision and development key.\n- Candidate uniqueness by case and candidate Event.\n- One effective decision per EventMatchCase.\n- Active article-event association uniqueness.
+- Event match case uniqueness by ArticleRevision and development key.
+- Candidate uniqueness by case and candidate Event.
+- One effective decision per EventMatchCase.
+- Active article-event association uniqueness.
 - Canonical article pair uniqueness for duplicate candidates.
 - Event-specific report version uniqueness.
 - Event analysis type and version uniqueness.
@@ -2010,7 +2016,9 @@ Where applicable, enforce:
 - Publication attempt number uniqueness within a publication operation.
 - Delivery idempotency key uniqueness within its scope.
 - Schedule occurrence uniqueness.
-- Event identity operation input/output uniqueness.\n- EventMatchDecision selected-candidate and case consistency.\n- EventMatchDecision supersession-chain consistency.
+- Event identity operation input/output uniqueness.
+- EventMatchDecision selected-candidate and case consistency.
+- EventMatchDecision supersession-chain consistency.
 - Entity alias uniqueness where the language and alias type make it unambiguous.
 
 Only one unresolved side-effecting publication operation should be allowed to modify the same target/publication-key chain at a time; enforce this through an appropriate transaction/locking rule or database constraint for the selected engine. Do not serialize unrelated publication keys merely because they share a target.
