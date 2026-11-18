@@ -3,9 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-015  
 **Title:** Market Data Integration and Economic Impact Classification  
-**Version:** 0.2  
 **Status:** Proposed  
-**Priority:** P1  
+**Version:** 1.0  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -16,120 +15,138 @@
 
 ## 1. Context and Problem Statement
 
-Economic intelligence may compare events with market observations across currencies, rates, commodities, equities, and other instruments. Market data varies in coverage, timestamps, units, licensing, and quality. A price movement after an event is an observation, not by itself proof that the event caused the movement.
+GENI may compare events with market observations and analyze consequences across currencies, rates, commodities, equities, sectors, trade, and macroeconomic indicators. Observed price changes do not prove event causality, and a market reaction is not equivalent to broader economic impact. Market-data access also involves licensing, instrument identity, timestamp alignment, session calendars, provider quality, and missing observations.
 
-This ADR is a proposal for formal review. It does not approve an implementation or override another decision. The existence of this document does not imply acceptance.
+This ADR is a proposal for formal review; it does not authorize implementation as accepted architecture.
 
 ## 2. Decision Question
 
-How should market observations be acquired and aligned with events, and how should observed reactions be separated from potential or causal economic impact?
+How should market observations be sourced, normalized, aligned with events, and used to distinguish measured market reactions from source-reported responses and analytical causal interpretations?
 
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-
-- Market data must have provenance, timestamps, units, and licensing metadata.
-- Instrument identity and market calendars must be explicit.
-- Observed reactions, inferred mechanisms, forecasts, and causal claims must remain distinct.
-- Missing or stale data must remain unknown rather than be converted into zero.
-- Provider integrations must be replaceable.
+- Treat market observations as source-attributed measurements with instrument, value, unit, time, and provider provenance.
+- Preserve bid/ask/mid/close or other price-type semantics where applicable.
+- Normalize instrument identity, currency, units, time zones, trading sessions, and baseline context.
+- Distinguish observed market reaction, source-reported reaction, inferred implication, and unknown.
+- Do not infer causality from temporal proximity alone.
+- Evaluate licensing and external-processing rights for market data.
+- Keep broader economic-impact methodology distinct from market-observation ingestion.
 
 ### 3.2 Technical Constraints
-
-- Domain contracts must not depend on a specific external provider unless explicitly approved.
-- All relevant policies, schemas, and derived outputs must be versioned.
-- Critical state transitions must be auditable and testable.
-- Missing or unavailable information must remain explicit.
+- Market-data rights are independent of news-content rights.
+- No provider, instrument universe, timeframe, or frequency is selected here.
+- ADR-019 defines broader assessment semantics; this ADR focuses on market observations and reactions.
+- A dedicated time-series platform is not automatically required.
 
 ### 3.3 Business and Product Constraints
-
-- The initial product must remain operationally simple.
-- Implementation sequencing must follow documented dependencies.
-- Product claims must not exceed the capability or evidence actually available.
+- The initial product remains event-centric economic intelligence with text reports as its first release.
+- The design must support incremental implementation and explicit evaluation.
+- Proposals remain provisional until the decision owner records approval.
 
 ### 3.4 Security and Privacy Constraints
-
-- External source content and model output are untrusted input.
-- Credentials and sensitive operational data must not be exposed in ordinary logs.
-- Access to privileged actions must follow least-privilege authorization.
+- Source content and model output are untrusted until validated.
+- Only authorized application services and reviewers may change authoritative state.
+- Secrets and unnecessary protected content must not appear in ordinary logs.
 
 ### 3.5 Operational and Cost Constraints
-
-- Concurrency, retries, resource usage, and external service calls must be bounded.
-- Operational metrics must make failure and uncertainty visible.
-- Numeric thresholds must be based on measurements or explicit policy approval.
+- Avoid unnecessary distributed infrastructure in the initial release.
+- Measure cost and complexity against workload and reliability requirements.
+- Failures, retries, recovery, and audit must be observable.
 
 ### 3.6 Legal and Content-Rights Constraints
-
-- Technical access does not imply permission to store, process, transform, or republish content.
-- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed where applicable.
+- Access does not itself authorize retention, external processing, transformation, quotation, or republication.
+- Source terms, licensing, privacy, and jurisdictional restrictions must be reviewed before production use.
 
 ### 3.7 Explicit Non-Goals
-
-- This ADR does not set unmeasured numeric service levels or model-quality thresholds.
-- This ADR does not select a vendor or provider where comparative evidence is unavailable.
-- This ADR does not approve its recommendation; explicit Project Owner approval remains required.
+- This ADR does not invent unmeasured numerical thresholds or performance guarantees.
+- This ADR does not approve a provider, database, or model merely by listing it as an alternative.
+- This proposal does not supersede the ADR approval process.
 
 ## 4. Alternatives Considered
 
-### 4.1 A — Treat post-event price movement as event impact
+### 4.1 Alternative A — Price movement as event impact
 
-**Advantages:** Simple and easy to communicate.
+**Description:** Treat a price movement after an event as its measured impact.
 
-**Disadvantages:** Confuses temporal association with causality and ignores confounding factors.
+**Advantages:**
+- Simple narrative and low data-model complexity.
 
-**Risk:** Very High
+**Disadvantages:**
+- Confuses measurement with causation and ignores confounders.
 
-### 4.2 B — Exclude market data from the product
+**Risks:**
+- False causal attribution and misleading reports.
 
-**Advantages:** Avoids market-data licensing and alignment complexity.
+**Estimated Complexity:** Low
 
-**Disadvantages:** Removes useful context for market-facing economic analysis.
+### 4.2 Alternative B — No market-data integration
 
-**Risk:** Medium
+**Description:** Use news sources and qualitative analysis only.
 
-### 4.3 C — Separate market observations, impact assessments, and causal attribution
+**Advantages:**
+- Avoids market-feed cost and licensing.
 
-**Advantages:** Preserves observable data and analytical uncertainty.
+**Disadvantages:**
+- Cannot independently verify market reactions.
 
-**Disadvantages:** Requires provider adapters, instrument mapping, and event-window methodology.
+**Risks:**
+- Reports may present source claims without independent market context.
 
-**Risk:** Medium
+**Estimated Complexity:** Low
 
+### 4.3 Alternative C — Provenance-aware observations plus separate analysis
+
+**Description:** Ingest authorized measurements, preserve context, and assess causality separately.
+
+**Advantages:**
+- Traceable measurement
+- supports uncertainty and multiple channels.
+
+**Disadvantages:**
+- Requires provider, instrument, time, and licensing integration.
+
+**Risks:**
+- Incomplete data or bad alignment may mislead analysts.
+
+**Estimated Complexity:** Medium to High
 
 ## 5. Evaluation and Comparison
 
-The following qualitative comparison is an architectural assessment, not a measured benchmark.
+The comparison is qualitative and reflects architectural fit, not measured performance or cost.
 
-| Criterion | Alternative A | Alternative B | Alternative C |
+| Evaluation Criterion | Price movement as event impact | No market-data integration | Provenance-aware observations plus separate analysis |
 |---|---|---|---|
-| Fit with product requirements | Limited / context-dependent | Partial | Strongest overall fit |
-| Operational complexity | Low | Medium | Medium |
-| Auditability and traceability | Limited | Partial | Strong |
-| Ability to evolve | Low to Medium | Medium | High |
-| Principal trade-off | Simplicity or incomplete capability | Partial separation | More explicit contracts and governance |
+| Measurement integrity | Low | Not available | High |
+| Causal validity | Low | Avoids claim | Separate assessment required |
+| Data cost | Low | Low | Provider dependent |
+| Traceability | Low | Medium | High |
 
-The recommendation favors Alternative C because it preserves the domain distinctions and operational controls required by the product. Any quantitative comparison must be performed against representative workload and evaluation data.
+The requirements in Section 3 are the primary decision drivers. Unmeasured cost and performance values are intentionally left unspecified.
 
 ## 6. Recommended Decision
 
-Use provider-independent MarketDataAdapter contracts. Store MarketObservation separately from Event and Analysis records, with instrument, venue, timestamp, timezone, frequency, unit/currency, provider, quality, and licensing metadata. Economic impact analysis is a separate versioned assessment by channel, direction, magnitude, horizon, evidence status, and uncertainty. Describe a price move as an observed market reaction unless a documented causal methodology and supporting evidence justify a stronger attribution. Do not infer event causality solely from temporal proximity.
+**Recommended Alternative:** Alternative C — Provenance-aware market observations with separate impact and causality assessment.
 
-### 6.1 Decision Boundaries
+Represent market data as independently sourced observations with instrument identity, measurement type, units, provider, observation time, session/calendar context, and baseline where available. A market-reaction assessment may describe a measured movement or source-reported reaction, but causal contribution requires separate analysis with evidence, comparison, uncertainty, and confounder discussion. Broader economic-impact analysis remains channel-based and is governed by GENI-ADR-019. Provider, instrument universe, and acquisition frequency remain open until rights and coverage are verified.
 
-- Define canonical instrument identifiers and alias mapping with venue and asset-class context.
-- Normalize timestamps and trading calendars without discarding original provider timestamps.
-- Record data frequency, units, currency, adjustment status, gaps, and stale-data flags.
-- Define event-time windows and baseline periods as versioned methodology parameters, not universal constants.
-- Store observed data independently from forecasts and analysis results.
-- Link each impact assessment to exact market observations and other evidence.
-- Respect provider licensing, retention, and redistribution restrictions.
+**Rationale:**
+- Separates measurement from inference and causal explanation.
+- Preserves context required to interpret prices and indicators.
+- Supports economic channels without collapsing them into one market score.
 
-### 6.2 Assumptions and Open Questions
+**Deferred Questions:**
+- Market-data provider and licensing terms.
+- Initial instrument universe and frequency.
+- Calendar, session, and baseline methodology.
+- Causal-attribution methodology and evaluation dataset.
+- Time-series storage and retention design.
 
-- The recommendation is based on the current product and architecture documents.
-- Any numeric threshold, provider selection, or legal interpretation not supported by evidence remains open.
-- The Project Owner may accept, reject, or request revision of this recommendation.
+**Recommendation Prepared By:** AI Architecture Assistant  
+**Recommendation Date:** 2026-11-18
+
+A recommendation is not an approval. The Project Owner must explicitly accept or reject this proposal.
 
 ## 7. Final Decision
 
@@ -139,162 +156,156 @@ Use provider-independent MarketDataAdapter contracts. Store MarketObservation se
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded. The recommendation in Section 6 is awaiting review.
+**Decision Rationale:** Pending formal review; Section 6 contains the recommendation.
 
 **Conditions or Restrictions:**
-
-- Do not treat this proposal as an accepted architectural constraint.
-- Do not implement irreversible changes solely on the basis of this recommendation.
-- Record any interim implementation assumption and its review trigger.
+- Maintain Proposed status until explicit approval is recorded.
+- Do not treat deferred questions or example values as settled implementation details.
+- Any temporary implementation assumption must be reversible and documented with a review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-
-- Makes the relevant domain or operational boundary explicit.
-- Improves traceability and repeatability.
-- Provides a basis for measurable verification and future revision.
+- Measured market context with traceable provenance.
+- Clear boundary between observed reaction and causal interpretation.
+- Ability to extend into wider economic indicators.
 
 ### 8.2 Negative Consequences
-
-- Adds implementation and documentation work.
-- Some policy details remain open pending data, legal review, or operational measurements.
-- Dependent components may need coordinated changes after approval.
+- Market-data licensing and normalization add cost.
+- Causal attribution remains difficult and may remain uncertain.
 
 ### 8.3 Technical Trade-Offs
-
-Alternative C favors explicit contracts and traceability over the smallest possible implementation. Provider-specific behavior or domain-specific exceptions must remain visible rather than being hidden behind an abstraction that implies guarantees the system does not have.
+Market data improves measurement but does not resolve causality. Initial release may use a limited set of authorized indicators or defer integration while preserving a logical observation contract.
 
 ### 8.4 Operational Consequences
-
-The implementation will require monitoring, recovery, and review procedures appropriate to the selected capability. Failure modes and unknown outcomes must be observable.
+Provider health, stale data, coverage gaps, revisions, licensing changes, and timestamp quality must be monitored.
 
 ### 8.5 Product and Business Consequences
-
-The recommendation is intended to support the product's evidence-based economic intelligence purpose. It must not create user-facing promises that exceed actual source coverage, data quality, or review capacity.
+Reports can state what markets actually did while separately explaining what may have caused the movement and what remains unknown.
 
 ### 8.6 Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Proposal mistaken for approval | Keep status Proposed until explicit approval is recorded. |
-| Over-specification without evidence | Leave thresholds and provider choices open until measured. |
-| Cross-document inconsistency | Synchronize affected documents and registry after approval. |
-| Implementation cannot satisfy a proposed guarantee | Report the conflict and revise the ADR rather than silently weakening the contract. |
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| False causal attribution | Medium | Critical | Require separate causal assessment and confounder analysis. |
+| Provider rights violation | Medium | Critical | Review licensing before storage and processing. |
+| Time/session misalignment | Medium | High | Normalize time zones and calendars; preserve raw timestamps. |
+| Incomplete provider coverage | Medium | Medium | Record missingness and avoid extrapolation. |
 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-
-- Define canonical instrument identifiers and alias mapping with venue and asset-class context.
-- Normalize timestamps and trading calendars without discarding original provider timestamps.
-- Record data frequency, units, currency, adjustment status, gaps, and stale-data flags.
-- Define event-time windows and baseline periods as versioned methodology parameters, not universal constants.
-- Store observed data independently from forecasts and analysis results.
-- Link each impact assessment to exact market observations and other evidence.
-- Respect provider licensing, retention, and redistribution restrictions.
+- MarketDataCollector (future/optional)
+- MarketObservationNormalizer
+- ImpactAnalyzer
+- EvidenceService
+- ObservabilityService
 
 ### 9.2 Affected Data Models and Interfaces
-
-The relevant interfaces, persistence fields, constraints, and version metadata must be updated only after the proposal is approved and the implementation design is reviewed.
+- MarketObservation
+- InstrumentReference
+- MarketDataSource
+- MarketReactionAssessment
+- EconomicImpact Analysis
 
 ### 9.3 Affected Documents
-
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
+- docs/01-product-and-system-architecture.md
+- docs/02-component-architecture-and-interfaces.md
+- docs/03-data-model-and-storage-design.md
+- docs/04-implementation-plan-and-roadmap.md
 
 ### 9.4 Related ADRs
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-008 | Depends on / Related to | Defines uncertainty and provenance for observations and causal claims. |
+| GENI-ADR-013 | Depends on | Defines source-rights controls. |
+| GENI-ADR-016 | Related to | Defines reliable collection and persistence. |
+| GENI-ADR-019 | Related to | Defines broader economic-impact semantics. |
+| GENI-ADR-009 | Related to | Defines acquisition scheduling and source health. |
 
-See the related ADR references in the registry. These dependencies do not imply that related Proposed ADRs have been accepted.
+These relationships do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-
-- Define canonical instrument identifiers and alias mapping with venue and asset-class context.
-- Normalize timestamps and trading calendars without discarding original provider timestamps.
-- Record data frequency, units, currency, adjustment status, gaps, and stale-data flags.
-- Define event-time windows and baseline periods as versioned methodology parameters, not universal constants.
-- Store observed data independently from forecasts and analysis results.
-- Link each impact assessment to exact market observations and other evidence.
-- Respect provider licensing, retention, and redistribution restrictions.
+- Define instrument identity and market-observation contracts.
+- Inventory providers, licenses, coverage, timestamps, and correction policies.
+- Normalize price types, units, currencies, and session context.
+- Preserve raw provider reference and normalized observation versions.
+- Separate observed movement from event-attribution analysis.
+- Create reference cases for non-trading hours, missing prices, revisions, and confounding events.
 
 ### 10.2 Migration or Compatibility Requirements
-
-No runtime or database migration is authorized by this proposal. If accepted, existing records and historical provenance must be inspected before a migration is designed. Migration must preserve audit history and must be tested from the current baseline.
+Inspect the actual implementation and data before defining migration. This proposal does not claim that a migration or implementation is complete. Any migration must preserve applicable history, provenance, and compatibility.
 
 ### 10.3 Dependencies
-
-Implementation sequencing must respect the dependencies recorded in the ADR Registry and the related decision documents.
+- GENI-ADR-008 — Defines uncertainty and provenance for observations and causal claims.
+- GENI-ADR-013 — Defines source-rights controls.
+- GENI-ADR-016 — Defines reliable collection and persistence.
+- GENI-ADR-019 — Defines broader economic-impact semantics.
+- GENI-ADR-009 — Defines acquisition scheduling and source health.
 
 ### 10.4 Implementation Sequence
-
-1. Obtain explicit Project Owner approval.
-2. Update affected architecture and data-model contracts.
-3. Define versioned interfaces and migration requirements.
-4. Implement the smallest end-to-end slice.
-5. Add focused automated and integration tests.
-6. Validate operational behavior and update implementation status separately from ADR status.
+1. Define market observation schema and instrument reference.
+2. Review provider coverage and rights.
+3. Implement one limited authorized data source if justified.
+4. Normalize and persist provenance-rich observations.
+5. Build separate market reaction and event attribution assessment.
+6. Evaluate data quality and causal-assessment limits.
 
 ### 10.5 Verification Requirements
+- Verify each observation has source, instrument, value, unit, and timestamp context.
+- Test timezone and trading-session alignment.
+- Test missing, stale, corrected, and outlier observations.
+- Verify temporal proximity alone does not produce causal statements.
+- Evaluate provider coverage on representative instruments.
 
-- Every market observation is traceable to provider, instrument, timestamp, unit, and source terms.
-- Time alignment can be reproduced from recorded timezone and calendar metadata.
-- Missing/stale observations remain explicit and are not scored as zero.
-- A temporal market reaction is not labeled causal without documented causal evidence.
-- Potential impact, observed reaction, forecast probability, and impact magnitude are distinct fields/semantics.
-- Impact analyses identify channel, direction, horizon, evidence status, uncertainty, and methodology version.
+Implementation verification remains deferred until formal acceptance and implementation of the dependent capability.
 
 ## 11. Acceptance Criteria
-
-| ID | Acceptance Criterion | Verification |
+| ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | Every market observation is traceable to provider, instrument, timestamp, unit, and source terms. | Architecture review and automated tests where applicable |
-| AC-02 | Time alignment can be reproduced from recorded timezone and calendar metadata. | Architecture review and automated tests where applicable |
-| AC-03 | Missing/stale observations remain explicit and are not scored as zero. | Architecture review and automated tests where applicable |
-| AC-04 | A temporal market reaction is not labeled causal without documented causal evidence. | Architecture review and automated tests where applicable |
-| AC-05 | Potential impact, observed reaction, forecast probability, and impact magnitude are distinct fields/semantics. | Architecture review and automated tests where applicable |
-| AC-06 | Impact analyses identify channel, direction, horizon, evidence status, uncertainty, and methodology version. | Architecture review and automated tests where applicable |
+| AC-01 | Market observations retain provider and instrument provenance. | Data model tests |
+| AC-02 | Price type, units, time, and session context are explicit. | Normalization tests |
+| AC-03 | Observed movement is separate from causal attribution. | Analysis contract tests |
+| AC-04 | Rights checks precede acquisition and retention. | Rights integration tests |
+| AC-05 | Missing/stale/corrected observations are represented explicitly. | Data quality tests |
+| AC-06 | Broader economic impact remains distinct from market reaction. | Cross-document review |
 
-Quantitative thresholds must be established using representative evaluation data or operational measurements. This ADR intentionally does not invent numerical targets.
+Any quantitative threshold must be supported by representative datasets, measurements, or formal policy review.
 
 ## 12. Review and Reconsideration
 
 ### 12.1 Review Triggers
-
-- A new market-data provider or asset class is introduced.
-- Coverage, latency, or licensing changes materially.
-- The product proposes causal attribution or event-study features.
-- Evaluation reveals systematic time-alignment or instrument-mapping errors.
+- Market-data requirements or provider coverage materially change.
+- Measured reporting gaps justify adding market data.
+- Licensing terms or retention requirements change.
 
 ### 12.2 Review Schedule
-
 **Review Date:** Not scheduled  
 **Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
-
-Reconsider this proposal if its assumptions become invalid, evaluation results contradict the recommendation, or product/legal/operational requirements materially change. A replacement of an accepted decision requires a new ADR or an explicitly approved superseding record.
+Reconsider when assumptions are invalidated or measurements show the proposal fails project requirements. A replacement must be recorded through the ADR lifecycle.
 
 ## 13. References and Supporting Evidence
 
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/05-architecture-decision-records.md`
-- `docs/adr/README.md`
-- Related decision topics are listed in the ADR Registry.
+The references below are internal project sources used to establish documented context. They are not empirical performance benchmarks or legal opinions.
 
-The current internal documents establish architectural context. They do not substitute for external legal advice, provider capability verification, or empirical performance measurements.
+| Reference | Type | Relevance |
+|---|---|---|
+| `docs/01-product-and-system-architecture.md` | Internal | Distinguishes market reaction from economic impact. |
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines impact analysis responsibilities. |
+| `docs/03-data-model-and-storage-design.md` | Internal | Defines MarketObservation and evidence links. |
+| `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines market-data and analysis stages. |
+| `GENI-ADR-008` | Internal | Evidence and uncertainty. |
+| `GENI-ADR-019` | Internal | Assessment semantics. |
+
+External legal, provider, and empirical evidence must be added during formal review where relevant.
 
 ## 14. Decision History
 
-| Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
-| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+| Date | Version | Status | Change |
+|---|---|---|---|
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 
 **End of ADR**
