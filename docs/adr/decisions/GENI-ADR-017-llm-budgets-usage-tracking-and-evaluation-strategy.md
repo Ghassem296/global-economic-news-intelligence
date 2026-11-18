@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-017  
 **Title:** LLM Budgets, Usage Tracking, and Evaluation Strategy  
 **Status:** Proposed  
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -199,9 +199,9 @@ The product can prioritize model calls that materially improve intelligence whil
 
 ### 9.2 Affected Data Models and Interfaces
 - LLMUsageRecord
-- TaskExecutionRecord
+- ProcessingRun and ProcessingStep as the authoritative task/workflow execution records (no duplicate TaskExecutionRecord entity)
 - Model/Prompt/Schema configuration versions
-- EvaluationRun and EvaluationResult
+- Versioned EvaluationRun and EvaluationResult artifacts in the repository/CI evaluation artifact store, not production business tables
 
 ### 9.3 Affected Documents
 - docs/01-product-and-system-architecture.md
@@ -224,9 +224,11 @@ These relationships do not imply that related Proposed ADRs have been accepted.
 ### 10.1 Required Implementation Work
 - Define normalized usage and cost-provenance schema.
 - Add task/workflow budget configuration and enforcement.
-- Record provider/model/prompt/schema/config identifiers.
+- Record provider/model/prompt/schema/config identifiers and link usage to ProcessingRun/ProcessingStep.
+- Record provider-reported cost separately from internally estimated cost, with cost-source and pricing-catalog version provenance.
 - Implement pricing catalog versioning where cost estimates are required.
 - Create human-reviewed task-specific reference datasets and rubrics.
+- Define versioned EvaluationRun and EvaluationResult artifact schemas, including dataset/case versions, output references or hashes, metrics/rubrics, model and prompt versions, evaluator provenance, and aggregate quality/cost/latency.
 - Build quality/cost/latency reports and regression gates.
 - Define explicit provider fallback compatibility and observability.
 
