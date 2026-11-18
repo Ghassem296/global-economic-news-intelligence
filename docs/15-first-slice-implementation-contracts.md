@@ -461,6 +461,7 @@ This inventory distinguishes defined state vocabulary from defined transition be
 | Aggregate / concept | Defined states or outcomes | Defined transition semantics | Readiness |
 |---|---|---|---|
 | Event lifecycle | DETECTED, ENRICHING, ACTIVE, MONITORING, RESOLVED, ARCHIVED | Complete guarded transition table exists in Document 03 §10.2. | Specified at logical level; policy/version/guard DTO details still required. |
+| EventIdentityOperation | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED; identity effect: NOT_APPLIED, APPLIED, UNKNOWN | Status and effect-state transitions, terminal rules, append-only history, and reconciliation semantics are defined in Document 03 §7.5–7.5.1. | Specified at logical level; policy-specific authorization and downstream reconciliation contracts remain gated. |
 | EventMatchCase | OPEN, PENDING_REVIEW, RESOLVED, CLOSED, CANCELLED | No allowed-transition graph, reopening rule, or precise status derivation from decisions/review is specified. | **Blocked** |
 | EventMatchCandidate | Illustrative GENERATED, EVALUATED, INELIGIBLE | Candidate immutable after EVALUATED/INELIGIBLE; complete enum and allowed transitions not closed. | **Partially specified** |
 | EventMatchDecision | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED | Immutable append/supersession; one effective decision pointer; outcome-specific invariants specified. These are outcomes, not mutable lifecycle states. | **Outcome contract specified; authorization/policy remains gated** |
@@ -470,6 +471,7 @@ This inventory distinguishes defined state vocabulary from defined transition be
 | ProcessingStep | Status field exists; no closed vocabulary or transition graph in Document 03. | Lease/fencing rules exist; status transition graph absent. | **Blocked** |
 | PublicationRecord | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED | Expected operation lifecycle and reconciliation semantics defined in Document 03 §11.8. | **Specified at logical level; target adapter contract remains gated** |
 | PublicationAttempt | EXECUTE/RECONCILE; CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, RECONCILED_NOT_APPLIED | Attempt records are traceable; mapping from each attempt outcome to operation transition requires a formal table. | **Partially specified** |
+| DeliveryRecord | PENDING, IN_PROGRESS, DELIVERED, FAILED, CANCELLED | Status vocabulary and idempotent retry requirement exist in Document 03 §12.1; allowed transitions, terminal/retry semantics, and DeliveryAttempt outcome mapping are not defined. | **Partially specified; transition contract required before delivery implementation** |
 | ExecutionLease | ACTIVE, RELEASED, EXPIRED | Exclusive acquisition, monotonic fencing, owner/token-bound renewal/release and stale-worker rejection specified in Document 03 §13.2.1. | **Specified at logical level; numeric lease policy is operational TBD** |
 | IdempotencyRecord | IN_PROGRESS, COMPLETED, FAILED, RECONCILIATION_REQUIRED | Same-fingerprint replay, different-fingerprint conflict, external reconciliation semantics specified in Document 03 §13.2.2. | **Specified at logical level; exact retry/expiry policy TBD** |
 | ReviewRecord | PENDING, IN_PROGRESS, COMPLETED, CANCELLED | Actions/history and successor workflow requirements defined; reopening is a new task lifecycle segment. | **Partially specified; ADR-014 approval required** |
@@ -484,7 +486,8 @@ The following must be completed from approved policy and reconciled across Docum
 4. PublicationDecision effective-successor algorithm and actor/authorization provenance reconciliation.
 5. PublicationAttempt outcome-to-PublicationRecord transition matrix, including unknown outcome and reconciliation.
 6. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014.
-7. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
+7. DeliveryRecord transition matrix, including retry/cancellation semantics, and DeliveryAttempt outcome mapping.
+8. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
 
 No implementation may invent missing transitions or treat timestamps as substitutes for state.
 
