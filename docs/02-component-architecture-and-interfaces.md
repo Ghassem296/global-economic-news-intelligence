@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.18  
+**Version:** 1.19  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -566,7 +566,8 @@ A correction creates a new report version; it must not overwrite a previously ge
 Responsibilities:
 
 - Execute authorized `PUBLISH`, `REPLACE`, and `WITHDRAW` operations.
-- Validate the effective publication decision and required review authorization.
+- For `PUBLISH` and `REPLACE`, validate the effective `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision for the exact new Report version and any required review authorization.
+- For `WITHDRAW`, validate the separate withdrawal authorization, actor/role, explicit reason, and reference to the currently effective PublicationRecord; a new PUBLISH decision is neither required nor sufficient authorization for withdrawal.
 - Validate the report version, publication target, stable publication key, and any existing publication being replaced or withdrawn.
 - Serialize conflicting operations for the same target and publication key without blocking unrelated keys at that target.
 - Persist a durable PublicationRecord before an external side effect.
@@ -1261,11 +1262,12 @@ A held report must be routed to a defined review mechanism. An authorized review
 **Input:**
 
 - Report version.
-- Effective publication decision for `PUBLISH` or `PUBLISH_WITH_CAVEATS`, when applicable.
+- Effective `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision for the exact new Report version when the operation is `PUBLISH` or `REPLACE`.
+- Separate withdrawal authorization, authorized actor/role, and explicit reason when the operation is `WITHDRAW`.
 - Publication target reference.
 - Stable publication key identifying the logical publication slot within that target.
 - Operation type: `PUBLISH`, `REPLACE`, or `WITHDRAW`.
-- Earlier PublicationRecord reference for replacement or withdrawal.
+- Earlier successful and currently effective PublicationRecord reference for replacement or withdrawal.
 - Stable idempotency key and required authorization context.
 
 **Publication adapter contract:**
