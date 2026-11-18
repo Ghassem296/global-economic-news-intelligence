@@ -77,6 +77,8 @@ Examples:
 - An unverified claim must not be represented as confirmed.
 - Missing market data must not be replaced with an invented market reaction.
 - Model confidence must not be treated as objective probability unless calibrated and explicitly defined.
+- Event importance, economic relevance, and economic impact must not be represented as one interchangeable score.
+- An event with unknown economic impact must not automatically receive low importance or low economic relevance.
 
 ### 2.4 Historical Integrity
 
@@ -119,6 +121,12 @@ These categories must not be conflated in reports.
 The logical model describes the capabilities and relationships required by the product.
 
 It does not require every logical entity to become a separate physical table in the first migration. Initial implementation must prioritize the first usable end-to-end workflow while preserving the ability to evolve.
+
+### 2.9 Separate Assessment Semantics
+
+Event importance, economic relevance, and economic impact are three different assessment questions. They must be represented as separately versioned analytical results, with independent result schemas and methodology versions. A shared execution pipeline or shared evidence inputs do not make the assessments interchangeable.
+
+The Event record is not the authoritative storage location for these assessment results. The versioned Analysis records are authoritative. A current-value projection or cache may be maintained for efficient reads only if it can be rebuilt from the underlying Analysis history.
 
 ## 3. Persistence Strategy
 
@@ -455,9 +463,6 @@ Fields:
 | occurrence_end_at | timestamp/null | Estimated or observed end |
 | occurrence_time_precision | string/null | Exact, approximate, date-only, unknown |
 | status | string | Current lifecycle state |
-| importance_score | decimal/null | Importance assessment |
-| economic_relevance_score | decimal/null | Economic relevance assessment |
-| score_policy_version | string/null | Scoring policy version |
 | first_observed_at | timestamp | First system observation |
 | last_updated_at | timestamp | Latest meaningful update |
 | resolved_at | timestamp/null | Resolution time |
@@ -469,7 +474,8 @@ Constraints:
 - Event identifiers remain stable during ordinary updates.
 - Event identity changes must use explicit merge or split operations.
 - Lifecycle transitions must be validated against an approved transition policy.
-- Scores must include a documented scale and assessment version.
+- Importance, economic relevance, and economic impact assessments must be stored as separate versioned Analysis records rather than independent scalar fields on Event.
+- A latest-assessment projection, if maintained, must be rebuildable from Analysis history.
 - Missing occurrence time must remain null.
 - `UPDATED` is not a persistent lifecycle state. It is represented through event history and update events.
 
@@ -1041,7 +1047,9 @@ Analysis types may include:
 
 - `EVENT_SUMMARY`
 - `IMPORTANCE_ASSESSMENT`
-- `ECONOMIC_IMPACT`
+- `ECONOMIC_RELEVANCE_ASSESSMENT`
+- `ECONOMIC_IMPACT_ASSESSMENT`
+- `MARKET_REACTION_ASSESSMENT`
 - `MARKET_IMPLICATIONS`
 - `RISK_ASSESSMENT`
 - `EVIDENCE_ASSESSMENT`
@@ -1049,7 +1057,9 @@ Analysis types may include:
 
 An analysis should be immutable after successful completion.
 
-A new analysis execution must create a new record or version rather than silently overwrite a completed result.
+A new analysis execution must create a new record or version rather than silently overwrite a completed result. For event assessments, the combination of event identity, analysis type, and version must identify a distinct immutable result. The methodology and schema versions must be recorded independently of the model or prompt version.
+
+The `confidence` field describes the degree of evidential support or reliability of the analytical assessment under its defined methodology. It must not be used as a substitute for importance, economic relevance, economic-effect magnitude, or forecast probability. Forecast probability, when supplied, must be a separately defined and calibrated output.
 
 ### 9.2 AnalysisEvidenceLink
 
@@ -1101,29 +1111,44 @@ Where practical, frequently used input types should use dedicated relational lin
 
 The application layer must validate that every referenced input exists and is eligible for use.
 
-### 9.4 Analysis Output Classification
+### 9.4 Assessment Output Classification
 
 Analytical content must distinguish:
 
-- Observed facts.
-- Source-attributed claims.
+- Observed facts and measurements.
+- Source-attributed claims and reported effects.
 - AI-generated interpretation.
 - Forecasts and scenarios.
-- Explicitly unknown or unavailable information.
+- Explicitly unknown, unavailable, or not-established information.
 
-A free-text analysis field alone is insufficient for important structured conclusions.
+A free-text analysis field alone is insufficient for important structured conclusions. Every assessment type must use a versioned structured-output schema and preserve material claims, uncertainty, methodology version, and supporting or contradicting evidence references.
 
-Structured analysis output should use a versioned schema. The schema must identify material claims, uncertainty, and supporting evidence references.
+The three event assessments use separate structured output contracts:
 
-### 9.5 Market Impact Evidence
+**Importance assessment (`IMPORTANCE_ASSESSMENT`)** should preserve the importance dimensions considered, qualitative rank or optional numeric score, rationale, evidence references, uncertainty, and methodology/schema versions. It must not derive its result by adding the economic relevance or impact outputs.
 
-Market impact must not be inferred as observed fact when no market data is available.
+**Economic relevance assessment (`ECONOMIC_RELEVANCE_ASSESSMENT`)** should preserve a relevance classification, identified direct/indirect/contextual transmission pathways, affected entities and geographies, supporting evidence references, and uncertainty. Suggested classifications are `DIRECT`, `INDIRECT`, `CONTEXTUAL`, `NO_MATERIAL_LINK_ESTABLISHED`, and `UNKNOWN`. These are descriptive classifications, not numeric magnitudes.
+
+**Economic impact assessment (`ECONOMIC_IMPACT_ASSESSMENT`)** should preserve one or more channel-level impact results. Each result should identify the channel, affected entity or geography, transmission mechanism, direction (`POSITIVE`, `NEGATIVE`, `MIXED`, `NEUTRAL`, or `UNCLEAR`), magnitude or defensible range where supported, time horizon/duration, evidence status, evidence references, and uncertainty. The result must not force distinct channels into one aggregate value.
+
+Evidence status for an economic effect must distinguish:
+
+1. `OBSERVED_ECONOMIC_EFFECT` — supported by an identified economic or market observation.
+2. `SOURCE_REPORTED_EFFECT` — reported by a source but not independently verified by integrated data.
+3. `INFERRED_POTENTIAL_EFFECT` — an analytical inference or forward-looking consequence.
+4. `UNKNOWN` — insufficient information to characterize the effect.
+
+The schema may also preserve separate forecast probability when a validated forecasting methodology supports it. Assessment confidence, forecast probability, effect direction, and magnitude must remain distinct values.
+
+### 9.5 Market Reaction and Market Data Evidence
+
+A market reaction is an observed or reported market response, not the same concept as economic relevance or the full economic impact of an event.
 
 The model must distinguish at least:
 
-1. `OBSERVED_MARKET_REACTION` — supported by an identified market data source.
-2. `SOURCE_REPORTED_REACTION` — reported by a publication or other source.
-3. `AI_INFERRED_IMPACT` — analytical interpretation without direct observed market data.
+1. `OBSERVED_MARKET_REACTION` — supported by an identified market data source and observation.
+2. `SOURCE_REPORTED_REACTION` — reported by a publication but not independently confirmed by integrated market data.
+3. `INFERRED_MARKET_IMPLICATION` — an analytical expectation or interpretation without direct observed market data.
 4. `UNKNOWN` — insufficient information.
 
 Where market data is integrated, a `MarketObservation` entity may record:
@@ -1143,7 +1168,7 @@ Where market data is integrated, a `MarketObservation` entity may record:
 
 Market data integration and its source rights require a separate architecture decision.
 
-A market observation must preserve its measurement time, source, unit, and baseline context. It must not imply causation between an event and a market movement without an explicit analytical assessment.
+A market observation must preserve its measurement time, source, unit, and baseline context. It records a market measurement; it does not establish that an event caused the movement. Any causal interpretation must be a separate analysis with its own evidence, methodology, and uncertainty.
 
 ## 10. Event History
 
@@ -1169,7 +1194,9 @@ Possible change types:
 - `TITLE_UPDATED`
 - `DESCRIPTION_UPDATED`
 - `STATUS_CHANGED`
-- `IMPORTANCE_UPDATED`
+- `IMPORTANCE_ASSESSED`
+- `ECONOMIC_RELEVANCE_ASSESSED`
+- `ECONOMIC_IMPACT_ASSESSED`
 - `ENTITY_ADDED`
 - `ARTICLE_ASSOCIATED`
 - `ARTICLE_DISASSOCIATED`
@@ -1895,7 +1922,7 @@ Indexes should support:
 - Duplicate candidate lookup.
 - Claim lookup by event and observation.
 - Evidence lookup by source, article, and origin type.
-- Analysis lookup by event and type.
+- Analysis lookup by event, analysis type, status, version, and creation time.
 - Report lookup by event and version.
 - Report-event lookup in both directions.
 - Publication decision lookup by report and decision.
@@ -1919,6 +1946,7 @@ Where applicable, enforce:
 - Active article-event association uniqueness.
 - Canonical article pair uniqueness for duplicate candidates.
 - Event-specific report version uniqueness.
+- Event analysis type and version uniqueness.
 - Source and checkpoint type uniqueness.
 - Processing step identity within a run.
 - Publication operation sequence uniqueness within a target/publication-key chain.
@@ -1943,17 +1971,31 @@ Deletion policies must protect historical evidence, reports, and provenance. Cas
 
 ## 17. Score and Confidence Semantics
 
-Scores must not be treated as interchangeable values.
+Scores and assessment outputs must not be treated as interchangeable values.
 
-For each score type, the system must document:
+The system must preserve the following distinctions:
 
-- What is being measured.
-- Valid range and scale.
+| Assessment | Question answered | What it must not represent |
+|---|---|---|
+| Event Importance | How significant and attention-worthy is this event overall? | Economic transmission strength, economic-effect magnitude, or forecast probability |
+| Economic Relevance | How direct and material is the event's connection to economic activity, policy, institutions, or markets? | The size, direction, or certainty of the resulting economic effect |
+| Economic Impact | What realized or potential economic consequences exist, by channel and time horizon? | Overall editorial importance or proof of causal market attribution |
+| Market Reaction | What market movement is observed or reported at a defined time and context? | Proof that the event caused that movement |
+
+For each assessment or score type, the system must document:
+
+- The question and construct being measured.
+- Valid categories, range, and scale where applicable.
 - Whether higher values indicate stronger or weaker results.
 - Calculation or assessment method.
-- Policy or model version.
+- Methodology, policy, and schema version.
 - Whether the value is calibrated.
-- Whether it is comparable across models, sources, or time periods.
+- Whether it is comparable across models, sources, event classes, or time periods.
+- Evidence requirements and uncertainty handling.
+
+Numeric values are optional. A numeric score must not be persisted or displayed without its defined scale, direction, interpretation, methodology version, and calibration status. Scores from different assessment types must not be added, averaged, or compared unless a separately approved and evaluated composite methodology explicitly defines that operation.
+
+An assessment's confidence value describes support for the assessment, not its importance or impact magnitude. A forecast probability must be represented separately and may be described as a probability only when its methodology and calibration support that interpretation.
 
 At minimum, separate semantics must be defined for:
 
@@ -1965,11 +2007,11 @@ At minimum, separate semantics must be defined for:
 - Claim verification confidence.
 - Event importance.
 - Economic relevance.
+- Economic impact by channel.
 - Analytical confidence.
+- Forecast probability, where used.
 
-A score must not be interpreted as a probability unless the calculation and calibration support that interpretation.
-
-Missing scores must remain null.
+Unknown, unavailable, not-established, and not-applicable values must remain distinguishable. Missing values must remain null or use the explicitly defined unknown state; they must not silently become zero, neutral, or a low score.
 
 ## 18. JSON Storage Policy
 
@@ -2352,7 +2394,7 @@ The following topics require formal ADRs or explicit approval before their imple
 8. Reprocessing, checkpoint, and workflow recovery guarantees.
 9. Multilingual content storage, translation, and reporting policy.
 10. Retention, archival, and deletion requirements.
-11. Score semantics, calibration, and versioning.
+11. Separate methodology, scales, calibration, and evaluation for event importance, economic relevance, and economic impact (GENI-ADR-019).
 12. Scheduling and worker execution strategy.
 
 Until the relevant decisions are accepted, implementation choices must remain replaceable and must not be presented as approved architecture.
@@ -2389,9 +2431,12 @@ The data model is acceptable for implementation when:
 26. Repository interfaces hide database-specific implementation details.
 27. Backup and restore procedures are documented and tested.
 28. Content retention respects applicable rights and licensing restrictions.
-29. Scores have documented semantics and versioning.
-30. Scheduled workflow execution can be tracked and made idempotent where scheduling is implemented.
-31. The model is consistent with Document 02 component and interface contracts.
+29. Event importance is independently represented and versioned.
+30. Economic relevance is separately represented with direct/indirect/contextual, not-established, and unknown outcomes.
+31. Economic impact is represented by channel, direction, magnitude where supported, time horizon, evidence status, and uncertainty.
+32. Scores and assessment confidence have distinct semantics, methodology/schema versions, and calibration metadata where applicable.
+33. Scheduled workflow execution can be tracked and made idempotent where scheduling is implemented.
+34. The model is consistent with Document 02 component and interface contracts.
 
 ## 30. Final Design Statement
 
