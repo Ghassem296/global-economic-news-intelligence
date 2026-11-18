@@ -605,11 +605,7 @@ def validate_distribution_authorization_contract() -> None:
             "complete set of exact allowed RightsAssessment references",
             "RFC 8785 JSON Canonicalization Scheme",
             "outbound_payload_sha256",
-            "upstream permission dependency",
-            "fail closed",
-            "RFC 8785 JSON Canonicalization Scheme",
-            "outbound_payload_sha256",
-            "upstream permission dependency",
+            "upstream rights dependencies",
             "fail closed",
         ),
     }
