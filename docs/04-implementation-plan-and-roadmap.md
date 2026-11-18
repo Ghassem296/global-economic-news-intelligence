@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.2
+**Version:** 1.3
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -541,6 +541,12 @@ The persistence layer must support:
 - Processing status and error records.
 - Recovery after interruption.
 - Auditability of publication and review decisions.
+- Unique EventMatchCase identity per ArticleRevision and development key.
+- Versioned, immutable candidate evaluations with deterministic input fingerprints.
+- Atomic EventMatchDecision creation and EventMatchCase.effective_decision_id updates.
+- Case-scoped candidate and decision references that prevent cross-case selection.
+- Atomic ArticleEventLink activation/deactivation with its authorizing decision.
+- At most one effective decision and one active ArticleEventLink per case.
 
 A polymorphic reference without enforceable integrity must not silently replace required foreign-key relationships.
 
@@ -816,20 +822,18 @@ This is the core product capability.
 ### Tasks
 
 1. Implement EventDetector.
-2. Implement candidate event generation.
-3. Implement EventMatcher.
-4. Implement semantic and lexical matching signals.
-5. Implement entity and temporal matching signals.
-6. Implement EventService.
-7. Implement article-event association.
-8. Implement event lifecycle transitions.
-9. Implement EventHistory.
-10. Implement event relationship handling.
-11. Implement event merge and split operations.
-12. Implement EventMatchCase, EventMatchCandidate, and EventMatchDecision lifecycle.
-13. Implement authorized review routing and successor-decision handling for ambiguous or corrected cases.
-14. Implement ArticleEventLink creation and deactivation through EventService with exact case and decision provenance.
-15. Implement event matching evaluation datasets.
+2. Identify distinct development scopes within each immutable ArticleRevision.
+3. Create or retrieve one EventMatchCase per ArticleRevision/development scope.
+4. Retrieve plausible existing Events for each case.
+5. Implement EventMatcher and semantic, lexical, entity, temporal, and geographic evaluation signals.
+6. Persist immutable EventMatchCandidate evaluations with matching-policy versions and input fingerprints.
+7. Implement case-level EventMatchDecision creation and supersession.
+8. Implement authorized event creation for NEW_EVENT_CANDIDATE outcomes; after creation, record the new Event as a candidate and create a subsequent MATCH decision before creating an ArticleEventLink.
+9. Implement EventService application of MATCH decisions and case-scoped ArticleEventLink creation/deactivation.
+10. Implement ReviewService routing and successor-decision handling for ambiguous or corrected cases.
+11. Implement event lifecycle transitions, EventHistory, and event relationships.
+12. Implement explicit event merge and split operations.
+13. Implement event matching evaluation datasets.
 
 ### Event Identity Policy
 
@@ -846,20 +850,26 @@ For example:
 
 ### Event Resolution Outcomes
 
-Each candidate must result in an explicit resolution:
+The unit of final resolution is EventMatchCase, not an individual EventMatchCandidate. A case represents one development within one immutable ArticleRevision and may contain multiple candidate Events.
 
-- Associate with an existing event.
-- Create a new event.
-- Mark as ambiguous or requiring review.
-- Reject the candidate association.
+A resolved case must have one effective EventMatchDecision with one of these outcomes:
+
+- `MATCH`: exactly one eligible candidate in the same case is selected. Only this outcome may authorize an active ArticleEventLink.
+- `NEW_EVENT_CANDIDATE`: a proposal to create a new Event; it does not create the Event or an ArticleEventLink. After separate event-creation authorization and idempotent creation, the new Event must be recorded as a candidate and a subsequent MATCH decision must authorize the association.
+- `NO_MATCH`: none of the evaluated candidate Events matches the development represented by this case. Other cases from the same ArticleRevision may still resolve to other Events.
+- `AMBIGUOUS`: multiple plausible candidates or insufficient evidence prevent a reliable decision.
+- `REVIEW_REQUIRED`: policy requires an authorized human review before resolution.
+
+Candidate-level processing statuses such as INELIGIBLE or SUPERSEDED are not case-level decision outcomes. An unresolved case must remain explicit and must not create an active association.
 
 The system must preserve:
 
-- Candidate signals and scores.
-- Matching method and policy version.
-- Final decision.
-- Decision provenance.
-- Relevant event history.
+- Candidate signals, scores, policy versions, and candidate-input fingerprints.
+- Immutable candidate evaluations and their relationship to the case.
+- Final case-level decision and any superseded decision.
+- Decision actor, rationale, and provenance.
+- Review task and reviewer outcome where applicable.
+- Exact case and decision references on every applied ArticleEventLink.
 
 Semantic similarity is a required matching capability, but a dedicated vector database is not automatically required.
 
@@ -903,7 +913,6 @@ Historical event records must not be silently deleted or rewritten.
 - Every resolved development has one effective case-level decision; unresolved cases remain explicit.
 - Every active ArticleEventLink references its EventMatchCase and effective MATCH decision.
 - Human corrections create successor decisions and preserve prior link history.
-- Event identity operations are traceable.
 - False merges and event fragmentation are measured.
 
 ---
@@ -984,8 +993,9 @@ Source independence must account for syndication and shared origin. Multiple cop
 - Evidence records and precise source references.
 - Claim assessments.
 - Contradiction and uncertainty records.
-- Versioned economic analysis.
-- Analysis evaluation results.
+- Separate versioned Event Importance, Economic Relevance, and Economic Impact Analysis outputs.
+- Optional market-reaction assessments backed by actual market observations.
+- Separate evaluation datasets and reports for all three assessment types.
 
 ### Exit Criteria
 
@@ -994,7 +1004,11 @@ Source independence must account for syndication and shared origin. Multiple cop
 - Source attribution is retained.
 - Conflicting information is represented.
 - Facts, source claims, analysis, and forecasts are distinguishable.
-- Market impact categories are supported by the available data.
+- Event Importance is evaluated independently of Economic Relevance and Economic Impact.
+- Economic Relevance is evaluated independently of Event Importance and demonstrated impact.
+- Economic Impact supports channel, direction, magnitude/range, horizon, evidence status, and uncertainty where supported.
+- Missing information remains unknown rather than being encoded as zero.
+- Observed market reactions are not described as proof of event causality.
 - Completed analyses are versioned and reproducible.
 
 ---
@@ -1047,7 +1061,7 @@ The data model should also support reports covering multiple events, such as per
 
 ### Publication Policy
 
-A report must receive a publication decision before delivery.
+A report must receive a publication decision before external publication. Recipient delivery is separate and must also satisfy the applicable distribution policy. A PublicationDecision records eligibility; it does not prove target-side publication success. PublicationService executes PUBLISH, REPLACE, and WITHDRAW, while ReportDelivery handles recipient/destination delivery independently.
 
 Initial outcomes:
 
