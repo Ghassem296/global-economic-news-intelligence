@@ -628,7 +628,7 @@ def validate_registry_snapshot_provenance() -> None:
     """Verify that the registry's inspected baseline is a real commit in this checkout's history."""
     registry = read_text(DOC_REGISTRY)
     matches = re.findall(
-        r"^\\*\\*Baseline Commit Inspected:\\*\\*\\s+`([0-9a-f]{40})`\\s*$",
+        r"^\*\*Baseline Commit Inspected:\*\*\s+`([0-9a-f]{40})`\s*$",
         registry,
         re.MULTILINE,
     )
@@ -668,7 +668,7 @@ def validate_roadmap_document_inventory() -> None:
         "## 6. Development Stage 0",
         "Roadmap project structure",
     )
-    code_block = re.search(r"```text\\s*\\n([\\s\\S]*?)\\n```", structure)
+    code_block = re.search(r"```text\s*\n([\s\S]*?)\n```", structure)
     if not code_block:
         fail("Roadmap project structure text tree is missing")
     lines = code_block.group(1).splitlines()
@@ -682,7 +682,7 @@ def validate_roadmap_document_inventory() -> None:
     directory_stack = [root_line]
     listed_files: set[str] = set()
     for line in lines:
-        match = re.match(r"^([│ ]*)(?:├──|└──)\\s+(.+?)\\s*$", line)
+        match = re.match(r"^([│ ]*)(?:├──|└──)\s+(.+?)\s*$", line)
         if not match:
             continue
         depth = len(match.group(1)) // 4
