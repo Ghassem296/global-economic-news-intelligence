@@ -96,7 +96,7 @@ The decision status recorded in the registry must match the status in the corres
 
 ## 4. Initial ADR Inventory
 
-The project has identified nineteen architectural decision topics.
+The project has identified twenty architectural decision topics.
 
 The registry distinguishes between:
 
@@ -109,7 +109,7 @@ These are separate properties and must not be confused.
 
 ### 4.1 Individual ADR Documents
 
-The following nineteen individual ADR documents are committed to the published main branch. All nineteen have status Proposed; none is an approved architectural decision.
+The following twenty individual ADR documents are committed to the published main branch. All twenty have status Proposed; none is an approved architectural decision.
 
 | ADR ID | Title | Document Availability | Decision Status | Repository Path |
 |---|---|---|---|---|
@@ -132,6 +132,7 @@ The following nineteen individual ADR documents are committed to the published m
 | GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | Published | Proposed | `decisions/GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` |
 | GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | Published | Proposed | `decisions/GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md` |
 | GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | Published | Proposed | `decisions/GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` |
+| GENI-ADR-020 | Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture | Published | Proposed | `decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md` |
 
 **Publication terminology:**
 
@@ -148,9 +149,9 @@ The existence of an ADR file does not imply that its implementation is complete.
 
 ### 4.2 Decision Topics Without Individual ADR Documents
 
-All nineteen registered decision topics currently have individual ADR files in published main branch. There are no remaining uncreated topics in the current registry.
+All twenty registered decision topics currently have individual ADR files in published main branch. There are no remaining uncreated topics in the current registry.
 
-Document publication does not imply approval. All nineteen ADRs remain Proposed pending explicit Project Owner decisions.
+Document publication does not imply approval. All twenty ADRs remain Proposed pending explicit Project Owner decisions.
 
 ### 4.3 Inventory Rules
 
