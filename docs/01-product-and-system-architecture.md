@@ -1078,12 +1078,13 @@ The high-level implementation sequence is:
 - Event detection and matching.
 - Event lifecycle and history.
 - Evidence management.
+- Economic relevance assessment and its initial evaluation.
 - Event matching evaluation.
 
 ### Development Phase C — Analysis and Publication
 
 - Importance assessment.
-- Economic impact analysis.
+- Economic impact analysis by channel.
 - Event dossier generation.
 - Publication quality gates.
 - Review handling.
