@@ -1176,31 +1176,20 @@ These constraints describe the current proposed architecture. Any change to an a
 
 Architectural decisions must be documented and tracked through the ADR governance process.
 
-The following individual ADR documents are currently published in the project documentation set:
+The project has nineteen registered architectural decision topics, and all nineteen have individual ADR documents in the current pull-request branch.
 
-| ADR | Subject | Current Status |
-|---|---|---|
-| GENI-ADR-001 | Event-Centric Intelligence Architecture | Proposed |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | Proposed |
-| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | Proposed |
-| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | Proposed |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | Proposed |
-| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | Proposed |
+All nineteen ADRs currently have status Proposed. None is an accepted architectural decision until the Project Owner explicitly records approval.
 
-The project has identified nineteen architectural decision topics. Six currently have individual ADR documents. The remaining thirteen topics are tracked in the ADR Registry and do not yet have individual decision documents.
+The topics cover:
 
-All six published ADRs currently have the status Proposed. None must be treated as an accepted architectural decision until explicit approval is recorded.
-
-Other architectural topics requiring formal decisions include:
-
-- Semantic search, embedding generation, and vector storage.
-- Publication quality gates and automated publishing policy.
-- Human review, corrections, and withdrawals.
-- Persistence technology, SQLite concurrency, and migration strategy.
-- Recovery, idempotency, and workflow execution guarantees.
-- Market data integration and market-impact classification.
-- Separate methodology, scales, calibration, and evaluation rules for event importance, economic relevance, and economic impact (GENI-ADR-019).
-- LLM budgets, cost tracking, and evaluation methodology.
+- Event-centric architecture, article deduplication, and event identity/matching.
+- Editorial focus, importance, economic relevance, and economic impact.
+- Evidence provenance and uncertainty.
+- LLM execution, deterministic workflows, budgets, and evaluation.
+- News acquisition, multilingual processing, and content rights.
+- Persistence, semantic retrieval, idempotency, and recovery.
+- Publication quality gates, human review, corrections, withdrawals, and delivery channels.
+- Market data integration and impact classification.
 
 The complete list of decision topics and their current tracking status is maintained in:
 
