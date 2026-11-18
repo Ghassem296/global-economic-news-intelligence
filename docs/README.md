@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.9  
+**Version:** 1.10
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
