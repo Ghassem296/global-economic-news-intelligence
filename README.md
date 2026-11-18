@@ -212,6 +212,7 @@ global-economic-news-intelligence/
     ├── 11-economic-taxonomy-specification.md
     ├── 12-testing-and-evaluation-strategy.md
     ├── 13-deployment-operations-and-observability.md
+    ├── 14-data-protection-and-privacy-specification.md
     │
     ├── adr/
     │   ├── README.md
