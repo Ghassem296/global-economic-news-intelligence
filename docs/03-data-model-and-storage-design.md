@@ -1420,19 +1420,24 @@ A `HOLD_FOR_REVIEW` decision must create or reference an operational review task
 
 ### 11.7 ReviewRecord
 
-Represents a human review or review action.
+Represents an operational human-review task for a typed domain subject. ReviewRecord is a task and audit record; it is not itself an authoritative event-matching or publication decision.
 
 Fields:
 
 - `id`
-- `report_id`
-- `publication_decision_id`
+- `review_type`
+- `subject_type`
+- `subject_reference`
+- `related_decision_reference` nullable
+- `report_id` nullable
+- `publication_decision_id` nullable
 - `review_status`
 - `reviewer_reference` nullable
 - `assigned_at` nullable
 - `due_at` nullable
 - `review_reason`
 - `review_notes`
+- `review_outcome` nullable
 - `created_at`
 - `completed_at`
 - `metadata`
@@ -1441,26 +1446,21 @@ Review states may include:
 
 - `PENDING`
 - `IN_PROGRESS`
-- `APPROVED`
-- `CHANGES_REQUESTED`
-- `REJECTED`
+- `COMPLETED`
 - `CANCELLED`
 
-A review record must support a real operational review queue.
+Review types identify the subject and required follow-up, including publication review and event-matching review. The exact type vocabulary and authorization matrix must be finalized under ADR-014.
 
-The operational review queue must support:
+Constraints and behavior:
 
-- Finding pending reviews.
-- Assigning or reassigning a reviewer.
-- Recording review ownership.
-- Recording due dates where required.
-- Recording review actions and outcomes.
-- Identifying overdue or abandoned reviews.
-- Creating a new publication decision after a material review outcome where required.
-
-Review history must not be silently overwritten.
-
-Reviewer identity and authorization must be managed by the application's security layer.
+- Exactly one typed subject must be identified by `subject_type` and `subject_reference`; the reference must be validated by the application layer where a database foreign key cannot express the polymorphic relationship.
+- For publication review, the subject and related decision must resolve to the relevant report version and PublicationDecision.
+- For event-matching review, the subject must identify an EventMatchCase and the related decision must identify the EventMatchDecision under review.
+- Review completion records the reviewer, time, and outcome. It does not mutate the related decision.
+- An event-matching review outcome that changes the effective result creates a new EventMatchDecision referencing the previous effective decision.
+- A publication review outcome that changes publication eligibility creates a new PublicationDecision.
+- Review history must not be silently overwritten. Reassignment and status changes must be auditable.
+- Reviewer identity and authorization must be managed by the application's security layer.
 
 ### 11.8 PublicationRecord
 
@@ -1974,7 +1974,7 @@ Indexes should support:
 - Event lookup by status, topic, and update time.
 - Event lookup by occurrence time.
 - Article-event lookup in both directions.
-- Event match candidate lookup by status and score.
+- Event match case lookup by ArticleRevision and development key.\n- Event match candidate lookup by case, status, and score.\n- Event match decision lookup by case and decision time.\n- Event match review lookup by status, assignment, and due date.
 - Duplicate candidate lookup.
 - Claim lookup by event and observation.
 - Evidence lookup by source, article, and origin type.
@@ -1999,7 +1999,7 @@ Where applicable, enforce:
 
 - Source-scoped external article identity.
 - Article revision number uniqueness.
-- Active article-event association uniqueness.
+- Event match case uniqueness by ArticleRevision and development key.\n- Candidate uniqueness by case and candidate Event.\n- One effective decision per EventMatchCase.\n- Active article-event association uniqueness.
 - Canonical article pair uniqueness for duplicate candidates.
 - Event-specific report version uniqueness.
 - Event analysis type and version uniqueness.
@@ -2010,7 +2010,7 @@ Where applicable, enforce:
 - Publication attempt number uniqueness within a publication operation.
 - Delivery idempotency key uniqueness within its scope.
 - Schedule occurrence uniqueness.
-- Event identity operation input/output uniqueness.
+- Event identity operation input/output uniqueness.\n- EventMatchDecision selected-candidate and case consistency.\n- EventMatchDecision supersession-chain consistency.
 - Entity alias uniqueness where the language and alias type make it unambiguous.
 
 Only one unresolved side-effecting publication operation should be allowed to modify the same target/publication-key chain at a time; enforce this through an appropriate transaction/locking rule or database constraint for the selected engine. Do not serialize unrelated publication keys merely because they share a target.
