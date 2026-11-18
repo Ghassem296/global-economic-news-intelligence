@@ -1,9 +1,10 @@
 # Architecture Decision Records (ADR) Registry
 
 **Project:** Global Economic News Intelligence  
+**Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.10  
+**Version:** 1.11  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
