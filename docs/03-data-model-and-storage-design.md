@@ -1994,6 +1994,7 @@ The logical table inventory is:
 |---|---|
 | `sources` | Source configuration |
 | `source_rights_profiles` | Versioned source rights and license context |
+| `source_licenses` | Referenced licenses and contractual terms associated with sources |
 | `content_access_records` | Source/content access and retrieval provenance |
 | `rights_assessments` | Operation-specific permission outcomes |
 | `content_retention_policies` | Versioned content retention rules |
@@ -2357,9 +2358,13 @@ Where content must be deleted, the system should preserve legally permissible me
 
 The following are proposed logical records aligned with GENI-ADR-013. Their final fields, permission vocabulary, retention/deletion mechanics, and physical persistence design remain subject to formal ADR acceptance and detailed implementation design.
 
-**SourceRightsProfile / SourceLicense**
+**SourceRightsProfile**
 
-A versioned profile linked to a Source. It should preserve the applicable license/contract reference, rights-document reference, profile status, permitted and restricted operation categories, content types, effective dates, verification date, retention-policy reference, supersession lineage, and the reviewer/authority that recorded the profile. Source defaults must not override more restrictive content-specific terms.
+A versioned profile linked to a Source and, where applicable, one or more SourceLicense records. It should preserve the rights-document reference, profile status, permitted and restricted operation categories, content types, effective dates, verification date, retention-policy reference, supersession lineage, and the reviewer/authority that recorded the profile. Source defaults must not override more restrictive content-specific terms.
+
+**SourceLicense**
+
+A referenced license or contractual instrument associated with a SourceRightsProfile. It should identify the licensor/provider, license or agreement reference, scope and permitted use categories, restrictions, effective/expiry dates, and supporting evidence reference. The system stores provenance and approved policy interpretation; it does not generate legal conclusions.
 
 **ContentAccessRecord**
 
@@ -2391,12 +2396,15 @@ An append-only record of material content-use operations, including operation ty
 
 The `rights_status` field on Article/ArticleRevision is only a summary projection. It is not a substitute for versioned, operation-specific RightsAssessment records. Exact schema and policy rules remain provisional until GENI-ADR-013 is accepted.
 
+## 23. Repository Contracts
+
 The application layer should depend on domain-oriented repository interfaces.
 
 Initial repository contracts include:
 
 - `SourceRepository`
 - `SourceRightsProfileRepository` (when GENI-ADR-013 is accepted)
+- `SourceLicenseRepository` (when GENI-ADR-013 is accepted)
 - `ContentAccessRepository` (when GENI-ADR-013 is accepted)
 - `RightsAssessmentRepository` (when GENI-ADR-013 is accepted)
 - `ContentRetentionPolicyRepository` (when GENI-ADR-013 is accepted)
