@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.16
+**Version:** 1.17
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -483,8 +483,10 @@ The first implementation slice should introduce the minimum required concepts, i
 - ClaimAssessment, ClaimAssessmentEvidenceLink, and append-only AssessmentHistory.
 - Separate Analysis records for each assessment type.
 - Report with immutable version lineage.
-- PublicationDecision, typed ReviewRecord, and append-only ReviewAction.
-- DeliveryRecord and DeliveryAttempt.
+- PublicationDecision, typed ReviewRecord, immutable ReviewContextLink, and append-only ReviewAction.
+- DeliveryRecord and DeliveryAttempt, with recipient-specific distribution authorization implemented in the delivery stage.
+- ProcessingRun/ProcessingStep and LLMUsageRecord as runtime execution and usage records.
+- Versioned, human-reviewed evaluation datasets and EvaluationRun/EvaluationResult artifacts.
 
 Additional concepts from the approved data model should be introduced when required by a concrete workflow.
 
@@ -508,7 +510,7 @@ Implement and test:
 - Analysis versioning.
 - Report versioning.
 - Publication decision rules.
-- Review task transitions and append-only ReviewAction history for article-deduplication, event-matching, and publication review types.
+- Review task transitions, exact ReviewContextLink references, and append-only ReviewAction history for article-deduplication, event-matching, and publication review types only. Claim-assessment, report-version, and content-rights review remain disabled until their specified successor workflows and authorization tests are implemented.
 - Delivery idempotency boundaries.
 
 ### Initial Evaluation Work
@@ -899,9 +901,12 @@ This is the core product capability.
 8. Implement the versioned EventCreationPolicy and authorized, idempotent creation for NEW_EVENT_CANDIDATE outcomes using the preassigned proposed_event_reference; after creation, record the new Event as a candidate and create a subsequent MATCH decision before creating an ArticleEventLink.
 9. Implement EventService application of MATCH decisions and case-scoped ArticleEventLink creation/deactivation.
 10. Implement ReviewService routing and successor-decision handling for ambiguous or corrected cases.
-11. Implement event lifecycle transitions, EventHistory, and event relationships.
-12. Implement explicit event merge and split operations.
-13. Implement event matching evaluation datasets.
+11. Implement the canonical EventLifecyclePolicy transition matrix, guard validation, and append-only EventHistory linkage.
+12. Implement EventRelationship using the canonical eight-type vocabulary and its direction/cycle rules.
+13. Implement EventIdentityOperation persistence with actor/authorization, status, idempotency, ordered input/output links, and EventHistory operation references.
+14. Implement deterministic historical identity resolution returning CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED; never choose an arbitrary split successor.
+15. Keep automated merge/split execution gated until GENI-ADR-011 is accepted, identity-operation recovery is tested, and successor ArticleEventLink reconciliation is verified.
+16. Implement event matching evaluation datasets.
 
 ### Event Identity Policy
 
@@ -1109,6 +1114,7 @@ Convert event intelligence into structured, versioned reports.
 13. Implement confirmed withdrawal and uncertain-outcome reconciliation.
 14. Implement report storage and add report evaluation datasets.
 15. Apply rights checks for source attribution, quotations, derived-output use, publication, and recipient distribution; preserve permitted source references independently of full-text retention.
+16. Implement the canonical six-family ReviewService successor routing, but enable claim-assessment, report-version, and content-rights review only after their successor workflows and authorization tests pass.
 
 ### Initial Report Structure
 
@@ -1210,17 +1216,20 @@ Enable controlled automated processing and text report delivery.
 ### Tasks
 
 1. Implement ReportDelivery as a recipient/destination delivery capability, separate from public publication execution.
-2. Define delivery destination interfaces.
-3. Implement delivery intent records.
-4. Implement delivery attempt history.
-5. Implement idempotent delivery operations.
-6. Implement scheduled collection.
-7. Implement scheduled processing.
-8. Implement event monitoring.
-9. Implement update detection.
-10. Implement operational status reporting.
-11. Implement retry and reconciliation behavior.
-12. Add delivery and scheduling integration tests.
+2. Define delivery destination interfaces and the versioned distribution-authorization policy.
+3. Persist immutable DistributionAuthorizationDecision records bound to the exact report version, recipient, destination, mode, channel, content scope, and policy version.
+4. Require an applicable CUSTOMER_DISTRIBUTION RightsAssessment and an effective, unexpired ALLOW decision before dispatch.
+5. Implement delivery intent records.
+6. Implement delivery attempt history.
+7. Implement idempotent delivery operations.
+8. Re-check authorization expiry/revocation before dispatch and preserve completed delivery history.
+9. Implement scheduled collection.
+10. Implement scheduled processing.
+11. Implement event monitoring.
+12. Implement update detection.
+13. Implement operational status reporting.
+14. Implement retry and reconciliation behavior.
+15. Add delivery and scheduling integration tests.
 
 ### Scheduling Strategy
 
