@@ -2,10 +2,10 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
-**Last Updated:** 2026-11-17
+**Last Updated:** 2026-11-18
 
 ---
 
@@ -492,19 +492,23 @@ A revised report must create a new version rather than silently overwriting prev
 Responsibilities:
 
 - Evaluate publication eligibility.
-- Apply publication quality gates.
-- Publish eligible reports.
-- Route held reports to a review queue.
-- Record review outcomes.
-- Distribute event updates.
-- Prevent duplicate publication.
-- Maintain delivery status.
-- Support corrections and withdrawals.
-- Support future delivery channels.
+- Apply publication quality and security gates.
+- Execute approved publication, replacement, and withdrawal operations.
+- Route held reports to an operational review queue.
+- Preserve publication-operation and attempt history.
+- Distribute reports or notifications through separate delivery operations.
+- Prevent unintended duplicate publication and delivery.
+- Record external publication and delivery references.
+- Support corrections, supersession, and withdrawal.
+- Support future publication targets and delivery channels.
 
-Publication and delivery are separate responsibilities.
+Publication and delivery are separate business operations with separate records, state transitions, retry policies, and observability.
 
-A report may be generated without being approved for publication.
+**Publication** makes an approved report version available at a configured publication target, such as a public website, public API, or public content feed. A channel must be explicitly classified as a publication target when it makes content publicly or generally available.
+
+**Delivery** sends a report, a publication link, or a notification to a configured recipient or delivery destination, such as an email recipient or subscriber channel. A destination may support more than one operation, but each operation must be classified and recorded separately.
+
+A publication decision is an authorization outcome, not proof that publication occurred. A report is considered published at a target only when a corresponding publication operation has a confirmed successful result.
 
 The publication policy must support:
 
@@ -513,17 +517,25 @@ The publication policy must support:
 - `HOLD_FOR_REVIEW`
 - `REJECT`
 
-A held report must be associated with a review record or queue entry containing its status, reason, timestamps, and eventual outcome.
+A held report must be associated with a review record or queue entry containing its status, reason, timestamps, and eventual outcome. An authorized review outcome must be recorded. Approval after review must result in a new publication decision; the earlier decision and review history must not be overwritten.
 
-The initial implementation must define who or what consumes the review queue.
+The publication execution workflow must create a durable publication-operation record before making an external side effect. The operation must identify the report version, target, operation type, applicable publication decision, and idempotency key. Each external attempt must be recorded separately.
 
-If no authorized reviewer is available, the system must not silently publish held content.
+Publication operations must distinguish:
 
-Published reports must support correction, supersession, and withdrawal.
+- `PUBLISH`: make an approved report version available at a target.
+- `REPLACE`: publish a corrected or superseding report version in place of an earlier publication.
+- `WITHDRAW`: remove or formally withdraw an existing publication where the target supports it.
 
-Previous versions and publication history must remain traceable.
+A replacement must reference the earlier publication it supersedes. The previous publication remains the effective publication until the replacement is confirmed successful. A failed replacement must not silently invalidate the previous publication.
 
-Delivery operations must be idempotent so that retries do not produce unintended duplicate publications.
+A withdrawal must reference the publication being withdrawn and preserve its reason and authorization context. If a target cannot physically remove content, the system must record the limitation and apply the approved withdrawal or tombstone procedure.
+
+A timeout or connection failure must not be assumed to mean that an external publication failed. When the target outcome is uncertain, the operation must enter reconciliation before another side-effecting attempt is made. Retries must reuse the same logical operation and idempotency key.
+
+Delivery must remain independent from publication. A delivery failure must not reverse a successful publication, and a successful delivery must not imply that a public publication exists. A delivery that sends a publication link must reference a confirmed successful publication operation. Direct delivery of report content may be allowed independently when the relevant delivery policy authorizes it.
+
+The initial implementation must define the publication targets, authorized withdrawal mechanism, review owner, and supported delivery destinations. Secrets and credentials must be referenced through secure configuration and must not be stored in destination references or ordinary metadata.
 
 ### 5.11 Scheduling and Workflow Orchestration
 
@@ -776,14 +788,14 @@ The complete transition rules and event identity policy are subject to the relev
 
 ## 11. Publication Policy
 
-Every generated report receives a publication decision.
+Every generated report receives an immutable publication decision. A publication decision describes whether a report version is eligible for publication; it does not record the external publication operation itself.
 
 | Decision | Meaning |
 |---|---|
-| `PUBLISH` | Sufficient quality and evidence for publication |
-| `PUBLISH_WITH_CAVEATS` | Publish with explicit limitations or uncertainty |
-| `HOLD_FOR_REVIEW` | Do not publish automatically; route to review |
-| `REJECT` | Invalid, irrelevant, or insufficiently useful output |
+| `PUBLISH` | The report version meets the requirements for publication |
+| `PUBLISH_WITH_CAVEATS` | The report version may be published only with explicit caveats and limitations |
+| `HOLD_FOR_REVIEW` | Do not publish; route to an authorized review process |
+| `REJECT` | The report version is not eligible for publication |
 
 Publication decisions should consider:
 
@@ -798,18 +810,51 @@ Publication decisions should consider:
 - Report validity.
 - Provenance completeness.
 - Security and content-policy checks.
+- Applicable content-access and licensing restrictions.
 
-Publication decisions must be recorded independently of report content and delivery outcomes.
+A decision must preserve its reasons, policy version, timestamp, and relationship to any decision it supersedes. A changed outcome creates a new decision rather than mutating the earlier record.
 
-A held report must remain unpublished until an authorized review outcome permits further action.
+A `HOLD_FOR_REVIEW` decision must create or reference an operational review task. The report remains unpublished until an authorized review outcome permits further processing. An approval, approval with caveats, or other material review outcome must be represented by a new effective publication decision. A review record alone is not a publication authorization.
 
-A rejected report must retain its decision and reason for auditability.
+For `PUBLISH_WITH_CAVEATS`, the caveats must be explicit, persisted, and included in the published representation. The publication execution must not silently omit them.
 
-Published reports must support correction, supersession, and withdrawal.
+## 11.1 Publication Execution
 
-Automatic publication must never bypass security, quality, or provenance requirements.
+Publication execution is a separate workflow from policy evaluation and review.
 
-The detailed publication, quality-gate, human-review, correction, and withdrawal policies must remain consistent with their corresponding ADRs and governance documents.
+Only a report version with an effective `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision may be submitted for publication. The execution must also verify that the decision has not been superseded or invalidated and that all required review, rights, security, and target-specific conditions are satisfied.
+
+Each logical publication operation must record:
+
+- The report version.
+- The effective publication decision, when required.
+- The publication target.
+- The operation type: `PUBLISH`, `REPLACE`, or `WITHDRAW`.
+- The target publication reference for replacement or withdrawal.
+- A stable idempotency key.
+- The operation status and timestamps.
+- External references and outcome information.
+- Each individual attempt and any recovery or reconciliation action.
+
+A successful publication operation is the evidence that the report version became available at the specified target. The publication state for a target must be derived from the history of successful publication operations, not inferred from the policy decision or from a delivery record.
+
+A new corrected report must be a new immutable report version. Publishing it as a replacement must reference the earlier publication. The earlier publication remains effective if replacement fails; it becomes superseded only after the target confirms the replacement.
+
+A withdrawal must reference an existing publication and retain the reason and authorization context. A failed or uncertain withdrawal must not be represented as completed.
+
+If an external request times out after it may have succeeded, the operation must be marked for reconciliation. The system must query or otherwise reconcile the target before retrying a side effect. Where the target does not support idempotency or status lookup, the duplicate-publication risk and manual reconciliation path must be documented.
+
+## 11.2 Delivery
+
+Delivery is the separate act of sending report content, a confirmed publication link, or a notification to a recipient or delivery destination.
+
+Delivery may occur after publication or independently when an approved delivery policy permits direct distribution of report content. A delivery that contains a publication link must reference a confirmed successful publication operation.
+
+Delivery status and history must not change publication status. Publication status and history must not be inferred from delivery status. Each operation must have its own idempotency key, attempts, external reference, and recovery handling.
+
+A rejected or held report must not be delivered through a path that bypasses its applicable publication or distribution policy.
+
+Automatic publication must never bypass security, quality, provenance, review, or content-rights requirements.
 
 ## 12. Report Structure
 
