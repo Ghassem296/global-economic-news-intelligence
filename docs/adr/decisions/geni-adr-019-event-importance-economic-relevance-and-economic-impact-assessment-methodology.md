@@ -1,115 +1,292 @@
 # GENI-ADR-019 — Event Importance, Economic Relevance, and Economic Impact Assessment Methodology
 
+**Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-019  
 **Title:** Event Importance, Economic Relevance, and Economic Impact Assessment Methodology  
-**Version:** 0.1  
-**Status:** Proposed — Awaiting Project Owner Review  
+**Version:** 0.2  
+**Status:** Proposed  
 **Priority:** P1  
-**Created:** 2026-11-18  
-**Last Updated:** 2026-11-18  
+**Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
-**Approval:** No approval has been recorded.
+**Approved By:** Not yet approved  
+**Approval Date:** N/A
+
+---
 
 ## 1. Context and Problem Statement
 
-Previous scoring risked conflating overall event importance, economic relevance, and economic impact. These answer different questions. Market reaction is not proof of causality, and missing information must not become a zero score.
+The product previously risked using one score to describe three different concepts: overall event importance, economic relevance, and economic impact. Importance determines follow-up priority; relevance describes the connection to the economy and markets; impact describes consequences by channel, direction, magnitude, and horizon. An event may be important without being economically relevant, and relevance may be clear before impact is established. Missing evidence must not be encoded as zero. Observed market movement does not by itself establish causality.
 
-This is a proposed decision document. Its recommendation does not become an approved architectural constraint until the Project Owner explicitly accepts it.
+This ADR is a proposal for formal review. It does not approve an implementation or override another decision. The existence of this document does not imply acceptance.
 
 ## 2. Decision Question
 
-How should the system independently assess importance, economic relevance, and economic impact while preserving uncertainty, evidence, and methodology versions?
+How should the three assessments be separated in domain semantics, persistence, methodology, calibration, and evaluation?
 
 ## 3. Requirements and Constraints
 
-- Preserve provenance, auditability, and historical traceability.
-- Keep domain decisions separate from candidate generation, processing state, and external side effects.
-- Version policies and derived assessments that may change over time.
-- Represent uncertainty and unavailable information explicitly.
-- Keep infrastructure replaceable where the domain does not require a specific provider.
-- Do not treat a recommendation, draft, or implementation progress as approval.
+### 3.1 Functional Requirements
+
+- Semantic independence of the three assessment questions.
+- Traceable evidence and methodology versioning.
+- Explicit unknown/insufficient-evidence outcomes.
+- Separation of confidence, forecast probability, and effect magnitude.
+- No causal claim from market reaction alone.
+- Independent evaluation and calibration for each assessment.
+
+### 3.2 Technical Constraints
+
+- Domain contracts must not depend on a specific external provider unless explicitly approved.
+- All relevant policies, schemas, and derived outputs must be versioned.
+- Critical state transitions must be auditable and testable.
+- Missing or unavailable information must remain explicit.
+
+### 3.3 Business and Product Constraints
+
+- The initial product must remain operationally simple.
+- Implementation sequencing must follow documented dependencies.
+- Product claims must not exceed the capability or evidence actually available.
+
+### 3.4 Security and Privacy Constraints
+
+- External source content and model output are untrusted input.
+- Credentials and sensitive operational data must not be exposed in ordinary logs.
+- Access to privileged actions must follow least-privilege authorization.
+
+### 3.5 Operational and Cost Constraints
+
+- Concurrency, retries, resource usage, and external service calls must be bounded.
+- Operational metrics must make failure and uncertainty visible.
+- Numeric thresholds must be based on measurements or explicit policy approval.
+
+### 3.6 Legal and Content-Rights Constraints
+
+- Technical access does not imply permission to store, process, transform, or republish content.
+- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed where applicable.
+
+### 3.7 Explicit Non-Goals
+
+- This ADR does not set unmeasured numeric service levels or model-quality thresholds.
+- This ADR does not select a vendor or provider where comparative evidence is unavailable.
+- This ADR does not approve its recommendation; explicit Project Owner approval remains required.
 
 ## 4. Alternatives Considered
 
-A. One composite event score. B. Two scores combining relevance and impact. C. Three independent assessments with separate schemas, methodology versions, calibration, and evaluation.
+### 4.1 A — One composite event score
 
-## 5. Recommended Decision
+**Advantages:** Simple ranking and minimal data model.
 
-Store three independent, versioned Analysis types: IMPORTANCE_ASSESSMENT, ECONOMIC_RELEVANCE_ASSESSMENT, and ECONOMIC_IMPACT_ASSESSMENT. Importance ranks overall follow-up priority; relevance evaluates direct/indirect economic connection; impact analyzes possible or observed effects by channel, direction, magnitude, horizon, evidence status, and uncertainty. Keep assessment confidence, forecast probability, and effect magnitude distinct. Use explicit UNKNOWN/INSUFFICIENT_EVIDENCE outcomes rather than numeric zero. Observed market reaction is separately sourced and cannot alone establish causality.
+**Disadvantages:** Conflates editorial priority, economic connection, and consequences; difficult to explain or calibrate.
 
-This is the recommended direction for review, not a final accepted decision.
+**Risk:** Very High
 
-## 6. Rationale
+### 4.2 B — Two scores combining relevance and impact
 
-C prevents category errors and permits independent evolution. An event may be important without being economically relevant, or economically relevant before impact is established.
+**Advantages:** Less complex than three separate assessments.
+
+**Disadvantages:** Still conflates whether an event is economically connected with what effects it may have.
+
+**Risk:** High
+
+### 4.3 C — Three independent, versioned assessments
+
+**Advantages:** Preserves distinct semantics and supports separate evaluation and evolution.
+
+**Disadvantages:** Requires more schemas, methodology governance, and user-interface explanation.
+
+**Risk:** Medium
+
+
+## 5. Evaluation and Comparison
+
+The following qualitative comparison is an architectural assessment, not a measured benchmark.
+
+| Criterion | Alternative A | Alternative B | Alternative C |
+|---|---|---|---|
+| Fit with product requirements | Limited / context-dependent | Partial | Strongest overall fit |
+| Operational complexity | Low | Medium | Medium |
+| Auditability and traceability | Limited | Partial | Strong |
+| Ability to evolve | Low to Medium | Medium | High |
+| Principal trade-off | Simplicity or incomplete capability | Partial separation | More explicit contracts and governance |
+
+The recommendation favors Alternative C because it preserves the domain distinctions and operational controls required by the product. Any quantitative comparison must be performed against representative workload and evaluation data.
+
+## 6. Recommended Decision
+
+Represent the three assessments as separate immutable, versioned Analysis records: IMPORTANCE_ASSESSMENT, ECONOMIC_RELEVANCE_ASSESSMENT, and ECONOMIC_IMPACT_ASSESSMENT. Importance answers how much overall attention/follow-up an event deserves. Economic relevance answers how directly and meaningfully the event connects to economic activity, policy, institutions, sectors, or markets, including explicit indirect pathways. Economic impact analyzes potential or observed consequences by channel, direction, magnitude, horizon, evidence status, and uncertainty. Keep assessment confidence, forecast probability, and impact magnitude separate. Use explicit UNKNOWN or INSUFFICIENT_EVIDENCE states; never substitute numeric zero for missing evidence. Market reactions are observations and not proof of causality.
+
+### 6.1 Decision Boundaries
+
+- Define a distinct result schema and allowed outcome vocabulary for each Analysis type.
+- Store methodology version, input evidence references, model/prompt/schema versions, assessment time, and confidence semantics.
+- Importance methodology may consider scale, scope, duration, novelty, affected population/institutions, and escalation potential; final weights require evaluation and approval.
+- Relevance methodology must represent direct/indirect transmission pathways and an explicit not-established/unknown outcome.
+- Impact methodology must represent channel, direction, magnitude scale, time horizon, evidence status, forecast probability where applicable, and uncertainty.
+- Keep observed market data in MarketObservation and link it to impact analysis without equating temporal movement with causality.
+- Do not store conflated importance_score or economic_relevance_score fields on Event; any current-value projection must be rebuildable from Analysis history.
+- Create separate evaluation datasets and calibration reports for the three assessment types.
+
+### 6.2 Assumptions and Open Questions
+
+- The recommendation is based on the current product and architecture documents.
+- Any numeric threshold, provider selection, or legal interpretation not supported by evidence remains open.
+- The Project Owner may accept, reject, or request revision of this recommendation.
 
 ## 7. Final Decision
 
+**Selected Alternative:** Pending formal approval  
 **Decision Status:** Proposed  
 **Decision Owner:** Project Owner  
-**Decision Date:** Not decided  
-**Approval Record:** No explicit approval has been recorded.  
-**Decision Rationale:** Pending Project Owner review.
+**Approved By:** Not yet approved  
+**Approval Date:** N/A
+
+**Decision Rationale:** Not formally recorded. The recommendation in Section 6 is awaiting review.
+
+**Conditions or Restrictions:**
+
+- Do not treat this proposal as an accepted architectural constraint.
+- Do not implement irreversible changes solely on the basis of this recommendation.
+- Record any interim implementation assumption and its review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
 
-- Establishes explicit architectural boundaries and reviewable direction.
-- Improves traceability between requirements, data contracts, workflows, and implementation.
-- Makes unresolved assumptions and validation requirements visible.
+- Makes the relevant domain or operational boundary explicit.
+- Improves traceability and repeatability.
+- Provides a basis for measurable verification and future revision.
 
 ### 8.2 Negative Consequences
 
-- Introduces documentation and validation work before implementation.
-- Some thresholds, provider choices, and operational parameters remain open until evidence is available.
-- Dependent documents may require coordinated updates after approval.
+- Adds implementation and documentation work.
+- Some policy details remain open pending data, legal review, or operational measurements.
+- Dependent components may need coordinated changes after approval.
 
-### 8.3 Risks and Mitigations
+### 8.3 Technical Trade-Offs
 
-- **Proposal mistaken for approval:** Keep status Proposed and require an explicit approval record.
-- **Premature over-specification:** Leave unmeasured thresholds and provider choices open.
-- **Cross-document drift:** Run consistency checks before merge and after acceptance.
+Alternative C favors explicit contracts and traceability over the smallest possible implementation. Provider-specific behavior or domain-specific exceptions must remain visible rather than being hidden behind an abstraction that implies guarantees the system does not have.
+
+### 8.4 Operational Consequences
+
+The implementation will require monitoring, recovery, and review procedures appropriate to the selected capability. Failure modes and unknown outcomes must be observable.
+
+### 8.5 Product and Business Consequences
+
+The recommendation is intended to support the product's evidence-based economic intelligence purpose. It must not create user-facing promises that exceed actual source coverage, data quality, or review capacity.
+
+### 8.6 Risks and Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Proposal mistaken for approval | Keep status Proposed until explicit approval is recorded. |
+| Over-specification without evidence | Leave thresholds and provider choices open until measured. |
+| Cross-document inconsistency | Synchronize affected documents and registry after approval. |
+| Implementation cannot satisfy a proposed guarantee | Report the conflict and revise the ADR rather than silently weakening the contract. |
 
 ## 9. Impact on Architecture and Documentation
 
-### 9.1 Affected Components, Data, and Workflows
+### 9.1 Affected Components
 
-Define schemas, scales, direction/horizon vocabularies, evidence requirements, unknown semantics, methodology versioning, calibration datasets, evaluation metrics, and rebuildable current-value projections.
+- Define a distinct result schema and allowed outcome vocabulary for each Analysis type.
+- Store methodology version, input evidence references, model/prompt/schema versions, assessment time, and confidence semantics.
+- Importance methodology may consider scale, scope, duration, novelty, affected population/institutions, and escalation potential; final weights require evaluation and approval.
+- Relevance methodology must represent direct/indirect transmission pathways and an explicit not-established/unknown outcome.
+- Impact methodology must represent channel, direction, magnitude scale, time horizon, evidence status, forecast probability where applicable, and uncertainty.
+- Keep observed market data in MarketObservation and link it to impact analysis without equating temporal movement with causality.
+- Do not store conflated importance_score or economic_relevance_score fields on Event; any current-value projection must be rebuildable from Analysis history.
+- Create separate evaluation datasets and calibration reports for the three assessment types.
 
-### 9.2 Affected Documents
+### 9.2 Affected Data Models and Interfaces
+
+The relevant interfaces, persistence fields, constraints, and version metadata must be updated only after the proposal is approved and the implementation design is reviewed.
+
+### 9.3 Affected Documents
 
 - `docs/01-product-and-system-architecture.md`
 - `docs/02-component-architecture-and-interfaces.md`
 - `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`, where sequencing is affected
+- `docs/04-implementation-plan-and-roadmap.md`
 - `docs/adr/README.md`
 
-### 9.3 Related ADRs
+### 9.4 Related ADRs
 
-- `GENI-ADR-001`
-- `GENI-ADR-008`
-- `GENI-ADR-015`
-
-Related Proposed ADRs are dependencies or context only; their presence does not imply approval.
+See the related ADR references in the registry. These dependencies do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
-Implementation must not assume this proposal is accepted. After approval, translate it into versioned interfaces, data constraints, workflow behavior, and implementation tasks. Any material deviation discovered during implementation must be brought to the decision owner and recorded.
+### 10.1 Required Implementation Work
 
-## 11. Acceptance and Verification Criteria
+- Define a distinct result schema and allowed outcome vocabulary for each Analysis type.
+- Store methodology version, input evidence references, model/prompt/schema versions, assessment time, and confidence semantics.
+- Importance methodology may consider scale, scope, duration, novelty, affected population/institutions, and escalation potential; final weights require evaluation and approval.
+- Relevance methodology must represent direct/indirect transmission pathways and an explicit not-established/unknown outcome.
+- Impact methodology must represent channel, direction, magnitude scale, time horizon, evidence status, forecast probability where applicable, and uncertainty.
+- Keep observed market data in MarketObservation and link it to impact analysis without equating temporal movement with causality.
+- Do not store conflated importance_score or economic_relevance_score fields on Event; any current-value projection must be rebuildable from Analysis history.
+- Create separate evaluation datasets and calibration reports for the three assessment types.
 
-No conflated score fields remain on Event; all three assessment types are independently persisted; missing evidence is not zero; confidence/probability/magnitude remain distinct; observed movement is not stated as causal without evidence.
+### 10.2 Migration or Compatibility Requirements
 
-Verification must include focused unit/integration tests, data-integrity tests where applicable, and review of affected architecture documents. Quantitative thresholds must come from representative evaluation data, operational measurements, or formal policy review rather than being invented in this ADR.
+No runtime or database migration is authorized by this proposal. If accepted, existing records and historical provenance must be inspected before a migration is designed. Migration must preserve audit history and must be tested from the current baseline.
+
+### 10.3 Dependencies
+
+Implementation sequencing must respect the dependencies recorded in the ADR Registry and the related decision documents.
+
+### 10.4 Implementation Sequence
+
+1. Obtain explicit Project Owner approval.
+2. Update affected architecture and data-model contracts.
+3. Define versioned interfaces and migration requirements.
+4. Implement the smallest end-to-end slice.
+5. Add focused automated and integration tests.
+6. Validate operational behavior and update implementation status separately from ADR status.
+
+### 10.5 Verification Requirements
+
+- Event has no conflated score fields that duplicate the authoritative Analysis records.
+- Each assessment is persisted as its own Analysis type with methodology version and evidence provenance.
+- Importance, economic relevance, and economic impact can produce different outcomes for the same Event.
+- Missing/insufficient evidence remains explicit and is not encoded as zero.
+- Assessment confidence, forecast probability, and impact magnitude are separate fields with documented semantics.
+- Impact is described by channel, direction, magnitude, horizon, evidence status, and uncertainty where supported.
+- Observed market reaction is not presented as proof of causal impact without a validated causal method.
+- Each assessment has its own evaluation dataset, metrics, and regression baseline.
+
+## 11. Acceptance Criteria
+
+| ID | Acceptance Criterion | Verification |
+|---|---|---|
+| AC-01 | Event has no conflated score fields that duplicate the authoritative Analysis records. | Architecture review and automated tests where applicable |
+| AC-02 | Each assessment is persisted as its own Analysis type with methodology version and evidence provenance. | Architecture review and automated tests where applicable |
+| AC-03 | Importance, economic relevance, and economic impact can produce different outcomes for the same Event. | Architecture review and automated tests where applicable |
+| AC-04 | Missing/insufficient evidence remains explicit and is not encoded as zero. | Architecture review and automated tests where applicable |
+| AC-05 | Assessment confidence, forecast probability, and impact magnitude are separate fields with documented semantics. | Architecture review and automated tests where applicable |
+| AC-06 | Impact is described by channel, direction, magnitude, horizon, evidence status, and uncertainty where supported. | Architecture review and automated tests where applicable |
+| AC-07 | Observed market reaction is not presented as proof of causal impact without a validated causal method. | Architecture review and automated tests where applicable |
+| AC-08 | Each assessment has its own evaluation dataset, metrics, and regression baseline. | Architecture review and automated tests where applicable |
+
+Quantitative thresholds must be established using representative evaluation data or operational measurements. This ADR intentionally does not invent numerical targets.
 
 ## 12. Review and Reconsideration
 
-Review before implementing the dependent capability, or earlier if product scope, legal restrictions, provider capabilities, operational scale, or evaluation results materially change.
+### 12.1 Review Triggers
 
-**Review Owner:** Project Owner  
-**Review Date:** Not scheduled
+- A new assessment scale or taxonomy is proposed.
+- Evaluation shows poor calibration or inconsistent reviewer interpretation.
+- New market data changes impact evidence capabilities.
+- The product changes its editorial priorities or target audience.
+- A model/provider change materially affects assessment outputs.
+
+### 12.2 Review Schedule
+
+**Review Date:** Not scheduled  
+**Review Owner:** Project Owner
+
+### 12.3 Reconsideration Conditions
+
+Reconsider this proposal if its assumptions become invalid, evaluation results contradict the recommendation, or product/legal/operational requirements materially change. A replacement of an accepted decision requires a new ADR or an explicitly approved superseding record.
 
 ## 13. References and Supporting Evidence
 
@@ -118,9 +295,15 @@ Review before implementing the dependent capability, or earlier if product scope
 - `docs/03-data-model-and-storage-design.md`
 - `docs/05-architecture-decision-records.md`
 - `docs/adr/README.md`
+- Related decision topics are listed in the ADR Registry.
+
+The current internal documents establish architectural context. They do not substitute for external legal advice, provider capability verification, or empirical performance measurements.
 
 ## 14. Decision History
 
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted; approval pending | AI Architecture Assistant |
+| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
+| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+
+**End of ADR**
