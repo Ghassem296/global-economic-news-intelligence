@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -325,7 +325,170 @@ The following remain open and must not be guessed by implementers:
 
 These are explicit dependencies, not missing values to be filled with arbitrary defaults.
 
-## 10. Related documents
+## 10. Field-level DTO schema tranche (v1.2)
+
+### 10.1 Authority and schema notation
+
+This section records only fields explicitly supported by Documents 02/03 and the existing method contracts. It is a logical field catalogue, not a wire-format schema. It does not select UUID/string encodings, JSON property names, database columns, enum serialization, maximum lengths, or transport validation rules.
+
+- **Required** means the domain model or operation contract requires the value for the stated operation.
+- **Conditional** means required only for the stated outcome/type.
+- **Nullable** means the model explicitly permits absence.
+- **TBD** means the source documents do not establish a safe field contract; implementation is blocked until resolved.
+- Common command metadata in §3.2 applies to state-changing commands. The metadata is not duplicated in each table.
+- A repository DTO must not accept client-supplied values for fields that are server-owned projections, such as effective pointers or current statuses.
+
+### 10.2 CreateEventMatchCase
+
+| Field | Type | Requiredness | Validation / invariant | Authority |
+|---|---|---|---|---|
+| `article_revision_id` | `ID<ArticleRevision>` | Required | Must resolve to the exact immutable revision; case scope cannot drift to another revision. | Document 03 §7.1 |
+| `development_key` | `Fingerprint` | Required | Deterministic and stable within the exact ArticleRevision; identifies one development, not a random run. Unique with ArticleRevision. | Document 03 §7.1 |
+| `scope_description` | `string` | Required | Describes the independently identified development. Exact length/normalization constraints TBD. | Document 03 §7.1 |
+| `metadata` | `JSON/object` | Optional | Must not duplicate authoritative fields or contain secrets/restricted source content by default. Schema TBD. | Document 03 §7.1 |
+
+Server-owned fields: case ID, initial case status, effective-decision pointer, created/closed timestamps, and aggregate version. The exact initial case status and who may create/reopen/cancel a case are not defined as a complete command contract.
+
+### 10.3 EventMatchCandidate evaluation record
+
+| Field | Type | Requiredness | Validation / invariant | Authority |
+|---|---|---|---|---|
+| `id` | `ID<EventMatchCandidate>` | Required | Stable immutable record identity. | Document 03 §7.2 |
+| `case_id` | `ID<EventMatchCase>` | Required | Must resolve to the exact case. | Document 03 §7.2 |
+| `candidate_event_id` | `ID<Event>` | Required | Candidate Event must be eligible in this case. | Document 03 §7.2 |
+| `lexical_similarity` | `number/null` | Nullable | Null when not evaluated; scale/direction/version semantics must be defined by matching policy. | Document 03 §7.2 |
+| `semantic_similarity` | `number/null` | Nullable | Must remain null when semantic retrieval is disabled/not evaluated. | Document 03 §7.2 |
+| `entity_overlap_score` | `number/null` | Nullable | Null when not evaluated; no implicit zero. | Document 03 §7.2 |
+| `temporal_compatibility_score` | `number/null` | Nullable | Null when not evaluated; no implicit zero. | Document 03 §7.2 |
+| `geographic_compatibility_score` | `number/null` | Nullable | Null when not evaluated; no implicit zero. | Document 03 §7.2 |
+| `overall_score` | `number/null` | Nullable | Null when not evaluated; not a decision confidence. | Document 03 §7.2 |
+| `matching_method` | `string/enum` | Required | Vocabulary and allowed methods require matching-policy approval. | Document 03 §7.2 |
+| `matching_policy_version` | `Version` | Required | Must identify the exact policy/configuration used. | Document 03 §7.2 |
+| `candidate_input_fingerprint` | `Fingerprint` | Required | Covers revision/development scope, candidate Event version and evaluation inputs/configuration. | Document 03 §7.2 |
+| `supersedes_candidate_id` | `Optional<ID<EventMatchCandidate>>` | Nullable | If present, same case and same candidate Event; no cross-case supersession. | Document 03 §7.2 |
+| `candidate_status` | `enum` | Required | Candidate-processing status only; never ACCEPTED/REJECTED/SUPERSEDED. | Document 03 §7.2 |
+| `evaluation_reason` | `string` | Required | Explains eligibility/ineligibility/evaluation; exact length TBD. | Document 03 §7.2 |
+| `evaluated_at` | `Instant` | Required | Timestamp of evaluation. | Document 03 §7.2 |
+| `created_at` | `Instant` | Required | Immutable creation timestamp. | Document 03 §7.2 |
+| `metadata` | `JSON/object` | Optional | Versioned extension only; schema TBD. | Document 03 §7.2 |
+
+The allowed candidate processing vocabulary is only exemplified as `GENERATED`, `EVALUATED`, and `INELIGIBLE`; the authoritative complete enum and transition rules are not explicitly closed. Do not treat this illustrative list as a final exhaustive enum until approved.
+
+### 10.4 EventMatchDecision
+
+| Field | Type | Requiredness | Validation / invariant | Authority |
+|---|---|---|---|---|
+| `id` | `ID<EventMatchDecision>` | Required | Immutable decision identity. | Document 03 §7.3 |
+| `case_id` | `ID<EventMatchCase>` | Required | Must identify exactly one case. | Document 03 §7.3 |
+| `outcome` | `enum` | Required | One of MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED. | Document 03 §7.3 |
+| `selected_candidate_id` | `Optional<ID<EventMatchCandidate>>` | Conditional | Required exactly for MATCH; candidate must be eligible and belong to same case. | Document 03 §7.3 |
+| `proposed_event_reference` | `Optional<ID<Event>>` | Conditional | Required for NEW_EVENT_CANDIDATE; stable preassigned identifier; does not itself create Event/link. | Document 03 §7.3 |
+| `decision_method` | `string/enum` | Required | Method vocabulary and authorization semantics TBD under matching policy. | Document 03 §7.3 |
+| `decision_confidence` | `number/null` | Optional | Distinct from candidate similarity; semantics/calibration must be explicit. | Document 03 §7.3 |
+| `decision_rationale` | `string` | Required | Must explain outcome; exact length/format TBD. | Document 03 §7.3 |
+| `matching_policy_version` | `Version` | Required | Exact policy version used. | Document 03 §7.3 |
+| `decided_by_type` | `string/enum` | Required | Actor category; vocabulary and authorization mapping TBD. | Document 03 §7.3 |
+| `decided_by_reference` | `string/reference` | Required | Must resolve to authenticated actor/service identity; representation TBD. | Document 03 §7.3 |
+| `supersedes_decision_id` | `Optional<ID<EventMatchDecision>>` | Nullable | If present, same case and must be prior effective decision; one direct successor constraint applies. | Document 03 §§7.3–7.4 |
+| `created_at` | `Instant` | Required | Immutable decision timestamp. | Document 03 §7.3 |
+| `metadata` | `JSON/object` | Optional | Must not override typed authoritative fields. | Document 03 §7.3 |
+
+Outcome-specific constraints:
+- MATCH: exactly one selected candidate; proposed_event_reference absent.
+- NEW_EVENT_CANDIDATE: proposed_event_reference required; selected_candidate_id absent.
+- NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED: neither candidate selection nor event creation authorization is implied.
+- A review action is not a decision. A material review outcome creates a successor decision.
+- The case effective pointer and all affected ArticleEventLink changes are one atomic write set.
+
+### 10.5 AppendPublicationDecision
+
+| Field | Type | Requiredness | Validation / invariant | Authority |
+|---|---|---|---|---|
+| `id` | `ID<PublicationDecision>` | Required | Immutable decision identity. | Document 03 §11.6 |
+| `report_id` | `ID<Report>` | Required | Exact immutable report version, never a report family/current alias. | Documents 03 §11.6, 15 §4.12 |
+| `decision` | `enum` | Required | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT. | Document 03 §11.6 |
+| `reason_codes` | `list<string/enum>` | Required | Controlled vocabulary is TBD; must be stable and auditable. | Document 03 §11.6 |
+| `explanation` | `string` | Required | Rationale for the decision; exact constraints TBD. | Document 03 §11.6 |
+| `caveats` | `Optional<list/string>` | Nullable | Required in meaningful form for PUBLISH_WITH_CAVEATS; exact representation TBD. | Document 03 §11.6 |
+| `policy_version` | `Version` | Required | Exact publication policy version. | Document 03 §11.6 |
+| `decided_at` | `Instant` | Required | Immutable decision time. | Document 03 §11.6 |
+| `supersedes_decision_id` | `Optional<ID<PublicationDecision>>` | Nullable | If present, must belong to the same exact report version and be the effective predecessor. | Document 03 §11.6 |
+| `metadata` | `JSON/object` | Optional | Typed decision fields remain authoritative. | Document 03 §11.6 |
+
+**Contract mismatch requiring resolution:** GENI-IMPL-015 §4.12 requires actor/provenance on the command/result, while the PublicationDecision field list in Document 03 §11.6 does not define actor identity or authorization reference. Do not silently add a persistent field or drop the provenance requirement. Reconcile Document 03 and the publication/security ADRs before implementing this DTO. Likewise, the exact effective-decision/supersession query rule must be specified as a deterministic rule, not inferred from timestamps.
+
+### 10.6 CreateProcessingRun
+
+| Field | Type | Requiredness | Validation / invariant | Authority |
+|---|---|---|---|---|
+| `id` | `ID<ProcessingRun>` | Required or server-assigned | Stable logical run identity; assignment ownership must be fixed by implementation contract. | Document 03 §13.1 |
+| `run_type` | `string/enum` | Required | Must identify the workflow kind; vocabulary is not closed in Document 03. | Document 03 §13.1 |
+| `target_type` | `string/enum` | Required | Must pair with target_id and resolve to a supported target family. | Document 03 §13.1 |
+| `target_id` | `ID<target>` | Required | Polymorphic reference; application validates existence and target_type agreement. | Document 03 §13.1 |
+| `idempotency_key` | `string` | Required | Unique within canonical operation/target scope; exact format/length TBD. | Documents 03 §13.1, §13.2.2 |
+| `input_fingerprint` | `Fingerprint` | Required | Same key + same fingerprint reuses logical operation; changed fingerprint conflicts. | Documents 03 §§13.1, 13.2.2 |
+
+The initial status, started_at behavior, heartbeat/lease initialization, retry schedule, and whether the run ID is caller- or server-assigned are not fully specified. These must be decided before implementation; do not accept caller-supplied RUNNING/COMPLETED states without an explicit lifecycle contract.
+
+### 10.7 TransitionProcessingRun
+
+| Field | Type | Requiredness | Validation / invariant | Authority |
+|---|---|---|---|---|
+| `run_id` | `ID<ProcessingRun>` | Required | Exact durable run. | Document 03 §13.1 |
+| `expected_version` | `Version` | Required | Compare-and-swap against current aggregate version. | Document 15 §§4.13, 7 |
+| `new_status` | `ProcessingRunStatus` | Required | Must be one of the declared statuses; transition graph is not yet defined. | Document 03 §13.1 |
+| `actor/worker_reference` | `ActorReference` | Required | Authenticated service/worker identity; concrete representation TBD. | Documents 15 §3.2, 03 §13.2.1 |
+| `fencing_token` | `integer` | Conditional | Required for every worker state-changing write when durable leases are enabled; must equal current token. | Document 03 §13.2.1 |
+| `occurred_at` | `Instant` | Required | Server-trusted transition time; clock authority/precision TBD. | Document 15 §4.13 |
+| `reason/error_category` | `Optional<string/enum>` | Conditional | Required when transition represents failure/cancellation or other reasoned outcome; exact categories TBD. | Document 15 §4.13 |
+
+ProcessingRun statuses declared by Document 03 are PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED. No permitted transition table, terminal-state rules, retry/reopen rules, or exact relationship between ProcessingRun and ProcessingStep statuses is defined. Therefore the DTO is not implementation-ready: the transition graph is an explicit blocker, not a license to permit every pair of statuses.
+
+### 10.8 RecoverableRunQuery and shared query DTOs
+
+| DTO | Fields established by source | Still unresolved |
+|---|---|---|
+| `RecoverableRunQuery` | Bounded page limit and optional cursor are required by the generic Page/query contract; optional filters may scope run type/target/status only if approved. | Exact filters, eligible statuses, ordering, lease-expiry cutoff, consistency semantics and max page size. |
+| `CandidateListQuery` | Bounded limit, optional cursor, stable ordering. | Sort keys, filter set, maximum page size and cursor encoding. |
+| `SourceCollectionQuery` | Optional source-type, language, geographic-scope and status filters; bounded limit; optional cursor. | Exact enum vocabularies, default/max page size, ordering and cursor format. |
+| `EventCandidateQuery` | Candidate retrieval must be bounded, deterministic and stably ordered. | Filter fields, eligibility rules, tie-breakers and page bounds. |
+| `AnalysisListQuery` | Query is scoped by event_id and analysis_type in repository signature. | Additional filters, sort order and page contract details. |
+
+### 10.9 Explicit state-machine inventory
+
+This inventory distinguishes defined state vocabulary from defined transition behavior. A list of statuses is not a state machine.
+
+| Aggregate / concept | Defined states or outcomes | Defined transition semantics | Readiness |
+|---|---|---|---|
+| Event lifecycle | DETECTED, ENRICHING, ACTIVE, MONITORING, RESOLVED, ARCHIVED | Complete guarded transition table exists in Document 03 §10.2. | Specified at logical level; policy/version/guard DTO details still required. |
+| EventMatchCase | OPEN, PENDING_REVIEW, RESOLVED, CLOSED, CANCELLED | No allowed-transition graph, reopening rule, or precise status derivation from decisions/review is specified. | **Blocked** |
+| EventMatchCandidate | Illustrative GENERATED, EVALUATED, INELIGIBLE | Candidate immutable after EVALUATED/INELIGIBLE; complete enum and allowed transitions not closed. | **Partially specified** |
+| EventMatchDecision | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED | Immutable append/supersession; one effective decision pointer; outcome-specific invariants specified. These are outcomes, not mutable lifecycle states. | **Outcome contract specified; authorization/policy remains gated** |
+| ArticleEventLink | is_active true/false | Active only while authorizing MATCH decision is effective; successor decision deactivates/activates atomically. | **Derived transition contract specified** |
+| PublicationDecision | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT | Immutable decisions; material change creates successor; exact effective-predecessor selection rule not fully specified. | **Partially specified; provenance mismatch open** |
+| ProcessingRun | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED | No transition graph or terminal/retry/recovery transition rules. | **Blocked** |
+| ProcessingStep | Status field exists; no closed vocabulary or transition graph in Document 03. | Lease/fencing rules exist; status transition graph absent. | **Blocked** |
+| PublicationRecord | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED | Expected operation lifecycle and reconciliation semantics defined in Document 03 §11.8. | **Specified at logical level; target adapter contract remains gated** |
+| PublicationAttempt | EXECUTE/RECONCILE; CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, RECONCILED_NOT_APPLIED | Attempt records are traceable; mapping from each attempt outcome to operation transition requires a formal table. | **Partially specified** |
+| ExecutionLease | ACTIVE, RELEASED, EXPIRED | Exclusive acquisition, monotonic fencing, owner/token-bound renewal/release and stale-worker rejection specified in Document 03 §13.2.1. | **Specified at logical level; numeric lease policy is operational TBD** |
+| IdempotencyRecord | IN_PROGRESS, COMPLETED, FAILED, RECONCILIATION_REQUIRED | Same-fingerprint replay, different-fingerprint conflict, external reconciliation semantics specified in Document 03 §13.2.2. | **Specified at logical level; exact retry/expiry policy TBD** |
+| ReviewRecord | PENDING, IN_PROGRESS, COMPLETED, CANCELLED | Actions/history and successor workflow requirements defined; reopening is a new task lifecycle segment. | **Partially specified; ADR-014 approval required** |
+
+### 10.10 Required transition tables before implementation
+
+The following must be completed from approved policy and reconciled across Documents 01–04, 08, 09, 12, 13 and the applicable ADRs:
+
+1. ProcessingRun transition matrix, including initial state, allowed transitions, terminal states, retry/recovery path, cancellation behavior, partial completion semantics and ProcessingStep interaction.
+2. EventMatchCase transition matrix, including decision-to-case status mapping, review start/completion, cancellation, reopening, and whether RESOLVED can be reopened by a successor decision.
+3. EventMatchCandidate complete status vocabulary and transition matrix; candidate evaluation records are immutable, so any re-evaluation must create a successor record.
+4. PublicationDecision effective-successor algorithm and actor/authorization provenance reconciliation.
+5. PublicationAttempt outcome-to-PublicationRecord transition matrix, including unknown outcome and reconciliation.
+6. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014.
+7. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
+
+No implementation may invent missing transitions or treat timestamps as substitutes for state.
+
+## 11. Related documents
 
 - Document 02 — Component Architecture and Interface Contracts.
 - Document 03 — Data Model and Storage Design.
