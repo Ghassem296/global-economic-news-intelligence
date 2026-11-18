@@ -215,6 +215,16 @@ Source
   +---- Article
           |
           +---- ArticleRevision
+                    |
+                    +---- EventMatchCase
+                           |
+                           +---- EventMatchCandidate --------> Event
+                           |
+                           +---- EventMatchDecision
+                                  |
+                                  +---- ArticleEventLink -----> Event
+                                  |
+                                  +---- ReviewRecord
           |
           +---- ArticleProcessingRecord
           |
@@ -223,18 +233,16 @@ Source
           +---- ArticleEntityMention
           |
           +---- DuplicateCandidate
-          |
-          +---- ArticleEventLink
-                    |
-                    +---- Event
-                           |
-                           +---- EventHistory
-                           |
-                           +---- EventRelationship
-                           |
-                           +---- EventEntityLink
-                           |
-                           +---- Claim
+
+Event
+  |
+  +---- EventHistory
+  |
+  +---- EventRelationship
+  |
+  +---- EventEntityLink
+  |
+  +---- Claim
                            |      |
                            |      +---- ClaimObservation
                            |      |
