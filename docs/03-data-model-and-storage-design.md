@@ -1825,6 +1825,7 @@ Fields:
 - `delivery_mode`
 - `channel`
 - `destination_reference`
+- `distribution_authorization_decision_id` — required exact effective authorization reference
 - `idempotency_key`
 - `status`
 - `external_reference`
@@ -1858,8 +1859,12 @@ Constraints:
 - The idempotency key must be unique within its relevant destination and operation scope.
 - Retries must not create duplicate external deliveries when the destination supports idempotency.
 - Delivery attempts must remain traceable.
+- Every outbound DeliveryRecord must reference exactly one `DistributionAuthorizationDecision` whose outcome is `ALLOW`, which is effective and unexpired at dispatch time.
+- The decision must match the exact report version, recipient, destination, delivery mode, channel, and authorized content scope. It must not be reused for a different recipient, destination, or report version.
 - A `PUBLICATION_LINK` delivery must reference a PublicationRecord whose publication operation is confirmed successful and still effective for that target.
 - `REPORT_CONTENT` or `NOTIFICATION` delivery may reference a PublicationRecord when relevant, but must be independently authorized by the applicable distribution policy.
+- Where source-derived content is distributed, the DistributionAuthorizationDecision must reference the applicable allowed `CUSTOMER_DISTRIBUTION` RightsAssessment; publication approval or source permission alone is insufficient.
+- Authorization revocation/expiry blocks future dispatch. Completed deliveries remain immutable history and must be addressed through a separate correction/withdrawal workflow.
 - Delivery status must not be confused with publication approval or publication success.
 - A delivery failure must not reverse or invalidate a confirmed publication.
 - The logical delivery operation must be distinct from individual delivery attempts.
@@ -1885,7 +1890,39 @@ Each attempt must be separately traceable.
 
 A retry must reuse the logical delivery operation and its idempotency key unless the operation itself has been explicitly superseded.
 
-### 12.3 Delivery State Consistency
+### 12.3 DistributionAuthorizationDecision
+
+Represents an immutable policy outcome authorizing or blocking one precisely scoped recipient-delivery operation. It is independent from PublicationDecision and source-content RightsAssessment.
+
+Fields:
+
+- `id`
+- `report_id` — exact immutable report version
+- `recipient_reference`
+- `destination_reference`
+- `delivery_mode`
+- `channel`
+- `authorized_content_scope`
+- `decision` — `ALLOW`, `DENY`, or `REQUIRES_REVIEW`
+- `distribution_policy_version`
+- `content_rights_assessment_reference` nullable, but required when source-derived content is delivered
+- `decided_by_type`
+- `decided_by_reference`
+- `reason_codes`
+- `decided_at`
+- `valid_until` nullable
+- `supersedes_decision_id` nullable
+- `metadata`
+
+Constraints:
+
+- The decision is immutable; correction/revocation creates a successor decision or explicit revocation record.
+- `ALLOW` is valid only for the exact report version, recipient, destination, delivery mode, channel, and content scope it names.
+- The applicable content-rights assessment must authorize customer distribution of the relevant source-derived content; it does not replace recipient-specific authorization.
+- Dispatch must re-check that the referenced decision remains effective, unexpired, and allowed.
+- An authorization decision is not evidence that delivery occurred.
+
+### 12.4 Delivery State Consistency
 
 External delivery operations cannot generally be included in a database transaction.
 
@@ -2041,8 +2078,14 @@ Fields:
 - `input_tokens` nullable
 - `output_tokens` nullable
 - `total_tokens` nullable
+- `provider_reported_cost` nullable
 - `estimated_cost` nullable
 - `currency` nullable
+- `cost_source` — `PROVIDER_REPORTED`, `INTERNAL_ESTIMATE`, or `UNAVAILABLE`
+- `pricing_catalog_version` nullable
+- `retry_count`
+- `fallback_used`
+- `fallback_policy_version` nullable
 - `duration_ms` nullable
 - `outcome`
 - `recorded_at`
@@ -2052,11 +2095,43 @@ Unknown usage or cost must remain null, not zero.
 
 Usage records should support cost reporting, provider comparison, budget enforcement, and operational evaluation.
 
+`provider_reported_cost` and `estimated_cost` are distinct. `cost_source` must identify which value is authoritative for a report; `UNAVAILABLE` requires both cost values to remain null. An internally estimated cost must reference the exact `pricing_catalog_version`; the system must not present an estimate as a provider-reported charge. Retry and fallback use must be explicit and traceable to the applicable fallback policy. Unknown token usage or cost must remain null, not zero.
+
 Provider-specific usage metadata may be retained in JSON, but commonly queried values should have explicit fields.
 
 Every recorded LLM operation should be traceable to the Shared LLM Execution Layer and, where applicable, to its processing run, step, or analysis.
 
-### 13.6 Schedule
+### 13.6 EvaluationRun and EvaluationResult (Evaluation Artifacts)
+
+Evaluation execution is a development/quality-governance activity, not a production business transaction. To avoid duplicating the authoritative runtime workflow record, `ProcessingRun` and `ProcessingStep` are the task/workflow execution records referenced by GENI-ADR-017; a separate production `TaskExecutionRecord` table is not introduced.
+
+Evaluation results are retained as versioned, machine-readable evaluation artifacts in the repository/CI artifact store, rather than as operational production tables.
+
+An `EvaluationRun` artifact must include:
+
+- `evaluation_run_id`
+- `dataset_id` and `dataset_version`
+- `task_type` and `task_version`
+- model, provider, prompt, schema, taxonomy, and policy versions where applicable
+- `started_at`, `completed_at`, and run status
+- runner/tool version and baseline-run reference
+- aggregate quality, cost, and latency metrics with explicit unknown values
+- artifact references and execution environment identifier
+
+Each `EvaluationResult` artifact must include:
+
+- `evaluation_run_id`
+- stable `case_id`
+- expected/reference-output version
+- produced-output reference or content hash
+- metric/rubric identifier and version
+- score or categorical verdict, nullable when not evaluated
+- evaluator type/version and human reviewer reference when applicable
+- error/skip reason and provenance references
+
+Evaluation artifacts must not contain restricted source content unless the relevant rights permit their storage. They must preserve dataset and model/prompt/schema versions so a run can be reproduced or compared. A failed or incomplete run must not be represented as a successful quality gate.
+
+### 13.7 Schedule
 
 Represents a configured recurring or one-time workflow schedule.
 
@@ -2075,7 +2150,7 @@ Fields:
 
 Schedule configuration must be validated and versioned.
 
-### 13.7 ScheduledExecution
+### 13.8 ScheduledExecution
 
 Represents one execution initiated by a schedule.
 
@@ -2213,6 +2288,7 @@ The logical table inventory is:
 | `publication_records` | Publish, replace, and withdraw operations |
 | `publication_attempts` | External publication attempt and reconciliation history |
 | `delivery_records` | Logical delivery operations |
+| `distribution_authorization_decisions` | Immutable recipient- and operation-specific delivery authorization outcomes |
 | `delivery_attempts` | Delivery retry history |
 | `processing_runs` | Workflow execution records |
 | `processing_steps` | Workflow step records |
