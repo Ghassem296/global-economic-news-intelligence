@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.6
+**Version:** 1.7
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -421,7 +421,7 @@ A unique constraint on `(source_id, external_id)` should apply only when `extern
 
 The exact treatment of nullable unique values must be verified for each database implementation.
 
-**Current content ownership rule:** `Article` is the current searchable projection of the latest accepted article revision. `ArticleRevision` is the historical record of meaningful content changes. Updates to the current projection and creation of a revision must occur atomically. The application must not maintain two independently editable copies of the same current content.
+**Current content ownership rule:** `Article` is the current searchable projection of the latest valid persisted article revision. `ArticleRevision` is the historical record of meaningful content changes. Updates to the current projection and creation of a revision must occur atomically. The application must not maintain two independently editable copies of the same current content.
 
 ### 5.5 ArticleRevision
 
