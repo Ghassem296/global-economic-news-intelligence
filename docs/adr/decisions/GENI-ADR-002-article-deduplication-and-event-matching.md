@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.5
+**Version:** 1.6
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -387,7 +387,9 @@ Each DuplicateDecision must reference exactly one DuplicateCandidate and preserv
 
 A correction or reassessment creates a successor DuplicateDecision for the same candidate. At most one effective decision may exist per candidate. Prior decisions and their evidence must remain immutable and traceable.
 
-A confirmed duplicate relationship is derived from the effective CONFIRMED_DUPLICATE decision. It must not delete or collapse either Article or ArticleRevision, erase source identity, or imply that two publications are independent corroboration. Multi-article groups, where needed, are derived from the graph of effective pairwise duplicate relationships and must preserve every pairwise decision and its provenance.
+A confirmed duplicate relationship is derived only from the effective `CONFIRMED_DUPLICATE` decision for that exact ArticleRevision pair. It must not delete or collapse either Article or ArticleRevision, erase source identity, or imply that two publications are independent corroboration.
+
+**Pairwise decisions are not assumed to be transitive.** In particular, a confirmed near-duplicate relationship between A–B and B–C does not by itself establish that A–C are duplicates. Connected-component or single-link clustering must therefore never be used as the authoritative rule for a duplicate group. Exact-duplicate equivalence may be grouped only when the same documented normalization/fingerprint rule yields an identical exact-content identity. A near-duplicate group may be treated as an authoritative group only when every member pair has an effective `CONFIRMED_DUPLICATE` decision (complete-link condition) or a separately versioned, explicitly authorized group decision is introduced by a future ADR. Otherwise, retain the pairwise edges and present any connected component only as a non-authoritative review/candidate cluster. Conflicting, missing, or superseded pairwise decisions must prevent automatic promotion to an authoritative group. Group reconstruction must be deterministic and must retain the exact pairwise decision and policy provenance used.
 
 The detailed fields, uniqueness rules, referential constraints, and repository contracts are defined in Document 03 and Document 02. Human correction and review are governed by ADR-014.
 
