@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.40
+**Version:** 1.41
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1705,6 +1705,8 @@ Review states may include:
 - `COMPLETED`
 - `CANCELLED`
 
+These review states define a vocabulary only. The allowed status-transition graph, initial-state rule, terminal-state semantics, status projection after each ReviewAction, and exact status effect of `REOPENED` are not fully defined. ReviewAction is append-only audit evidence, but its action-type list is not itself a complete transition table. A reopened task lifecycle segment must preserve the prior completion action; the current ReviewRecord status projection and segment identity rules require an explicit contract before implementation.
+
 Review types identify the subject and required follow-up. The canonical six subject families and successor routes are:
 
 | Review Type | Exact Subject | Material Successor |
@@ -1972,6 +1974,8 @@ Fields:
 Each attempt must be separately traceable.
 
 A retry must reuse the logical delivery operation and its idempotency key unless the operation itself has been explicitly superseded.
+
+The delivery status list defines vocabulary only; it does not define an allowed-transition graph, initial-state rule, terminal states, cancellation guards, or retryable failure semantics. DeliveryAttempt currently has no closed outcome vocabulary or formal mapping to DeliveryRecord status. The contract must define how a confirmed failure, unknown external outcome, late result, and reconciliation are represented, and how retries reuse the same logical DeliveryRecord and idempotency key without duplicating an externally visible delivery. Delivery state must remain independent of publication state and authorization decisions.
 
 ### 12.3 DistributionAuthorizationDecision
 
