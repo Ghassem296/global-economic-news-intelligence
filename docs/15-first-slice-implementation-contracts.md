@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -101,7 +101,7 @@ This logical contract does not select a transaction library or isolation level. 
 
 ## 4. Repository method contracts
 
-The signatures below are logical signatures. Request and result structures named here must be implemented as typed immutable contract objects in the chosen language.
+The signatures below are logical signatures. Request and result structures named here must be implemented as typed immutable contract objects in the chosen language. The names identify the required contract types, but this baseline does not yet define every field, nullability rule, validation constraint, and serialized representation for every command/query DTO. Those field-level schemas are a remaining Gate A deliverable and must be completed and reviewed before the corresponding method is implemented; do not infer fields from method names.
 
 ### 4.1 SourceRepository
 
