@@ -483,21 +483,22 @@ The event record represents current state. `EventHistory` preserves meaningful p
 
 ### 5.7 ArticleEventLink
 
-Associates an article with an event.
+Represents an applied, decision-authorized association between an ArticleRevision and an Event.
 
 Fields:
 
 - `id`
-- `article_id`
+- `article_revision_id`
 - `event_id`
 - `relationship_type`
 - `association_confidence`
 - `association_method`
 - `matching_policy_version`
+- `event_match_decision_id`
 - `associated_at`
 - `is_active`
 - `deactivated_at`
-- `decision_reference`
+- `deactivated_by_decision_id`
 - `metadata`
 
 Relationship types may include:
@@ -511,12 +512,13 @@ Relationship types may include:
 
 Constraints:
 
-- An active association must not be duplicated.
-- Confidence must use a documented range and semantics.
-- Association method and policy version must be recorded.
-- Deactivation must preserve historical association information.
-- A rejected match must not be represented as an active association.
-- Association changes must be traceable to an event-matching decision or an explicit authorized correction.
+- Every association must reference the exact EventMatchDecision that authorized its creation.
+- The referenced decision must have outcome MATCH and must identify the linked event through its selected candidate.
+- An active association must not be duplicated for the same article revision, event, and relationship role.
+- Association confidence must use documented semantics and must not be copied from candidate similarity without an explicit calibration rule.
+- Deactivation must preserve the original link and identify the decision that deactivated it.
+- A correction creates a new decision and a new association where appropriate; it must not rewrite historical decisions or silently repoint an existing link.
+- A rejected, ambiguous, or review-required match must not be represented as an active association.
 
 ### 5.8 DuplicateCandidate
 
@@ -692,14 +694,31 @@ An event may be linked to multiple entities with different roles.
 
 ## 7. Event Matching and Identity History
 
-### 7.1 EventMatchCandidate
+### 7.1 EventMatchCase
 
-Represents a candidate match between an incoming article or observation and an existing event.
+Represents one independent event-resolution case for one development identified within one immutable ArticleRevision. An article revision may have multiple cases when it describes multiple distinct developments.
 
 Fields:
 
 - `id`
-- `article_id`
+- `article_revision_id`
+- `development_key` — stable within the ArticleRevision and identifying the development being resolved
+- `scope_description`
+- `case_status`
+- `created_at`
+- `closed_at`
+- `metadata`
+
+The case is the unit of candidate evaluation, final decision, and human review. A case must not be reused for a materially different article revision or development scope.
+
+### 7.2 EventMatchCandidate
+
+Represents one existing Event considered as a possible match within an EventMatchCase. Candidate generation and evaluation do not establish an association.
+
+Fields:
+
+- `id`
+- `case_id`
 - `candidate_event_id`
 - `lexical_similarity`
 - `semantic_similarity`
@@ -710,28 +729,65 @@ Fields:
 - `matching_method`
 - `matching_policy_version`
 - `candidate_status`
-- `decision_reason`
+- `evaluation_reason`
 - `created_at`
-- `decided_at`
+- `evaluated_at`
+- `metadata`
 
-Candidate states may include:
+Candidate status describes processing only (for example `GENERATED`, `EVALUATED`, `INELIGIBLE`, or `SUPERSEDED`). `ACCEPTED` and `REJECTED` are prohibited candidate statuses because acceptance or rejection is a case-level decision, not a property of candidate retrieval.
 
-- `PENDING`
-- `ACCEPTED`
-- `REJECTED`
-- `INCONCLUSIVE`
-- `SUPERSEDED`
+A candidate score is not a decision confidence and must not be interpreted as one.
 
-The system must preserve the difference between:
+### 7.3 EventMatchDecision
 
-- A candidate match.
-- An accepted association.
-- A rejected association.
-- A newly created event.
+Represents an immutable, authoritative outcome for one EventMatchCase.
 
-A similarity score is not, by itself, a final event identity decision.
+Fields:
 
-The matching policy must define how candidate signals are interpreted and when a candidate requires review or creation of a new event. Exact thresholds and decision rules require a formal architecture decision or approved policy.
+- `id`
+- `case_id`
+- `outcome`
+- `selected_candidate_id` — required only for `MATCH`
+- `proposed_event_reference` — optional reference for `NEW_EVENT_CANDIDATE`
+- `decision_method`
+- `decision_confidence` — optional and distinct from candidate similarity
+- `decision_rationale`
+- `matching_policy_version`
+- `decided_by_type`
+- `decided_by_reference`
+- `supersedes_decision_id`
+- `created_at`
+- `metadata`
+
+Allowed outcomes:
+
+- `MATCH`
+- `NEW_EVENT_CANDIDATE`
+- `NO_MATCH`
+- `AMBIGUOUS`
+- `REVIEW_REQUIRED`
+
+Constraints:
+
+- `MATCH` must reference exactly one eligible candidate belonging to the same case.
+- Non-`MATCH` outcomes must not authorize an active ArticleEventLink.
+- `NEW_EVENT_CANDIDATE` proposes event creation but does not itself create an Event.
+- A later reassessment or human correction creates a new decision and references the decision it supersedes.
+- Historical decisions are immutable.
+- A review record is not a decision; an authorized review outcome must be materialized as a new EventMatchDecision.
+- Decision confidence, candidate similarity, and reviewer certainty are separate measurements and must not be substituted for one another.
+
+### 7.4 Event Matching Case and Decision Constraints
+
+- Every EventMatchCandidate must belong to exactly one EventMatchCase.
+- Every EventMatchCase must identify exactly one ArticleRevision and one development scope.
+- Every EventMatchDecision must belong to exactly one case.
+- A selected candidate must belong to the same case as its decision.
+- A case may have multiple historical decisions, but only one effective decision at a time.
+- A new decision supersedes the prior effective decision without modifying it.
+- A decision for one case must not implicitly decide another case from the same article revision.
+- Human review must reference the case and the decision under review; the review outcome must be recorded as a new decision.
+- Database constraints and application validation must prevent cross-case candidate references and invalid decision-to-link references.
 
 ### 7.2 Event Identity Operations
 
@@ -1858,10 +1914,10 @@ The logical table inventory is:
 | `article_entity_mentions` | Extracted entity mentions |
 | `entities` | Resolved entities |
 | `entity_aliases` | Alternative entity names |
-| `article_event_links` | Article-event associations |
+| `article_event_links` | Decision-authorized article-event associations |\n| `event_match_cases` | Per-revision, per-development event-resolution cases |\n| `event_match_decisions` | Immutable case-level event matching outcomes |
 | `duplicate_candidates` | Article duplicate candidates |
 | `events` | Current event state |
-| `event_match_candidates` | Event matching candidates |
+| `event_match_candidates` | Candidate events evaluated within a matching case |
 | `event_history` | Event change history |
 | `event_relationships` | Relationships between events |
 | `event_identity_operations` | Event merge and split operations |
@@ -2183,7 +2239,7 @@ Initial repository contracts include:
 - `ArticleEntityMentionRepository`
 - `EventRepository`
 - `ArticleEventLinkRepository`
-- `EventMatchCandidateRepository`
+- `EventMatchCaseRepository`\n- `EventMatchCandidateRepository`\n- `EventMatchDecisionRepository`
 - `EventHistoryRepository`
 - `EventRelationshipRepository`
 - `EventIdentityOperationRepository`
@@ -2273,7 +2329,7 @@ Data-layer tests must cover:
 - Current article projection consistency.
 - Duplicate candidate behavior.
 - Event identity preservation.
-- Event matching decisions.
+- Event matching cases, candidates, and immutable decisions.\n- Candidate-to-case and decision-to-case referential integrity.\n- Human review creating a superseding decision.\n- Link activation and deactivation with exact decision provenance.
 - Event merge and split history.
 - Many-to-many article-event relationships.
 - Topic classification history.
