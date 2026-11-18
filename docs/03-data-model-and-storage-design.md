@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -435,6 +435,7 @@ Fields:
 - `title`
 - `content_reference`
 - `content_hash`
+- `content_normalization_version`
 - `summary`
 - `language`
 - `observed_at`
@@ -448,7 +449,7 @@ Constraints:
 - Repeated collection of unchanged content must not create a revision.
 - Material changes must preserve the previous revision.
 - Content references must comply with the project's content retention and licensing policy.
-- A revision must identify the text representation to which its hashes and offsets refer.
+- A revision must identify the text representation and content-normalization version to which its hashes and offsets refer.
 
 `content_reference` may point to relationally stored content or an approved external content store. The physical storage method is an implementation decision.
 
