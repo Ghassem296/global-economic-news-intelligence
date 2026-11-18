@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.7  
+**Version:** 1.8  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -566,9 +566,21 @@ Historical references to a merged identity must remain resolvable.
 
 A merge must be idempotent. Repeating the same logical merge operation must not produce duplicate history entries or duplicate downstream effects.
 
-Every MERGE, SPLIT, or IDENTITY_CORRECTION must be represented by one durable EventIdentityOperation with a stable operation identifier and required unique idempotency key. The record must include operation type, status (`PENDING`, `IN_PROGRESS`, `SUCCEEDED`, `FAILED`, or `RECONCILIATION_REQUIRED`), reason, policy version, actor type/reference, authorization reference, processing-run reference where applicable, and requested/started/completed timestamps. Input and output event links must be explicit and ordered. Every affected EventHistory record must reference the exact `event_identity_operation_id`. A retry reuses the same operation and idempotency key. An uncertain operation must be reconciled before downstream effects are repeated.
+Every MERGE, SPLIT, or IDENTITY_CORRECTION must be represented by one durable EventIdentityOperation with a stable operation identifier, required unique idempotency key, explicit operation status, and an independent identity-effect state. MERGE records every participating Event as an input, including the selected survivor, and has exactly one output equal to that survivor. SPLIT records exactly one original input and at least two distinct successor outputs. IDENTITY_CORRECTION declares its permitted cardinality and purpose in the versioned policy. Input and output links are explicit and ordered; input links preserve the expected EventHistory version so stale or concurrently modified identities cannot be changed silently. The survivor is the only Event permitted in both the input and output sets of a MERGE.
 
-Operation cardinality is validated: MERGE requires at least two input events and exactly one surviving output; SPLIT requires exactly one input event and at least two successor outputs. IDENTITY_CORRECTION must declare its permitted cardinality in the versioned policy. ArticleEventLink records must never be directly repointed by an identity operation: affected EventMatchCases are resolved through successor EventMatchDecision records and EventService.
+Every operation preserves actor type/reference, authorization reference, policy version, reason, processing-run reference where applicable, and requested/started/completed timestamps. Every affected EventHistory record references the exact `event_identity_operation_id`; every operation-state transition is recorded in append-only EventIdentityOperationHistory. A retry reuses the same operation and idempotency key. An uncertain core-transaction outcome or incomplete downstream reconciliation remains `RECONCILIATION_REQUIRED` and must be reconciled before non-idempotent effects are repeated. `SUCCEEDED` is recorded only when the core identity effect and required downstream reconciliation are confirmed; `FAILED` or `CANCELLED` is permitted only when the core identity effect is definitively not applied.
+
+ArticleEventLink records must never be directly repointed or deleted by an identity operation: affected EventMatchCases are re-evaluated and resolved through successor EventMatchDecision records, and EventService applies the resulting association changes.
+
+### 6.10.1 Operation Atomicity, Concurrency, and Recovery
+
+The operation workflow has a durable preparation phase, one atomic core identity-application transaction, and separately recoverable downstream reconciliation. Preparation validates reviewer/system authority, the versioned identity policy, all input Event identifiers and expected EventHistory versions, operation cardinality, and the absence of conflicting unresolved operations over the same Event identities. It then creates the EventIdentityOperation, ordered input/output links, and initial PENDING EventIdentityOperationHistory entry in one transaction.
+
+The core identity transaction uses compare-and-swap/optimistic concurrency over the recorded input versions. It applies the canonical identity disposition, writes the corresponding EventHistory records for every affected Event, sets identity_effect_state to APPLIED, records the operation-history transition, and creates durable reconciliation/outbox work atomically. If the database commit outcome cannot be established, identity_effect_state is UNKNOWN and the operation remains RECONCILIATION_REQUIRED until a read-after-failure reconciliation establishes whether the core effect committed.
+
+Downstream work re-evaluates every affected EventMatchCase. Any ArticleEventLink deactivation or replacement must be authorized by a successor EventMatchDecision in that same case and applied by EventService. Reports and analyses are never rewritten; they are versioned, explicitly marked stale, or reconciled through a controlled workflow. The operation reaches SUCCEEDED only when all required downstream tasks are confirmed complete. If the core identity transaction is definitively not applied, the operation may be FAILED or cancelled before application. Once the core effect is APPLIED, the operation must not be marked FAILED or CANCELLED and must not be rolled back by mutating history; a corrective action is a new authorized IDENTITY_CORRECTION operation.
+
+An overlapping merge/split request must be serialized or rejected using an event-scoped lease/lock and expected-version check. Idempotent retries reuse the same operation ID and key. External notifications and long-running analysis/report reconciliation execute from durable follow-up work, never inside the core identity transaction.
 
 ### 6.11 Event Splitting
 
@@ -795,17 +807,18 @@ The product should communicate uncertainty rather than presenting an uncertain e
 Proposed domain entities include:
 
 - `Event`
-- `EventVersion`
 - `EventHistory`
+- `EventMatchCase`
 - `EventMatchCandidate`
 - `EventMatchDecision`
 - `ArticleEventLink`
 - `EventRelationship`
 - `EventIdentityOperation`
-- `EventIdentityAlias` or equivalent identity-resolution structure
-- `EventReviewRecord`
+- `EventIdentityOperationInput`
+- `EventIdentityOperationOutput`
+- `EventIdentityOperationHistory`
 
-The exact physical schema and repository boundaries must be defined in the data model and component architecture documents after the relevant ADRs are reviewed.
+The proposed logical model uses EventHistory and explicit EventIdentityOperation input/output/history records; it does not require a separate EventVersion, EventIdentityAlias, or EventReviewRecord entity. Historical identity resolution is derived from the EventIdentityOperation graph, while human review uses the shared ReviewRecord defined by ADR-014. The exact physical schema and repository boundaries are defined provisionally in Documents 02 and 03 and remain subject to formal ADR approval.
 
 Proposed application operations include:
 
@@ -856,9 +869,9 @@ If accepted, implementation should include:
 - Separate confirmed article-event associations.
 - Event continuation handling.
 - Event relationship records.
-- Event merge operations.
-- Event split operations.
-- Identity resolution.
+- Event merge operations with explicit survivor-in-input/output semantics and immutable operation history.
+- Event split operations with stable successor identifiers, explicit allocation, and unresolved-allocation handling.
+- Identity resolution that distinguishes the applied core identity effect from pending downstream reconciliation.
 - Historical event versions and operation records.
 - Review integration for uncertain cases.
 - Matching policy and model version tracking.
@@ -897,8 +910,8 @@ The initial implementation may not require a large-scale migration, but the data
 5. Implement confirmed article-event associations.
 6. Implement event continuation and history recording.
 7. Implement explicit event relationships.
-8. Implement controlled merge and split operations.
-9. Implement identity resolution and historical lookup.
+8. Implement controlled merge and split operations with ordered input/output contracts, version checks, immutable operation history, and explicit core-effect/reconciliation states.
+9. Implement identity resolution and historical lookup, including UNKNOWN-effect reconciliation and complete MULTIPLE_SUCCESSORS results.
 10. Integrate review handling for ambiguous cases.
 11. Add regression and evaluation datasets.
 12. Add operational monitoring and recovery procedures.
@@ -915,8 +928,13 @@ Verification must demonstrate that:
 - Merge operations preserve original identifiers and provenance.
 - Split operations preserve the original identity and create traceable successors.
 - Ambiguous cases remain unresolved or enter review.
-- Repeated processing does not create duplicate identity operations.
-- Interrupted operations can be recovered safely.
+- Repeated processing does not create duplicate identity operations or operation-history actions.
+- A MERGE includes its selected survivor in the input set and returns that same Event as its only output; invalid overlap is rejected.
+- A SPLIT preserves the complete successor set and never chooses an arbitrary successor for an unresolved allocation.
+- Concurrent or stale identity operations are rejected/serialized through expected-version checks and event-scoped ownership.
+- Interrupted operations are recovered from durable operation/history records; UNKNOWN outcomes are reconciled before any non-idempotent follow-up.
+- An applied core identity effect remains RECONCILIATION_REQUIRED until required association/report/analysis reconciliation is complete.
+- ArticleEventLink history is never directly repointed or deleted; successor links require successor EventMatchDecision records.
 - Historical reports remain traceable after identity changes.
 
 ## 11. Acceptance Criteria
@@ -1001,6 +1019,8 @@ Such measurements must be obtained through a representative evaluation dataset b
 | 1.4 | 2026-11-18 | Proposed | Defined case-level re-resolution and successor-decision requirements for article-event associations affected by merge and split operations. | AI Architecture Assistant |
 | 1.5 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.6 | 2026-11-18 | Proposed | Aligned decision and review authority terminology with the Project Owner role defined in GENI-GOV-005. | AI Architecture Assistant |
+| 1.7 | 2026-11-18 | Proposed | Aligned the identity-operation specification with the component and data-model contracts; retained Proposed status. | AI Architecture Assistant |
+| 1.8 | 2026-11-18 | Proposed | Defined EventIdentityOperationHistory, merge-survivor cardinality, optimistic concurrency, core-effect state, durable reconciliation, compensating corrections, and removed model entities not present in Documents 02/03. | AI Architecture Assistant |
 
 ---
 

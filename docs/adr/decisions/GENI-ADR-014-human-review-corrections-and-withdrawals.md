@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-014  
 **Title:** Human Review, Corrections, and Withdrawals  
 **Status:** Proposed  
-**Version:** 1.4  
+**Version:** 1.5  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -35,7 +35,7 @@ How should human review be triggered, authorized, recorded, and applied to event
 - Support review of DuplicateCandidate outcomes requiring human judgment and create immutable successor DuplicateDecision records for material corrections.
 - Coordinate report correction, publication replacement, withdrawal, claim-assessment correction, and rights remediation through explicit immutable successor records and authorized domain services.
 - Support escalation, reassignment, overdue detection, and audit.
-- Enable only article-deduplication, event-matching, and publication reviews in the first implementation slice; defer the other three types until their successor workflows and integration tests exist.
+- Enable exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION` in the first implementation slice. `REPORT_VERSION` is publication-eligibility review for an exact immutable Report version and its effective PublicationDecision. Defer `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` until their successor workflows, authorization rules, and integration tests exist.
 
 ### 3.2 Technical Constraints
 - Reviewer identity and authorization belong to the security layer.
@@ -141,11 +141,11 @@ A review task references exactly one typed subject and the exact immutable decis
 | `ARTICLE_DEDUPLICATION` | DuplicateCandidate and the DuplicateDecision under review | Article Deduplication Workflow creates a successor DuplicateDecision for the same candidate. |
 | `EVENT_MATCHING` | EventMatchCase and the EventMatchDecision under review | Event Resolution Workflow creates a successor EventMatchDecision; EventService applies only an effective MATCH. |
 | `CLAIM_ASSESSMENT` | Claim and exact ClaimAssessment | EvidenceService creates a successor ClaimAssessment with exact evidence links, appends AssessmentHistory, and atomically refreshes the Claim assessment projection. |
-| `REPORT_VERSION` | Exact immutable Report version | ReportVersionService creates a new corrected/superseding version; PublicationPolicy must issue a new decision before external replacement. |
+| `REPORT_VERSION` | Exact immutable Report version plus the exact effective PublicationDecision under review | ReportVersionService creates a new corrected/superseding version; PublicationPolicy issues a successor decision when eligibility changes, before any external replacement. |
 | `PUBLICATION_OPERATION` | Exact PublicationRecord and its current operation/reconciliation state | PublicationService reconciles an unknown outcome or creates an explicitly authorized successor REPLACE/WITHDRAW operation; previous operation/attempts remain immutable. |
 | `CONTENT_RIGHTS` | Exact RightsAssessment or SourceRightsProfile version | ContentRightsService creates a successor assessment/profile revision and initiates applicable restriction, retention, or deletion workflow; past publication/delivery history is not rewritten. |
 
-A review outcome is not itself a domain decision or external-operation authorization. The relevant domain service validates reviewer authority and policy, then creates the immutable successor record. Priority scale, thresholds, SLA, and authorization matrix remain subject to Project Owner approval. The architecture defines all six families, while the first implementation slice enables only article-deduplication, event-matching, and publication review. The remaining three families stay disabled until their successor workflows and integration tests are implemented.
+A review outcome is not itself a domain decision or external-operation authorization. The relevant domain service validates reviewer authority and policy, then creates the immutable successor record. Both `review_type` and `subject_type` use the same canonical family value. `REPORT_VERSION` is the first-slice publication-review family and binds the exact report version to its effective PublicationDecision. `PUBLICATION_OPERATION` is distinct: it reviews an existing PublicationRecord and its external operation/reconciliation state, and remains disabled in the first slice. The first slice enables exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`; `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` remain disabled until their successor workflows, authorization rules, and integration tests are implemented. Priority scale, thresholds, SLA, and authorization matrix remain subject to Project Owner approval.
 
 **Rationale:**
 - Prevents unaudited edits to authoritative records.
@@ -253,8 +253,8 @@ These relationships do not imply that related Proposed ADRs have been accepted.
 - Persist review tasks and assignment history.
 - Expose only evidence and source content permitted by rights policy.
 - Enforce reviewer authorization and separation of duties where required.
-- Apply article-deduplication, event-matching, and publication-review outcomes through their designated successor workflows.
-- Implement claim-assessment successor versions through EvidenceService, report-version correction through ReportVersionService followed by a new PublicationDecision, publication-operation reconciliation through PublicationService, and content-rights successor assessments through ContentRightsService before enabling those review types.
+- Apply `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION` outcomes through their designated successor workflows; a REPORT_VERSION review binds the exact Report version to its effective PublicationDecision.
+- Implement `REPORT_VERSION` correction through ReportVersionService followed by a new PublicationDecision in the first slice. Keep `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` disabled until the EvidenceService, PublicationService reconciliation, and ContentRightsService successor workflows respectively have approved authorization rules and passing integration tests.
 - Preserve old decisions, links, and report versions; create successor lineage.
 - Monitor overdue, abandoned, conflicting, and failed corrective tasks.
 
@@ -274,8 +274,8 @@ Inspect the actual implementation and data before defining migration. This propo
 2. Implement persistent review queue and task lifecycle.
 3. Integrate duplicate-candidate review with the Article Deduplication Workflow and immutable DuplicateDecision supersession.
 4. Integrate event-match review with Event Resolution workflow and EventService.
-5. Integrate report review with PublicationPolicy and ReportVersionService.
-6. Integrate correction, replacement, and withdrawal with PublicationService.
+5. Integrate `REPORT_VERSION` review with PublicationPolicy and ReportVersionService, binding the exact Report version to its effective PublicationDecision.
+6. Integrate correction, replacement, and withdrawal as separate PublicationService operations; this does not enable the `PUBLICATION_OPERATION` review family, which remains deferred until its reconciliation workflow and tests are complete.
 7. Add audit, escalation, and incident exercises.
 
 ### 10.5 Verification Requirements
@@ -284,7 +284,9 @@ Inspect the actual implementation and data before defining migration. This propo
 - Test article-deduplication review creates a successor DuplicateDecision for the same candidate.
 - Test material review outcomes create successor decisions without mutating originals.
 - Test corrected links preserve the old inactive link and create a traceable successor.
-- Test report correction creates a new version and separate publication replacement operation.
+- Test report correction creates a new version and a separate publication replacement operation.
+- Test first-slice review accepts only ARTICLE_DEDUPLICATION, EVENT_MATCHING, and REPORT_VERSION; deferred family requests cannot authorize material changes.
+- Test PUBLICATION_OPERATION review cannot be enabled before external-outcome reconciliation and authorization tests pass.
 - Test recovery, reassignment, and duplicate review submissions.
 
 Implementation verification remains deferred until formal acceptance and implementation of the dependent capability.
@@ -339,5 +341,7 @@ External legal, provider, and empirical evidence must be added during formal rev
 | 1.1 | 2026-11-18 | Proposed | Aligned event-matching review records and workflow references with the component architecture; removed undefined service and record types. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Extended typed human review to article-deduplication decisions and defined successor DuplicateDecision handling. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Completed typed subject families, mandatory priority provenance, and evidence/context link requirements. | AI Architecture Assistant |
+| 1.4 | 2026-11-18 | Proposed | Aligned review-family scope with the six canonical typed subjects and publication correction workflows; retained Proposed status. | AI Architecture Assistant |
+| 1.5 | 2026-11-18 | Proposed | Defined REPORT_VERSION as the first-slice publication-review family and PUBLICATION_OPERATION as a separately deferred external-operation review type; aligned implementation gates and verification. | AI Architecture Assistant |
 
 **End of ADR**
