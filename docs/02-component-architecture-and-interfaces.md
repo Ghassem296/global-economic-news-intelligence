@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.16  
+**Version:** 1.17  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -765,7 +765,7 @@ Fields:
 
 - `id`
 - `article_revision_id`
-- `development_key` — stable within the ArticleRevision and identifying the particular development or event mention being resolved
+- `development_key` — deterministic and stable within the ArticleRevision, based on a stable source-span/section anchor or canonical development-scope fingerprint, not a random processing-run identifier
 - `scope_description`
 - `case_status`
 - `effective_decision_id` — nullable pointer to the current effective EventMatchDecision; a mutable projection updated transactionally when a new decision is recorded
@@ -775,7 +775,7 @@ Fields:
 
 The effective-decision pointer is a current-state projection; historical EventMatchDecision records remain immutable.
 
-A separate case is required for each independently identifiable development in an article revision. The case is the unit of candidate evaluation, final decision, and human review. A case must not be silently reused for a materially different article revision or development scope.
+A separate case is required for each independently identifiable development in an article revision. Reprocessing the same ArticleRevision and development scope must reuse the same development_key and case. The case is the unit of candidate evaluation, final decision, and human review. A case must not be silently reused for a materially different article revision or development scope.
 
 ### 5.7 EventMatchCandidate
 
@@ -806,7 +806,7 @@ Each candidate record represents one versioned evaluation of one candidate Event
 
 Candidate status describes candidate-evaluation processing only (for example GENERATED, EVALUATED, or INELIGIBLE). ACCEPTED, REJECTED, and SUPERSEDED are not candidate statuses; supersession is represented by a new immutable candidate record referencing the prior evaluation. After reaching EVALUATED or INELIGIBLE, the candidate evaluation is immutable.
 
-A candidate score is not a decision confidence and must not be interpreted as one. Candidate evaluation identity is scoped by case, candidate Event, matching-policy version, and candidate-input fingerprint.
+A candidate score is not a decision confidence and must not be interpreted as one. Candidate evaluation identity is scoped by case, candidate Event, matching-policy version, and candidate-input fingerprint. A superseding candidate evaluation must reference a prior evaluation of the same Event in the same case.
 
 ### 5.8 EventMatchDecision
 
