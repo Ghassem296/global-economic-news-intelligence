@@ -1591,6 +1591,7 @@ Fields:
 - `due_at` nullable
 - `review_reason`
 - `review_notes`
+- `priority_policy_version` — required when priority is assigned or recalculated.
 - `review_outcome` nullable
 - `created_at`
 - `completed_at`
@@ -1618,9 +1619,25 @@ Constraints and behavior:
 - Review history must not be silently overwritten. Reassignment and status changes must be auditable.
 - Reviewer identity and authorization must be managed by the application's security layer.
 - ReviewRecord is the current task/projection; all lifecycle actions, assignment changes, reviewer notes, escalation, completion, and cancellation must be preserved in append-only ReviewAction records.
-- Current status and assignee fields on ReviewRecord must be rebuildable from its ReviewAction history. Final reviewer outcome and completion actor/time must be represented by an immutable completion action and must not be silently overwritten.
+- Current status, priority, and assignee fields on ReviewRecord must be rebuildable from its ReviewAction history. Priority changes must be recorded as actions with the applicable priority-policy version. Final reviewer outcome and completion actor/time must be represented by an immutable completion action and must not be silently overwritten.
 
-### 11.7.1 ReviewAction
+### 11.7.1 ReviewContextLink
+
+Connects a ReviewRecord to the exact evidence or domain records needed to understand the review without copying restricted source content into the task.
+
+Fields:
+
+- `id`
+- `review_record_id`
+- `context_type`
+- `context_reference`
+- `context_role`
+- `created_at`
+- `metadata`
+
+`context_type` must identify a supported typed reference such as `EVIDENCE`, `CLAIM_ASSESSMENT`, `DUPLICATE_DECISION`, `EVENT_MATCH_DECISION`, `REPORT_VERSION`, `PUBLICATION_OPERATION`, or `RIGHTS_ASSESSMENT`. The application layer must validate that the reference exists, belongs to the review subject where required, and is accessible to the assigned reviewer. Context links are immutable once the review is completed; corrections require a successor task or an append-only action.
+
+### 11.7.2 ReviewAction
 
 Represents one immutable action in the lifecycle of a ReviewRecord.
 
@@ -2563,7 +2580,7 @@ Initial repository contracts include:
 - `AnalysisRepository`
 - `AnalysisInputRepository`
 - `AnalysisEvidenceLinkRepository`
-- `MarketObservationRepository` (only when market-data integration is approved under GENI-ADR-015)
+- `MarketObservationRepository` (only when GENI-ADR-015 is accepted and market-data integration is in scope) (only when market-data integration is approved under GENI-ADR-015)
 - `ReportRepository`
 - `ReportEventLinkRepository`
 - `ReportEvidenceLinkRepository`
