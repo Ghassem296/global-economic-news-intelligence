@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.26
+**Version:** 1.27
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1820,7 +1820,8 @@ Represents a logical delivery operation for a report or a notification related t
 Fields:
 
 - `id`
-- `report_id`
+- `report_id` — exact immutable report version
+- `recipient_reference` — exact recipient or recipient-group identity addressed by the operation
 - `publication_record_id` nullable
 - `delivery_mode`
 - `channel`
@@ -1916,7 +1917,7 @@ Fields:
 
 Constraints:
 
-- The decision is immutable; correction/revocation creates a successor decision or explicit revocation record.
+- The decision is immutable; correction or revocation is represented by a successor decision (normally a DENY outcome) that supersedes the prior decision. The prior decision remains queryable and must not be edited.
 - `ALLOW` is valid only for the exact report version, recipient, destination, delivery mode, channel, and content scope it names.
 - The applicable content-rights assessment must authorize customer distribution of the relevant source-derived content; it does not replace recipient-specific authorization.
 - Dispatch must re-check that the referenced decision remains effective, unexpired, and allowed.
