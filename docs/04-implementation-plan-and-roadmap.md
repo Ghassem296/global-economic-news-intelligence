@@ -1228,7 +1228,7 @@ Enable controlled automated processing and text report delivery.
 8. Implement delivery intent records.
 9. Implement delivery attempt history.
 10. Implement idempotent delivery operations.
-11. Re-check decision expiry/revocation, every linked RightsAssessment, and the actual outbound content-scope fingerprint before dispatch; preserve completed delivery history.
+11. Re-check decision expiry/revocation, every linked RightsAssessment, and the exact canonical manifest item set and content digests before dispatch; record the serialized outbound-payload digest separately and preserve completed delivery history.
 12. Implement scheduled collection.
 13. Implement scheduled processing.
 14. Implement event monitoring.
