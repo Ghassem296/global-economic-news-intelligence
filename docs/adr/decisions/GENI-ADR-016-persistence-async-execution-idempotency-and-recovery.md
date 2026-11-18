@@ -310,8 +310,8 @@ External legal, provider, and empirical evidence must be added during formal rev
 
 ## 14. Decision History
 
-| Date | Version | Status | Change |
+| Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|
-| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
+| 1.0 | 2026-11-18 | Proposed | Expanded ADR proposal prepared for architecture review | AI Architecture Assistant |
 
 **End of ADR**
