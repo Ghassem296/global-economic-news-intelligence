@@ -316,6 +316,7 @@ External legal, provider, and empirical evidence must be added during formal rev
 
 | Date | Version | Status | Change |
 |---|---|---|---|
-| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |\n| 2026-11-18 | 1.1 | Proposed | Aligned event-matching review records and workflow references with the component architecture; removed undefined service and record types. |
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
+| 2026-11-18 | 1.1 | Proposed | Aligned event-matching review records and workflow references with the component architecture; removed undefined service and record types. |
 
 **End of ADR**
