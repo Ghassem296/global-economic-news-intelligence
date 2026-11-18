@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SEC-008  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -93,14 +93,14 @@ Documents 02, 03, 09, 10, 12, 13, and [14 — Data Protection and Privacy Specif
 
 `ContentRightsService` and `PrivacyProcessingAuthorization` are separate controls. For a provider request involving both source content and personal data, both must independently authorize the exact purpose, operation, payload classification, provider/model and processing region. A positive content-rights decision cannot substitute for privacy authorization.
 
-SharedLLMExecutionLayer fails closed if the privacy decision, processor register entry, transfer assessment or provider retention/training-use posture is missing, unknown, expired, revoked or inconsistent. Minimize/redact before transmission; do not include direct subject identifiers unless strictly necessary and explicitly authorized. Bind each request/usage record to authorization references, purpose, data category, provider/model, region and policy version. Re-evaluate when any attribute changes, including retries.
+SharedLLMExecutionLayer fails closed if the privacy decision, processor register entry, transfer assessment or provider retention/training-use posture is missing, unknown, expired, revoked or inconsistent. Minimize/redact before transmission; do not include direct subject identifiers unless strictly necessary and explicitly authorized. Bind each request/usage record to the immutable PrivacyAuthorizationDecision ID, applicable content-rights decision references, purpose, data category, provider/model, region and policy version. Persist the decision reference in LLMUsageRecord whenever personal data is processed. Re-evaluate when any attribute changes, including retries.
 
 Logs, traces, prompts, exception messages and evaluation artifacts are privacy-relevant stores. Use allowlisted telemetry, opaque subject references, redaction and access controls. Test synthetic canary values. Provider deletion acknowledgement and backup restoration must reconcile with the privacy deletion ledger. See Documents 02, 03, 09, 12, 13 and 14; GENI-ADR-020.
 
 ---
 
 **Document ID:** GENI-SEC-008  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Draft — Under Architecture Review  
 
 
