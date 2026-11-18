@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-008  
 **Title:** Evidence Provenance and Uncertainty Representation  
 **Status:** Proposed  
-**Version:** 1.5
+**Version:** 1.6
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -717,7 +717,7 @@ When evidence conflicts, the assessment should consider:
 - Whether the apparent contradiction can be explained by scope or timing differences.
 - Whether the available information remains insufficient.
 
-Conflicting evidence may result in a `MIXED` or `INCONCLUSIVE` assessment.
+Conflicting evidence may result in a `DISPUTED` assessment when material supporting and contradicting evidence remain in conflict, or `UNRESOLVED` when examination does not permit a reliable conclusion.
 
 The system must not automatically resolve contradictions by selecting the source with the highest general reliability score.
 
@@ -1172,6 +1172,7 @@ Such measurements must be established through representative datasets and evalua
 | 1.3 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Aligned claim-assessment outcomes and evidence-link relationships with Documents 02 and 03; separated evidence class from representation type and lifecycle states. | AI Architecture Assistant |
 | 1.5 | 2026-11-18 | Proposed | Removed lifecycle states from the assessment outcome enum, clarified canonical uncertainty semantics, and aligned all authority references with the Project Owner role. | AI Architecture Assistant |
+| 1.6 | 2026-11-18 | Proposed | Replaced remaining legacy MIXED/INCONCLUSIVE outcome wording with canonical DISPUTED/UNRESOLVED semantics. | AI Architecture Assistant |
 
 ---
 
