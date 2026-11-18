@@ -925,5 +925,6 @@ Upon acceptance:
 | 1.3 | 2026-11-18 | Proposed | Defined immutable DuplicateCandidate evaluations over exact ArticleRevision pairs and a separate immutable DuplicateDecision with supersession history. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.5 | 2026-11-18 | Proposed | Defined pairwise duplicate decision outcomes, immutable supersession, and group derivation from effective pairwise decisions. | AI Architecture Assistant |
+| 1.6 | 2026-11-18 | Proposed | Defined non-transitive near-duplicate grouping and conservative complete-link semantics. | AI Architecture Assistant |
 
 **End of ADR-002**
