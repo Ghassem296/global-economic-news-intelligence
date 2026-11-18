@@ -139,10 +139,10 @@ Contains:
 - Event dossier generation.
 - Report generation.
 - Report version management.
-- Publication policy.
-- Review management.
-- Correction and withdrawal handling.
-- Delivery coordination.
+- Publication policy and review management.
+- Publication execution, including publish, replace, and withdraw operations.
+- Report-version correction and supersession lineage.
+- Independent recipient delivery coordination.
 
 ### 3.7 Shared LLM Execution
 
@@ -761,11 +761,14 @@ Represents a publication policy evaluation.
 
 It must preserve:
 
-- Report reference.
+- Report-version reference.
 - Decision.
-- Decision reason.
+- Decision reasons and caveats.
 - Policy version.
 - Evaluation timestamp.
+- Supersession reference where applicable.
+
+A publication decision records eligibility and authorization only. It does not prove that a report has been published at an external target.
 
 ### 5.13 ReviewRecord
 
@@ -782,17 +785,20 @@ It must preserve:
 
 ### 5.14 DeliveryRecord
 
-Represents a delivery attempt.
+Represents a logical delivery operation.
 
 It must preserve:
 
-- Report reference.
-- Destination reference.
+- Report-version reference.
+- Delivery mode.
+- Destination and recipient reference.
+- Optional successful PublicationRecord reference when delivering a publication link.
 - Idempotency key.
-- Delivery status.
-- Attempt information.
+- Delivery status and attempt information.
 - External delivery reference where available.
 - Execution timestamps.
+
+Delivery status is independent of publication status. A delivery operation must not create, replace, withdraw, or otherwise mutate a publication.
 
 ### 5.15 ProcessingRun
 
@@ -1017,6 +1023,19 @@ A held report must be routed to a defined review mechanism. An authorized review
 - Operation type: `PUBLISH`, `REPLACE`, or `WITHDRAW`.
 - Earlier PublicationRecord reference for replacement or withdrawal.
 - Stable idempotency key and required authorization context.
+
+**Publication adapter contract:**
+
+The target-specific adapter must expose the capabilities supported by its target through an explicit interface:
+
+- `publish(request)` for a new publication.
+- `replace(request)` where the target supports replacement semantics.
+- `withdraw(request)` where the target supports removal or formal withdrawal.
+- `get_status(request)` or an equivalent reconciliation operation where the target supports status lookup.
+
+A request must include the logical operation identifier, idempotency key, target reference, report-version identity, and the exact authorized publication representation, including required caveats. It must not expose unrelated filesystem, shell, or secret-management capabilities.
+
+The adapter result must distinguish confirmed success, confirmed failure, and unknown outcome. It should return an external publication reference and URL when available. An unsupported target capability must be reported explicitly; the application must not simulate a successful replacement or withdrawal.
 
 **Output:**
 
