@@ -5,7 +5,7 @@
 **ADR ID:** GENI-ADR-NNN
 **Title:** [Short and Descriptive Decision Title]
 **Status:** Proposed
-**Version:** 1.1
+**Version:** 1.2
 **Date:** YYYY-MM-DD
 **Decision Owner:** Project Owner
 **Prepared By:** AI Architecture Assistant
