@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.8
+**Version:** 1.9
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -354,6 +354,7 @@ The following topics must be resolved or explicitly bounded before dependent imp
 - Workflow-first architecture and shared LLM execution.
 - Article deduplication versus event matching.
 - Event identity, matching, merging, and splitting.
+- EventCreationPolicy authorization, stable proposed Event identifiers, and idempotent recovery after partial creation.
 - Semantic similarity and embedding strategy.
 - Initial persistence and async execution strategy.
 - News acquisition and full-text access rights.
@@ -376,6 +377,7 @@ Not every future capability must be fully designed before the first implementati
 
 - Critical architecture conflicts are resolved.
 - Decisions blocking the first implementation slice are accepted or explicitly bounded.
+- EventCreationPolicy and human-approval conditions are accepted or explicitly bounded before NEW_EVENT_CANDIDATE can cause automatic Event creation.
 - The initial product scope is clear.
 - The documents identify which choices remain provisional.
 - No dependent implementation begins on the assumption that a Proposed ADR is already Accepted.
