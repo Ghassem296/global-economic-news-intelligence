@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.13  
+**Version:** 1.14  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -975,8 +975,9 @@ The domain model must not depend directly on a specific database engine.
 
 The initial persistence design must explicitly address:
 
-- SQLite journal mode and write concurrency.
-- Busy timeout and transaction boundaries.
+- Transaction boundaries and write-serialization requirements independent of the selected engine.
+- Database-engine-specific concurrency, locking, journaling, and timeout settings only after an engine is selected under GENI-ADR-005. For SQLite, this includes journal mode, busy timeout, and its single-writer constraints; for PostgreSQL, the corresponding connection, locking, and transaction settings.
+
 - The selected asynchronous database access approach.
 - Database migration management.
 - Backup and restore procedures.
