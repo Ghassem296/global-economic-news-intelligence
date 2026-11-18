@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-013  
 **Title:** News Content Access, Full-Text Retention, Licensing, and Republishing  
-**Version:** 1.2
+**Version:** 1.3
 **Status:** Proposed  
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
@@ -445,12 +445,15 @@ The system must distinguish the following activities:
 | `INTERNAL_ANALYSIS` | Using content to support internal intelligence tasks. |
 | `EXTERNAL_LLM_PROCESSING` | Sending content to an external LLM provider. |
 | `DERIVED_OUTPUT_GENERATION` | Creating summaries, classifications, or other derived outputs. |
+| `TRANSLATION` | Translating source content or creating a translated derivative; this permission is distinct from general analysis and distribution. |
+| `EMBEDDING_GENERATION` | Creating vector or other machine-readable representations from content; storage and external-provider transmission require separate applicable checks. |
 | `QUOTATION` | Including excerpts from source content. |
-| `AUDIO_VIDEO_TRANSFORMATION` | Transforming content into audio or video outputs. |
+| `AUDIO_TRANSFORMATION` | Transforming content into spoken audio or narration. |
+| `VIDEO_TRANSFORMATION` | Transforming content into video, including narration, visuals, or captions. |
 | `CUSTOMER_DISTRIBUTION` | Delivering derived outputs to customers. |
 | `CONTENT_REPUBLICATION` | Reproducing original or substantial source content. |
 
-Permission for one activity must not automatically grant permission for another.
+Permission for one activity must not automatically grant permission for another. The operation catalog is canonical across Documents 02 and 03: rights assessments must use these exact operation identifiers, and each request must identify the operation, content scope, policy version, and enforcement point. `DISCOVERY` is distinct from `METADATA_ACCESS`; translation and embedding generation are distinct from generic derived-output generation; audio and video transformation are separate operations. External transmission for translation or embedding generation must additionally pass `EXTERNAL_LLM_PROCESSING` or the applicable external-provider permission check.
 
 For example, permission for `INTERNAL_ANALYSIS` does not automatically authorize `CONTENT_REPUBLICATION`.
 
@@ -1110,7 +1113,7 @@ This ADR should be reviewed when:
 ### 12.2 Review Schedule
 
 **Review Date:** Not scheduled.  
-**Review Owner:** Product Owner.
+**Review Owner:** Project Owner.
 
 ### 12.3 Reconsideration Conditions
 
@@ -1145,6 +1148,7 @@ Source-specific rights and legal requirements must be verified before production
 | 1.0 | 2026-11-17 | Proposed | Initial proposal covering source access, full-text retention, licensing, processing, attribution, and republication. | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Synchronized version history and end-of-document metadata with the current Proposed ADR revision; no approval status changed. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
+| 1.3 | 2026-11-18 | Proposed | Canonicalized operation permissions and separated translation, embedding, audio, and video transformations; aligned review authority. | AI Architecture Assistant |
 
 ---
 
