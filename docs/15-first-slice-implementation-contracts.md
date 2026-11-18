@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-19
@@ -471,10 +471,10 @@ This inventory distinguishes defined state vocabulary from defined transition be
 | ProcessingStep | A status field exists; no closed vocabulary, initial state, transition graph, terminal rules, or run-aggregation semantics are defined. | Lease/fencing rules exist; they govern ownership and stale-writer rejection, not the missing status lifecycle. | **Blocked** |
 | PublicationRecord | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED | Expected operation lifecycle and reconciliation semantics defined in Document 03 §11.8. | **Specified at logical level; target adapter contract remains gated** |
 | PublicationAttempt | EXECUTE/RECONCILE; CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, RECONCILED_NOT_APPLIED | Attempt outcomes are enumerated; outcome-to-PublicationRecord transition mapping, retryable/terminal behavior, and post-reconciliation state require a formal table. | **Partially specified** |
-| DeliveryRecord | PENDING, IN_PROGRESS, DELIVERED, FAILED, CANCELLED | Status vocabulary and idempotent retry requirement exist in Document 03 §12.1; allowed transitions, terminal/retry semantics, and DeliveryAttempt outcome mapping are not defined. | **Partially specified; transition contract required before delivery implementation** |
+| DeliveryRecord | PENDING, IN_PROGRESS, DELIVERED, FAILED, CANCELLED | Vocabulary and same-operation idempotency requirement exist; initial state, allowed transitions, terminal/cancellation/retry semantics, and DeliveryAttempt outcome mapping are not defined. | **Partially specified; transition contract required before delivery implementation** |
 | ExecutionLease | ACTIVE, RELEASED, EXPIRED | Exclusive acquisition, monotonic fencing, owner/token-bound renewal/release and stale-worker rejection specified in Document 03 §13.2.1. | **Specified at logical level; numeric lease policy is operational TBD** |
 | IdempotencyRecord | IN_PROGRESS, COMPLETED, FAILED, RECONCILIATION_REQUIRED | Same-fingerprint replay, different-fingerprint conflict, external reconciliation semantics specified in Document 03 §13.2.2. | **Specified at logical level; exact retry/expiry policy TBD** |
-| ReviewRecord | PENDING, IN_PROGRESS, COMPLETED, CANCELLED | Actions/history and successor workflow requirements defined; reopening is a new task lifecycle segment. | **Partially specified; ADR-014 approval required** |
+| ReviewRecord | PENDING, IN_PROGRESS, COMPLETED, CANCELLED | Append-only ReviewAction vocabulary/history and successor workflows are defined; allowed status transitions, action-to-status projection, terminal rules, and reopened-segment identity remain unresolved. | **Partially specified; ADR-014 approval required** |
 
 ### 10.10 Required transition tables before implementation
 
@@ -487,8 +487,8 @@ The following must be completed from approved policy and reconciled across Docum
 5. EventMatchCandidate complete status vocabulary and creation/evaluation contract, including eligibility guards, interrupted generation, idempotent evaluation, and immutable successor-record behavior for changed inputs/policy.
 6. PublicationDecision effective-successor algorithm, concurrent-append guard, and actor/authorization provenance reconciliation.
 7. PublicationAttempt outcome-to-PublicationRecord transition matrix, including confirmed failure, unknown outcome, reconciliation-not-applied, retry eligibility, and terminal/cancelled behavior.
-8. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014.
-9. DeliveryRecord transition matrix, including retry/cancellation semantics, and DeliveryAttempt outcome mapping.
+8. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014, including action-to-status projection, terminal/cancellation behavior, and reopened task-segment identity.
+9. DeliveryRecord transition matrix, including retry/cancellation/unknown-outcome semantics, and DeliveryAttempt outcome vocabulary and mapping.
 10. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
 
 ### 10.10.1 Processing execution lifecycle closure questions
@@ -545,6 +545,24 @@ PublicationDecision, ReviewRecord, PublicationRecord, and PublicationAttempt are
 
 The effective PublicationDecision must be scoped to the exact report version. A new decision must not create competing effective successors. PublicationAttempt records are immutable attempt evidence; changing the logical PublicationRecord state must not rewrite an attempt. Unknown external outcomes require reconciliation before any further side-effecting attempt. These constraints do not authorize implementation until the missing mappings and provenance contract are resolved.
 
+### 10.10.4 Review and delivery lifecycle closure questions
+
+ReviewRecord and DeliveryRecord must not be conflated with the domain decision or publication operation they support.
+
+| Decision | Required contract | Why it cannot be inferred |
+|---|---|---|
+| Review creation | Server-controlled initial status, required initial ReviewAction, and exact task-segment identity. | The status vocabulary and CREATED action exist, but the initial projection rule is not tabulated. |
+| Review transitions | Allowed status transitions, guards, actor/authorization requirements, and terminal states for COMPLETED/CANCELLED. | The action list is append-only but does not define every legal status transition. |
+| Action projection | Deterministic mapping from CREATED, ASSIGNED, REASSIGNED, PRIORITY_CHANGED, STARTED, NOTE_ADDED, ESCALATED, COMPLETED, CANCELLED, and REOPENED to current ReviewRecord fields. | Current status/priority/assignee are rebuildable projections, but action-to-projection semantics are not fully defined. |
+| Reopening | Whether REOPENED changes the same ReviewRecord projection or starts a distinct lifecycle segment; segment identity, assignment reset, due-date/priority behavior, and completion history. | ADR-014 requires a new task lifecycle segment but does not define its storage/projection representation. |
+| Review concurrency | Ordering, sequence allocation, expected-version checks, duplicate action handling, and atomicity between ReviewAction append and ReviewRecord projection. | Append-only actions and unique sequence are required, but the complete concurrency contract is not specified. |
+| Delivery creation | Server-controlled initial status, scheduling semantics, dispatch eligibility, and authorization revalidation immediately before dispatch. | Delivery statuses and authorization constraints exist, but initial/dispatch transition rules are not tabulated. |
+| Delivery transitions | Allowed transitions, terminal states, cancellation guards, retry eligibility, and behavior when authorization expires or is revoked during execution. | Status names and dispatch authorization rules do not define lifecycle precedence. |
+| DeliveryAttempt outcomes | Closed outcome vocabulary and mapping of confirmed success, confirmed failure, timeout/unknown, and reconciliation to DeliveryRecord status. | DeliveryAttempt has no defined outcome enum or outcome-to-operation transition table. |
+| Delivery retry/reconciliation | Same logical DeliveryRecord/idempotency key behavior, late-result handling, destination idempotency capability, and reconciliation before another side effect when outcome is unknown. | Retry must reuse the operation key, but failure classification and unknown-outcome handling are not fully defined. |
+
+A ReviewAction is immutable evidence of a task action; it does not replace the authoritative successor decision created by the designated domain workflow. A DeliveryAttempt is immutable evidence of one external attempt; it does not itself authorize dispatch or change PublicationRecord state. Authorization must be checked for the exact delivery scope at dispatch, and a delivery failure must not reverse a confirmed publication.
+
 No implementation may invent missing transitions or treat timestamps as substitutes for state.
 
 ## 11. Related documents
@@ -563,10 +581,10 @@ No implementation may invent missing transitions or treat timestamps as substitu
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-19
 
-**Revision Note (v1.6):** Expanded PublicationDecision and PublicationAttempt blockers into an explicit contract-closure checklist covering effective-successor selection, concurrency, actor/authorization provenance, caveat enforcement, attempt-outcome mapping, retry, reconciliation, and cancellation. No new statuses or transition rules were invented; implementation remains blocked pending resolution and Project Owner approval.
+**Revision Note (v1.7):** Expanded ReviewRecord and DeliveryRecord lifecycle blockers into an explicit contract-closure checklist covering action-to-status projection, task reopening segments, concurrency, delivery attempt outcomes, authorization revalidation, retry, and reconciliation. No new statuses or transition rules were invented; implementation remains blocked pending resolution and Project Owner approval.
 
 **End of Document**
