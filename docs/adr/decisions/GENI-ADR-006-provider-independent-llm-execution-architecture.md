@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-006  
 **Title:** Provider-Independent LLM Execution Architecture  
-**Version:** 1.2
+**Version:** 1.3
 **Status:** Proposed  
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
@@ -910,6 +910,7 @@ No provider benchmark or cost comparison is claimed by this proposal.
 | 1.0 | 2026-11-17 | Proposed | Initial proposal for a shared provider-independent LLM execution architecture | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Synchronized version history and end-of-document metadata with the current Proposed ADR revision; no approval status changed. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
+| 1.3 | 2026-11-18 | Proposed | Aligned decision and review authority terminology with the Project Owner role defined in GENI-GOV-005. | AI Architecture Assistant |
 
 ---
 
