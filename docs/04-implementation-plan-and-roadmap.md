@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -1058,14 +1058,15 @@ The initial event dossier should support:
 4. Latest Developments.
 5. Timeline.
 6. Key Entities.
-7. Economic Significance.
-8. Observed Market Reaction, if supported by data.
-9. Potential Market and Sector Impact.
-10. Supporting Evidence.
-11. Conflicting or Unconfirmed Information.
-12. Risks and Uncertainties.
-13. Analytical Assessment.
-14. Sources.
+7. Event Importance — why the development deserves attention or follow-up.
+8. Economic Relevance — direct, indirect, or contextual transmission pathways.
+9. Observed Market Reaction, only when supported by actual market observations.
+10. Economic Impact — realized or potential consequences by channel, direction, magnitude, and horizon where supported.
+11. Supporting Evidence.
+12. Conflicting or Unconfirmed Information.
+13. Risks and Uncertainties.
+14. Analytical Assessment.
+15. Sources.
 
 Reports should be concise enough to be useful while preserving important evidence and context.
 
@@ -1254,11 +1255,15 @@ Create datasets covering:
 **Event Intelligence**
 
 - Event detection precision and recall.
-- Event matching accuracy.
+- Candidate retrieval recall at the configured candidate depth.
+- Case-level EventMatchDecision precision, recall, and unresolved/ambiguous rate.
+- False active-association rate.
+- False event-creation rate.
 - False event merge rate.
 - Event fragmentation rate.
 - Event update correctness.
 - Merge and split correctness.
+- Human-review escalation and correction rates.
 
 **Evidence**
 
@@ -1270,16 +1275,15 @@ Create datasets covering:
 
 **Analysis**
 
-- Event Importance quality and calibration.
-- Economic Relevance classification quality.
-- Economic Impact channel/direction/horizon quality.
-- Analytical consistency.
-- Unsupported assertion rate.
+- Event Importance ranking quality and calibration.
+- Economic Relevance classification and transmission-pathway validity.
+- Economic Impact channel-level direction, magnitude/range, horizon, and evidence-status quality.
+- Unknown and insufficient-evidence classification quality.
+- Separation of assessment confidence, forecast probability, and effect magnitude.
+- Consistency and divergence checks across the three independent assessments.
 - Forecast and uncertainty quality.
-- Event Importance assessment quality.
-- Economic Relevance classification correctness.
-- Economic Impact classification and channel-level assessment correctness.
-- Separation of market reaction from causal attribution.
+- Unsupported material assertion rate.
+- False causal-attribution rate for observed market reactions.
 
 **Reporting**
 
