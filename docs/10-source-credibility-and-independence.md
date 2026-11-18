@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SRC-010  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -29,7 +29,9 @@ Several articles may derive from one original report and count as one origin for
 
 Source identity represents publisher or identifiable information origin, not merely hostname. Preserve publisher, canonical source, domain/host, author where available, original publication time, acquisition time, and provider identifiers separately.
 
-Typed, time-bounded relationship candidates include OWNED_BY, OPERATED_BY, SAME_EDITORIAL_GROUP, SYNDICATES_TO, SYNDICATED_FROM, REPUBLISHES, ATTRIBUTES_TO, CITES, AFFILIATED_WITH, and UNKNOWN_RELATIONSHIP. Preserve direction, validity interval, supporting evidence, assessment state, provenance, and version. Unknown relationship is not independence evidence.
+Publisher/source relationships are represented by the versioned SourceRelationship model in Document 03. Typed, time-bounded relationship candidates include OWNED_BY, OPERATED_BY, SAME_EDITORIAL_GROUP, SYNDICATES_TO, SYNDICATED_FROM, REPUBLISHES, AFFILIATED_WITH, and UNKNOWN_RELATIONSHIP. Preserve the declared from/to direction (except the symmetric SAME_EDITORIAL_GROUP relation), validity interval, supporting evidence, assessment state, provenance, and relationship version. Do not canonicalize directional source pairs as unordered pairs.
+
+Relationships between individual publications are represented separately by ArticleOriginRelationship and must reference exact ArticleRevision records or an explicit primary-source origin. These article-origin edges include SYNDICATED_FROM, REPRINTED_FROM, DERIVED_FROM, ATTRIBUTES_TO, QUOTES, SUMMARIZES, CITES, USES_COMMON_PRIMARY_SOURCE, and UNKNOWN_RELATIONSHIP. ORIGINAL_REPORTING is an evidence/source role, not a publisher-to-publisher or article-to-article edge. Source ownership/affiliation must never be inferred from article wording, and article syndication must never be inferred from domain similarity alone. Unknown relationship is not independence evidence.
 
 ## 4. Information-Origin Independence
 
@@ -70,6 +72,6 @@ Documents 02, 03, and 12; GENI-ADR-008 and GENI-ADR-019.
 ---
 
 **Document ID:** GENI-SRC-010  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft — Under Architecture Review  
 **End of Document**

@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.13
+**Version:** 1.14
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -249,14 +249,6 @@ It records document identifiers, titles, file paths, versions, statuses, respons
 
 **Authority:** Primary documentation inventory and registry reference.
 
-# 4. Architectural Decision Records
-
-**Directory:** `adr/`
-
-Architectural Decision Records document the reasoning behind significant architectural choices.
-
-Each ADR should describe the problem, relevant context, alternatives, evaluation criteria, recommendation, consequences, and final decision status.
-
 ## 3.8 Security Architecture and Threat Model
 
 **File:** 08-security-architecture-and-threat-model.md  
@@ -298,6 +290,14 @@ Defines verification layers, dataset governance, metric definitions, AI evaluati
 **Document ID:** GENI-OPS-013
 
 Defines environment separation, runtime responsibilities, deployment controls, observability, recovery, capacity, runbooks, and readiness gates.
+
+# 4. Architectural Decision Records
+
+**Directory:** `adr/`
+
+Architectural Decision Records document the reasoning behind significant architectural choices.
+
+Each ADR should describe the problem, relevant context, alternatives, evaluation criteria, recommendation, consequences, and final decision status.
 
 ## 4.1 ADR Registry
 
@@ -638,6 +638,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `docs/README.md`  
-**Version:** 1.13  
+**Version:** 1.14  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18

@@ -98,7 +98,7 @@ Planned subject areas include:
 - Financial Markets
 - Macroeconomics
 - Trade and Industry
-- Energy and Natural Resources
+- Energy and Resources
 - Fiscal Policy and Public Debt
 - Geopolitical Economic Risk
 

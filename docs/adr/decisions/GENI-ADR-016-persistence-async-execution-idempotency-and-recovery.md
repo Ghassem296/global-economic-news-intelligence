@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-016  
 **Title:** Persistence, Async Execution, Idempotency, and Recovery  
 **Status:** Proposed  
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -136,6 +136,14 @@ Persist workflow runs and step state in the application persistence layer with a
 - Allows interrupted work to resume from durable checkpoints.
 - Prevents duplicate state changes and makes external effects auditable.
 - Avoids premature distributed infrastructure while preserving an upgrade path.
+
+**Required logical persistence contracts:**
+
+- `ExecutionLease` is the authoritative ownership record for a ProcessingRun or ProcessingStep. It carries a stable owner identity, expiry/heartbeat state, and a monotonically increasing fencing token. Lease acquisition/renewal is atomic; every worker state change validates the current token so a stale worker cannot commit after ownership changes.
+- Run/step lease timestamps are query projections only; they do not establish ownership by themselves.
+- `IdempotencyRecord` is unique by `(operation_scope, idempotency_key)` and stores a request fingerprint and operation outcome. Reusing a key with a different fingerprint is a conflict; reusing it with the same fingerprint returns/resumes the existing logical operation.
+- Local domain effects and idempotency state share a transaction where possible. External effects use durable intent and explicit reconciliation; unknown outcomes are not treated as confirmed failures and must be reconciled before retry.
+- Lease duration, renewal interval, worker topology, and database-specific locking are deployment/implementation choices and remain deferred until measured and formally reviewed.
 
 **Deferred Questions:**
 - Lease duration and renewal intervals.
@@ -313,5 +321,6 @@ External legal, provider, and empirical evidence must be added during formal rev
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Expanded ADR proposal prepared for architecture review | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Defined logical ExecutionLease fencing and scoped IdempotencyRecord contracts and aligned the data model with recovery requirements. | AI Architecture Assistant |
 
 **End of ADR**

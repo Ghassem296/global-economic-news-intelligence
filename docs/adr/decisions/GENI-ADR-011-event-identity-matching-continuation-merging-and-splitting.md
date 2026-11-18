@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.8  
+**Version:** 1.9  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -711,12 +711,13 @@ The Project Owner must explicitly accept or reject this recommendation.
 
 **Deferred Questions:**
 
-- Exact matching thresholds and calibration.
-- Detailed event lifecycle states and transitions.
-- Final event relationship taxonomy.
-- Review ownership and escalation policy.
-- Detailed reconciliation of previously published reports after merge or split.
-- Final event identity data model and database constraints.
+- Exact matching thresholds and calibration against representative event-resolution data.
+- Domain-specific resolution criteria and quantitative monitoring/archival thresholds.
+- Review ownership, authorization, and escalation policy.
+- Detailed reconciliation of previously published reports and downstream media after merge or split.
+- Final database-specific constraints and migration details for the event identity model.
+
+The canonical event relationship taxonomy and lifecycle baseline are specified in Sections 6.8 and 6.14 and are no longer deferred questions. They remain Proposed and must not be treated as formally approved until this ADR is accepted.
 
 ## 8. Consequences and Trade-Offs
 
@@ -1021,6 +1022,7 @@ Such measurements must be obtained through a representative evaluation dataset b
 | 1.6 | 2026-11-18 | Proposed | Aligned decision and review authority terminology with the Project Owner role defined in GENI-GOV-005. | AI Architecture Assistant |
 | 1.7 | 2026-11-18 | Proposed | Aligned the identity-operation specification with the component and data-model contracts; retained Proposed status. | AI Architecture Assistant |
 | 1.8 | 2026-11-18 | Proposed | Defined EventIdentityOperationHistory, merge-survivor cardinality, optimistic concurrency, core-effect state, durable reconciliation, compensating corrections, and removed model entities not present in Documents 02/03. | AI Architecture Assistant |
+| 1.9 | 2026-11-18 | Proposed | Removed lifecycle and relationship-taxonomy items already defined as normative baselines from the deferred-question list; retained approval gates and genuinely open domain decisions. | AI Architecture Assistant |
 
 ---
 

@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.43  
+**Version:** 1.44  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -417,6 +417,8 @@ Responsibilities:
 - Identify known source ownership or syndication relationships.
 - Provide source context to evidence assessment.
 - Identify missing or uncertain source information.
+- Read versioned, time-bounded SourceRelationship records without treating unknown relationships as independence.
+
 
 Source assessment is contextual input to evidence evaluation, not proof that a claim is true or false.
 
@@ -429,6 +431,7 @@ Responsibilities:
 - Store claims and evidence records.
 - Link evidence to claims.
 - Record source attribution.
+- Record article-origin relationships between exact ArticleRevision records, including shared primary-source references.
 - Record support and contradiction relationships.
 - Persist immutable ClaimAssessment versions and exact ClaimAssessmentEvidenceLink records.
 - Append AssessmentHistory actions.
@@ -1222,6 +1225,7 @@ Initial repository interfaces include the following logical contracts. This inve
 - `ContentUsageAuditRepository` (when GENI-ADR-013 is accepted)
 - `SourceHealthRepository`
 - `SourceRelationshipRepository`
+- `ArticleOriginRelationshipRepository`
 - `ArticleRepository`
 - `ArticleRevisionRepository`
 - `ArticleProcessingRepository`

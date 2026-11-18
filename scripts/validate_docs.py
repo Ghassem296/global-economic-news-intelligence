@@ -622,7 +622,62 @@ def validate_distribution_authorization_contract() -> None:
                 fail(f"Distribution authorization contract missing {term!r} in {relative}")
 
 
+
+def validate_cross_document_contracts() -> None:
+    readme = read_text(ROOT / "README.md")
+    data_model = read_text(ROOT / "docs/03-data-model-and-storage-design.md")
+    components = read_text(ROOT / "docs/02-component-architecture-and-interfaces.md")
+    source_spec = read_text(ROOT / "docs/10-source-credibility-and-independence.md")
+    adr_008 = read_text(ADR_DIR / "GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md")
+    adr_010 = read_text(ADR_DIR / "GENI-ADR-010-phased-text-audio-and-video-delivery.md")
+    adr_011 = read_text(ADR_DIR / "GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md")
+    index = read_text(ROOT / "docs/README.md")
+
+    if "Energy and Natural Resources" in readme:
+        fail("README taxonomy label is stale; use the canonical 'Energy and Resources' label")
+    for relative in ("docs/01-product-and-system-architecture.md", "docs/11-economic-taxonomy-specification.md"):
+        if "Energy and Resources" not in read_text(ROOT / relative):
+            fail(f"Canonical Energy and Resources taxonomy label missing from {relative}")
+
+    required_data_terms = (
+        "source_id_from", "source_id_to", "valid_from", "valid_until",
+        "relationship_version", "### 5.3.1 ArticleOriginRelationship",
+        "article_revision_id_from", "### 13.2.1 ExecutionLease", "fencing_token",
+        "### 13.2.2 IdempotencyRecord", "operation_scope",
+        "execution_leases", "idempotency_records",
+    )
+    for term in required_data_terms:
+        if term not in data_model:
+            fail(f"Data-model cross-document contract missing {term!r}")
+
+    for term in ("ArticleOriginRelationshipRepository", "SourceRelationshipRepository"):
+        if term not in components:
+            fail(f"Component repository contract missing {term!r}")
+    if "ArticleOriginRelationship" not in source_spec:
+        fail("Source credibility specification does not define article-origin provenance")
+    if "ORIGINAL_REPORTING is an evidence/source role" not in source_spec:
+        fail("Source credibility specification must distinguish ORIGINAL_REPORTING from relationship edges")
+    if "ORIGINAL_REPORTING" not in adr_008 or "not an edge type" not in adr_008:
+        fail("ADR-008 must distinguish source roles from relationship edges")
+    if "SourceRightsProfile" not in adr_010 or "ContentRightsProfile" in adr_010:
+        fail("ADR-010 rights-profile name must match the canonical SourceRightsProfile model")
+
+    deferred = adr_011.split("**Deferred Questions:**", 1)
+    if len(deferred) != 2:
+        fail("ADR-011 Deferred Questions section not found")
+    deferred_body = deferred[1].split("## 8.", 1)[0]
+    for obsolete in ("Detailed event lifecycle states and transitions", "Final event relationship taxonomy"):
+        if obsolete in deferred_body:
+            fail(f"ADR-011 still defers a baseline already defined in Section 6: {obsolete}")
+
+    heading_four = index.find("# 4. Architectural Decision Records")
+    section_313 = index.find("## 3.13 Deployment, Operations, and Observability")
+    if heading_four < 0 or section_313 < 0 or heading_four < section_313:
+        fail("Documentation index Section 4 must follow all Section 3 document entries")
+
+
 def main() -> None:
+    validate_cross_document_contracts()
     validate_document_versions()
     validate_adrs()
     validate_duplicate_version_metadata()
@@ -636,7 +691,7 @@ def main() -> None:
     validate_event_identity_operation_contract()
     validate_distribution_authorization_contract()
     print(
-        "Documentation validation passed: controlled and duplicate versions, "
+        "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled and duplicate versions, "
         "all 19 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
         "local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
         "event identity-operation history/recovery, and multi-source distribution authorization."

@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.32
+**Version:** 1.33
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -358,35 +358,69 @@ Records should preserve historical health observations rather than only storing 
 
 ### 5.3 SourceRelationship
 
-Represents a known relationship between information sources.
+Represents a known, evidence-backed relationship between two publisher/source identities. It is not a relationship between individual articles or article revisions.
 
 Fields:
 
 - `id`
-- `source_id_a`
-- `source_id_b`
+- `source_id_from`
+- `source_id_to`
 - `relationship_type`
-- `confidence`
+- `assessment_status` — `UNASSESSED`, `PROPOSED`, `CONFIRMED`, `DISPUTED`, `REJECTED`, or `UNKNOWN`
+- `confidence` nullable, with semantics defined by the applicable assessment method
 - `evidence_reference`
+- `valid_from` nullable
+- `valid_until` nullable
+- `relationship_version`
+- `supersedes_relationship_id` nullable
 - `created_at`
 - `updated_at`
 - `metadata`
 
-Relationship types may include:
-
-- `SAME_OWNER`
-- `SYNDICATES_CONTENT`
-- `REPUBLISHES`
-- `SHARES_ORIGINAL_REPORTING`
-- `AFFILIATED_WITH`
-- `UNKNOWN_RELATIONSHIP`
+Relationship types include `OWNED_BY`, `OPERATED_BY`, `SAME_EDITORIAL_GROUP`, `SYNDICATES_TO`, `SYNDICATED_FROM`, `REPUBLISHES`, `AFFILIATED_WITH`, and `UNKNOWN_RELATIONSHIP`. `SAME_EDITORIAL_GROUP` is symmetric; the other types are directional. The `from` and `to` orientation is normative and must not be replaced by an unordered pair.
 
 Constraints:
 
-- Source pairs must use a canonical ordering or equivalent uniqueness rule.
+- Both source references must resolve to distinct Source records.
+- Only symmetric relationships may use canonical source-pair ordering; directional relationships preserve their declared orientation.
+- A validity interval must satisfy `valid_from < valid_until` when both endpoints are known.
+- A correction or changed assessment creates a successor version; historical relationship assertions are not overwritten.
+- Unassessed, disputed, rejected, or unknown relationships must not be treated as confirmed facts.
 - Relationships must not be inferred from domain similarity alone.
-- Relationship confidence and supporting evidence must be recorded when available.
 - Unknown independence must not be interpreted as confirmed independence.
+
+### 5.3.1 ArticleOriginRelationship
+
+Represents a provenance relationship between one exact ArticleRevision and another article revision, a source, or an explicitly identified external origin. It is separate from publisher ownership/affiliation relationships in SourceRelationship.
+
+Fields:
+
+- `id`
+- `article_revision_id_from` — the publication whose information origin is being described
+- `article_revision_id_to` nullable — the cited, copied, syndicated, or otherwise related origin article revision
+- `origin_source_id` nullable — a known source-level origin when no exact origin revision is available
+- `external_origin_reference` nullable — a stable reference to a press release, dataset, statement, document, or other external origin
+- `relationship_type`
+- `assessment_status`
+- `confidence` nullable
+- `evidence_reference`
+- `valid_from` nullable
+- `valid_until` nullable
+- `relationship_version`
+- `supersedes_relationship_id` nullable
+- `created_at`
+- `metadata`
+
+Relationship types include `SYNDICATED_FROM`, `REPRINTED_FROM`, `DERIVED_FROM`, `ATTRIBUTES_TO`, `QUOTES`, `SUMMARIZES`, `CITES`, `USES_COMMON_PRIMARY_SOURCE`, and `UNKNOWN_RELATIONSHIP`. `ORIGINAL_REPORTING` is an evidence/source role, not an edge type; it must be recorded as a role on the relevant evidence or source assessment.
+
+Constraints:
+
+- `article_revision_id_from` must reference the exact ArticleRevision being assessed.
+- Exactly one of `article_revision_id_to`, `origin_source_id`, or `external_origin_reference` must identify the target origin for a known relationship. An `UNKNOWN_RELATIONSHIP` may have no target, but must retain the evidence and assessment basis for its unknown state.
+- A relationship between article revisions must preserve direction from the dependent/subject publication to the origin publication.
+- A validity interval must satisfy `valid_from < valid_until` when both endpoints are known.
+- Corrections create successor versions and preserve the prior assertion and its evidence.
+- Missing provenance must remain unknown; it must not be converted into a guessed origin.
 
 ### 5.4 Article
 
@@ -2019,7 +2053,9 @@ Fields:
 - `input_fingerprint`
 - `started_at`
 - `heartbeat_at`
-- `lease_expires_at`
+- `lease_expires_at` — denormalized projection of the current ExecutionLease; not the ownership authority
+- `current_lease_id` nullable
+- `lease_fencing_token` nullable — latest fencing token observed for this run
 - `next_retry_at`
 - `completed_at`
 - `error_category`
@@ -2058,7 +2094,9 @@ Fields:
 - `output_reference`
 - `started_at`
 - `heartbeat_at`
-- `lease_expires_at`
+- `lease_expires_at` — denormalized projection of the current ExecutionLease; not the ownership authority
+- `current_lease_id` nullable
+- `lease_fencing_token` nullable — latest fencing token observed for this step
 - `next_retry_at`
 - `completed_at`
 - `attempt_number`
@@ -2071,6 +2109,64 @@ A step must be safely repeatable or explicitly marked as non-repeatable.
 Completed step outputs should be reusable when the input fingerprint and relevant processing versions have not changed.
 
 A step with an expired lease may be considered for recovery only after the application layer verifies that the previous execution is no longer active.
+
+`heartbeat_at` and `lease_expires_at` on ProcessingRun/ProcessingStep are query projections only. The authoritative owner, lease status, expiry, and fencing token are stored in ExecutionLease. A worker must present the current fencing token for every state-changing write; stale tokens are rejected even if the old worker is still running.
+
+### 13.2.1 ExecutionLease
+
+Represents the durable, exclusive ownership claim for one ProcessingRun or ProcessingStep.
+
+Fields:
+
+- `id`
+- `resource_type` — `PROCESSING_RUN` or `PROCESSING_STEP`
+- `resource_id`
+- `owner_id` — stable worker/process identity
+- `fencing_token` — monotonically increasing integer for the resource
+- `status` — `ACTIVE`, `RELEASED`, or `EXPIRED`
+- `acquired_at`
+- `heartbeat_at`
+- `expires_at`
+- `released_at` nullable
+- `created_at`
+- `metadata`
+
+Constraints and behavior:
+
+- At most one active lease may exist for a resource; acquisition must be an atomic compare-and-set/transaction, not a read-then-write sequence.
+- Every successful acquisition increments the resource fencing token. Tokens must never be reused for the same resource.
+- Renewal and release must match the lease ID, owner ID, and current fencing token.
+- Every worker write that changes run/step state or commits a domain effect must validate the current fencing token within the same transaction boundary.
+- Expiry permits recovery to be considered; it does not prove that the former worker stopped. Fencing prevents a late former worker from committing.
+- Lease duration and heartbeat interval are deployment settings, not hard-coded domain truths.
+
+### 13.2.2 IdempotencyRecord
+
+Represents the durable result or in-progress state of one logical operation, including operations whose side effects extend beyond a ProcessingRun.
+
+Fields:
+
+- `id`
+- `operation_scope` — canonical operation/target scope
+- `idempotency_key`
+- `request_fingerprint`
+- `status` — `IN_PROGRESS`, `COMPLETED`, `FAILED`, or `RECONCILIATION_REQUIRED`
+- `processing_run_id` nullable
+- `owner_id` nullable
+- `result_reference` nullable
+- `started_at`
+- `completed_at` nullable
+- `created_at`
+- `metadata`
+
+Constraints and behavior:
+
+- `(operation_scope, idempotency_key)` must be unique.
+- Reuse of a key with the same request fingerprint returns or resumes the existing logical operation; it must not create a second domain effect.
+- Reuse of a key with a different request fingerprint is a conflict and must be rejected.
+- Creation/claim of the record and the corresponding local database effect must share an atomic transaction where possible.
+- External side effects require durable intent and explicit reconciliation; an unknown outcome must not be retried as though failure were confirmed.
+- Retention/expiry of idempotency records must not permit a still-retriable external operation to execute twice.
 
 ### 13.3 ArticleProcessingRecord
 
@@ -2309,9 +2405,10 @@ The logical table inventory is:
 | `content_usage_audit_records` | Audit trail for content use and external transmission |
 | `derived_artifacts` | Versioned derived outputs with source-rights provenance |
 | `source_health_records` | Source health history |
-| `source_relationships` | Known source relationships |
+| `source_relationships` | Versioned, directed publisher/source relationships |
 | `articles` | Current normalized article projection |
 | `article_revisions` | Article revision history |
+| `article_origin_relationships` | Versioned provenance links between exact article revisions and their information origins |
 | `article_topic_classifications` | Topic classification history |
 | `article_entity_mentions` | Extracted entity mentions |
 | `entities` | Resolved entities |
@@ -2360,6 +2457,8 @@ The logical table inventory is:
 | `delivery_attempts` | Delivery retry history |
 | `processing_runs` | Workflow execution records |
 | `processing_steps` | Workflow step records |
+| `execution_leases` | Atomic worker ownership and fencing-token history |
+| `idempotency_records` | Scoped logical-operation idempotency and reconciliation state |
 | `article_processing_records` | Article processing stage history |
 | `collection_checkpoints` | Incremental collection state |
 | `llm_usage_records` | LLM usage and cost |
@@ -2441,7 +2540,12 @@ Where applicable, enforce:
 - Event-specific report version uniqueness.
 - Event analysis type and version uniqueness.
 - Source and checkpoint type uniqueness.
+- SourceRelationship version uniqueness within its directed source pair and relationship type; only symmetric relationship types may canonicalize the pair.
+- ArticleOriginRelationship version uniqueness within its subject revision, target origin, relationship type, and assessment lineage.
 - Processing step identity within a run.
+- At most one active ExecutionLease per resource and strictly increasing fencing tokens per resource.
+- IdempotencyRecord uniqueness by `(operation_scope, idempotency_key)`.
+- ProcessingRun idempotency-key uniqueness within its documented run-type scope.
 - Publication operation sequence uniqueness within a target/publication-key chain.
 - Publication idempotency key uniqueness within its target/publication-key scope.
 - Publication attempt number uniqueness within a publication operation.
@@ -2667,9 +2771,11 @@ Reprocessing must create a traceable new execution when relevant inputs or polic
 
 Failed workflow steps must be recoverable without incorrectly repeating completed external side effects.
 
-Expired execution leases must be detected and handled through a documented recovery policy.
+Expired execution leases must be detected and handled through a documented recovery policy. Lease ownership is represented by ExecutionLease; the run/step lease timestamps are projections only.
 
-A workflow must not be resumed concurrently by multiple workers. The execution ownership mechanism must be atomic and must support recovery after process termination.
+A workflow must not be resumed concurrently by multiple workers. Lease acquisition and renewal must be atomic, and every state-changing worker write must validate a monotonically increasing fencing token so that a stale worker cannot commit after ownership changes.
+
+Logical operation idempotency is represented by IdempotencyRecord, uniquely scoped by `(operation_scope, idempotency_key)` and bound to a request fingerprint. Reuse with a different fingerprint is a conflict. External side effects require durable intent and reconciliation of unknown outcomes before retry.
 
 ## 22. Retention and Content Rights
 

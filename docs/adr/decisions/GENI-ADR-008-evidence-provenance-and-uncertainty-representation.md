@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-008  
 **Title:** Evidence Provenance and Uncertainty Representation  
 **Status:** Proposed  
-**Version:** 1.6
+**Version:** 1.7
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -543,27 +543,16 @@ Multiple articles may originate from:
 
 The number of articles alone must never be used as a measure of independent confirmation.
 
-The system should maintain source relationship information where available.
+The system must maintain two distinct relationship models:
 
-Proposed source relationship types include:
+1. `SourceRelationship` records publisher/source-level ownership, operation, editorial-group, syndication, and affiliation relationships. These are versioned, time-bounded assertions with explicit direction except for explicitly symmetric relationship types.
+2. `ArticleOriginRelationship` records provenance between exact ArticleRevision records and/or an identified source or external primary origin. Its directed relationship types include `SYNDICATED_FROM`, `REPRINTED_FROM`, `DERIVED_FROM`, `ATTRIBUTES_TO`, `QUOTES`, `SUMMARIZES`, `CITES`, `USES_COMMON_PRIMARY_SOURCE`, and `UNKNOWN_RELATIONSHIP`.
 
-- `ORIGINAL_REPORTING`
-- `SYNDICATED_FROM`
-- `REPRINTED_FROM`
-- `DERIVED_FROM`
-- `QUOTES`
-- `SUMMARIZES`
-- `CITES`
-- `USES_COMMON_PRIMARY_SOURCE`
-- `UNKNOWN_RELATIONSHIP`
+`ORIGINAL_REPORTING` is an evidence/source role, not an edge type. It describes the role of a source or evidence item in a claim context. It must not be stored as a source-to-source relationship. The two relationship models must not be conflated: publisher ownership does not prove that two particular articles share an origin, and article syndication does not prove common ownership.
 
-When several publications derive their information from one original report, the system should preserve the shared origin.
+When several publications derive their information from one original report or primary source, the system should preserve that shared origin against the exact ArticleRevision/evidence provenance. A relationship may be uncertain; the system must not invent an origin merely because articles use similar wording or share a domain. Where independence cannot be established, record `INDEPENDENCE_UNKNOWN`.
 
-A source relationship may be uncertain. The system must not invent an origin relationship merely because two articles use similar wording.
-
-Where independence cannot be established, the system must record the limitation.
-
-Independent corroboration requires evidence that the supporting information has sufficiently independent origins, not simply different publisher names.
+Independent corroboration requires evidence that supporting information has sufficiently independent origins, not simply different publisher names. Source pairs are not canonicalized as unordered pairs when the relationship is directional.
 
 ### 6.6 Source Reliability Versus Claim Assessment
 
@@ -1173,6 +1162,7 @@ Such measurements must be established through representative datasets and evalua
 | 1.4 | 2026-11-18 | Proposed | Aligned claim-assessment outcomes and evidence-link relationships with Documents 02 and 03; separated evidence class from representation type and lifecycle states. | AI Architecture Assistant |
 | 1.5 | 2026-11-18 | Proposed | Removed lifecycle states from the assessment outcome enum, clarified canonical uncertainty semantics, and aligned all authority references with the Project Owner role. | AI Architecture Assistant |
 | 1.6 | 2026-11-18 | Proposed | Replaced remaining legacy MIXED/INCONCLUSIVE outcome wording with canonical DISPUTED/UNRESOLVED semantics. | AI Architecture Assistant |
+| 1.7 | 2026-11-18 | Proposed | Separated publisher/source relationships from article-origin provenance and clarified ORIGINAL_REPORTING as an evidence/source role. | AI Architecture Assistant |
 
 ---
 
