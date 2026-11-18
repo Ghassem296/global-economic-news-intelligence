@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.34  
+**Version:** 1.35  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1085,6 +1085,7 @@ It must preserve:
 - ReviewRecord reference and monotonically assigned action sequence.
 - Action type, actor type/reference/role, and authorization reference.
 - Previous and new status where applicable.
+- Previous and new priority plus the priority-policy version for `PRIORITY_CHANGED` actions.
 - Assignee change, review outcome, and reason/notes where applicable.
 - Idempotency key, timestamp, and metadata.
 
