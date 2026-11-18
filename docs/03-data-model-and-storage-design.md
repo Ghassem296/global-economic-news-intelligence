@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.19
+**Version:** 1.20
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -1649,7 +1649,7 @@ Constraints:
 - `(review_record_id, action_sequence)` must be unique and assigned atomically.
 - A non-null idempotency_key must be unique within the ReviewRecord.
 - Actor identity and role must be validated by the authorization layer at action time.
-- `COMPLETED` must record the final reviewer outcome and actor; a material outcome must create the required successor EventMatchDecision or PublicationDecision through the appropriate domain workflow.
+- `COMPLETED` must record the final reviewer outcome and actor; a material outcome must create the required successor DuplicateDecision, EventMatchDecision, or PublicationDecision through the appropriate domain workflow.
 - `REOPENED` creates a new task lifecycle segment; it must not delete or rewrite the previous completion action.
 - ReviewAction must reference exactly one existing ReviewRecord.
 
@@ -2760,7 +2760,7 @@ The logical model may contain additional entities that are implemented later.
 
 The following topics require formal ADRs or explicit approval before their implementation is treated as fixed:
 
-1. Initial relational database and SQLite operating configuration.
+1. Initial relational database engine and its engine-specific operating configuration.
 2. Event identity, matching thresholds, merge, and split policy.
 3. Embedding generation and semantic search storage.
 4. Article full-text acquisition, retention, and licensing.
