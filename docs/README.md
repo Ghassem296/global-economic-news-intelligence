@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.21
+**Version:** 1.22
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -318,7 +318,7 @@ This is an engineering specification, not legal advice, a jurisdiction-specific 
 **File:** `15-first-slice-implementation-contracts.md`  
 **Document ID:** `GENI-IMPL-015`
 
-Defines the proposed method-level repository contracts, logical input/output types, transaction write sets, idempotency and concurrency requirements, and approval/testing gates for the first implementation slice. It does not approve a database, programming-language serialization, provider, content-rights policy, or any Proposed ADR.
+Defines the proposed method-level repository contracts, field-level DTO schema tranche, state-machine inventory, transaction write sets, idempotency and concurrency requirements, and approval/testing gates for the first implementation slice. ProcessingRun and EventMatchCase transition graphs and several DTO details remain explicitly blocked pending cross-document reconciliation and Project Owner approval. It does not approve a database, programming-language serialization, provider, content-rights policy, or any Proposed ADR.
 
 **Consult this document when:**
 
