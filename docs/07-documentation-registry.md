@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.16  
+**Version:** 1.17  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -157,7 +157,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | Document ID | Title | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.13 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.27 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.28 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.21 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.16 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.7 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
@@ -169,7 +169,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-17 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.16 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.17 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.8 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.11 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.1 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -184,7 +184,7 @@ The published `main` branch contains all nineteen individual ADR documents. The 
 | ADR ID | Title | Repository Path | Actual Version | Decision Status | Publication State | Decision Owner | Decision Date | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.4 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.5 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/geni-adr-003-economic-intelligence-as-primary-editorial-focus.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/geni-adr-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/geni-adr-005-initial-persistence-technology-and-migration-strategy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -396,8 +396,8 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `5da45eddbeea93388652885f4ce1a543ed7b50b9`  
-**Registry Refresh:** This inventory was checked against the published `main` branch at the baseline commit above, after the preceding architecture, ADR, and governance-metadata corrections, including the clarified semantic-retrieval approval gate. This registry revision is committed as the next change on `main`.
+**Baseline Commit Inspected:** `cb0ba336d551046432b9ae0fa68be383b85a6c29`  
+**Registry Refresh:** This inventory was checked against the published `main` branch at the baseline commit above, after the preceding architecture, ADR, and governance-metadata corrections, including the clarified semantic-retrieval approval gate and claim/evidence contract alignment. This registry revision is committed as the next change on `main`.
 
 This refresh was performed against the published GitHub `main` branch after Pull Request #1 had been merged. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
