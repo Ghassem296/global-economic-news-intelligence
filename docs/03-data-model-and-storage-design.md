@@ -2580,7 +2580,7 @@ Initial repository contracts include:
 - `AnalysisRepository`
 - `AnalysisInputRepository`
 - `AnalysisEvidenceLinkRepository`
-- `MarketObservationRepository` (only when GENI-ADR-015 is accepted and market-data integration is in scope) (only when market-data integration is approved under GENI-ADR-015)
+- `MarketObservationRepository` (only when GENI-ADR-015 is accepted and market-data integration is in scope)
 - `ReportRepository`
 - `ReportEventLinkRepository`
 - `ReportEvidenceLinkRepository`
@@ -2588,6 +2588,7 @@ Initial repository contracts include:
 - `ReportAnalysisLinkRepository`
 - `PublicationDecisionRepository`
 - `ReviewRepository`
+- `ReviewContextLinkRepository`
 - `PublicationRepository`
 - `PublicationAttemptRepository`
 - `DeliveryRepository`
