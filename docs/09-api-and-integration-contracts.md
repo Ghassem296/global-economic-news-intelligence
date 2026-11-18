@@ -83,11 +83,6 @@ Whether a public API is needed; transport/framework/authentication; exact first-
 
 Documents 02, 03, 08, and 12; GENI-ADR-004, 013, 016, and 017.
 
----
-
-**Document ID:** GENI-API-009  
-**Version:** 1.1  
-**Status:** Draft — Under Architecture Review  
 ## 13. Internal Privacy Command and Query Contracts
 
 The initial rights-request interface is an internal application contract; a public HTTP endpoint is not required by this specification. An approved UI, support channel or operator adapter may submit commands only after intake authentication and authority procedures are approved.
@@ -117,6 +112,12 @@ Commands require authenticated actor/service identity, resource-scoped authoriza
 Provider adapters receive minimized payload plus privacy authorization reference, content-rights decision reference when applicable, purpose ID, data category/classification, provider/model, processing region, policy version and transfer-assessment reference. Reject missing or stale references. These fields are authorization metadata, not proof of legal compliance. No public route, transport, legal deadline or jurisdictional right is selected here.
 
 See Documents 02, 03, 08, 12, 13 and 14; GENI-ADR-020.
+
+---
+
+**Document ID:** GENI-API-009  
+**Version:** 1.1  
+**Status:** Draft — Under Architecture Review  
 
 
 **End of Document**
