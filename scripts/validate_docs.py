@@ -632,6 +632,7 @@ def validate_cross_document_contracts() -> None:
     adr_010 = read_text(ADR_DIR / "GENI-ADR-010-phased-text-audio-and-video-delivery.md")
     adr_011 = read_text(ADR_DIR / "GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md")
     adr_016 = read_text(ADR_DIR / "GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md")
+    adr_018 = read_text(ADR_DIR / "GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md")
     index = read_text(ROOT / "docs/README.md")
 
     if "Energy and Natural Resources" in readme:
@@ -693,6 +694,8 @@ def validate_cross_document_contracts() -> None:
         fail("ADR-008 must distinguish source roles from relationship edges")
     if "SourceRightsProfile" not in adr_010 or "ContentRightsProfile" in adr_010:
         fail("ADR-010 rights-profile name must match the canonical SourceRightsProfile model")
+    if "ArticleProcessingRecord" not in adr_018 or "LanguageDetectionRecord" in adr_018:
+        fail("ADR-018 language detection must use the ArticleProcessingRecord model unless a separate entity is approved")
 
     deferred = adr_011.split("**Deferred Questions:**", 1)
     if len(deferred) != 2:

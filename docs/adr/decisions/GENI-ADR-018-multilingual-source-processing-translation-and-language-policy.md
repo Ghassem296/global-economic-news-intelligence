@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-018  
 **Title:** Multilingual Source Processing, Translation, and Language Policy  
 **Status:** Proposed  
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -207,11 +207,13 @@ The product can cover more sources without hiding language or translation limits
 
 ### 9.2 Affected Data Models and Interfaces
 - ArticleRevision
-- LanguageDetectionRecord
+- ArticleProcessingRecord (`LANGUAGE_DETECTION` stage, with detector/method version, input fingerprint, and typed output reference)
 - TranslationArtifact
 - EntityAlias
-- ProcessingRun
+- ProcessingRun and ProcessingStep
 - Analysis
+
+Language detection is not a separate persistent domain entity in the current logical model. Each detection attempt is represented by an ArticleProcessingRecord at the LANGUAGE_DETECTION stage; its processing version, input fingerprint, output reference, timestamps, and status preserve the exact detector result and provenance. ArticleRevision.language is the current normalized projection, not the authoritative history of detection attempts. A standalone LanguageDetectionRecord must not be introduced without a separately reviewed model change and migration decision.
 
 ### 9.3 Affected Documents
 - docs/01-product-and-system-architecture.md
@@ -315,5 +317,6 @@ External legal, provider, and empirical evidence must be added during formal rev
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Expanded ADR proposal prepared for architecture review | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Aligned language-detection persistence with ArticleProcessingRecord and clarified that LanguageDetectionRecord is not a separate current-model entity. | AI Architecture Assistant |
 
 **End of ADR**
