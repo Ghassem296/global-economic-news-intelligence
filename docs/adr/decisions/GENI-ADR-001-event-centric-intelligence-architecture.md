@@ -4,9 +4,9 @@
 **ADR ID:** GENI-ADR-001
 **Title:** Event-Centric Intelligence Architecture
 **Status:** Proposed
-**Version:** 1.2
+**Version:** 1.3
 **Date:** 2026-11-18
-**Decision Owner:** Product Owner
+**Decision Owner:** Project Owner
 **Prepared By:** AI Architecture Assistant
 **Approved By:** Not yet approved
 **Approval Date:** N/A
@@ -710,6 +710,7 @@ The references above identify relevant project materials. They do not imply that
 | 1.0 | 2026-11-16 | Proposed | Initial proposal for an event-centric intelligence architecture. | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Clarified article/event identity and related document references. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Corrected the affected-document reference to the actual ADR governance document path. | AI Architecture Assistant |
+| 1.3 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 
 ---
 
