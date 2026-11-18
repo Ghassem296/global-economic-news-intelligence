@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.18
+**Version:** 1.19
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -594,7 +594,7 @@ Potential documents include:
 
 ## 12.2 Technical and Operational Specifications
 
-The API, security, source credibility, economic taxonomy, testing/evaluation, and operations topics are now tracked in Documents 08–13. Further detailed specifications should be created only for distinct requirements not covered by the existing authoritative documents.
+The API, security, source credibility, economic taxonomy, testing/evaluation, operations, and privacy topics are now tracked in Documents 08–14. Further detailed specifications should be created only for distinct requirements not covered by the existing authoritative documents.
 
 ## 12.3 Future Intelligence Capabilities
 
