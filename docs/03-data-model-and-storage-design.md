@@ -815,6 +815,8 @@ Constraints:
 - A selected candidate must belong to the same case as its decision.
 - A case may have multiple historical decisions, but only one effective decision at a time; the EventMatchCase.effective_decision_id pointer identifies it.
 - A new decision supersedes the prior effective decision without modifying it and updates the case pointer in the same transaction.
+- In that same transaction, all active ArticleEventLinks authorized by the prior effective decision must be deactivated; if the new effective decision is MATCH, a new ArticleEventLink referencing that exact decision must be activated.
+- A non-MATCH effective decision leaves the case with no active ArticleEventLink.
 - A decision may supersede at most one prior decision, and a prior decision may have at most one direct successor in the same case.
 - A decision for one case must not implicitly decide another case from the same article revision.
 - Human review must reference the case and the decision under review; the review outcome must be recorded as a new decision.
@@ -2044,7 +2046,10 @@ Where applicable, enforce:
 
 - Source-scoped external article identity.
 - Article revision number uniqueness.
+- Composite uniqueness of `(article_id, id)` on ArticleRevision for same-Article current-revision references.
 - Event match case uniqueness by ArticleRevision and development key.
+- Composite uniqueness of `(id, article_revision_id)` on EventMatchCase for case/article-revision consistency.
+- Composite uniqueness of `(case_id, id)` on EventMatchCandidate and EventMatchDecision for case-scoped references.
 - Candidate evaluation uniqueness by case, candidate Event, matching-policy version, and candidate input fingerprint.
 - One effective decision pointer per EventMatchCase.
 - At most one direct successor per superseded EventMatchDecision.
@@ -2073,13 +2078,15 @@ All uniqueness rules involving nullable fields must be tested against the select
 
 Foreign keys should protect ordinary relational relationships.
 
-The following case-scoped composite relationships must be enforced by database constraints where supported, or by application validation inside the same UnitOfWork transaction when the selected database cannot express them directly:
+The following composite relationships must be enforced by database constraints where supported, or by application validation inside the same UnitOfWork transaction when the selected database cannot express them directly:
 
+- `Article(current_revision_id, id)` must resolve to an ArticleRevision whose `article_id` is that same Article.
 - `EventMatchCase(id, effective_decision_id)` must resolve to `EventMatchDecision(case_id, id)`; the referenced decision must belong to that case.
 - `EventMatchDecision(case_id, selected_candidate_id)` must resolve to `EventMatchCandidate(case_id, id)`; a decision cannot select a candidate from another case.
 - `ArticleEventLink(event_match_case_id, event_match_decision_id)` must resolve to the same case and decision.
 - `ArticleEventLink(event_match_case_id, article_revision_id)` must resolve to the case's exact ArticleRevision.
 - The linked `event_id` must equal the `candidate_event_id` selected by the referenced MATCH decision.
+- `EventHistory(event_match_case_id, source_event_match_decision_id)`, when both are present, must reference the same case and its NEW_EVENT_CANDIDATE decision.
 - A link may be active only while its authorizing MATCH decision is the effective decision for that case.
 
 The corresponding database constraints and application checks must be covered by repository contract and transactional integration tests. If composite/deferred foreign keys are used, their migration and behavior must be verified against the selected engine.
