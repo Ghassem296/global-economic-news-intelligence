@@ -423,7 +423,7 @@ Documents 06 and 07 are published in `main` but remain Proposed pending explicit
 
 ### 12.4 ADR Inventory
 
-All twenty individual ADR files are present in `main`. All twenty are Proposed; none is recorded as Accepted. There are no uncreated individual ADR files among the nineteen registered topics.
+All twenty individual ADR files are present in `main`. All twenty are Proposed; none is recorded as Accepted. There are no uncreated individual ADR files among the twenty registered topics.
 
 ### 12.5 Indexes and Reference Materials
 
