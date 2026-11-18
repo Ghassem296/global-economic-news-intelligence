@@ -117,7 +117,7 @@ See Documents 02, 03, 08, 12, 13 and 14; GENI-ADR-020.
 ---
 
 **Document ID:** GENI-API-009  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft — Under Architecture Review  
 
 
