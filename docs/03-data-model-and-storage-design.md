@@ -7,6 +7,7 @@
 **Owner:** Project Owner
 **Last Updated:** 2026-11-18
 
+---
 
 ## 31. Privacy Domain Records and Personal Data Lineage
 
