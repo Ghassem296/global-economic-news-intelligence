@@ -3,9 +3,9 @@
 **Project:** Global Economic News Intelligence  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Draft — Under Documentation Review  
-**Last Updated:** 2026-11-17
+**Last Updated:** 2026-11-18
 
 ---
 
@@ -81,7 +81,7 @@ The decision status recorded in the registry must match the status in the corres
 
 ## 4. Initial ADR Inventory
 
-The project has identified eighteen architectural decision topics.
+The project has identified nineteen architectural decision topics.
 
 The registry distinguishes between:
 
@@ -136,6 +136,7 @@ The following decision topics have been identified but do not yet have individua
 | GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | P1 | Not created |
 | GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | P1 | Not created |
 | GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | P2 | Not created |
+| GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | P1 | Not created |
 
 ### 4.3 Inventory Rules
 
@@ -180,6 +181,8 @@ In particular:
 - **ADR-016** addresses execution reliability, idempotency, and recovery.
 - **ADR-006** defines the provider-independent LLM execution boundary.
 - **ADR-017** addresses LLM budgets, usage tracking, and evaluation.
+- **ADR-019** defines the separate assessment semantics and methodology boundaries for event importance, economic relevance, and economic impact.
+- **ADR-015** addresses market data integration and observed impact classification; it must not replace the broader assessment semantics defined by ADR-019.
 - **ADR-013** addresses content access, retention, licensing, and republication constraints.
 - **ADR-010** addresses the phased delivery of text, audio, and video.
 
