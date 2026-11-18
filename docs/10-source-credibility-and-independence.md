@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SRC-010  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -67,11 +67,11 @@ Ready for implementation when source identity/relationship semantics map to the 
 
 ## 10. Related Documents
 
-Documents 02, 03, and 12; GENI-ADR-008 and GENI-ADR-019.
+Documents 02, 03, 08, 12, and 14; GENI-ADR-008, GENI-ADR-019, and GENI-ADR-020. Personal-data subject linkage and processing permissions are governed by Document 14; source credibility and reporting independence are not privacy authorization.
 
 ---
 
 **Document ID:** GENI-SRC-010  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft — Under Architecture Review  
 **End of Document**
