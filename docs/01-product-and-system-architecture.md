@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.14  
+**Version:** 1.15  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -592,7 +592,7 @@ The proposed capability must:
 
 - Maintain versioned source rights profiles and applicable license/contract references.
 - Record how a content artifact was accessed and which source/content revision it refers to.
-- Evaluate permission separately for metadata access, full-text access, temporary processing, persistent storage, internal analysis, external LLM processing, embedding/translation, derived-output generation, quotation, customer distribution, and republication.
+- Evaluate permission using the canonical operation catalog in GENI-ADR-013: discovery, metadata access, full-text access, temporary processing, persistent storage, internal analysis, external LLM processing, derived-output generation, translation, embedding generation, quotation, audio transformation, video transformation, customer distribution, and content republication. These are separate permissions; translation and embedding generation, and audio and video transformation, must not be combined.
 - Apply retention, expiration, restriction, and deletion requirements to original content and derived artifacts.
 - Preserve an auditable basis, policy version, outcome, and handling constraints for each material rights assessment.
 - Block restricted operations when permission is unknown, denied, expired, revoked, or requires review.
