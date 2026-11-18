@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.30  
+**Version:** 1.31  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1233,27 +1233,29 @@ The following map identifies the proposed authoritative application component fo
 
 | Domain state / records | Authoritative writer or coordinator | Boundary |
 |---|---|---|
-| Source configuration and source relationships | `SourceRegistry` | Does not collect articles or approve content rights by implication. |
-| Source health and collection checkpoints | `NewsCollector` with `WorkflowOrchestrator` | Observations/checkpoints only; source configuration remains with `SourceRegistry`. |
-| Source rights profiles, permission assessments, retention and deletion records | `ContentRightsService` | Must fail closed on unknown permission and preserve policy/version provenance. |
-| Article current projection and immutable ArticleRevision | `ArticleRevisionService` | Atomically creates/reuses a revision and updates the current projection. |
+| Source and SourceRelationship | `SourceRegistry` | Owns source identity and configuration; does not collect articles or approve content rights by implication. |
+| SourceHealth and CollectionCheckpoint | `NewsCollector` with `WorkflowOrchestrator` | Records source observations and collection progress; source configuration remains with SourceRegistry. |
+| SourceRightsProfile, SourceLicense, ContentAccess, RightsAssessment, ContentRetentionPolicy, ContentDeletion, DerivedArtifact, and ContentUsageAudit | `ContentRightsService` | Must fail closed on unknown permission and preserve policy/version provenance. |
+| Article and ArticleRevision current state | `ArticleRevisionService` | Atomically creates/reuses a revision and updates the current Article projection. |
 | ArticleProcessingRecord | Article Processing Workflow | Tracks article processing attempts and stage outcomes; it does not own source identity or immutable revision content. |
-| Duplicate candidates | `ArticleDeduplicator` | Produces immutable candidate evidence only; does not decide duplicate identity. |
-| Duplicate decisions | Article Deduplication Workflow | Applies the versioned duplicate policy and persists immutable DuplicateDecision/supersession history; never deletes source Articles. |
-| Topic classification | `TopicClassifier` | Versioned result for an exact ArticleRevision. |
-| Entity mentions and canonical entity/alias resolution | `EntityExtractor` and `EntityResolver` | Extraction creates mentions; resolver owns canonical resolution and ambiguity. |
+| ArticleClassification | `TopicClassifier` | Versioned classification result for an exact ArticleRevision. |
+| DuplicateCandidate | `ArticleDeduplicator` | Produces immutable pairwise candidate evidence only; does not decide duplicate identity. |
+| DuplicateDecision | Article Deduplication Workflow | Applies the versioned duplicate policy and persists immutable decision/supersession history; never deletes source Articles. |
+| Entity and EntityAlias | `EntityResolver` | Owns canonical identity, aliases, and ambiguity resolution. |
+| ArticleEntityMention | `EntityExtractor` with `EntityResolver` | Extraction creates source-scoped mentions; resolution assigns canonical references without erasing the original mention. |
 | EventMatchCase and EventMatchCandidate | Event Resolution Workflow and `EventMatcher` | Matcher evaluates candidates; workflow owns case lifecycle and coordinates decisions. |
 | EventMatchDecision | Event Resolution Workflow, including authorized review routing | Immutable case-level decision; no direct mutation by a review task. |
 | Event, ArticleEventLink, EventRelationship, and EventIdentityOperation | `EventService` | Applies authorized decisions and identity operations transactionally. |
 | EventHistory | `EventHistoryService`, invoked through `EventService` | Append-only history; not a second event-state owner. |
-| Claims, ClaimObservation, Evidence, EvidenceLocation, ClaimEvidenceLink, ClaimAssessment, ClaimAssessmentEvidenceLink, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
-| Analysis, AnalysisInput, and AnalysisEvidenceLink | Event Intelligence Workflow with the relevant assessor/analyzer | Assessors produce typed outputs; workflow persists versioned results and inputs. |
-| Report, ReportEventLink, ReportEvidenceLink, ReportArticleLink, ReportAnalysisLink, and report-version lineage | `ReportVersionService` | `ReportGenerator` prepares content; ReportVersionService persists the immutable report version and its exact provenance links. |
-| MarketObservation | Market-data acquisition/normalization workflow to be defined under GENI-ADR-015 | Stores provider observations and their provenance only; it must not infer event causality or mutate economic-impact assessments. |\n| PublicationDecision | `PublicationPolicy` through Publication Decision Workflow | Eligibility only; no external side effect. |
+| Claim, ClaimObservation, Evidence, EvidenceLocation, ClaimEvidenceLink, ClaimAssessment, ClaimAssessmentEvidenceLink, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
+| Analysis, AnalysisInput, and AnalysisEvidenceLink | Event Intelligence Workflow with the relevant assessor/analyzer | Assessors produce typed outputs; workflow persists versioned results and exact inputs. |
+| MarketObservation | Market-data acquisition/normalization workflow to be defined under GENI-ADR-015 | Stores provider observations and provenance only; it must not infer event causality or mutate economic-impact assessments. |
+| Report, ReportEventLink, ReportEvidenceLink, ReportArticleLink, ReportAnalysisLink, and report-version lineage | `ReportVersionService` | `ReportGenerator` prepares content; ReportVersionService persists the immutable report version and exact provenance links. |
+| PublicationDecision | `PublicationPolicy` through Publication Decision Workflow | Eligibility only; no external side effect. |
 | ReviewRecord and ReviewAction | `ReviewService` | Task lifecycle and reviewer audit only; no domain-decision override. |
 | PublicationRecord and PublicationAttempt | `PublicationService` | External publication operations and reconciliation. |
 | DeliveryRecord and DeliveryAttempt | `ReportDelivery` | Recipient delivery only; cannot mutate publication state. |
-| ProcessingRun, ProcessingStep, schedules and executions | `WorkflowOrchestrator` | Execution state remains separate from domain state. |
+| ProcessingRun, ProcessingStep, Schedule, and ScheduledExecution | `WorkflowOrchestrator` | Execution state remains separate from domain state. |
 | LLMUsageRecord | `SharedLLMExecutionLayer` | Records provider usage/cost where available. |
 | TranslationArtifact | `TranslationService` (optional) | Immutable derived translation; original ArticleRevision remains authoritative. |
 | EmbeddingRecord and retrieval runs | `SemanticRetrievalAdapter` (optional) | Retrieval only; no final event decision or association. |
