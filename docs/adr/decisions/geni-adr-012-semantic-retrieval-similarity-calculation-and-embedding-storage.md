@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-012  
 **Title:** Semantic Retrieval, Similarity Calculation, and Embedding Storage  
 **Status:** Proposed  
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -130,7 +130,7 @@ The requirements in Section 3 are the evaluation criteria. Unmeasured latency, q
 
 **Recommended Alternative:** Alternative B as a measured initial candidate, with an evidence-based escalation path to Alternative C.
 
-Keep relational Event, Article, and decision records authoritative. Embeddings are derived, versioned retrieval artifacts. Begin with lexical/deterministic retrieval and an embedding prototype stored using the simplest proven persistence option. Adopt dedicated vector infrastructure only when representative tests show that the selected relational approach cannot meet approved quality, latency, or scale objectives. Similarity may rank candidates; only a separate EventMatchDecision can authorize association.
+Keep relational Event, Article, and decision records authoritative. Embeddings are derived, versioned retrieval artifacts. After this ADR is formally accepted, begin with lexical/deterministic retrieval and a separately measured embedding prototype stored using the simplest proven persistence option. Adopt dedicated vector infrastructure only when representative tests show that the selected relational approach cannot meet approved quality, latency, or scale objectives. Similarity may rank candidates; only a separate EventMatchDecision can authorize association.
 
 **Rationale:**
 - Avoids converting similarity into a domain decision.
@@ -308,5 +308,6 @@ External legal, provider, and measured performance evidence must be added where 
 | Date | Version | Status | Change |
 |---|---|---|---|
 | 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
+| 2026-11-18 | 1.1 | Proposed | Clarified that the embedding prototype follows formal acceptance, consistent with the staged implementation roadmap. |
 
 **End of ADR**
