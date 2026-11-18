@@ -658,7 +658,7 @@ def parse_documentation_tree_paths(content: str, root_name: str) -> set[str]:
     directory_stack = [root_name]
     listed_files: set[str] = set()
     for line in lines:
-        match = re.match(r"^([│| ]*)(?:├──|└──|\|--|\+--)\\s+(.+?)\\s*$", line)
+        match = re.match(r"^([│| ]*)(?:├──|└──|\|--|\+--)\s+(.+?)\s*$", line)
         if not match:
             continue
         prefix, name = match.groups()
