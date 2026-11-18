@@ -671,13 +671,15 @@ def validate_privacy_specification_contract() -> None:
     contracts = {
         "docs/02-component-architecture-and-interfaces.md": (
             "PrivacyManagementService", "PrivacyProcessingAuthorization",
-            "DataSubjectRequest", "PersonalDataLineageRepository",
+            "DataSubjectRequest", "PrivacyRequestRepository", "PersonalDataLineageRepository",
+            "PrivacyPolicyRepository", "DataSubjectReferenceRepository",
         ),
         "docs/03-data-model-and-storage-design.md": (
             "PersonalDataInventory", "ProcessingPurpose", "PrivacyProcessingBasis",
             "DataSubjectReference", "DataSubjectRequestAction", "PrivacyDeletionRecord",
             "ProcessorRegister", "InternationalTransferAssessment", "PrivacyImpactAssessment",
-            "PersonalDataLineage",
+            "PersonalDataLineage", "PrivacyRequestRepository", "PrivacyPolicyRepository",
+            "DataSubjectReferenceRepository",
         ),
         "docs/08-security-architecture-and-threat-model.md": (
             "PrivacyProcessingAuthorization", "ContentRightsService", "SharedLLMExecutionLayer",
