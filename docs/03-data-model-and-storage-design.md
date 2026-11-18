@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.25
+**Version:** 1.26
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -309,7 +309,8 @@ Fields:
 | country_code | string/null | Source country, if applicable |
 | ownership_group | string/null | Known ownership grouping |
 | syndication_group | string/null | Known syndication grouping |
-| reliability_profile | JSON/null | Documented source assessment context |
+| reliability_profile | JSON/null | Documented source reliability context and assessment basis |
+| reliability_profile_version | string/null | Version of the source reliability profile and its evaluation criteria |
 | collection_config | JSON | Non-secret source configuration |
 | is_active | boolean | Whether collection is enabled |
 | created_at | timestamp | Creation time |
@@ -320,7 +321,9 @@ Constraints:
 - Source identifiers must be stable.
 - Source URL validation is mandatory.
 - Credentials and secrets must not be stored in ordinary configuration fields.
-- Reliability information must have documented semantics.
+- Reliability information must have documented semantics, a version, an evidence basis, and explicit unknown values.
+- A SourceAssessmentResult is a derived context value, not an authoritative claim-verification outcome or separate persistent entity.
+- Historical ClaimAssessment input provenance must preserve the source-profile version and source-metadata fingerprint it consumed.
 - Source ownership and syndication relationships must not be inferred solely from domain names.
 - Source configuration changes must be auditable where operationally significant.
 
@@ -862,37 +865,31 @@ Constraints:
 
 ### 7.5 Event Identity Operations
 
-Event merging and splitting must preserve stable identifiers and historical traceability.
+Event merging and splitting are explicit, auditable identity operations. They must preserve stable event identifiers, decision lineage, and historical traceability. They are not ordinary event updates and must not silently rewrite ArticleEventLink records.
 
-A merge operation must record:
-
-- The surviving event identifier.
-- The identifiers of merged events.
-- The reason for merging.
-- The decision method and confidence, where applicable.
-- The time of the operation.
-- The resulting article and entity associations.
-
-A split operation must record:
-
-- The original event identifier.
-- The new event identifiers.
-- The reason for splitting.
-- The reassignment of article-event relationships.
-- The decision method and time.
-
-The logical operation is represented by `EventIdentityOperation`.
+A merge operation must record all input events, the selected surviving canonical event, the rationale and supporting evidence, decision method, actor and authorization, policy version, operation status, idempotency key, timestamps, and affected records. A split operation must record the original event, all successor events, the allocation of articles/claims/evidence/observations, unresolved allocations, rationale, actor and authorization, policy version, status, idempotency key, and affected records.
 
 Fields:
 
 - `id`
-- `operation_type`
+- `operation_type` — `MERGE`, `SPLIT`, or `IDENTITY_CORRECTION`
+- `status` — `PENDING`, `IN_PROGRESS`, `SUCCEEDED`, `FAILED`, or `RECONCILIATION_REQUIRED`
 - `reason`
 - `decision_method`
-- `decision_confidence`
+- `decision_confidence` nullable
 - `policy_version`
+- `actor_type`
+- `actor_reference`
+- `authorization_reference`
+- `idempotency_key` — required and unique for the logical operation
+- `processing_run_id` nullable
+- `requested_at`
+- `started_at` nullable
+- `completed_at` nullable
 - `created_at`
 - `metadata`
+
+The actor may be an authorized system policy or a human reviewer. Human-initiated or high-impact automated operations must carry an authorization reference resolvable by the security/audit layer. Status changes are append-only in operation history or EventHistory; a completed or failed operation must not be silently reopened or rewritten. A retry reuses the same idempotency key and operation identifier. An operation with an uncertain result enters `RECONCILIATION_REQUIRED` before any non-idempotent downstream action is repeated.
 
 Possible operation types:
 
@@ -908,6 +905,7 @@ The event input and output relationships must be stored through explicit relatio
 - `operation_id`
 - `event_id`
 - `role`
+- `position`
 
 **EventIdentityOperationOutput**
 
@@ -915,30 +913,37 @@ The event input and output relationships must be stored through explicit relatio
 - `operation_id`
 - `event_id`
 - `role`
+- `position`
 
 This avoids relying on JSON arrays as the only representation of event identity relationships.
 
 Constraints:
 
-- The same event must not be an input and output of the same operation unless the operation type explicitly permits it.
-- Operation inputs and outputs must be validated by the application layer.
-- Event identity operations and affected association changes must be committed atomically.
-- The system must not silently delete or reuse event identifiers after a merge or split.
-- Survivor-selection and aliasing rules require a formal event identity policy.
+- A MERGE requires at least two distinct input events and exactly one surviving output event.
+- A SPLIT requires exactly one original input event and at least two successor output events.
+- An IDENTITY_CORRECTION must declare its permitted input/output cardinality in the operation policy.
+- The same event must not be both input and output of the same operation unless the operation type explicitly permits it.
+- Input/output roles and ordering must be validated by the application layer.
+- Operation creation, status transition, input/output links, and affected event-history records must be transactionally consistent.
+- External notifications and downstream report reconciliation must use durable follow-up work; they must not be executed as an untracked side effect inside the identity transaction.
+- The system must not delete or reuse event identifiers after a merge or split.
+- ArticleEventLink changes require case-scoped successor EventMatchDecision records and EventService application; the identity operation must not directly repoint a historical link.
+- Survivor selection must use a documented, versioned policy and must not assume that the newest or oldest event is always correct.
+
+Identity resolution is a read contract as well as a storage concern. Resolving a historical identifier must return one of: `CANONICAL` (one current canonical event), `MULTIPLE_SUCCESSORS` (two or more candidate successor events after a split), or `UNRESOLVED` (no safe deterministic resolution). A merge may resolve to one survivor with its operation lineage. A split must return the complete successor set and relevant operation references; the resolver must never select an arbitrary successor. Callers must supply case/evidence context to choose among multiple successors, and unresolved associations remain unlinked.
 
 ### 7.6 EventRelationship
 
-Represents relationships between distinct events.
+Represents a typed relationship between two distinct event identities. The canonical vocabulary shared with GENI-ADR-011 is:
 
-Relationship types may include:
-
-- `RELATED_TO`
-- `CAUSED_BY`
-- `TRIGGERED_BY`
-- `PART_OF`
-- `FOLLOWED_BY`
-- `ESCALATION_OF`
-- `CONTINUATION_OF`
+- `RELATED_TO` — contextual relationship without a stronger asserted meaning; symmetric and stored once using deterministic event-id ordering.
+- `CAUSED_BY` — the source event was caused by the target event; directed.
+- `TRIGGERED_BY` — the target event directly initiated the source event; directed and narrower than general causation.
+- `PART_OF` — the source event is a bounded constituent/sub-event of the target event; directed.
+- `FOLLOWED_BY` — the target event occurred after the source event; directed.
+- `ESCALATION_OF` — the source event is a distinct escalation in severity or scope of the target event; directed.
+- `CONTINUATION_OF` — the source event is a distinct later phase continuing the target development; directed.
+- `SUPERSEDES` — the source event supersedes the target event as the current occurrence/decision being tracked; directed.
 
 Fields:
 
@@ -946,18 +951,22 @@ Fields:
 - `source_event_id`
 - `target_event_id`
 - `relationship_type`
-- `confidence`
-- `direction`
+- `confidence` nullable
 - `policy_version`
 - `created_at`
 - `metadata`
 
+The source/target orientation is defined by the relationship descriptions above; a separate free-form direction field is not permitted. The application derives inverse navigation where appropriate rather than storing duplicate inverse edges.
+
 Constraints:
 
-- Self-referential relationships must be rejected unless explicitly supported by a documented rule.
-- Directed relationship types must preserve direction.
-- Related events must not be merged solely because a relationship exists.
-- Relationship cycles must be handled according to the semantics of the relationship type.
+- Self-referential relationships are rejected.
+- `RELATED_TO` must be canonicalized to one stored edge for an unordered event pair.
+- Directed relationships preserve source/target orientation.
+- A relationship never authorizes a merge or an ArticleEventLink.
+- Event relationships do not alter event identity or lifecycle status.
+- Cycles are rejected for `PART_OF`, `FOLLOWED_BY`, `ESCALATION_OF`, and `CONTINUATION_OF`; causal cycles are rejected unless a future explicitly approved policy defines another treatment.
+- Similarity, shared entities, or an existing relationship must never be used alone to merge events.
 
 ## 8. Claims and Evidence
 
@@ -1383,6 +1392,7 @@ Fields:
 - `actor_reference` nullable
 - `event_match_case_id` nullable
 - `source_event_match_decision_id` nullable
+- `event_identity_operation_id` nullable — exact identity operation responsible for this history change
 - `event_creation_policy_version` nullable
 - `idempotency_key` nullable
 - `metadata`
@@ -1412,11 +1422,25 @@ History should be append-only from the application perspective. A non-null Event
 
 ### 10.2 Lifecycle Transitions
 
-Event lifecycle states and allowed transitions must be defined in the event lifecycle policy and approved through architecture governance.
+The canonical states and allowed transitions are defined below and align with Section 9 of Document 01.
 
-The data layer must not independently invent lifecycle transitions.
+| Current State | Allowed Next State | Guard |
+|---|---|---|
+| `DETECTED` | `ENRICHING` | Initial triage passed and accountable processing exists. |
+| `ENRICHING` | `ACTIVE` | Minimum identity, attribution, and evidence/enrichment requirements are met. |
+| `ENRICHING` | `RESOLVED` | A sufficiently evidenced short-lived development is already concluded. |
+| `ACTIVE` | `MONITORING` | No material new development is currently expected but monitoring remains justified. |
+| `ACTIVE` | `RESOLVED` | Domain-specific resolution criteria and supporting evidence are recorded. |
+| `MONITORING` | `ACTIVE` | A material new development requires active monitoring. |
+| `MONITORING` | `RESOLVED` | Domain-specific resolution criteria are met. |
+| `MONITORING` | `ARCHIVED` | Retention/archival policy permits it and no unresolved high-priority work remains. |
+| `RESOLVED` | `MONITORING` | New material or contradictory evidence justifies authorized reopening. |
+| `RESOLVED` | `ARCHIVED` | Retention and archival policy permits it. |
+| `ARCHIVED` | `MONITORING` | Authorized restoration identifies new material evidence or continuing monitoring need. |
 
-A transition must be validated by the domain/application layer and recorded in EventHistory within the same transaction as the event update.
+Any unlisted transition is rejected. A same-state request is an idempotent no-op. Reopening/restoration requires actor, reason, supporting evidence/context, and lifecycle-policy version. Archival does not delete the Event or its history. The policy must not create a backward transition to `DETECTED` to conceal a later correction; identity corrections use the explicit event identity operation workflow.
+
+The domain/application layer validates the guard before persistence. A successful transition updates the current Event projection and appends an EventHistory record in the same transaction. The history must preserve previous/new state, actor and authorization reference, reason, lifecycle-policy version, and correlation/idempotency context.
 
 A transient update notification must not be modeled as a persistent lifecycle state.
 
@@ -1604,7 +1628,18 @@ Review states may include:
 - `COMPLETED`
 - `CANCELLED`
 
-Review types identify the subject and required follow-up. Supported subject families must include article-deduplication, event-matching, claim-assessment, report-version, publication-operation, and content-rights reviews. Each review type must map to exactly one typed subject family and the exact immutable assessment/decision/operation under review. The canonical type vocabulary, priority scale, triggers, and authorization matrix must be finalized under ADR-014.
+Review types identify the subject and required follow-up. The canonical six subject families and successor routes are:
+
+| Review Type | Exact Subject | Material Successor |
+|---|---|---|
+| `ARTICLE_DEDUPLICATION` | DuplicateCandidate plus the DuplicateDecision under review | New DuplicateDecision for the same candidate through Article Deduplication Workflow. |
+| `EVENT_MATCHING` | EventMatchCase plus the EventMatchDecision under review | New EventMatchDecision through Event Resolution Workflow; EventService applies only an effective MATCH. |
+| `CLAIM_ASSESSMENT` | Claim plus the exact ClaimAssessment | New ClaimAssessment and exact evidence links; append AssessmentHistory and atomically refresh the Claim projection through EvidenceService. |
+| `REPORT_VERSION` | Exact immutable Report version | New immutable corrected Report version; new PublicationDecision before any external replacement. |
+| `PUBLICATION_OPERATION` | Exact PublicationRecord and operation state | Reconciliation or separately authorized successor operation through PublicationService; prior attempts remain immutable. |
+| `CONTENT_RIGHTS` | Exact RightsAssessment or SourceRightsProfile version | New RightsAssessment/profile revision and applicable restriction/deletion workflow through ContentRightsService. |
+
+Each type must resolve to exactly one subject family and exact immutable record. The canonical vocabulary, priority scale, triggers, and authorization matrix are governed by ADR-014. The initial implementation enables only article-deduplication, event-matching, and publication review; other types remain disabled until their successor workflows and authorization tests exist.
 
 Constraints and behavior:
 
@@ -1616,6 +1651,10 @@ Constraints and behavior:
 - An article-deduplication review outcome that changes the effective result creates a new DuplicateDecision referencing the previous effective decision for the same candidate.
 - An event-matching review outcome that changes the effective result creates a new EventMatchDecision referencing the previous effective decision.
 - A publication review outcome that changes publication eligibility creates a new PublicationDecision.
+- A claim-assessment review must create a successor ClaimAssessment with exact evidence links, append AssessmentHistory, and atomically update Claim.current_assessment_id and its verification projections.
+- A report-version review must create a new immutable Report version; any new publication eligibility must be decided by PublicationPolicy, while external replacement/withdrawal remains a separate PublicationService operation.
+- A publication-operation review must reconcile an unknown external outcome before deciding whether a new logical operation is needed; it must never edit an earlier PublicationRecord or PublicationAttempt.
+- A content-rights review must create a new RightsAssessment or SourceRightsProfile revision and trigger only the authorized content restriction/retention/deletion workflow; it does not retroactively rewrite completed deliveries.
 - Review history must not be silently overwritten. Reassignment and status changes must be auditable.
 - Reviewer identity and authorization must be managed by the application's security layer.
 - ReviewRecord is the current task/projection; all lifecycle actions, assignment changes, reviewer notes, escalation, completion, and cancellation must be preserved in append-only ReviewAction records.
@@ -2169,6 +2208,7 @@ The logical table inventory is:
 | `report_analysis_links` | Report analysis references |
 | `publication_decisions` | Publication policy history |
 | `review_records` | Human review records |
+| `review_context_links` | Immutable typed evidence and domain-context links attached to review tasks |
 | `review_actions` | Append-only human-review lifecycle and audit actions |
 | `publication_records` | Publish, replace, and withdraw operations |
 | `publication_attempts` | External publication attempt and reconciliation history |
