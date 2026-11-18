@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.12  
+**Version:** 1.13
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -353,11 +353,14 @@ The following priorities are a suggested review order based on architectural ris
 | P1 | GENI-ADR-016 | Defines async execution, idempotency, and recovery requirements. |
 | P1 | GENI-ADR-017 | Establishes LLM budgets, usage tracking, and evaluation strategy. |
 | P1 | GENI-ADR-007 | Defines deterministic workflows and selective use of agent reasoning. |
+| P1 | GENI-ADR-019 | Defines the separate Event Importance, Economic Relevance, and Economic Impact assessment boundaries required by core reporting. |
 | P2 | GENI-ADR-018 | Defines multilingual processing, translation, and language policy. |
 | P2 | GENI-ADR-003 | Formalizes economic-intelligence scope and editorial prioritization. |
 | P2 | GENI-ADR-010 | Defines the evolution of text, audio, and video delivery. |
 
 This priority order is a planning recommendation, not an approval sequence or a requirement to create all ADRs before any implementation.
+
+Every registered ADR must appear exactly once in this priority table. Adding or renumbering an ADR requires updating the priority inventory in the same change.
 
 Dependencies discovered during review may change the order.
 
