@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.7
+**Version:** 1.8
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -1300,7 +1300,9 @@ Create datasets covering:
 - Median and P95 latency.
 - LLM cost per successful report when measurable.
 - Failure recovery rate.
-- Delivery reconciliation success.
+- Publication operation success and reconciliation outcomes.
+- Failed replacement safety and confirmed withdrawal correctness.
+- Delivery reconciliation success and duplicate-delivery rate.
 - Resource utilization.
 
 ### Evaluation Method
@@ -1323,10 +1325,13 @@ Quality thresholds must be established using representative datasets and documen
 
 Critical metrics should include:
 
-- False event merge rate.
+- False event merge rate and false active-association rate.
+- Case-level matching precision/recall and false event-creation rate.
 - Unsupported material assertion rate.
 - Evidence provenance completeness.
-- Publication policy enforcement.
+- Independent quality thresholds for Event Importance, Economic Relevance, and Economic Impact.
+- Publication policy enforcement and failed-replacement safety.
+- Confirmed withdrawal and publication reconciliation correctness.
 - Duplicate delivery rate within the documented delivery guarantees.
 - Recovery correctness.
 
