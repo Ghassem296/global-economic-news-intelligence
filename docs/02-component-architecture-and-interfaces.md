@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.40  
+**Version:** 1.41  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -627,7 +627,7 @@ Responsibilities:
 
 It must not generate report content, determine publication eligibility, or execute public publication, replacement, or withdrawal operations. A delivery containing a publication link must reference a confirmed successful PublicationRecord. Delivery outcomes must not change publication state.
 
-ReportDelivery coordinates the versioned DistributionAuthorizationPolicy and persists its immutable DistributionAuthorizationDecision through DistributionAuthorizationRepository before dispatch. The decision must bind the exact report version, recipient, destination, delivery mode, channel, authorized content scope, and deterministic content-scope fingerprint. For every source-derived item included in that scope, the decision must preserve an exact allowed `CUSTOMER_DISTRIBUTION` RightsAssessment through a DistributionAuthorizationRightsLink; a multi-source report therefore requires the complete set of applicable assessments, not one representative assessment. The set fingerprint must be reproducible from the immutable links. At dispatch, ReportDelivery must verify that the decision is still effective and unexpired, every linked RightsAssessment still permits its exact scope, and the outbound payload's fingerprint exactly matches the authorized fingerprint. An incomplete, stale, revoked, or mismatched authorization blocks dispatch. A general subscription, publication decision, or a single source-rights assessment alone is insufficient. Already completed external delivery is preserved as history and handled through a separate correction/withdrawal process where applicable.
+ReportDelivery coordinates the versioned DistributionAuthorizationPolicy and persists its immutable DistributionAuthorizationDecision through DistributionAuthorizationRepository before dispatch. The decision must bind the exact report version, recipient, destination, delivery mode, channel, authorized content scope, and deterministic content-scope fingerprint. For every source-derived item included in that scope, the decision must preserve an exact allowed `CUSTOMER_DISTRIBUTION` RightsAssessment through a DistributionAuthorizationRightsLink; a multi-source report therefore requires the complete set of applicable assessments, not one representative assessment. The set fingerprint must be reproducible from the immutable links. At dispatch, ReportDelivery must verify that the decision is still effective and unexpired, every linked RightsAssessment still permits its exact scope, and every upstream permission dependency recorded in the derived artifact's provenance remains effective. The authorized content-scope fingerprint is the SHA-256 digest of the canonical content-scope manifest, not the serialized email/API/media payload. ReportDelivery must rebuild the outbound representation only from the immutable manifest items, verify their immutable revision references and content digests, reject additions, omissions, substitutions, or changed transformations, and record the serialized request bytes separately as outbound_payload_sha256 before dispatch. An incomplete, stale, revoked, or mismatched authorization blocks dispatch. A general subscription, publication decision, or a single source-rights assessment alone is insufficient. Already completed external delivery is preserved as history and handled through a separate correction/withdrawal process where applicable.
 
 Delivery operations must use stable idempotency keys.
 
@@ -1118,7 +1118,8 @@ It must preserve:
 - Destination and recipient reference.
 - Optional successful PublicationRecord reference when delivering a publication link.
 - Required `distribution_authorization_decision_id` referencing the exact effective DistributionAuthorizationDecision.
-- Required `content_scope_fingerprint` identifying the exact content scope/payload being delivered; it must equal the fingerprint authorized by the referenced decision.
+- Required `content_scope_fingerprint` identifying the exact versioned canonical content-scope manifest; it must equal the authorized_content_scope_fingerprint of the referenced decision.
+- Required outbound_payload_sha256 recording the SHA-256 digest of the exact serialized outbound request bytes immediately before dispatch; this is distinct from the content-scope fingerprint.
 - Idempotency key scoped to the report version, recipient, destination, delivery mode, channel, and content-scope fingerprint.
 - Delivery status and attempt information.
 - External delivery reference where available.
@@ -1142,6 +1143,10 @@ The logical record must preserve:
 - Decision actor, authorization/consent context, reason codes, decision time, validity/expiry, and supersession reference.
 
 An `ALLOW` decision must cover the complete authorized content scope. For source-derived content, it must reference the complete immutable set of allowed `CUSTOMER_DISTRIBUTION` RightsAssessments through DistributionAuthorizationRightsLink records. If a source-derived item is not authorized, it must be excluded from the actual authorized payload or the request must be denied/reviewed; an incomplete rights set must never authorize the larger scope.
+
+The authorized_content_scope_fingerprint is SHA-256 over the RFC 8785 JSON Canonicalization Scheme (JCS) serialization, encoded as UTF-8, of a versioned ContentScopeManifest. The manifest contains the schema version, exact immutable report-version reference, and one entry per atomic outbound content item. Each entry contains a stable content-item identifier, immutable source/article-revision or DerivedArtifact/version references, the transformation and output-language identifiers where applicable, the SHA-256 digest of the exact UTF-8 content bytes for that item, and the complete typed source-scope lineage. Sort set-valued item and lineage arrays by their stable identifiers before JCS serialization; preserve order only where order is semantically part of the content. Do not normalize or rewrite content bytes before computing an item digest. Encode the final digest as 64 lowercase hexadecimal characters. The DeliveryRecord content_scope_fingerprint must equal this manifest digest. Record the hash of channel-specific serialized request bytes separately as outbound_payload_sha256.
+
+For rights_assessment_set_fingerprint, construct a versioned array containing every exact immutable RightsAssessment reference required for every source-derived manifest item, including assessment identifier/version, exact operation, exact typed content-scope reference, outcome, policy/profile version, and validity boundary. Sort by (content_scope_reference, operation, rights_assessment_id, assessment_version), serialize using the same JCS/UTF-8 rules, and hash with SHA-256. A source-derived ALLOW decision requires a non-empty, complete set of currently effective ALLOWED CUSTOMER_DISTRIBUTION assessments. When no source-derived content is present, the set fingerprint is null and no rights links are permitted.
 
 ### 5.18.2 DistributionAuthorizationRightsLink
 
