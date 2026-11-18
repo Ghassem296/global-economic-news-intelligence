@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.15  
+**Version:** 1.16  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -169,7 +169,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-17 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.15 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.16 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.8 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.11 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.1 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -194,7 +194,7 @@ The published `main` branch contains all nineteen individual ADR documents. The 
 | GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | `docs/adr/decisions/geni-adr-009-near-real-time-news-acquisition-strategy.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-010 | Phased Text, Audio, and Video Delivery | `docs/adr/decisions/geni-adr-010-phased-text-audio-and-video-delivery.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.4 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `docs/adr/decisions/geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `docs/adr/decisions/geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/geni-adr-014-human-review-corrections-and-withdrawals.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-015 | Market Data Integration and Economic Impact Classification | `docs/adr/decisions/geni-adr-015-market-data-integration-and-economic-impact-classification.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -396,8 +396,8 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `9e3f11aa9991bc3d05981a6c56f3d7e4e26666a9`  
-**Registry Refresh:** This inventory was checked against the published `main` branch at the baseline commit above, after the preceding architecture, ADR, and governance-metadata corrections. This registry revision is committed as the next change on `main`.
+**Baseline Commit Inspected:** `5da45eddbeea93388652885f4ce1a543ed7b50b9`  
+**Registry Refresh:** This inventory was checked against the published `main` branch at the baseline commit above, after the preceding architecture, ADR, and governance-metadata corrections, including the clarified semantic-retrieval approval gate. This registry revision is committed as the next change on `main`.
 
 This refresh was performed against the published GitHub `main` branch after Pull Request #1 had been merged. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
