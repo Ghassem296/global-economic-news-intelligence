@@ -430,44 +430,44 @@ They may be introduced only through a documented requirement and an accepted arc
 
 Responsibilities:
 
-- Evaluate event importance.
-- Evaluate economic relevance.
-- Analyze potential economic consequences.
-- Identify affected countries, institutions, industries, and markets.
-- Identify risks and uncertainties.
-- Separate observed information from inferred conclusions.
-- Maintain analytical versions and methodology references.
+- Assess the overall importance of an event.
+- Assess the event's economic relevance independently of its overall importance.
+- Analyze the nature, direction, scale, and timing of potential or realized economic consequences.
+- Identify affected countries, institutions, industries, sectors, and markets.
+- Identify economic transmission mechanisms, risks, and uncertainties.
+- Distinguish observed outcomes, source-reported effects, analytical inferences, and forecasts.
+- Maintain separate versioned assessment results and methodology references.
 
-Importance and economic impact are separate concepts.
+The system must produce three distinct assessments. They answer different questions and must not be collapsed into one score.
 
-Importance measures the overall significance of an event.
+**Event Importance** answers: *How significant is this event overall, and how much attention or monitoring priority does it warrant?*
 
-Economic impact describes the nature and potential magnitude of its economic consequences.
+Importance concerns the event's overall significance and urgency. It may consider institutional significance, geographic and population scope, novelty or materiality, time sensitivity, and expected duration. It is not a measurement of economic relevance, the magnitude of economic consequences, or the probability that a forecast will occur.
 
-The system must distinguish at least three categories of market and economic impact:
+**Economic Relevance** answers: *How directly and materially is this event connected to economic activity, policy, institutions, or markets?*
 
-1. **Observed Market Reaction:** A reaction supported by actual market data available to the system.
-2. **Source-Reported Reaction:** A reaction reported by a news source but not independently verified by integrated market data.
-3. **AI-Inferred Economic Impact:** A potential or expected consequence inferred from available evidence and analytical reasoning.
+Economic relevance evaluates the existence and strength of plausible economic transmission pathways. It identifies whether the connection is direct, indirect, contextual, not established, or unknown. It does not measure the size, direction, or certainty of the resulting economic effect.
 
-The system must not describe an inferred impact as an observed market reaction.
+**Economic Impact** answers: *What economic consequences have occurred or may occur, through which channels, with what direction, magnitude, and time horizon?*
 
-In the absence of reliable market data, the system may describe possible economic consequences but must explicitly identify them as analytical assessments.
+Economic impact evaluates consequences across relevant channels such as inflation, interest rates, growth, employment, currencies, trade, energy, public finance, industrial production, and financial stability. It must distinguish potential from realized effects and describe affected entities, geography, direction, magnitude, duration, and uncertainty where supported.
 
-Scoring dimensions may include:
+A high-importance event may have low or unestablished economic relevance. An event may be highly economically relevant even when its eventual impact is not yet known. A material economic impact must not be inferred solely from a high importance or relevance assessment.
 
-- Geographic scope.
-- Number and significance of affected entities.
-- Institutional significance.
-- Market relevance.
-- Time sensitivity.
-- Magnitude of development.
-- Potential duration.
-- Economic transmission channels.
+The system must distinguish at least the following evidence states for economic effects:
 
-Scoring methodology, scales, calibration, thresholds, and versioning must be formally specified and evaluated.
+1. **Observed Economic Effect:** An outcome supported by an identified economic or market data source.
+2. **Source-Reported Effect:** An effect described by a source but not independently confirmed by the system's integrated data.
+3. **Inferred Potential Effect:** A possible consequence derived through explicit analytical reasoning and evidence.
+4. **Unknown:** Available information is insufficient to characterize the effect.
 
-Unknown or unavailable information must not automatically be interpreted as zero impact or zero importance.
+Observed market reaction is a narrower concept than economic impact. A measured price or yield movement may be an observed market reaction, but the movement's causal relationship to an event remains a separate analytical question. Market observations must not be treated as proof that the event caused the observed movement.
+
+Importance, economic relevance, and economic impact must be stored and evaluated as separate versioned assessment results. A single composite score must not silently combine them. Numeric scores are optional and may be used only when their scale, direction, methodology, version, calibration, and evaluation criteria are explicit. Qualitative levels and structured dimensions may be more appropriate than a single number.
+
+Assessment confidence, forecast probability, economic-effect magnitude, and overall importance are different quantities. They must not share a field or be described as interchangeable. Missing or unavailable information must remain unknown rather than being converted to zero, neutral impact, or low importance.
+
+Assessment methodologies, scales, calibration, thresholds, and acceptance criteria require formal specification and evaluation before they are used for automated production ranking or publication decisions.
 
 ### 5.9 Report Generation
 
@@ -596,13 +596,16 @@ The main processing pipeline is:
 10. Event matching.
 11. Event association or new event creation.
 12. Evidence enrichment and verification.
-13. Event importance assessment.
-14. Economic impact analysis.
-15. Event dossier generation.
-16. Publication policy evaluation.
-17. Review routing when required.
-18. Report publication and delivery.
-19. Event monitoring and subsequent updates.
+13. Economic relevance assessment.
+14. Event importance assessment.
+15. Economic impact analysis.
+16. Event dossier generation.
+17. Publication policy evaluation.
+18. Review routing when required.
+19. Report publication and delivery.
+20. Event monitoring and subsequent updates.
+
+Importance, economic relevance, and economic impact assessments must remain separate outputs even when they share source evidence or analytical execution resources.
 
 The pipeline must support controlled reprocessing when classification, extraction, matching, scoring, or analysis logic changes.
 
@@ -718,43 +721,72 @@ An article may have multiple topic classifications, each with an associated conf
 
 Classification results must be versioned so that changes in taxonomy or classification logic can be evaluated and reprocessed.
 
-## 9. Importance and Economic Impact
+## 9. Importance, Economic Relevance, and Economic Impact
 
-Importance and economic impact are separate concepts.
+### 9.1 Event Importance
 
-**Importance** measures the overall significance of an event.
+Importance measures the overall significance of an event and its priority for attention, monitoring, and editorial coverage.
 
-**Economic impact** describes the nature and potential magnitude of its economic consequences.
+Potential dimensions include:
 
-Importance dimensions may include:
+- Institutional or public significance.
+- Geographic and population scope.
+- Novelty and materiality of the development.
+- Time sensitivity and urgency.
+- Expected duration or persistence.
+- Relevance to the product's stated monitoring priorities.
 
-- Geographic scope.
-- Number of affected entities.
-- Institutional significance.
-- Market relevance.
-- Time sensitivity.
-- Development magnitude.
-- Potential duration.
+Importance must not be calculated by simply adding economic relevance and economic impact. The importance methodology must state whether economic considerations contribute to the assessment and how double-counting is prevented.
 
-Economic impact dimensions may include:
+### 9.2 Economic Relevance
 
-- Inflation.
-- Interest rates.
-- Currency.
-- Trade.
-- Energy.
-- Employment.
-- Public finance.
-- Financial stability.
-- Industrial production.
+Economic relevance measures the strength of the event's connection to economic activity, policy, institutions, or markets.
 
-The system must distinguish measured data from qualitative analysis and model-generated estimates.
+The assessment should identify:
 
-Scoring must have a documented scale, methodology, version, and evaluation process.
+- Direct economic links, such as a central-bank rate decision or a change in a fiscal measure.
+- Indirect links, such as geopolitical developments that may affect trade routes or supply chains.
+- Contextual links where an economic connection is relevant background but not yet a demonstrated transmission pathway.
+- Whether a material economic connection has not been established.
+- Whether available information is insufficient to make the assessment.
 
-Scores must not imply a level of precision unsupported by available evidence.
+The result must identify the relevant transmission channels, affected entities, geographic scope, and supporting evidence where available. Relevance does not establish that an effect has occurred or determine its magnitude.
 
-Missing information must be represented as unknown or unavailable rather than automatically converted to zero.
+### 9.3 Economic Impact
+
+Economic impact describes realized or potential consequences of an event.
+
+An impact assessment should identify, where supported:
+
+- Economic channel or dimension.
+- Affected country, institution, sector, industry, market, or group.
+- Direct or indirect transmission mechanism.
+- Direction of effect, such as positive, negative, mixed, neutral, or unclear.
+- Magnitude or defensible range, with its unit and reference context where applicable.
+- Expected or observed time horizon and duration.
+- Evidence status: observed, source-reported, inferred, or unknown.
+- Supporting and conflicting evidence.
+- Uncertainty and limitations.
+
+A single aggregate impact number must not conceal materially different effects across countries, sectors, instruments, or time horizons. An aggregate score may be introduced only through an explicit, evaluated methodology.
+
+### 9.4 Market Reaction and Causality
+
+An observed market reaction requires identifiable market data, instrument identity, measurement time, source, and a suitable comparison or baseline where relevant.
+
+A market reaction is not, by itself, proof of event causality. The system must distinguish a measured market movement from a source's explanation of that movement and from the system's own causal interpretation.
+
+When no suitable market data is available, the system may describe potential market implications as analysis, but must not label them as observed market reactions.
+
+### 9.5 Scoring and Uncertainty Rules
+
+Each assessment type must use its own versioned result schema and methodology. Numeric scales, if used, must define their valid range, direction, interpretation, comparability, and calibration status.
+
+An assessment confidence value expresses the strength of support for the assessment; it is not the event's importance, the magnitude of impact, or the probability of a forecast unless a separately defined and calibrated probability is explicitly provided.
+
+Unknown, unavailable, contradictory, and not-applicable inputs must remain distinguishable. Missing information must not automatically lower a score, become zero impact, or be interpreted as evidence that no effect exists.
+
+The methodology and quantitative acceptance thresholds for importance, economic relevance, and economic impact must be documented and evaluated independently.
 
 ## 10. Event Lifecycle
 
@@ -969,6 +1001,7 @@ The system must track:
 - Event matching confidence and outcomes.
 - Event creation, merge, and split operations.
 - Evidence and verification outcomes.
+- Importance, economic relevance, and economic impact assessment outcomes, including unknown/insufficient-data rates and methodology versions.
 - Publication decisions.
 - Review queue status and age.
 - LLM usage and cost when known.
@@ -1005,6 +1038,8 @@ The system must establish evaluation procedures for:
 - Event matching.
 - Evidence attribution.
 - Importance assessment.
+- Economic relevance assessment.
+- Economic impact assessment by channel and evidence status.
 - Publication decisions.
 - Report quality.
 
@@ -1087,21 +1122,22 @@ The initial release is functionally complete when the following capabilities are
 14. Event history records material changes and lifecycle transitions.
 15. Claims and evidence are traceable to source material.
 16. Reports distinguish source claims, supported facts, analysis, and forecasts.
-17. Economic significance is explicitly evaluated.
-18. Importance assessment uses a documented and versioned methodology.
-19. Market reactions are not presented as observed without supporting market data.
-20. Publication policy is enforced and publication decisions are immutable and versioned.
-21. Held reports are routed to a defined review mechanism, and review approval cannot bypass a new effective publication decision.
-22. Reports can be generated and corrected through immutable report versions with traceable report-level lineage.
-23. Publication, replacement, and withdrawal are recorded as separate idempotent operations, and publication success is confirmed by the target rather than inferred from a policy decision.
-24. Uncertain external publication outcomes are reconciled before another side-effecting attempt; a failed replacement does not invalidate the previous confirmed publication.
-25. Delivery operations are recorded separately from publication, prevent unintended duplicate delivery, and do not change publication status.
-26. Processing failures and recovery operations are observable.
-27. The system can restart without corrupting existing data.
-28. Reprocessing does not silently overwrite historical analytical, report, publication, or delivery records.
-29. LLM execution respects configured budgets, deadlines, and output validation.
-30. External content is handled as untrusted input.
-31. The initial system operates without mandatory distributed or cloud infrastructure.
+17. Event importance is assessed independently using a documented and versioned methodology.
+18. Economic relevance is assessed separately, including its direct or indirect transmission pathways and an explicit unknown/not-established outcome.
+19. Economic impact is analyzed by channel, direction, magnitude, time horizon, evidence status, and uncertainty where supported.
+20. Observed market reactions are supported by market data and are not presented as proof of event causality.
+21. Publication policy is enforced and publication decisions are immutable and versioned.
+22. Held reports are routed to a defined review mechanism, and review approval cannot bypass a new effective publication decision.
+23. Reports can be generated and corrected through immutable report versions with traceable report-level lineage.
+24. Publication, replacement, and withdrawal are recorded as separate idempotent operations, and publication success is confirmed by the target rather than inferred from a policy decision.
+25. Uncertain external publication outcomes are reconciled before another side-effecting attempt; a failed replacement does not invalidate the previous confirmed publication.
+26. Delivery operations are recorded separately from publication, prevent unintended duplicate delivery, and do not change publication status.
+27. Processing failures and recovery operations are observable.
+28. The system can restart without corrupting existing data.
+29. Reprocessing does not silently overwrite historical analytical, report, publication, or delivery records.
+30. LLM execution respects configured budgets, deadlines, and output validation.
+31. External content is handled as untrusted input.
+32. The initial system operates without mandatory distributed or cloud infrastructure.
 
 Quantitative acceptance thresholds for extraction quality, event matching, classification, and report quality must be established in the evaluation specification before the relevant capabilities are considered production-ready.
 
@@ -1146,7 +1182,7 @@ The following individual ADR documents are currently published in the project do
 | GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | Proposed |
 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | Proposed |
 
-The project has identified eighteen architectural decision topics. Six currently have individual ADR documents. The remaining twelve topics are tracked in the ADR Registry and do not yet have individual decision documents.
+The project has identified nineteen architectural decision topics. Six currently have individual ADR documents. The remaining thirteen topics are tracked in the ADR Registry and do not yet have individual decision documents.
 
 All six published ADRs currently have the status Proposed. None must be treated as an accepted architectural decision until explicit approval is recorded.
 
@@ -1158,6 +1194,7 @@ Other architectural topics requiring formal decisions include:
 - Persistence technology, SQLite concurrency, and migration strategy.
 - Recovery, idempotency, and workflow execution guarantees.
 - Market data integration and market-impact classification.
+- Separate methodology, scales, calibration, and evaluation rules for event importance, economic relevance, and economic impact (GENI-ADR-019).
 - LLM budgets, cost tracking, and evaluation methodology.
 
 The complete list of decision topics and their current tracking status is maintained in:
