@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.35
+**Version:** 1.36
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -2235,6 +2235,12 @@ Fields:
 - `provider`
 - `model_id`
 - `operation_type`
+- `privacy_authorization_decision_id` nullable — immutable PrivacyAuthorizationDecision reference for personal-data processing
+- `processing_purpose_id` nullable
+- `data_category` nullable
+- `processing_region` nullable
+- `transfer_assessment_id` nullable
+- `content_rights_decision_refs` nullable — exact applicable source-content decisions
 - `prompt_version`
 - `schema_version`
 - `input_tokens` nullable
@@ -2465,6 +2471,18 @@ The logical table inventory is:
 | `schedules` | Workflow schedule definitions |
 | `scheduled_executions` | Schedule execution history |
 | `embedding_records` | Optional semantic representations |
+| `personal_data_inventory` | Logical inventory of personal-data categories, systems, purposes and retention references |
+| `processing_purposes` | Versioned approved processing purposes and permitted operations/categories |
+| `privacy_processing_bases` | Reviewed basis assessments and jurisdiction-specific evidence references |
+| `privacy_authorization_decisions` | Immutable scoped privacy-processing decisions and policy evidence |
+| `data_subject_references` | Restricted opaque subject linkage; identity map stored separately/protected |
+| `data_subject_requests` | Data-subject request lifecycle and verified scope |
+| `data_subject_request_actions` | Idempotent target-level request actions and evidence |
+| `privacy_deletion_records` | Deletion/restriction outcomes, processor acknowledgements and restore reconciliation |
+| `processor_register` | Approved processor/subprocessor posture, purpose, region, retention and deletion capability |
+| `international_transfer_assessments` | Transfer destination, safeguards and approval evidence |
+| `privacy_impact_assessments` | Processing risk assessments and mitigation/approval evidence |
+| `personal_data_lineage` | Subject-linked source, processing, provider and derived-artifact lineage |
 
 Not every logical entity must be implemented in the first migration. The implementation roadmap should prioritize a usable end-to-end workflow while preserving the domain contracts.
 
@@ -2916,6 +2934,7 @@ Initial repository contracts include:
 - `PersonalDataLineageRepository` (GENI-ADR-020)
 - `PrivacyPolicyRepository` (GENI-ADR-020; inventory, purposes, processing bases, processor/transfer/PIA records)
 - `DataSubjectReferenceRepository` (GENI-ADR-020; restricted subject linkage)
+- `PrivacyAuthorizationRepository` (GENI-ADR-020; immutable scoped privacy authorization decisions)
 
 Additional repositories may be introduced when implementation needs justify them.
 
@@ -3182,6 +3201,7 @@ These are logical model contracts proposed by GENI-ADR-020 and required by GENI-
 | ProcessingPurpose | stable purpose ID, description, permitted operations/categories, approval state, effective interval, policy version |
 | PrivacyProcessingBasis | basis ID, purpose, jurisdiction, basis type/reference, assessment evidence, effective interval and review state; legal basis is a qualified-review input |
 | DataSubjectReference | opaque linkage ID, verification state/reference and restricted identity-map reference; no direct identifier in ordinary lineage/telemetry |
+| PrivacyAuthorizationDecision | decision ID, subject reference where needed, purpose, operation, data category, provider/model, region, policy version, transfer assessment, outcome/reason codes, decided/expiry/revocation timestamps and audit reference |
 | DataSubjectRequest | request ID, subject reference, request type, intake channel/time, verification state, jurisdiction-policy reference, status, idempotency key, response reference |
 | DataSubjectRequestAction | action ID, request ID, target, action type/state, attempts, outcome, exception/hold reference, verification evidence and timestamps |
 | PrivacyDeletionRecord | deletion ID, request/action, target/lineage scope, tombstone/state, processor acknowledgements, backup reconciliation and exception evidence |
@@ -3204,7 +3224,8 @@ Backups may expire under an approved schedule. A deletion ledger/tombstone must 
 - Subject identifiers and linkage maps require restricted access and approved protection.
 - PersonalDataLineage is not ArticleLineage or ContentRightsLineage.
 - ContentRightsService and PrivacyProcessingAuthorization are independent.
-- LLM/provider requests retain authorization references, purpose, provider/region and provenance.
+- LLM/provider requests retain authorization decision IDs, purpose, provider/region and provenance.
+- PrivacyAuthorizationDecision is immutable, scoped, time-bounded and independently auditable; stale/revoked/unknown decisions cannot authorize processing.
 - No physical schema, legal basis, retention duration or jurisdictional rule is selected here.
 
 See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
