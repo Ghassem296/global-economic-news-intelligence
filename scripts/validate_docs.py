@@ -669,7 +669,7 @@ def validate_privacy_specification_contract() -> None:
     if missing:
         fail(f"Privacy specification is incomplete; missing concepts: {missing}")
     security = read_text(ROOT / "docs/08-security-architecture-and-threat-model.md")
-    if "docs/14-data-protection-and-privacy-specification.md" not in security:
+    if "14-data-protection-and-privacy-specification.md" not in security:
         fail("Security architecture must reference the Data Protection and Privacy Specification")
 
 
