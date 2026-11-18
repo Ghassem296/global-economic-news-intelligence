@@ -1197,6 +1197,7 @@ Initial repository interfaces include the following logical contracts. This inve
 - `ReportAnalysisLinkRepository`
 - `PublicationDecisionRepository`
 - `ReviewRepository`
+- `ReviewContextLinkRepository`
 - `PublicationRepository`
 - `PublicationAttemptRepository`
 - `DeliveryRepository`
@@ -1229,7 +1230,7 @@ At minimum, the first vertical slice requires method-level contracts and reposit
 
 ### 6.2 Data and Write Ownership
 
-The following map identifies the proposed authoritative application component for domain writes. It does not require one repository per table; persistence may be grouped by aggregate where transaction boundaries remain explicit.
+The following map identifies proposed writers for domain-state groups; it is not an exhaustive repository-by-repository ownership matrix. It does not require one repository per table; persistence may be grouped by aggregate where transaction boundaries remain explicit. Before implementation, every repository listed in Section 6 must be mapped to its aggregate, authoritative writer/coordinator, and transaction/UnitOfWork boundary. A group-level row below must not be interpreted as proof that every repository contract or write path has already been assigned.
 
 | Domain state / records | Authoritative writer or coordinator | Boundary |
 |---|---|---|
