@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.11  
+**Version:** 1.12  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -101,6 +101,7 @@ Contains:
 - News source adapters.
 - News collectors.
 - Article normalizers.
+- Article revision lifecycle management.
 - Article deduplication.
 - Language identification.
 - Topic classification.
@@ -978,7 +979,7 @@ Represents a historical occurrence or material change associated with an event.
 
 Event history must be append-oriented and auditable.
 
-It must preserve relevant lifecycle transitions, material updates, corrections, merges, and splits.
+It must preserve relevant lifecycle transitions, material updates, corrections, merges, and splits. Event creation must have an initial append-only history record; when created from a matching case, that record retains the source case, NEW_EVENT_CANDIDATE decision, EventCreationPolicy version, actor, and idempotency provenance.
 
 ### 5.21 PublicationRecord
 
@@ -1470,6 +1471,8 @@ Examples:
 - `source.collection.failed`
 - `article.ingested`
 - `article.normalized`
+- `article.revision.created`
+- `article.revision.unchanged`
 - `article.duplicate_candidate_detected`
 - `article.duplicate_confirmed`
 - `article.classified`
@@ -1534,6 +1537,7 @@ Tests must not require paid APIs.
 
 Critical tests include:
 
+- Article revision idempotency for unchanged content and immutable history for material updates.
 - Article deduplication without accidental event merging.
 - Near-duplicate and syndicated article detection.
 - Event matching with ambiguous candidates.
