@@ -8,6 +8,7 @@
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
 
+---
 
 ## 19. Privacy Domain and Execution Contracts
 
