@@ -545,7 +545,7 @@ No implementation may invent missing transitions or treat timestamps as substitu
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-19
 
