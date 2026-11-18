@@ -644,6 +644,75 @@ def document_inventory_difference(expected: set[str], listed: set[str]) -> tuple
     return expected - listed, listed - expected
 
 
+def parse_documentation_tree_paths(content: str, root_name: str) -> set[str]:
+    """Parse a Markdown text tree and return file paths relative to its displayed root."""
+    code_block = re.search(r"```text\s*\n([\s\S]*?)\n```", content)
+    if not code_block:
+        fail(f"Documentation tree is missing for {root_name}")
+
+    lines = code_block.group(1).splitlines()
+    root_marker = f"{root_name}/"
+    if not any(line.strip().rstrip("/") == root_name for line in lines):
+        fail(f"Documentation tree root is missing: {root_marker}")
+
+    directory_stack = [root_name]
+    listed_files: set[str] = set()
+    for line in lines:
+        match = re.match(r"^([│| ]*)(?:├──|└──|\|--|\+--)\\s+(.+?)\\s*$", line)
+        if not match:
+            continue
+        prefix, name = match.groups()
+        depth = prefix.count("|") - 1 if "|" in prefix else len(prefix) // 4
+        name = name.strip()
+        is_directory = name.endswith("/")
+        name = name.rstrip("/")
+
+        while len(directory_stack) > depth + 1:
+            directory_stack.pop()
+        parent = directory_stack[: depth + 1]
+        if len(parent) != depth + 1:
+            fail(f"Malformed directory nesting in documentation tree: {line}")
+
+        if is_directory:
+            directory_stack = parent + [name]
+        else:
+            listed_files.add("/".join(parent[1:] + [name]))
+
+    return listed_files
+
+
+def validate_readme_documentation_trees() -> None:
+    """Require both README trees to match the actual Markdown inventory exactly."""
+    expected_docs = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "docs").rglob("*.md")
+    }
+
+    root_readme = read_text(ROOT / "README.md")
+    root_listed = parse_documentation_tree_paths(
+        root_readme, "global-economic-news-intelligence"
+    )
+    expected_root = expected_docs | {"README.md"}
+    missing, unexpected = document_inventory_difference(expected_root, root_listed)
+    if missing or unexpected:
+        fail(
+            "Root README repository tree must exactly match Markdown files; "
+            f"missing={sorted(missing)}; unexpected={sorted(unexpected)}"
+        )
+
+    index = read_text(ROOT / "docs/README.md")
+    index_listed = {
+        f"docs/{path}"
+        for path in parse_documentation_tree_paths(index, "docs")
+    }
+    missing, unexpected = document_inventory_difference(expected_docs, index_listed)
+    if missing or unexpected:
+        fail(
+            "Documentation Index tree must exactly match Markdown files under docs/; "
+            f"missing={sorted(missing)}; unexpected={sorted(unexpected)}"
+        )
+
+
 def validate_root_readme_adr_authority() -> None:
     """The root README links to the ADR registry without copying its inventory."""
     readme = read_text(ROOT / "README.md")
@@ -964,6 +1033,7 @@ def main() -> None:
     validate_registry_snapshot_provenance()
     validate_validator_source_structure()
     validate_root_readme_adr_authority()
+    validate_readme_documentation_trees()
     validate_privacy_specification_contract()
     validate_roadmap_document_inventory()
     validate_cross_document_contracts()
