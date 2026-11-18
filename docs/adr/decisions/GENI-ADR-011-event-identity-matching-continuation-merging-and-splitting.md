@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.2  
+**Version:** 1.3  
 **Date:** 2026-11-18  
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -438,7 +438,7 @@ The matching process should produce one of the following structured outcomes:
 
 `NO_MATCH` is a case-level outcome recorded after evaluating the case's candidate set. It means that none of the evaluated candidate Events matches the single development represented by that EventMatchCase. It does not prevent another EventMatchCase for a different development in the same ArticleRevision from resolving to a different Event.
 
-`NEW_EVENT_CANDIDATE` is not equivalent to automatic permission to create a new event. Creation must follow the applicable event-creation policy and idempotency rules.
+`NEW_EVENT_CANDIDATE` is not permission to create an event by itself. The decision must carry a stable, preassigned `proposed_event_reference` that will become the Event identifier. Creation is allowed only when the decision is still effective and a versioned EventCreationPolicy authorizes it, including any required human review. The initial EventHistory record must retain the source EventMatchCase, NEW_EVENT_CANDIDATE decision, EventCreationPolicy version, actor/authorization reference, and idempotency key. Retrying the same authorized creation must return the same Event. After creation, the Event is recorded as an EventMatchCandidate in the original case and a successor MATCH decision must select it before an ArticleEventLink is activated.
 
 `AMBIGUOUS` must not be silently converted into `MATCH`.
 
@@ -969,6 +969,7 @@ Such measurements must be obtained through a representative evaluation dataset b
 | 1.0 | 2026-11-16 | Proposed | Initial proposal covering event identity, matching, continuation, merging, splitting, and historical traceability. | AI Architecture Assistant | 
 | 1.1 | 2026-11-18 | Proposed | Defined per-revision matching cases, immutable case-level decisions, candidate boundaries, review supersession, and decision-authorized ArticleEventLink creation. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Clarified case-level NO_MATCH semantics and immutable, fingerprinted candidate-evaluation history. | AI Architecture Assistant |
+| 1.3 | 2026-11-18 | Proposed | Defined preassigned event identity, versioned EventCreationPolicy, creation provenance/idempotency, and the successor MATCH requirement. | AI Architecture Assistant |
 
 ---
 
