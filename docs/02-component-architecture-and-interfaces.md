@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.49  
+**Version:** 1.50  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -580,7 +580,7 @@ ReviewService manages the review task and reviewer action only. It does not own 
 
 A review completion is not itself a domain decision or external-operation authorization. The designated domain service must validate reviewer authority and policy, create the immutable successor record, and preserve supersession lineage. A publication-operation review must enter reconciliation when the external outcome is unknown; it must not assume that a timed-out operation failed.
 
-The architecture supports all six subject families. The first implementation slice enables exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. In this context, publication review is a `REPORT_VERSION` review: it references the exact immutable report version and exact effective `PublicationDecision`, and its material outcome is applied through `ReportVersionService` and/or a successor `PublicationDecision`. `PUBLICATION_OPERATION` is a separate review family for an already-created `PublicationRecord` and its external-operation/reconciliation state; it is not enabled in the first slice. `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` remain disabled until their service-level successor workflows, authorization rules, and integration tests are implemented.
+The architecture supports all six subject families. The first implementation slice enables `ARTICLE_DEDUPLICATION` and `EVENT_MATCHING` review only. `REPORT_VERSION` review is a supported architectural capability but is not enabled in the first slice: it remains gated until `ReviewRecordRepository`, `ReviewContextLink`/`ReviewAction` persistence contracts, their transaction and state-transition rules, and the applicable GENI-ADR-014 approval are complete. In this context, publication review is a `REPORT_VERSION` review: it references the exact immutable report version and exact effective `PublicationDecision`, and its material outcome is applied through `ReportVersionService` and/or a successor `PublicationDecision`. `PUBLICATION_OPERATION` is a separate review family for an already-created `PublicationRecord` and its external-operation/reconciliation state; it is not enabled in the first slice. `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` remain disabled until their service-level successor workflows, authorization rules, and integration tests are implemented.
 
 Reviewer identity and authorization must be enforced by the application's security layer.
 
