@@ -789,7 +789,7 @@ Constraints:
 - Human review must reference the case and the decision under review; the review outcome must be recorded as a new decision.
 - Database constraints and application validation must prevent cross-case candidate references and invalid decision-to-link references.
 
-### 7.2 Event Identity Operations
+### 7.5 Event Identity Operations
 
 Event merging and splitting must preserve stable identifiers and historical traceability.
 
@@ -855,7 +855,7 @@ Constraints:
 - The system must not silently delete or reuse event identifiers after a merge or split.
 - Survivor-selection and aliasing rules require a formal event identity policy.
 
-### 7.3 EventRelationship
+### 7.6 EventRelationship
 
 Represents relationships between distinct events.
 
