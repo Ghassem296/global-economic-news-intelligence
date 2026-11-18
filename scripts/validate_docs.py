@@ -41,7 +41,7 @@ def read_text(path: Path) -> str:
 def document_version(path: Path) -> str:
     text = read_text(path)
     match = re.search(
-        r"^\\*\\*Version:\\*\\*\\s*([0-9]+\\.[0-9]+)\\s*$",
+        r"^\*\*Version:\*\*\s*([0-9]+\.[0-9]+)\s*$",
         text,
         re.MULTILINE,
     )
@@ -79,14 +79,14 @@ def validate_adrs() -> None:
     paths = sorted(ADR_DIR.glob("GENI-ADR-*.md"))
     ids: list[str] = []
     for path in paths:
-        match = re.match(r"^(GENI-ADR-\\d{3})-", path.name)
+        match = re.match(r"^(GENI-ADR-\d{3})-", path.name)
         if not match:
             fail(f"Invalid ADR filename: {path.name}")
         adr_id = match.group(1)
         ids.append(adr_id)
 
         text = read_text(path)
-        status = re.search(r"^\\*\\*Status:\\*\\*\\s*([A-Za-z]+)", text, re.MULTILINE)
+        status = re.search(r"^\*\*Status:\*\*\s*([A-Za-z]+)", text, re.MULTILINE)
         if not status:
             fail(f"Missing ADR status: {path.name}")
         if status.group(1) not in VALID_ADR_STATUSES:
@@ -121,7 +121,7 @@ def validate_adrs() -> None:
     if len(priority_section) != 2:
         fail("ADR priority section not found")
     priority_body = priority_section[1].split("## 13.", 1)[0]
-    priority_ids = re.findall(r"GENI-ADR-\\d{3}", priority_body)
+    priority_ids = re.findall(r"GENI-ADR-\d{3}", priority_body)
     if (
         len(priority_ids) != len(EXPECTED_ADR_IDS)
         or set(priority_ids) != EXPECTED_ADR_IDS
