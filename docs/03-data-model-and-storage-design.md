@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.17
+**Version:** 1.18
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -231,6 +231,8 @@ Source
           +---- ArticleEntityMention
           |
           +---- DuplicateCandidate
+                    |
+                    +---- DuplicateDecision (immutable outcome and supersession history)
 
 Event
   |
@@ -241,10 +243,16 @@ Event
   +---- EventEntityLink
   |
   +---- Claim
-                           |      |
-                           |      +---- ClaimObservation
-                           |      |
-                           |      +---- ClaimEvidenceLink
+         |
+         +---- ClaimAssessment (immutable versions)
+                |
+                +---- ClaimAssessmentEvidenceLink ----> Evidence
+                |
+                +---- AssessmentHistory (append-only)
+         |
+         +---- ClaimObservation
+         |
+         +---- ClaimEvidenceLink
                            |                    |
                            +---- Analysis      Evidence
                            |      |
@@ -2610,7 +2618,7 @@ The initial deployment must document:
 - Treatment of in-progress workflows after restoration.
 - Treatment of pending external delivery operations after restoration.
 
-Backups must use a method safe for the selected SQLite operating mode.
+Backups must use a consistency-safe method supported by the database engine selected under GENI-ADR-005. Engine-specific backup and restore procedures must be documented and restore-tested; no SQLite-specific operating mode is assumed before that ADR is accepted.
 
 A restore test is required before backups are considered operationally reliable.
 
