@@ -71,11 +71,6 @@ Hosting model/region/network; process/worker/scheduler; database/backup tooling 
 
 Documents 04, 08, 09, and 12; GENI-ADR-005, 013, 016, and 017.
 
----
-
-**Document ID:** GENI-OPS-013  
-**Version:** 1.1  
-**Status:** Draft — Under Architecture Review  
 ## 13. Privacy Operations Runbooks
 
 These runbooks are required before enabling personal-data processing in production. Each identifies an authorized owner, trigger/severity, prerequisites, approval boundary, safe diagnostics, execution, target-level verification, escalation and retained evidence.
@@ -97,6 +92,12 @@ Before restored data is exposed or reprocessed, replay deletion/restriction tomb
 Contain suspected disclosure/unauthorized transfer; preserve minimized evidence; identify affected purposes, records, processors and regions through lineage; revoke credentials/authorization as appropriate; engage designated privacy/legal owner to assess notification obligations under applicable law; document decisions and corrective actions. Do not invent notification deadlines.
 
 Runbook publication is not evidence of successful exercise. See Documents 02, 03, 08, 09, 12 and 14; GENI-ADR-020.
+
+---
+
+**Document ID:** GENI-OPS-013  
+**Version:** 1.1  
+**Status:** Draft — Under Architecture Review  
 
 
 **End of Document**
