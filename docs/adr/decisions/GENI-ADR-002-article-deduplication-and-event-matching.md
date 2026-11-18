@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.1  
-**Date:** 2026-11-18  
+**Version:** 1.2
+**Date:** 2026-11-18
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -793,6 +793,8 @@ This is preferable to silently deleting source records, merging unrelated events
 | GENI-ADR-012 | Defines semantic retrieval, similarity calculation, and embedding storage options. |
 | GENI-ADR-016 | Defines persistence, asynchronous execution, idempotency, and recovery. |
 | GENI-ADR-017 | Defines LLM budgets, usage tracking, and evaluation strategy. |
+| GENI-ADR-014 | Defines human review and authorized correction of ambiguous or incorrect event associations. |
+| GENI-ADR-018 | Defines language and translation constraints relevant to multilingual duplicate detection and event matching. |
 | Document 02 | Defines the component and interface contracts that must preserve the separation. |
 | Document 03 | Defines the logical data model and persistence implications. |
 | Document 04 | Defines implementation sequencing and delivery priorities. |
