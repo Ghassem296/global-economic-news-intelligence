@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.0  
-**Date:** 2026-11-16  
+**Version:** 1.1  
+**Date:** 2026-11-18  
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -966,7 +966,7 @@ Such measurements must be obtained through a representative evaluation dataset b
 
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
-| 1.0 | 2026-11-16 | Proposed | Initial proposal covering event identity, matching, continuation, merging, splitting, and historical traceability. | AI Architecture Assistant |
+| 1.0 | 2026-11-16 | Proposed | Initial proposal covering event identity, matching, continuation, merging, splitting, and historical traceability. | AI Architecture Assistant |\n| 1.1 | 2026-11-18 | Proposed | Defined per-revision matching cases, immutable case-level decisions, candidate boundaries, review supersession, and decision-authorized ArticleEventLink creation. | AI Architecture Assistant |
 
 ---
 
