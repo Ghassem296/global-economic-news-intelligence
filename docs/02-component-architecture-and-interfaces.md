@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.15  
+**Version:** 1.16  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -795,6 +795,7 @@ Fields:
 - `matching_method`
 - `matching_policy_version`
 - `candidate_input_fingerprint`
+- `supersedes_candidate_id` — nullable reference to the prior evaluation of the same candidate Event in the same case
 - `candidate_status`
 - `evaluation_reason`
 - `created_at`
@@ -803,7 +804,7 @@ Fields:
 
 Each candidate record represents one versioned evaluation of one candidate Event within one case. An evaluated candidate record is immutable. A changed policy or evaluation input creates a new candidate record; an identical evaluation input is idempotent through its fingerprint.
 
-Candidate status describes processing only (for example GENERATED, EVALUATED, INELIGIBLE, or SUPERSEDED). ACCEPTED and REJECTED are prohibited candidate statuses because acceptance or rejection is a case-level decision, not a property of candidate retrieval.
+Candidate status describes candidate-evaluation processing only (for example GENERATED, EVALUATED, or INELIGIBLE). ACCEPTED, REJECTED, and SUPERSEDED are not candidate statuses; supersession is represented by a new immutable candidate record referencing the prior evaluation. After reaching EVALUATED or INELIGIBLE, the candidate evaluation is immutable.
 
 A candidate score is not a decision confidence and must not be interpreted as one. Candidate evaluation identity is scoped by case, candidate Event, matching-policy version, and candidate-input fingerprint.
 
