@@ -1423,6 +1423,8 @@ Operation statuses:
 - `CANCELLED`
 - `RECONCILIATION_REQUIRED`
 
+The status represents the current state of the logical operation. The expected transitions are `PENDING` to `IN_PROGRESS`, followed by a confirmed terminal result or `RECONCILIATION_REQUIRED`. After reconciliation confirms that the external effect did not occur, a retry may resume the same logical operation under its original idempotency key and with a new attempt. A confirmed successful operation must not be reset and executed again.
+
 Operation semantics and constraints:
 
 - A publication key identifies one logical publication slot within a target. A target may host many independent publication keys.
@@ -1449,6 +1451,7 @@ Fields:
 - `id`
 - `publication_record_id`
 - `attempt_number`
+- `attempt_type`
 - `started_at`
 - `completed_at` nullable
 - `outcome`
@@ -1458,7 +1461,20 @@ Fields:
 - `reconciliation_reference` nullable
 - `metadata`
 
-Each attempt must be separately traceable. Attempt outcomes should distinguish confirmed success, confirmed failure, and unknown external outcome. An unknown outcome must trigger reconciliation rather than an automatic blind retry.
+Attempt types:
+
+- `EXECUTE`
+- `RECONCILE`
+
+Attempt outcomes:
+
+- `CONFIRMED_SUCCESS`
+- `CONFIRMED_FAILURE`
+- `OUTCOME_UNKNOWN`
+- `RECONCILED_SUCCESS`
+- `RECONCILED_NOT_APPLIED`
+
+Each attempt must be separately traceable. An `OUTCOME_UNKNOWN` result must place the PublicationRecord in `RECONCILIATION_REQUIRED`. Reconciliation must determine whether the external effect occurred before the operation is retried or finalized.
 
 ## 12. Delivery Records
 
@@ -2331,7 +2347,7 @@ The following topics require formal ADRs or explicit approval before their imple
 3. Embedding generation and semantic search storage.
 4. Article full-text acquisition, retention, and licensing.
 5. Source reliability assessment and calibration.
-6. Publication review and correction workflow.
+6. Publication review, target-adapter capabilities, idempotency/reconciliation guarantees, correction, replacement, and withdrawal workflow.
 7. Market data sources and observed impact classification.
 8. Reprocessing, checkpoint, and workflow recovery guarantees.
 9. Multilingual content storage, translation, and reporting policy.
