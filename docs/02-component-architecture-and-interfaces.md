@@ -1569,9 +1569,9 @@ The current individual ADR documents are listed in:
 
 `docs/adr/README.md`
 
-The project currently has six published individual ADR documents, all with Proposed status.
+All nineteen registered decision topics currently have individual ADR documents in this pull-request branch. All nineteen remain Proposed; none is an accepted architectural decision until explicit Project Owner approval is recorded.
 
-The remaining identified decision topics are tracked in the ADR Registry and must not be treated as accepted architectural decisions.
+The ADR Registry is the authoritative inventory of document availability, status, priorities, and dependencies. The existence of an ADR file does not authorize implementation.
 
 Until the relevant ADRs are accepted, these decisions remain proposed and must not be treated as approved implementation constraints.
 
