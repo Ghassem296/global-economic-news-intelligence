@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-014  
 **Title:** Human Review, Corrections, and Withdrawals  
 **Status:** Proposed  
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -304,7 +304,7 @@ The references below are internal project sources used to establish documented c
 | Reference | Type | Relevance |
 |---|---|---|
 | `docs/01-product-and-system-architecture.md` | Internal | Defines review, publication, and correction boundaries. |
-| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines ReviewService and ReviewService. |
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines the shared ReviewService and Event Resolution workflow responsibilities. |
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines review records and immutable decisions. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines review and correction stages. |
 | `GENI-ADR-004` | Internal | Publication decisions and quality gates. |
@@ -316,6 +316,6 @@ External legal, provider, and empirical evidence must be added during formal rev
 
 | Date | Version | Status | Change |
 |---|---|---|---|
-| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |\n| 2026-11-18 | 1.1 | Proposed | Aligned event-matching review records and workflow references with the component architecture; removed undefined service and record types. |
 
 **End of ADR**
