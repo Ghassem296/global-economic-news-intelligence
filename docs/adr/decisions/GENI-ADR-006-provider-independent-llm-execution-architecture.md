@@ -908,6 +908,7 @@ No provider benchmark or cost comparison is claimed by this proposal.
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
 | 1.0 | 2026-11-17 | Proposed | Initial proposal for a shared provider-independent LLM execution architecture | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Synchronized version history and end-of-document metadata with the current Proposed ADR revision; no approval status changed. | AI Architecture Assistant |
 
 ---
 
@@ -915,5 +916,5 @@ No provider benchmark or cost comparison is claimed by this proposal.
 
 **ADR ID:** `GENI-ADR-006`  
 **File:** `GENI-ADR-006-provider-independent-llm-execution-architecture.md`  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Proposed

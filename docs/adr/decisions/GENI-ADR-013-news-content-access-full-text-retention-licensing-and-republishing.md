@@ -1143,6 +1143,7 @@ Source-specific rights and legal requirements must be verified before production
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
 | 1.0 | 2026-11-17 | Proposed | Initial proposal covering source access, full-text retention, licensing, processing, attribution, and republication. | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Synchronized version history and end-of-document metadata with the current Proposed ADR revision; no approval status changed. | AI Architecture Assistant |
 
 ---
 
@@ -1150,5 +1151,5 @@ Source-specific rights and legal requirements must be verified before production
 
 **ADR ID:** `GENI-ADR-013`  
 **File:** `GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md`  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Proposed

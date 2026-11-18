@@ -197,7 +197,6 @@ Ambiguous or high-risk items may be delayed, but corrections become explainable 
 
 ### 9.1 Affected Components
 - ReviewService
-- ReviewService
 - EventService
 - PublicationPolicy
 - ReportVersionService
@@ -205,7 +204,6 @@ Ambiguous or high-risk items may be delayed, but corrections become explainable 
 - Authorization service
 
 ### 9.2 Affected Data Models and Interfaces
-- ReviewRecord
 - ReviewRecord
 - EventMatchDecision
 - ArticleEventLink

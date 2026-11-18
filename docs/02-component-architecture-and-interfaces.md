@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.22  
+**Version:** 1.23  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -255,9 +255,7 @@ Responsibilities:
 
 It must not merge articles merely because they describe the same event.
 
-It generates DuplicateCandidate evaluation records only. The Article Deduplication Workflow owns policy application and immutable DuplicateDecision creation/supersession. Neither candidate scoring nor duplicate decision may delete the source Article or erase source provenance.
-
-A duplicate candidate is evaluation evidence only. It must not store or impersonate the authoritative final decision. A separate immutable DuplicateDecision records the effective outcome and any supersession history.
+ArticleDeduplicator produces immutable DuplicateCandidate evaluations only. The Article Deduplication Workflow owns policy application and immutable DuplicateDecision creation/supersession. Neither candidate scoring nor duplicate decision may delete the source Article or erase source provenance.
 
 ### 4.5 TopicClassifier
 
@@ -429,11 +427,12 @@ Responsibilities:
 - Link evidence to claims.
 - Record source attribution.
 - Record support and contradiction relationships.
-- Maintain verification status.
-- Preserve evidence provenance.
-- Support evidence corrections and supersession.
+- Persist immutable ClaimAssessment versions and exact ClaimAssessmentEvidenceLink records.
+- Append AssessmentHistory actions.
+- Maintain the Claim current-assessment projection atomically with a new effective assessment.
+- Preserve evidence provenance and support authorized correction/supersession.
 
-Evidence records must be traceable to their original source material or other explicitly identified evidence origins.
+Evidence records must be traceable to their original source material or other explicitly identified evidence origins. Claim.verification_status and Claim.confidence are projections of the current ClaimAssessment, not independently editable assessment facts.
 
 Evidence and claim relationships may be many-to-many when justified.
 
@@ -452,6 +451,8 @@ Responsibilities:
 It must not treat repeated syndication as independent corroboration.
 
 An evidence assessment must distinguish insufficient evidence from evidence of absence.
+
+EvidenceAnalyzer produces a typed assessment proposal with evidence references, rationale, policy/method version, and confidence semantics where applicable. EvidenceService validates and persists the immutable ClaimAssessment and its evidence links. EvidenceAnalyzer must not directly mutate Claim.verification_status or overwrite prior assessments.
 
 ### 4.16 ImportanceRanker
 
@@ -780,6 +781,20 @@ Constraints:
 - Hashes and evidence offsets must identify the exact text representation and normalization version to which they apply.
 - The Article current projection must reference the latest accepted revision and must be updated atomically with revision creation.
 - EventMatchCase must reference one exact immutable ArticleRevision; a later revision does not silently mutate or reuse the prior revision's matching cases.
+
+### 5.3.1 DuplicateCandidate
+
+Represents immutable candidate evidence comparing two exact ArticleRevision records for possible duplicate or near-duplicate content.
+
+It must preserve the canonical pair of Article and ArticleRevision references, similarity signals, matching method, matching-policy version, input fingerprint, evaluation timestamp, and metadata. A candidate is not a final duplicate decision. Re-evaluation with changed input or policy creates a distinct candidate evaluation; unchanged input is idempotent.
+
+### 5.3.2 DuplicateDecision
+
+Represents the immutable authoritative outcome for one DuplicateCandidate.
+
+It must preserve the candidate reference, outcome (CONFIRMED_DUPLICATE, NOT_DUPLICATE, or REVIEW_REQUIRED), rationale, decision method and policy version, decision actor, timestamp, documented confidence semantics where available, and superseded decision reference.
+
+A correction creates a successor DuplicateDecision and preserves the prior decision. The effective duplicate relationship is derived from the effective decision; neither a candidate score nor the decision may delete or collapse the original Article or ArticleRevision.
 
 ### 5.4 ArticleProcessingRecord
 
@@ -1150,6 +1165,7 @@ Initial interfaces include:
 - `ClaimRepository`
 - `EvidenceRepository`
 - `ClaimAssessmentRepository`
+- `ClaimAssessmentEvidenceLinkRepository`
 - `AssessmentHistoryRepository`
 - `AnalysisRepository`
 - `ReportRepository`
@@ -1189,14 +1205,15 @@ The following map identifies the proposed authoritative application component fo
 | Source health and collection checkpoints | `NewsCollector` with `WorkflowOrchestrator` | Observations/checkpoints only; source configuration remains with `SourceRegistry`. |
 | Source rights profiles, permission assessments, retention and deletion records | `ContentRightsService` | Must fail closed on unknown permission and preserve policy/version provenance. |
 | Article current projection and immutable ArticleRevision | `ArticleRevisionService` | Atomically creates/reuses a revision and updates the current projection. |
-| Duplicate candidates | `ArticleDeduplicator` | Produces candidate evidence only; does not decide identity or establish event association. |
+| Duplicate candidates | `ArticleDeduplicator` | Produces immutable candidate evidence only; does not decide duplicate identity. |
+| Duplicate decisions | Article Deduplication Workflow | Applies the versioned duplicate policy and persists immutable DuplicateDecision/supersession history; never deletes source Articles. |
 | Topic classification | `TopicClassifier` | Versioned result for an exact ArticleRevision. |
 | Entity mentions and canonical entity/alias resolution | `EntityExtractor` and `EntityResolver` | Extraction creates mentions; resolver owns canonical resolution and ambiguity. |
 | EventMatchCase and EventMatchCandidate | Event Resolution Workflow and `EventMatcher` | Matcher evaluates candidates; workflow owns case lifecycle and coordinates decisions. |
 | EventMatchDecision | Event Resolution Workflow, including authorized review routing | Immutable case-level decision; no direct mutation by a review task. |
 | Event and ArticleEventLink | `EventService` | Applies authorized decisions and identity operations transactionally. |
 | EventHistory | `EventHistoryService`, invoked through `EventService` | Append-only history; not a second event-state owner. |
-| Claims, evidence, ClaimAssessment, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
+| Claims, evidence, ClaimAssessment, ClaimAssessmentEvidenceLink, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
 | Analysis and analysis provenance links | Event Intelligence Workflow with the relevant assessor/analyzer | Assessors produce typed outputs; workflow persists versioned results and inputs. |
 | Report versions and lineage | `ReportVersionService` | `ReportGenerator` creates content but does not own immutable version persistence. |
 | PublicationDecision | `PublicationPolicy` through Publication Decision Workflow | Eligibility only; no external side effect. |
@@ -1238,6 +1255,38 @@ Where a capability is not yet defined or its ADR remains Proposed, this map desc
 - Content access restrictions.
 
 The workflow must preserve enough information to resume collection safely.
+
+### 7.1.1 Article Deduplication Workflow
+
+**Input:**
+
+- Two ArticleRevision references and their owning Article identifiers.
+- Immutable DuplicateCandidate evaluation(s).
+- Duplicate policy/version and execution/idempotency context.
+
+**Responsibilities:**
+
+1. Validate that the two ArticleRevision records belong to the identified Articles and are not the same revision.
+2. Ensure the comparison pair is canonical and candidate evaluations are scoped to exact revision inputs.
+3. Obtain candidate evidence from ArticleDeduplicator; candidate scores do not authorize a final decision.
+4. Apply the active, versioned duplicate-decision policy and record an immutable DuplicateDecision.
+5. Route REVIEW_REQUIRED cases to the authorized review process when that policy is available.
+6. On correction or reassessment, create a successor DuplicateDecision referencing the prior effective decision.
+7. Preserve original Article and ArticleRevision identities and all source provenance.
+
+**Output:**
+
+- The immutable candidate evaluation references used.
+- The new or existing effective DuplicateDecision.
+- The resulting duplicate relationship projection, if CONFIRMED_DUPLICATE.
+
+**Invariants:**
+
+- At most one effective DuplicateDecision exists per candidate.
+- Repeated execution with the same candidate/policy/idempotency identity must not create duplicate decisions.
+- A failed or incomplete evaluation is not a NOT_DUPLICATE decision.
+- Duplicate decisions do not establish event identity or alter ArticleEventLink.
+- Confirming a duplicate does not delete, merge, or overwrite source Article records.
 
 ### 7.2 Article Processing Workflow
 
