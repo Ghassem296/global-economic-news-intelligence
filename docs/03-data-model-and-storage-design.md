@@ -1916,7 +1916,9 @@ The logical table inventory is:
 | `article_entity_mentions` | Extracted entity mentions |
 | `entities` | Resolved entities |
 | `entity_aliases` | Alternative entity names |
-| `article_event_links` | Decision-authorized article-event associations |\n| `event_match_cases` | Per-revision, per-development event-resolution cases |\n| `event_match_decisions` | Immutable case-level event matching outcomes |
+| `article_event_links` | Decision-authorized article-event associations |
+| `event_match_cases` | Per-revision, per-development event-resolution cases |
+| `event_match_decisions` | Immutable case-level event matching outcomes |
 | `duplicate_candidates` | Article duplicate candidates |
 | `events` | Current event state |
 | `event_match_candidates` | Candidate events evaluated within a matching case |
@@ -2253,7 +2255,7 @@ Initial repository contracts include:
 - `ArticleEventLinkRepository`
 - `EventMatchCaseRepository`
 - `EventMatchCandidateRepository`
-- `EventMatchDecisionRepository`\n- `EventMatchDecisionRepository`
+- `EventMatchDecisionRepository`
 - `EventHistoryRepository`
 - `EventRelationshipRepository`
 - `EventIdentityOperationRepository`
@@ -2343,7 +2345,10 @@ Data-layer tests must cover:
 - Current article projection consistency.
 - Duplicate candidate behavior.
 - Event identity preservation.
-- Event matching cases, candidates, and immutable decisions.\n- Candidate-to-case and decision-to-case referential integrity.\n- Human review creating a superseding decision.\n- Link activation and deactivation with exact decision provenance.
+- Event matching cases, candidates, and immutable decisions.
+- Candidate-to-case and decision-to-case referential integrity.
+- Human review creating a superseding decision.
+- Link activation and deactivation with exact decision provenance.
 - Event merge and split history.
 - Many-to-many article-event relationships.
 - Topic classification history.
