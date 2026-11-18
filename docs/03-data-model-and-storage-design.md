@@ -1,11 +1,11 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.37
+**Version:** 1.38
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
-**Last Updated:** 2026-11-18
+**Last Updated:** 2026-11-19
 
 ---
 
@@ -2071,6 +2071,18 @@ Possible statuses:
 - `CANCELLED`
 - `PARTIALLY_COMPLETED`
 
+The status list above defines the current vocabulary only; it does not define an allowed-transition graph or a complete lifecycle contract. In particular, this model does not yet establish:
+
+- The permitted initial status and whether run creation may accept any status other than the server-controlled initial state.
+- Which statuses are terminal, whether a terminal run may be superseded, and whether any status may be reopened.
+- Whether `PARTIALLY_COMPLETED` means that at least one step completed while another did not, or whether it is reserved for a specific controlled outcome.
+- How ProcessingStep outcomes are aggregated into ProcessingRun status, including the effect of skipped, cancelled, blocked, retry-pending, or non-repeatable steps.
+- Whether recovery resumes the same ProcessingRun or creates a successor run, and how completed step outputs are reused.
+- How cancellation, deadline expiry, failure, and recovery races are resolved.
+- Whether run status transitions require a separate append-only history entity in addition to the current status projection.
+
+These are explicit implementation blockers. No transition, terminal-state, aggregation, or recovery rule may be inferred from the status names, timestamps, lease expiry, or the existence of a ProcessingStep.
+
 `target_type` and `target_id` form a polymorphic reference and cannot be protected by an ordinary foreign key to multiple target tables.
 
 The application layer must validate the target reference. Where stronger relational integrity is required, target-specific link tables should be introduced.
@@ -2103,6 +2115,8 @@ Fields:
 - `error_category`
 - `error_summary`
 - `metadata`
+
+The `status` field is required, but this model does not define its enum vocabulary, initial value, allowed transitions, terminal states, retry semantics, or relationship to ProcessingRun.status. Those lifecycle rules remain an explicit implementation blocker and must be specified before a ProcessingStep status is persisted or transitioned.
 
 A step must be safely repeatable or explicitly marked as non-repeatable.
 
