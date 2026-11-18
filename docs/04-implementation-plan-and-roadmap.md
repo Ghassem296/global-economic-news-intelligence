@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.13
+**Version:** 1.14
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence
@@ -212,16 +212,44 @@ global-economic-news-intelligence/
 │       └── eval.yml
 │
 ├── docs/
+│   ├── README.md
 │   ├── 01-product-and-system-architecture.md
 │   ├── 02-component-architecture-and-interfaces.md
 │   ├── 03-data-model-and-storage-design.md
 │   ├── 04-implementation-plan-and-roadmap.md
-│   ├── 05-agent-template-architecture.md
-│   ├── 06-agent-template-implementation-specification.md
-│   ├── 07-architecture-decision-records.md
-│   └── adr/
-│       ├── README.md
-│       └── adr-template.md
+│   ├── 05-architecture-decision-records.md
+│   ├── 06-documentation-governance-and-change-management.md
+│   ├── 07-documentation-registry.md
+│   │
+│   ├── adr/
+│   │   ├── README.md
+│   │   ├── adr-template.md
+│   │   └── decisions/
+│       │       ├── GENI-ADR-001-event-centric-intelligence-architecture.md
+│       │       ├── GENI-ADR-002-article-deduplication-and-event-matching.md
+│       │       ├── geni-adr-003-economic-intelligence-as-primary-editorial-focus.md
+│       │       ├── geni-adr-004-publication-decisions-quality-gates-and-automated-publishing-policy.md
+│       │       ├── geni-adr-005-initial-persistence-technology-and-migration-strategy.md
+│       │       ├── GENI-ADR-006-provider-independent-llm-execution-architecture.md
+│       │       ├── geni-adr-007-deterministic-workflows-and-selective-agent-reasoning.md
+│       │       ├── GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md
+│       │       ├── geni-adr-009-near-real-time-news-acquisition-strategy.md
+│       │       ├── geni-adr-010-phased-text-audio-and-video-delivery.md
+│       │       ├── GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md
+│       │       ├── geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md
+│       │       ├── GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md
+│       │       ├── geni-adr-014-human-review-corrections-and-withdrawals.md
+│       │       ├── geni-adr-015-market-data-integration-and-economic-impact-classification.md
+│       │       ├── geni-adr-016-persistence-async-execution-idempotency-and-recovery.md
+│       │       ├── geni-adr-017-llm-budgets-usage-tracking-and-evaluation-strategy.md
+│       │       ├── geni-adr-018-multilingual-source-processing-translation-and-language-policy.md
+│       │       └── geni-adr-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md
+│   │
+│   └── references/
+│       └── agent-template/
+│           ├── README.md
+│           ├── agent-template-architecture.md
+│           └── agent-template-implementation-specification.md
 │
 ├── evals/
 │   ├── datasets/
@@ -1749,5 +1777,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.12
+**Version:** 1.14
 **Status:** Draft — Under Architecture Review
