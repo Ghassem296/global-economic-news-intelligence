@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.11
+**Version:** 1.12
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -132,13 +132,11 @@ The Event record is not the authoritative storage location for these assessment 
 
 ### 3.1 Initial Relational Storage
 
-SQLite is the proposed initial relational database, subject to formal architecture approval.
+SQLite is a candidate for the initial relational persistence proof-of-concept, not a selected production engine. The initial engine must be chosen under GENI-ADR-005 after measuring the expected workload, concurrent writers, locking and transaction behavior, backup/restore needs, deployment model, and operational capacity. PostgreSQL remains an alternative for the initial selection if those measurements require it.
 
-The initial implementation should support:
+The selected initial implementation should support:
 
-- Local development.
-- Single-instance operation.
-- Early deployment validation.
+- Local development and the intended deployment model.
 - Relational integrity.
 - Versioned migrations.
 - Transactional updates.
@@ -161,7 +159,7 @@ SQLite concurrency limitations must be documented. Concurrent asynchronous workf
 
 ### 3.2 Future Relational Storage
 
-PostgreSQL is a potential future implementation when operational requirements justify it.
+PostgreSQL is an alternative initial engine as well as a possible future implementation. Whether it is selected initially or introduced later must follow the workload proof-of-concept and formal approval under GENI-ADR-005.
 
 Possible triggers include:
 
