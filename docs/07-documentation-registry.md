@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.33
+**Version:** 1.34
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -169,7 +169,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-17 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.32 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.34 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.11 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.13 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -396,7 +396,7 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `527d46ad893338e48d3a9b4ad5457774640da9cc`  
+**Baseline Commit Inspected:** `223d8209a5d4fd2b4dd83178e0fd3f502e52da63`  
 **Registry Refresh:** This revision was prepared from the exact published `main` tree identified by the baseline commit above. The earlier architecture, component, data-model, ADR, and validation corrections were committed as successive fast-forward updates before this baseline was inspected. This revision corrects the remaining first-slice Human Review wording in Documents 01 and 04 and updates their version entries together with this registry snapshot. The resulting commit becomes the new authoritative `main` snapshot.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
