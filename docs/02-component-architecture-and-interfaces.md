@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.10  
+**Version:** 1.11  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -370,6 +370,8 @@ Responsibilities:
 - Preserve historical relationships after corrections.
 
 EventService owns event-level business rules and the application of authorized event-association decisions. The Event Resolution workflow coordinates candidate evaluation, case-level decision creation, and review routing. EventService must reject attempts to create an active association from a non-MATCH decision.
+
+For new-event creation, EventService must require the effective NEW_EVENT_CANDIDATE decision for the case, validate the versioned EventCreationPolicy and any required review authorization, and use the decision's preassigned `proposed_event_reference` as the Event identifier. Creation must be idempotent: retrying the same authorized decision must return the same Event and must not create a duplicate. EventService creates the Event but does not create the ArticleEventLink from the NEW_EVENT_CANDIDATE decision; the new Event must first be recorded as a candidate and selected by a subsequent MATCH decision.
 
 EventService must not implement low-level similarity calculations or database-specific query logic.
 
@@ -1132,9 +1134,38 @@ New processing versions must not silently overwrite historical results.
 - A non-MATCH outcome must not create an active ArticleEventLink.
 - Human review references the case and the decision under review. Its outcome creates a new EventMatchDecision that supersedes the prior effective decision.
 - Every ArticleEventLink references the exact MATCH decision that authorized it.
-- NEW_EVENT_CANDIDATE does not create an Event automatically; event creation follows the separate policy and idempotency rules.
+- NEW_EVENT_CANDIDATE does not create an Event automatically; it routes to the Authorized New-Event Creation Workflow. The created Event must be represented as a candidate and selected by a successor MATCH decision before an ArticleEventLink is applied.
 
 EventMatcher performs candidate evaluation. Event Resolution Workflow coordinates the case and decision lifecycle. EventService applies an authorized decision and maintains event and association invariants.
+
+### 7.3.1 Authorized New-Event Creation Workflow
+
+**Input:**
+
+- EventMatchCase identifier.
+- The current effective EventMatchDecision with outcome `NEW_EVENT_CANDIDATE`.
+- Its stable `proposed_event_reference`.
+- Versioned EventCreationPolicy and authorization context.
+- Review authorization where policy requires human approval.
+
+**Output:**
+
+- One Event created with the preassigned identifier, or the already-created Event returned on an idempotent retry.
+- Initial EventHistory provenance for creation.
+- An EventMatchCandidate in the same case referencing the created Event.
+- A new immutable EventMatchDecision with outcome `MATCH` that supersedes the NEW_EVENT_CANDIDATE decision.
+- An ArticleEventLink only after the effective MATCH decision is applied.
+
+**Workflow invariants:**
+
+- The NEW_EVENT_CANDIDATE decision must still be the effective decision when creation is authorized.
+- The EventCreationPolicy version and actor/authorization provenance must be recorded.
+- The proposed Event identifier is stable across retries; a retry must not create a second Event.
+- If policy requires human review, the review outcome must be recorded before creation; a material review outcome creates a successor NEW_EVENT_CANDIDATE decision.
+- Event creation alone does not establish an article-event association.
+- The EventMatchCandidate and subsequent MATCH decision must belong to the original EventMatchCase.
+- Failure after Event creation but before the MATCH decision must be recoverable without duplicate Event creation.
+- Only the effective MATCH decision authorizes ArticleEventLink activation.
 
 ### 7.4 Event Matching Review Workflow
 
