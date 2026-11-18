@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-008  
 **Title:** Evidence Provenance and Uncertainty Representation  
 **Status:** Proposed  
-**Version:** 1.3
+**Version:** 1.4
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -493,11 +493,10 @@ Proposed types:
 |---|---|
 | `SUPPORTS` | The evidence provides support for the claim. |
 | `CONTRADICTS` | The evidence conflicts with the claim. |
-| `QUALIFIES` | The evidence limits, narrows, or adds conditions to the claim. |
-| `CONTEXTUALIZES` | The evidence provides relevant context without directly proving or disproving the claim. |
-| `DERIVED_FROM` | The evidence or assertion is derived from another identifiable information item. |
-| `NEUTRAL` | The evidence has been examined but does not materially support or contradict the claim. |
-| `UNASSESSED` | The relationship has not yet been evaluated. |
+| `CONTEXTUALIZES` | The evidence qualifies, narrows, or provides relevant context without directly proving or disproving the claim. |
+| `MENTIONS` | The evidence refers to the claim without establishing material support or contradiction. |
+
+These are the canonical claim-assessment relationship values used by Documents 02 and 03. `QUALIFIES` is represented as `CONTEXTUALIZES` with an explanatory qualifier in link metadata. `DERIVED_FROM` is provenance lineage between information items, not a claim-assessment relationship; it must be recorded in provenance metadata or a dedicated provenance relation. `NEUTRAL` and `UNASSESSED` are assessment states, not relationship types: use `MENTIONS` only when the evidence actually refers to the claim, and leave the link unassessed until evaluated.
 
 A relationship must not be assigned merely because an article contains similar words.
 
@@ -505,7 +504,9 @@ The relationship must reflect the actual evidential relevance of the information
 
 ### 6.4 Evidence Types
 
-The initial evidence taxonomy should distinguish at least:
+The following evidence classes describe the source/nature of information, not the representation-level `Evidence.evidence_type` enum in Document 03. Document 03 currently uses representation values such as `DIRECT_QUOTE`, `REPORTED_FACT`, `OFFICIAL_DOCUMENT`, `DATA_POINT`, `SOURCE_INTERPRETATION`, `SYSTEM_DERIVED`, and `OTHER`. These are separate axes and must not be forced into a one-to-one enum mapping. Until a dedicated `evidence_class` field is approved, retain the class as typed metadata with its taxonomy version; preserve the representation-level `evidence_type` independently.
+
+The initial evidence-class taxonomy should distinguish at least:
 
 | Evidence Type | Description |
 |---|---|
@@ -595,7 +596,7 @@ Therefore:
 
 ### 6.7 Claim Assessment Outcomes
 
-The system should use explicit assessment outcomes.
+The system should use the canonical assessment outcomes defined in Document 03. `MIXED` maps to `DISPUTED` when material supporting and contradicting evidence remain in conflict; `INCONCLUSIVE` maps to `UNRESOLVED`; and `UNVERIFIED` must not be used as a final assessment outcome, because it conflates insufficient evidence with a completed assessment. Use `INSUFFICIENT_EVIDENCE` when the evidence set is inadequate and `UNRESOLVED` when the assessment remains indeterminate after examination. `SUPERSEDED` and `WITHDRAWN` are lifecycle states/actions, not assessment outcomes; preserve them in assessment history and supersession/withdrawal metadata.
 
 Proposed values:
 
@@ -604,10 +605,9 @@ Proposed values:
 | `SUPPORTED` | Available evidence provides sufficient support under the applicable assessment policy. |
 | `PARTIALLY_SUPPORTED` | Some parts of the claim are supported, but others remain uncertain or unsupported. |
 | `CONTRADICTED` | Available evidence materially conflicts with the claim. |
-| `MIXED` | Material supporting and contradicting evidence both exist. |
-| `UNVERIFIED` | The available evidence is insufficient to establish the claim. |
-| `INCONCLUSIVE` | The available evidence has been examined but does not permit a reliable conclusion. |
-| `SUPERSEDED` | A newer assessment or corrected claim has replaced this assessment for current use. |
+| `DISPUTED` | Material evidence or credible sources remain in unresolved conflict; preserve both supporting and contradicting links. |
+| `INSUFFICIENT_EVIDENCE` | The available evidence set is too limited to support or contradict the claim. |
+| `UNRESOLVED` | Evidence has been examined, but the assessment cannot reliably resolve the claim. |
 | `WITHDRAWN` | The claim or assessment has been withdrawn under an explicit correction or review process. |
 
 The outcome must be interpreted in context.
@@ -817,7 +817,7 @@ This ADR is currently **Proposed**.
 
 **Decision Status:** Proposed
 
-**Decision Owner:** Product Owner
+**Decision Owner:** Project Owner
 
 **Approved By:** Not yet approved
 
@@ -831,7 +831,7 @@ It separates source attribution, evidence relationships, claim assessment, and A
 
 This separation is necessary for reliable economic intelligence and transparent reporting.
 
-The Product Owner must explicitly accept or reject this recommendation.
+The Project Owner must explicitly accept or reject this recommendation.
 
 **Conditions or Restrictions:**
 
@@ -1137,7 +1137,7 @@ This ADR should be reviewed when:
 
 **Review Date:** Not scheduled
 
-**Review Owner:** Product Owner
+**Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
 
@@ -1171,6 +1171,7 @@ Such measurements must be established through representative datasets and evalua
 | 1.1 | 2026-11-18 | Proposed | Clarified distinct assessment semantics and source/evidence provenance constraints. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Aligned ClaimAssessment, ClaimAssessmentEvidenceLink, AssessmentHistory, and Claim current-assessment projection with Documents 02 and 03. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
+| 1.4 | 2026-11-18 | Proposed | Aligned claim-assessment outcomes and evidence-link relationships with Documents 02 and 03; separated evidence class from representation type and lifecycle states. | AI Architecture Assistant |
 
 ---
 
