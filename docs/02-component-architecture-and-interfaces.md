@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.38  
+**Version:** 1.39  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -567,7 +567,7 @@ Canonical subject-family to successor-workflow mapping:
 | `ARTICLE_DEDUPLICATION` | DuplicateCandidate and the DuplicateDecision under review | Article Deduplication Workflow creates a successor DuplicateDecision for the same candidate. |
 | `EVENT_MATCHING` | EventMatchCase and the EventMatchDecision under review | Event Resolution Workflow creates a successor EventMatchDecision; EventService applies only its effective MATCH outcome. |
 | `CLAIM_ASSESSMENT` | Claim and the exact ClaimAssessment under review | EvidenceService creates a successor ClaimAssessment with exact ClaimAssessmentEvidenceLink records, appends AssessmentHistory, and atomically refreshes the Claim projection. |
-| `REPORT_VERSION` | Exact immutable Report version | ReportVersionService creates a new immutable corrected/superseding version; PublicationPolicy must issue a new decision before any replacement publication. |
+| `REPORT_VERSION` | Exact immutable Report version plus its exact effective `PublicationDecision` | ReportVersionService creates a new immutable corrected/superseding version; PublicationPolicy must issue a new decision before any replacement publication. |
 | `PUBLICATION_OPERATION` | Exact PublicationRecord and its current operation/reconciliation state | PublicationService reconciles an unknown external outcome or creates an explicitly authorized successor REPLACE/WITHDRAW operation; the prior operation and attempts remain immutable. |
 | `CONTENT_RIGHTS` | Exact RightsAssessment or versioned SourceRightsProfile | ContentRightsService issues a successor RightsAssessment or profile revision and triggers applicable restriction/retention/deletion workflows; it does not silently rewrite prior external delivery or publication history. |
 
