@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.15
+**Version:** 1.16
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -290,6 +290,13 @@ Defines verification layers, dataset governance, metric definitions, AI evaluati
 **Document ID:** GENI-OPS-013
 
 Defines environment separation, runtime responsibilities, deployment controls, observability, recovery, capacity, runbooks, and readiness gates.
+
+## 3.14 Data Protection and Privacy Specification
+
+**File:** 14-data-protection-and-privacy-specification.md  
+**Document ID:** GENI-PRIV-014
+
+Defines data inventory, processing purposes, privacy principles, retention and deletion controls, data-subject request handling, processor/model-provider governance, international transfers, incident response, and privacy impact assessment expectations. This is a proposed engineering specification, not legal advice or evidence of compliance.
 
 # 4. Architectural Decision Records
 
@@ -612,6 +619,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `docs/README.md`  
-**Version:** 1.15  
+**Version:** 1.16  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18

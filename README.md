@@ -142,6 +142,7 @@ The main documentation includes:
 | [11 — Economic Taxonomy Specification](docs/11-economic-taxonomy-specification.md) | Stable subject identifiers, classification, and taxonomy governance |
 | [12 — Testing and Evaluation Strategy](docs/12-testing-and-evaluation-strategy.md) | Test layers, datasets, metrics, and release quality gates |
 | [13 — Deployment, Operations, and Observability](docs/13-deployment-operations-and-observability.md) | Runtime, deployment, monitoring, recovery, and readiness |
+| [14 — Data Protection and Privacy Specification](docs/14-data-protection-and-privacy-specification.md) | Personal-data inventory, purposes, retention, deletion, rights requests, processors, and privacy risk controls |
 
 ### Architecture Decision Records
 
@@ -149,27 +150,7 @@ Individual Architecture Decision Records are maintained in [`docs/adr/`](docs/ad
 
 The ADR registry identifies decision topics, priorities, dependencies, and current statuses.
 
-The repository contains nineteen individual ADR documents, all currently Proposed:
-
-- GENI-ADR-001 — Event-Centric Intelligence Architecture
-- GENI-ADR-002 — Article Deduplication and Event Matching Separation
-- GENI-ADR-003 — Economic Intelligence as the Primary Editorial Focus
-- GENI-ADR-004 — Publication Decisions, Quality Gates, and Automated Publishing Policy
-- GENI-ADR-005 — Initial Persistence Technology and Migration Strategy
-- GENI-ADR-006 — Provider-Independent LLM Execution Architecture
-- GENI-ADR-007 — Deterministic Workflows and Selective Agent Reasoning
-- GENI-ADR-008 — Evidence Provenance and Uncertainty Representation
-- GENI-ADR-009 — Near-Real-Time News Acquisition Strategy
-- GENI-ADR-010 — Phased Text, Audio, and Video Delivery
-- GENI-ADR-011 — Event Identity, Matching, Continuation, Merging, and Splitting
-- GENI-ADR-012 — Semantic Retrieval, Similarity Calculation, and Embedding Storage
-- GENI-ADR-013 — News Content Access, Full-Text Retention, Licensing, and Republishing
-- GENI-ADR-014 — Human Review, Corrections, and Withdrawals
-- GENI-ADR-015 — Market Data Integration and Economic Impact Classification
-- GENI-ADR-016 — Persistence, Async Execution, Idempotency, and Recovery
-- GENI-ADR-017 — LLM Budgets, Usage Tracking, and Evaluation Strategy
-- GENI-ADR-018 — Multilingual Source Processing, Translation, and Language Policy
-- GENI-ADR-019 — Event Importance, Economic Relevance, and Economic Impact Assessment Methodology
+The [ADR Registry](docs/adr/README.md) is the sole authoritative inventory for individual ADR identifiers, titles, repository paths, priorities, and decision statuses. This README intentionally does not reproduce that inventory; consult the registry for the current list and status of all decision records.
 
 The existence or publication of an ADR does not imply that its proposal has been formally accepted.
 

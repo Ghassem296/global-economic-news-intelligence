@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SEC-008  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -11,7 +11,7 @@
 
 ## 1. Purpose and Status
 
-Defines the proposed security model, trust boundaries, threat scenarios, controls, and verification expectations. It complements Documents 02, 03, 09–13 and the rights-related ADRs. Publication is not implementation or approval evidence; deployment choices and numeric objectives remain open.
+Defines the proposed security model, trust boundaries, threat scenarios, controls, and verification expectations. It complements Documents 02, 03, 09–14 and the rights-related ADRs. Personal-data processing, retention, deletion, data-subject requests, processors, and international-transfer controls are specified in [Document 14](14-data-protection-and-privacy-specification.md); this threat model does not replace that specification. Publication is not implementation or approval evidence; deployment choices and numeric objectives remain open.
 
 ## 2. Security Objectives
 
@@ -87,11 +87,11 @@ Identity provider and session/token lifecycle; role-to-permission matrix; secret
 
 ## 10. Related Documents
 
-Documents 02, 03, 09, 10, 12, and 13; GENI-ADR-004, 008, 013, 014, 016, and 017. Related ADRs retain their own status; this document does not accept them.
+Documents 02, 03, 09, 10, 12, 13, and 14; GENI-ADR-004, 008, 013, 014, 016, and 017. Related ADRs retain their own status; this document does not accept them.
 
 ---
 
 **Document ID:** GENI-SEC-008  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft — Under Architecture Review  
 **End of Document**

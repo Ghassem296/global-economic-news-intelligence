@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+import ast
+import importlib.util
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+VALIDATOR_PATH = ROOT / "scripts" / "validate_docs.py"
+SPEC = importlib.util.spec_from_file_location("validate_docs", VALIDATOR_PATH)
+assert SPEC is not None and SPEC.loader is not None
+validator = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(validator)
+
+
+class DocumentationValidatorTests(unittest.TestCase):
+    def test_validator_has_no_shadowed_top_level_functions(self) -> None:
+        tree = ast.parse(VALIDATOR_PATH.read_text(encoding="utf-8"))
+        names = [node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        self.assertEqual(len(names), len(set(names)))
+
+    def test_registry_snapshot_requires_one_full_baseline_sha(self) -> None:
+        valid = "**Baseline Commit Inspected:** `a4b54e6f397558d82e6b438f03d9dbfe9944f55e`"
+        self.assertEqual(validator.registry_snapshot_baseline(valid), "a4b54e6f397558d82e6b438f03d9dbfe9944f55e")
+
+    def test_registry_snapshot_rejects_missing_or_duplicate_baseline(self) -> None:
+        with self.assertRaises(SystemExit):
+            validator.registry_snapshot_baseline("No baseline recorded")
+        duplicate = (
+            "**Baseline Commit Inspected:** `a4b54e6f397558d82e6b438f03d9dbfe9944f55e`\n"
+            "**Baseline Commit Inspected:** `a4b54e6f397558d82e6b438f03d9dbfe9944f55e`"
+        )
+        with self.assertRaises(SystemExit):
+            validator.registry_snapshot_baseline(duplicate)
+
+    def test_document_inventory_detects_missing_and_unexpected_files(self) -> None:
+        expected = {"docs/a.md", "docs/nested/b.md"}
+        listed = {"docs/a.md", "docs/extra.md"}
+        missing, unexpected = validator.document_inventory_difference(expected, listed)
+        self.assertEqual(missing, {"docs/nested/b.md"})
+        self.assertEqual(unexpected, {"docs/extra.md"})
+
+    def test_root_readme_uses_adr_registry_as_single_inventory(self) -> None:
+        validator.validate_root_readme_adr_authority()
+
+    def test_privacy_specification_is_linked_and_complete(self) -> None:
+        validator.validate_privacy_specification_contract()
+
+
+if __name__ == "__main__":
+    unittest.main()

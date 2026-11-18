@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.24
+**Version:** 1.25
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -227,6 +227,7 @@ global-economic-news-intelligence/
 │   ├── 11-economic-taxonomy-specification.md
 │   ├── 12-testing-and-evaluation-strategy.md
 │   ├── 13-deployment-operations-and-observability.md
+│   ├── 14-data-protection-and-privacy-specification.md
 │   │
 │   ├── adr/
 │   │   ├── README.md
@@ -1812,5 +1813,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.24
+**Version:** 1.25
 **Status:** Draft — Under Architecture Review

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import re
 import sys
 import subprocess
@@ -25,6 +26,7 @@ CONTROLLED_DOCUMENTS = [
     "docs/11-economic-taxonomy-specification.md",
     "docs/12-testing-and-evaluation-strategy.md",
     "docs/13-deployment-operations-and-observability.md",
+    "docs/14-data-protection-and-privacy-specification.md",
     "docs/README.md",
     "docs/adr/README.md",
 ]
@@ -289,32 +291,6 @@ def validate_review_contract_alignment() -> None:
             fail(f"Review-family contract is incomplete in {relative}: {missing}")
         if "REPORT_VERSION" not in content or "PUBLICATION_OPERATION" not in content:
             fail(f"Publication review families are not distinguished in {relative}")
-
-
-def validate_event_identity_operation_contract() -> None:
-    """Protect operation history, survivor cardinality, and recovery semantics."""
-    identity_documents = [
-        "docs/02-component-architecture-and-interfaces.md",
-        "docs/03-data-model-and-storage-design.md",
-        "docs/04-implementation-plan-and-roadmap.md",
-        "docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md",
-    ]
-    for relative in identity_documents:
-        content = read_text(ROOT / relative)
-        if "EventIdentityOperationHistory" not in content:
-            fail(f"Missing EventIdentityOperationHistory contract in {relative}")
-        if "RECONCILIATION_REQUIRED" not in content:
-            fail(f"Missing identity-operation reconciliation state in {relative}")
-    data_model = read_text(ROOT / "docs/03-data-model-and-storage-design.md")
-    for required in (
-        "including the selected survivor",
-        "exactly one output Event equal to that survivor",
-        "The only permitted input/output overlap is the MERGE survivor",
-        "EventIdentityOperationHistory",
-    ):
-        if required not in data_model:
-            fail(f"Data-model identity-operation invariant is missing: {required}")
-
 
 
 def markdown_content_without_fences(content: str) -> str:
@@ -624,39 +600,77 @@ def validate_distribution_authorization_contract() -> None:
 
 
 
-def validate_registry_snapshot_provenance() -> None:
-    """Verify that the registry's inspected baseline is a real commit in this checkout's history."""
-    registry = read_text(DOC_REGISTRY)
+def registry_snapshot_baseline(registry_text: str) -> str:
+    """Parse the single full commit SHA used as the documentation inspection baseline."""
     matches = re.findall(
         r"^\*\*Baseline Commit Inspected:\*\*\s+`([0-9a-f]{40})`\s*$",
-        registry,
+        registry_text,
         re.MULTILINE,
     )
     if len(matches) != 1:
-        fail(
-            "Documentation registry must contain exactly one full 40-character "
-            "Baseline Commit Inspected value"
-        )
-    baseline = matches[0]
+        fail("Documentation registry must contain exactly one full 40-character Baseline Commit Inspected value")
+    return matches[0]
+
+
+def validate_registry_snapshot_provenance() -> None:
+    """Verify the inspected baseline exists and is an ancestor of the validated revision."""
+    baseline = registry_snapshot_baseline(read_text(DOC_REGISTRY))
     exists = subprocess.run(
         ["git", "cat-file", "-e", f"{baseline}^{{commit}}"],
-        cwd=ROOT,
-        capture_output=True,
-        check=False,
+        cwd=ROOT, capture_output=True, check=False,
     )
     if exists.returncode != 0:
         fail(f"Registry snapshot commit is not available in Git history: {baseline}")
     ancestor = subprocess.run(
         ["git", "merge-base", "--is-ancestor", baseline, "HEAD"],
-        cwd=ROOT,
-        capture_output=True,
-        check=False,
+        cwd=ROOT, capture_output=True, check=False,
     )
     if ancestor.returncode != 0:
-        fail(
-            "Registry snapshot commit is not an ancestor of the checked-out revision: "
-            f"{baseline}"
-        )
+        fail(f"Registry snapshot commit is not an ancestor of the checked-out revision: {baseline}")
+
+
+def validate_validator_source_structure() -> None:
+    """Reject duplicate top-level function definitions that silently shadow validators."""
+    source = read_text(ROOT / "scripts/validate_docs.py")
+    tree = ast.parse(source, filename="scripts/validate_docs.py")
+    names = [node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
+    duplicates = sorted(name for name in set(names) if names.count(name) > 1)
+    if duplicates:
+        fail(f"Duplicate top-level validator function definitions: {duplicates}")
+
+
+def document_inventory_difference(expected: set[str], listed: set[str]) -> tuple[set[str], set[str]]:
+    """Return missing and unexpected Markdown paths in a documentation tree."""
+    return expected - listed, listed - expected
+
+
+def validate_root_readme_adr_authority() -> None:
+    """The root README links to the ADR registry without copying its inventory."""
+    readme = read_text(ROOT / "README.md")
+    if "docs/adr/README.md" not in readme or "adr registry" not in readme.lower():
+        fail("Root README must direct readers to the authoritative ADR Registry")
+    if re.search(r"^\s*[-*]\s+GENI-ADR-\d{3}\b", readme, re.MULTILINE):
+        fail("Root README duplicates individual ADR inventory entries")
+    if re.search(r"^\|\s*GENI-ADR-\d{3}\s*\|", readme, re.MULTILINE):
+        fail("Root README duplicates ADR registry table rows")
+
+
+def validate_privacy_specification_contract() -> None:
+    """Ensure the privacy specification is substantive and linked from the security model."""
+    relative = "docs/14-data-protection-and-privacy-specification.md"
+    content = read_text(ROOT / relative).lower()
+    required = (
+        "data inventory", "purpose limitation", "data minimization", "lawful basis",
+        "retention schedule", "data subject request", "international transfer",
+        "processor", "subprocessor", "model provider", "deletion propagation",
+        "privacy impact assessment", "special-category", "jurisdiction-specific",
+    )
+    missing = [term for term in required if term not in content]
+    if missing:
+        fail(f"Privacy specification is incomplete; missing concepts: {missing}")
+    security = read_text(ROOT / "docs/08-security-architecture-and-threat-model.md")
+    if "docs/14-data-protection-and-privacy-specification.md" not in security:
+        fail("Security architecture must reference the Data Protection and Privacy Specification")
 
 
 def validate_roadmap_document_inventory() -> None:
@@ -702,11 +716,15 @@ def validate_roadmap_document_inventory() -> None:
         path.relative_to(ROOT).as_posix()
         for path in (ROOT / "docs").rglob("*.md")
     }
-    missing = sorted(expected_files - listed_files)
-    if missing:
+    listed_documentation_files = {
+        path for path in listed_files
+        if path.startswith("docs/") and path.lower().endswith(".md")
+    }
+    missing, unexpected = document_inventory_difference(expected_files, listed_documentation_files)
+    if missing or unexpected:
         fail(
-            "Roadmap project structure omits published Markdown documents: "
-            f"{missing}"
+            "Roadmap documentation tree must exactly match published Markdown files; "
+            f"missing={sorted(missing)}; unexpected={sorted(unexpected)}"
         )
 
     initial_concepts = extract_section(
@@ -901,6 +919,9 @@ def validate_adr_registry_title_alignment() -> None:
 
 def main() -> None:
     validate_registry_snapshot_provenance()
+    validate_validator_source_structure()
+    validate_root_readme_adr_authority()
+    validate_privacy_specification_contract()
     validate_roadmap_document_inventory()
     validate_cross_document_contracts()
     validate_document_versions()
@@ -922,7 +943,7 @@ def main() -> None:
         "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled versions and document ID/version/status registry parity, ADR title alignment and single-source inventory, duplicate versions, "
         "all 19 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
         "local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
-        "event identity-operation history/recovery, multi-source distribution authorization, registry snapshot provenance, and roadmap/document inventory parity."
+        "event identity-operation history/recovery, multi-source distribution authorization, privacy specification coverage, validator source integrity, registry snapshot provenance, and exact roadmap/document inventory parity."
     )
 
 
