@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.20  
+**Version:** 1.21  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -677,6 +677,31 @@ Responsibilities:
 
 ContentRightsService must not infer legal permission from technical accessibility, decide source reliability, determine publication eligibility, or replace recipient-distribution authorization. The Project Owner must approve the rights policy and the evidence basis for initial source profiles. Detailed policy criteria and legal/contractual mappings remain provisional until GENI-ADR-013 is accepted.
 
+### 4.30 TranslationService (Optional)
+
+Responsibilities, when translation is enabled under an approved language policy:
+
+- Accept an exact immutable ArticleRevision and explicit source/target languages.
+- Verify that temporary/external processing and derived-artifact creation are permitted by ContentRightsService.
+- Produce a separate, versioned translation artifact linked to the original ArticleRevision.
+- Preserve translator/provider, model, prompt/configuration, processing version, output language, quality state, and source-content provenance.
+- Validate material details such as names, dates, numbers, units, negation, attribution, and quoted terms.
+- Expose whether a downstream consumer is using original source text or a translation.
+
+The original ArticleRevision remains authoritative. Translation must not overwrite Article or ArticleRevision content. Translation is optional; unsupported or unevaluated languages must remain explicit and must not be treated as reliably translated. Cross-language event matching must not rely on translation until representative evaluation supports it. The exact supported languages, provider, and quality thresholds remain subject to GENI-ADR-018.
+
+### 4.31 SemanticRetrievalAdapter (Optional)
+
+Responsibilities, when semantic retrieval is enabled:
+
+- Retrieve plausible Event candidates for a specific EventMatchCase using versioned embedding or other approved semantic retrieval.
+- Preserve embedding model, preprocessing, input fingerprint, and retrieval-policy provenance.
+- Enforce ContentRightsService checks before external embedding generation or storage where applicable.
+- Provide candidate retrieval results to EventMatcher without creating an EventMatchDecision or ArticleEventLink.
+- Support a lexical baseline and measurable comparison of candidate recall, precision, latency, and cost.
+
+The adapter does not decide event identity, calibrate candidate similarity as probability, or require a dedicated vector database. The implementation backend and acceptance thresholds remain subject to GENI-ADR-012; semantic retrieval must remain replaceable and may be deferred if measured value does not justify it.
+
 ## 5. Domain Model Contracts
 
 The following entities represent the initial domain model.
@@ -1064,6 +1089,7 @@ Initial interfaces include:
 - `ContentDeletionRepository` (when GENI-ADR-013 is accepted)
 - `DerivedArtifactRepository` (when GENI-ADR-013 is accepted)
 - `ContentUsageAuditRepository` (when GENI-ADR-013 is accepted)
+- `EmbeddingRepository` (when GENI-ADR-012 is accepted)
 - `ArticleRepository`
 - `ArticleRevisionRepository`
 - `ArticleProcessingRepository`
@@ -1130,6 +1156,8 @@ The following map identifies the proposed authoritative application component fo
 | DeliveryRecord and DeliveryAttempt | `ReportDelivery` | Recipient delivery only; cannot mutate publication state. |
 | ProcessingRun, ProcessingStep, schedules and executions | `WorkflowOrchestrator` | Execution state remains separate from domain state. |
 | LLMUsageRecord | `SharedLLMExecutionLayer` | Records provider usage/cost where available. |
+| TranslationArtifact | `TranslationService` (optional) | Immutable derived translation; original ArticleRevision remains authoritative. |
+| EmbeddingRecord and retrieval runs | `SemanticRetrievalAdapter` (optional) | Retrieval only; no final event decision or association. |
 
 Where a capability is not yet defined or its ADR remains Proposed, this map describes a proposed ownership boundary and is not approval to implement it.
 
@@ -1792,7 +1820,7 @@ The current individual ADR documents are listed in:
 
 `docs/adr/README.md`
 
-All nineteen registered decision topics currently have individual ADR documents in this pull-request branch. All nineteen remain Proposed; none is an accepted architectural decision until explicit Project Owner approval is recorded.
+All nineteen registered decision topics currently have individual ADR documents in this pull-request branch. All nineteen remain Proposed; none is an accepted architectural decision until explicit Project Owner approval is recorded. In particular, translation capability/provider/quality policy (GENI-ADR-018) and semantic retrieval implementation/storage (GENI-ADR-012) remain optional and must not be assumed approved by the component placeholders in this document.
 
 The ADR Registry is the authoritative inventory of document availability, status, priorities, and dependencies. The existence of an ADR file does not authorize implementation.
 
