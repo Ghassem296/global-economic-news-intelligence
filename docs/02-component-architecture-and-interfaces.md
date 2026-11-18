@@ -820,7 +820,10 @@ Constraints:
 
 - Every association must reference the exact EventMatchCase and EventMatchDecision that authorized its creation.
 - The referenced EventMatchDecision must belong to the referenced EventMatchCase, have outcome MATCH and must identify the linked event through its selected candidate.
-- An active association must not be duplicated for the same article revision, event, and relationship role.
+- At most one active ArticleEventLink may exist for an EventMatchCase; historical inactive links must be retained.
+- The link's article_revision_id must equal the ArticleRevision referenced by its EventMatchCase.
+- The link's event_id must equal the Event selected by the referenced MATCH decision.
+- A link is active only while its authorizing MATCH decision remains the effective decision for that case.
 - Deactivation must preserve the original link and identify the decision or authorized correction that deactivated it.
 - A correction creates a new decision and a new association where appropriate; it must not rewrite the historical decision or silently repoint an existing link.
 - A single article may have multiple active links when separate EventMatchCase records justify them.
