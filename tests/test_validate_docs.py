@@ -46,6 +46,13 @@ class DocumentationValidatorTests(unittest.TestCase):
     def test_privacy_specification_is_linked_and_complete(self) -> None:
         validator.validate_privacy_specification_contract()
 
+    def test_privacy_architecture_is_aligned_across_documents(self) -> None:
+        validator.validate_privacy_specification_contract()
+
+    def test_expected_adr_inventory_includes_adr_020(self) -> None:
+        self.assertIn("GENI-ADR-020", validator.EXPECTED_ADR_IDS)
+        self.assertEqual(len(validator.EXPECTED_ADR_IDS), 20)
+
 
 if __name__ == "__main__":
     unittest.main()
