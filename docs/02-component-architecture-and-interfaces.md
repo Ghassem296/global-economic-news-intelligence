@@ -1109,7 +1109,7 @@ EventMatcher performs candidate evaluation. Event Resolution Workflow coordinate
 - Any association correction is applied through EventService in the same controlled transaction as the effective decision update.
 - A review task cannot directly create an Event or call an external publication target.
 
-### 7.10 Event Intelligence Workflow
+### 7.5 Event Intelligence Workflow
 
 **Input:**
 
@@ -1132,7 +1132,7 @@ EventMatcher performs candidate evaluation. Event Resolution Workflow coordinate
 
 Observed economic effects, source-reported effects, inferred potential effects, and unknown effects must remain distinguishable. Market observations must not be treated as proof of causal attribution.
 
-### 7.5 Reporting Workflow
+### 7.6 Reporting Workflow
 
 **Input:**
 
@@ -1149,7 +1149,7 @@ Observed economic effects, source-reported effects, inferred potential effects, 
 
 Report generation must not itself create an external publication or delivery operation. ReportVersionService creates the immutable report version and preserves its lineage.
 
-### 7.6 Publication Decision and Review Workflow
+### 7.7 Publication Decision and Review Workflow
 
 **Input:**
 
@@ -1166,7 +1166,7 @@ Report generation must not itself create an external publication or delivery ope
 
 A held report must be routed to a defined review mechanism. An authorized review outcome must be recorded, and a material outcome must produce a new effective publication decision. This workflow does not perform an external publication.
 
-### 7.7 Publication Execution Workflow
+### 7.8 Publication Execution Workflow
 
 **Input:**
 
@@ -1200,7 +1200,7 @@ The adapter result must distinguish confirmed success, confirmed failure, and un
 
 The workflow must persist the logical operation before calling the external target. A replacement must not supersede the previous publication until success is confirmed. A withdrawal must not be marked complete until the target outcome is confirmed. An uncertain external outcome must be reconciled before another side-effecting attempt.
 
-### 7.8 Delivery Workflow
+### 7.9 Delivery Workflow
 
 **Input:**
 
@@ -1218,7 +1218,7 @@ The workflow must persist the logical operation before calling the external targ
 
 A publication-link delivery must reference a confirmed successful publication. Direct report-content delivery may occur independently when its distribution policy permits it. The workflow must prevent unintended duplicate delivery and must not change publication state.
 
-### 7.9 Reprocessing Workflow
+### 7.10 Reprocessing Workflow
 
 **Input:**
 
