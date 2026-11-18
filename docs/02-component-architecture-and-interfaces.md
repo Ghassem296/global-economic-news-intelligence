@@ -1433,7 +1433,11 @@ Critical tests include:
 
 - Article deduplication without accidental event merging.
 - Near-duplicate and syndicated article detection.
-- Event matching with ambiguous candidates.\n- Multiple independent matching cases within one article revision.\n- Candidate scores that must not be mistaken for final decisions.\n- Human review producing a new immutable EventMatchDecision.\n- Correcting and deactivating an ArticleEventLink without losing its history.
+- Event matching with ambiguous candidates.
+- Multiple independent matching cases within one article revision.
+- Candidate scores that must not be mistaken for final decisions.
+- Human review producing a new immutable EventMatchDecision.
+- Correcting and deactivating an ArticleEventLink without losing its history.
 - Event identity preservation.
 - Event merge and split history.
 - Importance assessment behavior independently of economic relevance and impact.
