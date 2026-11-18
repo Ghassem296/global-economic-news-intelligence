@@ -672,6 +672,7 @@ def validate_privacy_specification_contract() -> None:
         "docs/02-component-architecture-and-interfaces.md": (
             "PrivacyManagementService", "PrivacyProcessingAuthorization",
             "DataSubjectRequest", "PrivacyRequestRepository", "PersonalDataLineageRepository",
+            "PrivacyAuthorizationDecision", "PrivacyAuthorizationRepository",
             "PrivacyPolicyRepository", "DataSubjectReferenceRepository",
         ),
         "docs/03-data-model-and-storage-design.md": (
@@ -679,6 +680,7 @@ def validate_privacy_specification_contract() -> None:
             "DataSubjectReference", "DataSubjectRequestAction", "PrivacyDeletionRecord",
             "ProcessorRegister", "InternationalTransferAssessment", "PrivacyImpactAssessment",
             "PersonalDataLineage", "PrivacyRequestRepository", "PrivacyPolicyRepository",
+            "PrivacyAuthorizationDecision", "PrivacyAuthorizationRepository",
             "DataSubjectReferenceRepository",
         ),
         "docs/08-security-architecture-and-threat-model.md": (
@@ -686,7 +688,7 @@ def validate_privacy_specification_contract() -> None:
         ),
         "docs/09-api-and-integration-contracts.md": (
             "SubmitDataSubjectRequest", "DiscoverSubjectData", "ExecuteDataSubjectAction",
-            "RecordProcessorDeletionOutcome",
+            "RecordProcessorDeletionOutcome", "EvaluatePrivacyProcessingAuthorization",
         ),
         "docs/12-testing-and-evaluation-strategy.md": (
             "backup restore", "lineage", "canary", "provider",
@@ -703,7 +705,8 @@ def validate_privacy_specification_contract() -> None:
 
     adr_path = ADR_DIR / "GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md"
     adr = read_text(adr_path)
-    if "**ADR ID:** GENI-ADR-020" not in adr or "**Status:** Proposed" not in adr:
+    if ("**ADR ID:** GENI-ADR-020" not in adr or "**Status:** Proposed" not in adr
+            or "PrivacyAuthorizationDecision" not in adr):
         fail("GENI-ADR-020 must exist with its identifier and Proposed status")
     adr_registry = read_text(ADR_REGISTRY)
     if "GENI-ADR-020" not in adr_registry:
