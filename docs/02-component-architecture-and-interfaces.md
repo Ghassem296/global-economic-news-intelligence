@@ -2,11 +2,36 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.46  
+**Version:** 1.47  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
+
+
+## 19. Privacy Domain and Execution Contracts
+
+This section operationalizes GENI-ADR-020 and GENI-PRIV-014. It remains proposed until the ADR and affected specifications are approved.
+
+### 19.1 PrivacyManagementService
+
+PrivacyManagementService coordinates the data-subject request lifecycle; it does not make legal determinations. It accepts authenticated intake commands, assigns durable request IDs, coordinates identity/authority verification, resolves restricted subject references, discovers source and derived records, coordinates access/correction/restriction/objection/export/deletion actions under approved policy, routes holds/exceptions to authorized human review, dispatches target-specific actions, verifies outcomes, and records response/audit evidence. It enforces idempotency and configured policy deadlines. It must not invent lawful bases, deadlines, exemptions, controller/processor roles or jurisdictional rules.
+
+### 19.2 Independent authorization
+
+ContentRightsService evaluates source/publisher content permissions. PrivacyProcessingAuthorization evaluates personal-data processing for the exact subject/data category, purpose, operation, recipient/provider and region. When both domains apply, both decisions are independently required. Missing, unknown, expired, revoked or mismatched decisions deny the operation. Bind decisions to policy version, purpose, classification, operation, provider/model, region, decision time and expiry. Neither service grants the other's permission.
+
+### 19.3 Request workflow
+
+Intake → identity/authority verification → scope/applicability assessment under approved policy → lineage-backed discovery → human legal-hold/exception review where required → planned action approval → execution across authoritative/derived/provider targets → target-level verification/reconciliation → response preparation and audit closure. A request is not complete merely because a primary row was deleted. Each target records completed, not applicable, unavailable, unverifiable or legally excepted with rationale and review owner.
+
+### 19.4 LLM/provider boundary
+
+Before every provider request, SharedLLMExecutionLayer independently evaluates privacy authorization and content rights where applicable, minimizes/redacts payloads, and binds authorization to purpose, data category, provider/model, region and policy version. Re-evaluate if any attribute or policy state changes, including retries. Unknown processor, transfer or provider posture blocks the affected operation unless an explicitly approved exception applies.
+
+### 19.5 Ownership
+
+PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction lifecycle writes. Privacy policy administration owns ProcessingPurpose, PrivacyProcessingBasis, ProcessorRegister, InternationalTransferAssessment and PrivacyImpactAssessment. A restricted subject-linkage repository resolves DataSubjectReference. PersonalDataLineageRepository records processing-to-derived-artifact relationships. The coordinator issues domain commands; it does not bypass aggregate-owned writes. Physical tables and public transport remain open.
 
 ---
 
