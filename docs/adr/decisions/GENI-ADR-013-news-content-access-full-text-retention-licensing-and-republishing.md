@@ -763,7 +763,7 @@ This ADR is currently **Proposed**.
 
 **Decision Status:** Proposed
 
-**Decision Owner:** Product Owner
+**Decision Owner:** Project Owner
 
 **Approved By:** Not yet approved
 
@@ -775,7 +775,7 @@ Alternative C is recommended because it provides the necessary controls for sour
 
 It allows the system to use sources with different access and licensing conditions without assuming unrestricted rights.
 
-The Product Owner must explicitly accept or reject this recommendation.
+The Project Owner must explicitly accept or reject this recommendation.
 
 **Conditions or Restrictions:**
 
@@ -797,7 +797,7 @@ The Product Owner must explicitly accept or reject this recommendation.
 - Which derived artifacts may be retained after source-text deletion?
 - What customer-facing attribution format is required?
 - Which legal jurisdictions require specific policy treatment?
-- Which license-management responsibilities belong to operations or the Product Owner?
+- Which license-management responsibilities belong to operations or the Project Owner?
 - How should rights restrictions affect historical reports and generated media?
 
 ## 8. Consequences and Trade-Offs
