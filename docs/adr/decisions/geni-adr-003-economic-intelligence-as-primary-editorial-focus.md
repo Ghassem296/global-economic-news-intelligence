@@ -4,9 +4,9 @@
 **ADR ID:** GENI-ADR-003  
 **Title:** Economic Intelligence as the Primary Editorial Focus  
 **Status:** Proposed  
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-11-18  
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
@@ -314,5 +314,6 @@ External legal review, provider measurements, market-data coverage measurements,
 |---|---|---|---|
 | 2026-11-18 | 1.0 | Proposed | Initial proposal prepared for architecture review |
 | 2026-11-18 | 1.1 | Proposed | Clarified editorial inclusion versus Event Importance and Economic Impact to align with GENI-ADR-019. |
+| 2026-11-18 | 1.2 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. |
 
 **End of ADR**
