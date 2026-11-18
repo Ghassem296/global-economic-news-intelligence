@@ -87,11 +87,11 @@ Identity provider and session/token lifecycle; role-to-permission matrix; secret
 
 ## 10. Related Documents
 
-Documents 02, 03, 09, 10, 12, 13, and 14; GENI-ADR-004, 008, 013, 014, 016, and 017. Related ADRs retain their own status; this document does not accept them.
+Documents 02, 03, 09, 10, 12, 13, and [14 — Data Protection and Privacy Specification](14-data-protection-and-privacy-specification.md); GENI-ADR-004, 008, 013, 014, 016, 017, and 020. Related ADRs retain their own status; this document does not accept them.
 
 ## 11. Privacy Processing Authorization and LLM Egress
 
-Content-rights authorization and privacy processing authorization are separate controls. For a provider request involving both source content and personal data, both must independently authorize the exact purpose, operation, payload classification, provider/model and processing region. A positive content-rights decision cannot substitute for privacy authorization.
+`ContentRightsService` and `PrivacyProcessingAuthorization` are separate controls. For a provider request involving both source content and personal data, both must independently authorize the exact purpose, operation, payload classification, provider/model and processing region. A positive content-rights decision cannot substitute for privacy authorization.
 
 SharedLLMExecutionLayer fails closed if the privacy decision, processor register entry, transfer assessment or provider retention/training-use posture is missing, unknown, expired, revoked or inconsistent. Minimize/redact before transmission; do not include direct subject identifiers unless strictly necessary and explicitly authorized. Bind each request/usage record to authorization references, purpose, data category, provider/model, region and policy version. Re-evaluate when any attribute changes, including retries.
 
