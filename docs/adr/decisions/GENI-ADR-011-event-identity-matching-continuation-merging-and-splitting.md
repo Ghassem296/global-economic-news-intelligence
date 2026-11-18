@@ -4,9 +4,9 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.4  
+**Version:** 1.5  
 **Date:** 2026-11-18  
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
@@ -977,6 +977,7 @@ Such measurements must be obtained through a representative evaluation dataset b
 | 1.2 | 2026-11-18 | Proposed | Clarified case-level NO_MATCH semantics and immutable, fingerprinted candidate-evaluation history. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Defined preassigned event identity, versioned EventCreationPolicy, creation provenance/idempotency, and the successor MATCH requirement. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Defined case-level re-resolution and successor-decision requirements for article-event associations affected by merge and split operations. | AI Architecture Assistant |
+| 1.5 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 
 ---
 
