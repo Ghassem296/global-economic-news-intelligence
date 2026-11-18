@@ -4,9 +4,9 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.3
+**Version:** 1.4
 **Date:** 2026-11-18
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
@@ -900,5 +900,6 @@ Upon acceptance:
 | 1.1 | 2026-11-18 | Proposed | Clarified per-ArticleRevision EventMatchCase scope, candidate/decision separation, immutable EventMatchDecision, exact ArticleEventLink provenance, and human-review outcome handling. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Clarified duplicate candidate and decision separation and the need to preserve duplicate decision history. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Defined immutable DuplicateCandidate evaluations over exact ArticleRevision pairs and a separate immutable DuplicateDecision with supersession history. | AI Architecture Assistant |
+| 1.4 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 
 **End of ADR-002**
