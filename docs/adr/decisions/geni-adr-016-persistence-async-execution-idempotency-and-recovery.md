@@ -3,9 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-016  
 **Title:** Persistence, Async Execution, Idempotency, and Recovery  
-**Version:** 0.2  
 **Status:** Proposed  
-**Priority:** P1  
+**Version:** 1.0  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -16,122 +15,138 @@
 
 ## 1. Context and Problem Statement
 
-Collection, enrichment, matching, analysis, and publication are multi-step workflows that may fail or restart. Concurrent workers can race on state transitions. External side effects can time out after succeeding, so blind retries may duplicate publications or deliveries. A global exactly-once guarantee is not realistic across independent systems.
+Collection, event resolution, evidence analysis, reporting, publication, and delivery are multi-step workflows that can fail or restart. In-memory tasks and blind retries may lose work, duplicate domain changes, repeat external side effects, or leave uncertain outcomes. The system requires durable execution state, explicit transaction boundaries, concurrency control, idempotency, leases or equivalent ownership, and reconciliation.
 
-This ADR is a proposal for formal review. It does not approve an implementation or override another decision. The existence of this document does not imply acceptance.
+This ADR is a proposal for formal review; it does not authorize implementation as accepted architecture.
 
 ## 2. Decision Question
 
-Which persistence, execution, idempotency, and recovery guarantees should the initial platform provide?
+What persistence and execution guarantees are required to resume interrupted work safely and prevent duplicate domain changes or external side effects?
 
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-
-- Durable workflow state and restartability.
-- Atomic ownership/leases for concurrent workers.
-- Idempotent domain effects and stable operation keys.
-- Explicit distinction between internal transactions and external side effects.
-- Recovery and reconciliation after uncertain outcomes.
-- Operational simplicity proportional to the initial deployment.
+- Persist workflow runs and step states needed for audit and recovery.
+- Define atomic transaction boundaries for critical domain transitions.
+- Use idempotency keys/fingerprints for repeatable domain operations and external side effects.
+- Use leases or equivalent atomic ownership to prevent concurrent duplicate workers.
+- Classify retryable, permanent, and unknown-outcome failures.
+- Reconcile uncertain external publication/delivery outcomes before side-effecting retries.
+- Support cancellation, deadlines, backoff, recovery, and manual escalation.
+- Keep processing state separate from domain state.
 
 ### 3.2 Technical Constraints
-
-- Domain contracts must not depend on a specific external provider unless explicitly approved.
-- All relevant policies, schemas, and derived outputs must be versioned.
-- Critical state transitions must be auditable and testable.
-- Missing or unavailable information must remain explicit.
+- A database transaction cannot atomically include a remote provider side effect.
+- Exactly-once external execution cannot be claimed without provider guarantees.
+- Initial deployment may be single-node; distributed queues are not required by default.
+- Database-specific behavior is governed by ADR-005.
 
 ### 3.3 Business and Product Constraints
-
-- The initial product must remain operationally simple.
-- Implementation sequencing must follow documented dependencies.
-- Product claims must not exceed the capability or evidence actually available.
+- The initial product remains event-centric economic intelligence with text reports as its first release.
+- The design must support incremental implementation and explicit evaluation.
+- Proposals remain provisional until the decision owner records approval.
 
 ### 3.4 Security and Privacy Constraints
-
-- External source content and model output are untrusted input.
-- Credentials and sensitive operational data must not be exposed in ordinary logs.
-- Access to privileged actions must follow least-privilege authorization.
+- Source content and model output are untrusted until validated.
+- Only authorized application services and reviewers may change authoritative state.
+- Secrets and unnecessary protected content must not appear in ordinary logs.
 
 ### 3.5 Operational and Cost Constraints
-
-- Concurrency, retries, resource usage, and external service calls must be bounded.
-- Operational metrics must make failure and uncertainty visible.
-- Numeric thresholds must be based on measurements or explicit policy approval.
+- Avoid unnecessary distributed infrastructure in the initial release.
+- Measure cost and complexity against workload and reliability requirements.
+- Failures, retries, recovery, and audit must be observable.
 
 ### 3.6 Legal and Content-Rights Constraints
-
-- Technical access does not imply permission to store, process, transform, or republish content.
-- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed where applicable.
+- Access does not itself authorize retention, external processing, transformation, quotation, or republication.
+- Source terms, licensing, privacy, and jurisdictional restrictions must be reviewed before production use.
 
 ### 3.7 Explicit Non-Goals
-
-- This ADR does not set unmeasured numeric service levels or model-quality thresholds.
-- This ADR does not select a vendor or provider where comparative evidence is unavailable.
-- This ADR does not approve its recommendation; explicit Project Owner approval remains required.
+- This ADR does not invent unmeasured numerical thresholds or performance guarantees.
+- This ADR does not approve a provider, database, or model merely by listing it as an alternative.
+- This proposal does not supersede the ADR approval process.
 
 ## 4. Alternatives Considered
 
-### 4.1 A — In-memory tasks and best-effort retries
+### 4.1 Alternative A — In-memory best-effort workflows
 
-**Advantages:** Minimal infrastructure and simple development.
+**Description:** Keep state in process memory and retry failures opportunistically.
 
-**Disadvantages:** Lost state after process termination; weak duplicate prevention and auditability.
+**Advantages:**
+- Simple initial code.
 
-**Risk:** Very High
+**Disadvantages:**
+- Work is lost on restart
+- duplicate effects are difficult to prevent.
 
-### 4.2 B — Distributed workflow/queue platform immediately
+**Risks:**
+- Data loss or repeated external side effects.
 
-**Advantages:** Mature distributed execution and scaling options.
+**Estimated Complexity:** Low
 
-**Disadvantages:** Operational complexity and service dependency may be premature.
+### 4.2 Alternative B — Distributed workflow platform immediately
 
-**Risk:** Medium
+**Description:** Adopt a durable orchestration platform from the first release.
 
-### 4.3 C — Durable database-backed workflows with bounded async execution
+**Advantages:**
+- Mature workflow features and distributed execution.
 
-**Advantages:** Supports restart, audit, and idempotent effects within a simple deployment.
+**Disadvantages:**
+- Operational and development overhead before scale is proven.
 
-**Disadvantages:** Requires careful transaction, lease, and reconciliation design.
+**Risks:**
+- Premature infrastructure and platform coupling.
 
-**Risk:** Medium
+**Estimated Complexity:** High
 
+### 4.3 Alternative C — Database-backed durable workflows
+
+**Description:** Persist runs/steps, use bounded async workers, leases, idempotency, and reconciliation.
+
+**Advantages:**
+- Recoverable, auditable, compatible with simple deployment.
+
+**Disadvantages:**
+- Requires careful transaction and failure design.
+
+**Risks:**
+- Database throughput or locking may constrain scale.
+
+**Estimated Complexity:** Medium
 
 ## 5. Evaluation and Comparison
 
-The following qualitative comparison is an architectural assessment, not a measured benchmark.
+The comparison is qualitative and reflects architectural fit, not measured performance or cost.
 
-| Criterion | Alternative A | Alternative B | Alternative C |
+| Evaluation Criterion | In-memory best-effort workflows | Distributed workflow platform immediately | Database-backed durable workflows |
 |---|---|---|---|
-| Fit with product requirements | Limited / context-dependent | Partial | Strongest overall fit |
-| Operational complexity | Low | Medium | Medium |
-| Auditability and traceability | Limited | Partial | Strong |
-| Ability to evolve | Low to Medium | Medium | High |
-| Principal trade-off | Simplicity or incomplete capability | Partial separation | More explicit contracts and governance |
+| Restart recovery | Low | High | High |
+| Initial operational complexity | Low | High | Medium |
+| Duplicate-effect control | Weak | Strong if configured | Strong with explicit keys |
+| Single-node suitability | High | Low | High |
 
-The recommendation favors Alternative C because it preserves the domain distinctions and operational controls required by the product. Any quantitative comparison must be performed against representative workload and evaluation data.
+The requirements in Section 3 are the primary decision drivers. Unmeasured cost and performance values are intentionally left unspecified.
 
 ## 6. Recommended Decision
 
-Use durable ProcessingRun and ProcessingStep records, bounded asynchronous concurrency, atomic worker leases, and idempotency keys scoped to logical operations. Persist domain state and workflow outcomes in the same transaction where they share a database boundary. For external publication/delivery, persist operation intent and attempts separately; if outcome is uncertain, reconcile with the target before retrying. State guarantees honestly: at-least-once execution with idempotent domain effects and target-specific side-effect guarantees, not universal exactly-once execution.
+**Recommended Alternative:** Alternative C — Durable database-backed workflow state with bounded async execution and explicit idempotency/reconciliation.
 
-### 6.1 Decision Boundaries
+Persist workflow runs and step state in the application persistence layer with atomic ownership and explicit transaction boundaries. Use deterministic idempotency keys for repeatable domain operations and durable intent records for external effects. External operations distinguish confirmed success, confirmed failure, and unknown outcome; an unknown outcome must be reconciled before retry. Start with bounded workers and a simple scheduler. Introduce distributed queues or workflow infrastructure only when measured workload, throughput, or availability requirements justify them.
 
-- Define workflow run/step identity, state transitions, input fingerprints, deadlines, lease owner, lease expiry, and retry count.
-- Use atomic lease acquisition and expiry recovery; prevent simultaneous ownership of one active step.
-- Define idempotency key scope for ingestion, matching decisions, publication operations, and deliveries.
-- Use database transactions for case decision creation, effective-decision pointer updates, and link activation/deactivation.
-- Keep external network calls outside long-running database transactions.
-- Persist publication/delivery intent and each attempt; reconcile unknown outcomes before a retry.
-- Define retryable versus permanent errors, exponential backoff, dead-letter/manual-intervention path, and observability.
-- Test recovery after process crash at each side-effect boundary.
+**Rationale:**
+- Allows interrupted work to resume from durable checkpoints.
+- Prevents duplicate state changes and makes external effects auditable.
+- Avoids premature distributed infrastructure while preserving an upgrade path.
 
-### 6.2 Assumptions and Open Questions
+**Deferred Questions:**
+- Lease duration and renewal intervals.
+- Queue technology and worker topology.
+- Database-specific transaction implementation.
+- Quantitative recovery-time and throughput objectives.
 
-- The recommendation is based on the current product and architecture documents.
-- Any numeric threshold, provider selection, or legal interpretation not supported by evidence remains open.
-- The Project Owner may accept, reject, or request revision of this recommendation.
+**Recommendation Prepared By:** AI Architecture Assistant  
+**Recommendation Date:** 2026-11-18
+
+A recommendation is not an approval. The Project Owner must explicitly accept or reject this proposal.
 
 ## 7. Final Decision
 
@@ -141,166 +156,162 @@ Use durable ProcessingRun and ProcessingStep records, bounded asynchronous concu
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded. The recommendation in Section 6 is awaiting review.
+**Decision Rationale:** Pending formal review; Section 6 contains the recommendation.
 
 **Conditions or Restrictions:**
-
-- Do not treat this proposal as an accepted architectural constraint.
-- Do not implement irreversible changes solely on the basis of this recommendation.
-- Record any interim implementation assumption and its review trigger.
+- Maintain Proposed status until explicit approval is recorded.
+- Do not treat deferred questions or example values as settled implementation details.
+- Any temporary implementation assumption must be reversible and documented with a review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-
-- Makes the relevant domain or operational boundary explicit.
-- Improves traceability and repeatability.
-- Provides a basis for measurable verification and future revision.
+- Durable and observable workflow execution.
+- Safer retry and recovery behavior.
+- Supports a simple deployment while preserving correctness.
 
 ### 8.2 Negative Consequences
-
-- Adds implementation and documentation work.
-- Some policy details remain open pending data, legal review, or operational measurements.
-- Dependent components may need coordinated changes after approval.
+- Additional persistence and operational state.
+- More complex transitions and recovery tests.
 
 ### 8.3 Technical Trade-Offs
-
-Alternative C favors explicit contracts and traceability over the smallest possible implementation. Provider-specific behavior or domain-specific exceptions must remain visible rather than being hidden behind an abstraction that implies guarantees the system does not have.
+The design does not promise exactly-once execution. It targets at-least-once invocation with idempotent domain effects and explicit reconciliation for external operations. Distributed workflow infrastructure remains a measured future option.
 
 ### 8.4 Operational Consequences
-
-The implementation will require monitoring, recovery, and review procedures appropriate to the selected capability. Failure modes and unknown outcomes must be observable.
+Monitor stuck runs, expired leases, retry exhaustion, queue age, reconciliation backlog, and backup/restore health.
 
 ### 8.5 Product and Business Consequences
-
-The recommendation is intended to support the product's evidence-based economic intelligence purpose. It must not create user-facing promises that exceed actual source coverage, data quality, or review capacity.
+The system is less likely to lose collected news or duplicate publication/delivery after interruption.
 
 ### 8.6 Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Proposal mistaken for approval | Keep status Proposed until explicit approval is recorded. |
-| Over-specification without evidence | Leave thresholds and provider choices open until measured. |
-| Cross-document inconsistency | Synchronize affected documents and registry after approval. |
-| Implementation cannot satisfy a proposed guarantee | Report the conflict and revise the ADR rather than silently weakening the contract. |
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Database lock contention | Medium | High | Measure workload, bound concurrency, and define engine escalation criteria. |
+| Incorrect idempotency scope | Medium | Critical | Define scope by logical operation, resource, and destination. |
+| False success after timeout | Medium | Critical | Use unknown-outcome state and reconciliation. |
+| Lost workflow ownership | Medium | High | Use atomic leases, expiry, and compare-and-swap semantics. |
 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-
-- Define workflow run/step identity, state transitions, input fingerprints, deadlines, lease owner, lease expiry, and retry count.
-- Use atomic lease acquisition and expiry recovery; prevent simultaneous ownership of one active step.
-- Define idempotency key scope for ingestion, matching decisions, publication operations, and deliveries.
-- Use database transactions for case decision creation, effective-decision pointer updates, and link activation/deactivation.
-- Keep external network calls outside long-running database transactions.
-- Persist publication/delivery intent and each attempt; reconcile unknown outcomes before a retry.
-- Define retryable versus permanent errors, exponential backoff, dead-letter/manual-intervention path, and observability.
-- Test recovery after process crash at each side-effect boundary.
+- WorkflowOrchestrator
+- Repository/UnitOfWork implementations
+- PublicationService
+- ReportDelivery
+- Collection adapters
+- ObservabilityService
 
 ### 9.2 Affected Data Models and Interfaces
-
-The relevant interfaces, persistence fields, constraints, and version metadata must be updated only after the proposal is approved and the implementation design is reviewed.
+- ProcessingRun
+- ProcessingStep
+- ExecutionLease
+- IdempotencyRecord
+- PublicationRecord/Attempt
+- DeliveryRecord/Attempt
+- CollectionCheckpoint
 
 ### 9.3 Affected Documents
-
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
+- docs/01-product-and-system-architecture.md
+- docs/02-component-architecture-and-interfaces.md
+- docs/03-data-model-and-storage-design.md
+- docs/04-implementation-plan-and-roadmap.md
 
 ### 9.4 Related ADRs
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-005 | Depends on / Related to | Database choice and transaction semantics constrain persistence. |
+| GENI-ADR-009 | Related to | Collection checkpoints and acquisition recovery. |
+| GENI-ADR-004 | Related to | Publication side effects require durable intent and reconciliation. |
+| GENI-ADR-014 | Related to | Review tasks are durable workflows. |
+| GENI-ADR-006 | Related to | Provider calls need bounded timeouts and retry classification. |
 
-See the related ADR references in the registry. These dependencies do not imply that related Proposed ADRs have been accepted.
+These relationships do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-
-- Define workflow run/step identity, state transitions, input fingerprints, deadlines, lease owner, lease expiry, and retry count.
-- Use atomic lease acquisition and expiry recovery; prevent simultaneous ownership of one active step.
-- Define idempotency key scope for ingestion, matching decisions, publication operations, and deliveries.
-- Use database transactions for case decision creation, effective-decision pointer updates, and link activation/deactivation.
-- Keep external network calls outside long-running database transactions.
-- Persist publication/delivery intent and each attempt; reconcile unknown outcomes before a retry.
-- Define retryable versus permanent errors, exponential backoff, dead-letter/manual-intervention path, and observability.
-- Test recovery after process crash at each side-effect boundary.
+- Define run/step lifecycle and state transitions.
+- Define transaction boundaries for event decisions, associations, publication, and delivery records.
+- Implement atomic worker ownership and stale-lease recovery.
+- Add idempotency keys and uniqueness constraints.
+- Separate local retry from external-side-effect reconciliation.
+- Add failure injection at persistence and external-call boundaries.
+- Document backup, restore, and migration operations.
 
 ### 10.2 Migration or Compatibility Requirements
-
-No runtime or database migration is authorized by this proposal. If accepted, existing records and historical provenance must be inspected before a migration is designed. Migration must preserve audit history and must be tested from the current baseline.
+Inspect the actual implementation and data before defining migration. This proposal does not claim that a migration or implementation is complete. Any migration must preserve applicable history, provenance, and compatibility.
 
 ### 10.3 Dependencies
-
-Implementation sequencing must respect the dependencies recorded in the ADR Registry and the related decision documents.
+- GENI-ADR-005 — Database choice and transaction semantics constrain persistence.
+- GENI-ADR-009 — Collection checkpoints and acquisition recovery.
+- GENI-ADR-004 — Publication side effects require durable intent and reconciliation.
+- GENI-ADR-014 — Review tasks are durable workflows.
+- GENI-ADR-006 — Provider calls need bounded timeouts and retry classification.
 
 ### 10.4 Implementation Sequence
-
-1. Obtain explicit Project Owner approval.
-2. Update affected architecture and data-model contracts.
-3. Define versioned interfaces and migration requirements.
-4. Implement the smallest end-to-end slice.
-5. Add focused automated and integration tests.
-6. Validate operational behavior and update implementation status separately from ADR status.
+1. Define aggregates and transaction boundaries.
+2. Implement durable run/step persistence.
+3. Implement leases/ownership and recovery.
+4. Implement idempotency records and unique constraints.
+5. Implement external operation reconciliation.
+6. Add failure-injection, backup, restore, and recovery tests.
 
 ### 10.5 Verification Requirements
+- Crash before and after each transaction boundary and verify recoverability.
+- Run concurrent workers and verify one owner per step.
+- Retry the same request and verify no duplicate domain effect.
+- Simulate timeout after a provider accepted an operation and verify reconciliation precedes retry.
+- Verify cancellation and deadlines do not corrupt committed state.
+- Test backup/restore and expired leases.
 
-- A crashed workflow can resume without corrupting completed domain state.
-- Two workers cannot concurrently own the same unexpired lease.
-- Repeated identical ingestion does not duplicate articles or revisions.
-- Creating a decision and updating its case effective-decision pointer is atomic.
-- An uncertain publication/delivery outcome is reconciled before a new side-effecting attempt.
-- Retries preserve the same logical operation and idempotency key.
-- Backup/restore tests cover in-progress workflow and pending external operation states.
+Implementation verification remains deferred until formal acceptance and implementation of the dependent capability.
 
 ## 11. Acceptance Criteria
-
-| ID | Acceptance Criterion | Verification |
+| ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | A crashed workflow can resume without corrupting completed domain state. | Architecture review and automated tests where applicable |
-| AC-02 | Two workers cannot concurrently own the same unexpired lease. | Architecture review and automated tests where applicable |
-| AC-03 | Repeated identical ingestion does not duplicate articles or revisions. | Architecture review and automated tests where applicable |
-| AC-04 | Creating a decision and updating its case effective-decision pointer is atomic. | Architecture review and automated tests where applicable |
-| AC-05 | An uncertain publication/delivery outcome is reconciled before a new side-effecting attempt. | Architecture review and automated tests where applicable |
-| AC-06 | Retries preserve the same logical operation and idempotency key. | Architecture review and automated tests where applicable |
-| AC-07 | Backup/restore tests cover in-progress workflow and pending external operation states. | Architecture review and automated tests where applicable |
+| AC-01 | Workflow run/step history is durable and queryable. | Persistence tests |
+| AC-02 | Critical domain changes are transactionally consistent. | Integration tests |
+| AC-03 | Concurrent ownership prevents duplicate workers. | Concurrency tests |
+| AC-04 | Idempotency prevents duplicate domain effects. | Repeated-request tests |
+| AC-05 | Unknown external outcomes require reconciliation before retry. | Failure-injection tests |
+| AC-06 | Recovery works after process restart. | Recovery exercise |
 
-Quantitative thresholds must be established using representative evaluation data or operational measurements. This ADR intentionally does not invent numerical targets.
+Any quantitative threshold must be supported by representative datasets, measurements, or formal policy review.
 
 ## 12. Review and Reconsideration
 
 ### 12.1 Review Triggers
-
-- Workload requires multiple nodes or a distributed queue.
-- Measured contention exceeds the selected database's capacity.
-- A target's idempotency or reconciliation behavior changes.
-- Recovery objectives or availability requirements materially increase.
+- Measured write concurrency exceeds engine capacity.
+- Multi-process or multi-node deployment becomes necessary.
+- Recovery/availability objectives change.
+- External target semantics invalidate current idempotency assumptions.
 
 ### 12.2 Review Schedule
-
 **Review Date:** Not scheduled  
 **Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
-
-Reconsider this proposal if its assumptions become invalid, evaluation results contradict the recommendation, or product/legal/operational requirements materially change. A replacement of an accepted decision requires a new ADR or an explicitly approved superseding record.
+Reconsider when assumptions are invalidated or measurements show the proposal fails project requirements. A replacement must be recorded through the ADR lifecycle.
 
 ## 13. References and Supporting Evidence
 
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/05-architecture-decision-records.md`
-- `docs/adr/README.md`
-- Related decision topics are listed in the ADR Registry.
+The references below are internal project sources used to establish documented context. They are not empirical performance benchmarks or legal opinions.
 
-The current internal documents establish architectural context. They do not substitute for external legal advice, provider capability verification, or empirical performance measurements.
+| Reference | Type | Relevance |
+|---|---|---|
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines WorkflowOrchestrator and execution contracts. |
+| `docs/03-data-model-and-storage-design.md` | Internal | Defines run/step, idempotency, publication and delivery persistence. |
+| `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines persistence and recovery implementation. |
+| `GENI-ADR-005` | Internal | Persistence engine selection. |
+| `GENI-ADR-004` | Internal | Publication operation separation. |
+| `GENI-ADR-006` | Internal | Provider execution timeout/retry semantics. |
+
+External legal, provider, and empirical evidence must be added during formal review where relevant.
 
 ## 14. Decision History
 
-| Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
-| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+| Date | Version | Status | Change |
+|---|---|---|---|
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 
 **End of ADR**
