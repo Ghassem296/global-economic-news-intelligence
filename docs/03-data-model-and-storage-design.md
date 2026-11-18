@@ -705,11 +705,12 @@ Fields:
 - `development_key` — stable within the ArticleRevision and identifying the development being resolved
 - `scope_description`
 - `case_status`
+- `effective_decision_id` — nullable pointer to the current effective EventMatchDecision; a projection updated transactionally when a new decision is recorded
 - `created_at`
 - `closed_at`
 - `metadata`
 
-The case is the unit of candidate evaluation, final decision, and human review. A case must not be reused for a materially different article revision or development scope.
+Case states may include `OPEN`, `PENDING_REVIEW`, `RESOLVED`, `CLOSED`, and `CANCELLED`. The case is the unit of candidate evaluation, final decision, and human review. A case must not be reused for a materially different article revision or development scope. The effective-decision pointer is a mutable current-state projection; historical EventMatchDecision records remain immutable.
 
 ### 7.2 EventMatchCandidate
 
@@ -783,8 +784,9 @@ Constraints:
 - Every EventMatchCase must identify exactly one ArticleRevision and one development scope.
 - Every EventMatchDecision must belong to exactly one case.
 - A selected candidate must belong to the same case as its decision.
-- A case may have multiple historical decisions, but only one effective decision at a time.
-- A new decision supersedes the prior effective decision without modifying it.
+- A case may have multiple historical decisions, but only one effective decision at a time; the EventMatchCase.effective_decision_id pointer identifies it.
+- A new decision supersedes the prior effective decision without modifying it and updates the case pointer in the same transaction.
+- A decision may supersede at most one prior decision, and a prior decision may have at most one direct successor in the same case.
 - A decision for one case must not implicitly decide another case from the same article revision.
 - Human review must reference the case and the decision under review; the review outcome must be recorded as a new decision.
 - Database constraints and application validation must prevent cross-case candidate references and invalid decision-to-link references.
@@ -2004,7 +2006,8 @@ Where applicable, enforce:
 - Article revision number uniqueness.
 - Event match case uniqueness by ArticleRevision and development key.
 - Candidate uniqueness by case and candidate Event.
-- One effective decision per EventMatchCase.
+- One effective decision pointer per EventMatchCase.
+- At most one direct successor per superseded EventMatchDecision.
 - Active article-event association uniqueness.
 - Canonical article pair uniqueness for duplicate candidates.
 - Event-specific report version uniqueness.
@@ -2019,6 +2022,7 @@ Where applicable, enforce:
 - Event identity operation input/output uniqueness.
 - EventMatchDecision selected-candidate and case consistency.
 - EventMatchDecision supersession-chain consistency.
+- EventMatchCase.effective_decision_id must reference a decision belonging to that same case.
 - Entity alias uniqueness where the language and alias type make it unambiguous.
 
 Only one unresolved side-effecting publication operation should be allowed to modify the same target/publication-key chain at a time; enforce this through an appropriate transaction/locking rule or database constraint for the selected engine. Do not serialize unrelated publication keys merely because they share a target.
