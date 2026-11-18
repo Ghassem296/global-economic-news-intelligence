@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -937,22 +937,15 @@ The initial product output language is English.
 
 ## 13. Persistence Strategy
 
-SQLite is the proposed initial persistence implementation.
+SQLite is a candidate for the initial persistence proof-of-concept, not a selected or approved database engine. ADR-005 requires the initial engine to be selected after testing the expected workload, concurrent writers, transaction behavior, backup/restore requirements, deployment model, and operational capacity.
 
-Reasons include:
+SQLite may be selected if those tests demonstrate that its single-instance concurrency and operational model satisfy the initial workload. PostgreSQL remains an alternative for the initial selection if the measured requirements exceed SQLite's suitable operating envelope; it may also be a later migration target if requirements grow.
 
-- Low operational complexity.
-- Local development support.
-- Suitability for an initial single-instance deployment.
-- Simple backup and migration workflows.
-
-The SQLite decision remains subject to formal architectural approval.
+Until ADR-005 is formally accepted, no implementation or document may treat either engine as the approved production choice.
 
 Persistence must be accessed through repository interfaces.
 
-The domain model must not depend directly on SQLite.
-
-PostgreSQL may be introduced later if justified by concurrency, deployment, operational, or scaling requirements.
+The domain model must not depend directly on a specific database engine.
 
 The initial persistence design must explicitly address:
 
