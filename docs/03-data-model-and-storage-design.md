@@ -1,10 +1,10 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.2
+**Version:** 1.3
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
-**Last Updated:** 2026-11-16
+**Last Updated:** 2026-11-18
 
 ---
 
@@ -1235,7 +1235,7 @@ Generation status may include:
 - `FAILED`
 - `SUPERSEDED`
 
-Publication status must not be duplicated as an independently mutable field on Report. It is represented by PublicationDecision and the publication workflow's current state.
+Publication status must not be stored as an independently mutable field on Report and must not be inferred from PublicationDecision. PublicationDecision records eligibility; PublicationRecord records external publication operations. The effective publication state for a target is derived from the history of successful PublicationRecord operations.
 
 Constraints:
 
@@ -1312,6 +1312,7 @@ Fields:
 - `decision`
 - `reason_codes`
 - `explanation`
+- `caveats` nullable
 - `policy_version`
 - `decided_at`
 - `supersedes_decision_id` nullable
@@ -1324,13 +1325,15 @@ Decision values:
 - `HOLD_FOR_REVIEW`
 - `REJECT`
 
-A decision is an immutable record. A new decision must be created when the publication outcome changes.
+A decision is an immutable record. A new decision must be created when the publication outcome changes or a review produces a material outcome.
 
-The system must preserve which policy version produced the decision.
+The system must preserve which policy version produced the decision. The current effective decision must be derived through an explicit supersession rule. Historical decisions must remain queryable.
 
-The current effective decision must be derived through an explicit supersession rule. Historical decisions must remain queryable.
+A `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision authorizes a publication operation only while it remains effective and all other authorization, rights, and target requirements are satisfied. It does not prove that publication occurred.
 
-A `HOLD_FOR_REVIEW` decision must create or reference an operational review task. It must not silently remain unprocessed.
+For `PUBLISH_WITH_CAVEATS`, the caveats must be explicit and must be included in the published representation.
+
+A `HOLD_FOR_REVIEW` decision must create or reference an operational review task. It must not silently remain unprocessed. An authorized review outcome must produce a new effective publication decision when it changes eligibility; the original decision and review record must remain intact.
 
 ### 11.7 ReviewRecord
 
@@ -1376,16 +1379,94 @@ Review history must not be silently overwritten.
 
 Reviewer identity and authorization must be managed by the application's security layer.
 
-## 12. Delivery Records
+### 11.8 PublicationRecord
 
-### 12.1 DeliveryRecord
-
-Represents a logical delivery operation for a report.
+Represents one logical operation against a publication target. It is distinct from a PublicationDecision and from a DeliveryRecord.
 
 Fields:
 
 - `id`
 - `report_id`
+- `publication_decision_id` nullable for withdrawal operations
+- `publication_target_reference`
+- `operation_type`
+- `target_publication_id` nullable
+- `status`
+- `idempotency_key`
+- `external_reference` nullable
+- `external_url` nullable
+- `authorization_reference` nullable
+- `reason` nullable
+- `requested_by` nullable
+- `requested_at`
+- `started_at` nullable
+- `completed_at` nullable
+- `error_category` nullable
+- `error_summary` nullable
+- `created_at`
+- `metadata`
+
+Operation types:
+
+- `PUBLISH`
+- `REPLACE`
+- `WITHDRAW`
+
+Operation statuses:
+
+- `PENDING`
+- `IN_PROGRESS`
+- `SUCCEEDED`
+- `FAILED`
+- `CANCELLED`
+- `RECONCILIATION_REQUIRED`
+
+Operation semantics and constraints:
+
+- `PUBLISH` requires an effective `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision and must not reference a previous publication as its target.
+- `REPLACE` requires an effective publication decision for the new report version and a reference to the earlier successful publication it intends to supersede.
+- `WITHDRAW` requires a reference to an existing publication and explicit authorization/reason information. Its publication-decision reference may be null because withdrawal is an authorized lifecycle operation rather than permission to publish content.
+- The target publication and new operation must refer to the same configured publication target.
+- A stable idempotency key must be unique within the target and operation scope.
+- The same logical operation must reuse its idempotency key on retry.
+- A successful replacement supersedes the earlier publication. A failed or uncertain replacement leaves the earlier confirmed publication effective.
+- A successful withdrawal records that the target has withdrawn the referenced publication. A failed or uncertain withdrawal must not be treated as complete.
+- A timeout or transport failure with an unknown external outcome must produce `RECONCILIATION_REQUIRED`; the operation must be reconciled before another side-effecting attempt.
+- The current effective publication for a target is derived from the chain of successful operations. Failed, cancelled, or unresolved operations must not silently replace the last confirmed effective state.
+- Publication operation history must remain append-oriented and auditable. Corrections must not overwrite previous report content or publication records.
+
+### 11.9 PublicationAttempt
+
+Represents one external execution attempt for a PublicationRecord.
+
+Fields:
+
+- `id`
+- `publication_record_id`
+- `attempt_number`
+- `started_at`
+- `completed_at` nullable
+- `outcome`
+- `external_reference` nullable
+- `error_category` nullable
+- `error_summary` nullable
+- `reconciliation_reference` nullable
+- `metadata`
+
+Each attempt must be separately traceable. Attempt outcomes should distinguish confirmed success, confirmed failure, and unknown external outcome. An unknown outcome must trigger reconciliation rather than an automatic blind retry.
+
+## 12. Delivery Records
+
+### 12.1 DeliveryRecord
+
+Represents a logical delivery operation for a report or a notification related to a report.
+
+Fields:
+
+- `id`
+- `report_id`
+- `publication_record_id` nullable
+- `delivery_mode`
 - `channel`
 - `destination_reference`
 - `idempotency_key`
@@ -1401,6 +1482,12 @@ Fields:
 - `updated_at`
 - `metadata`
 
+Delivery modes:
+
+- `REPORT_CONTENT`
+- `PUBLICATION_LINK`
+- `NOTIFICATION`
+
 Possible statuses:
 
 - `PENDING`
@@ -1413,9 +1500,12 @@ Constraints:
 
 - An idempotency key must be present for externally visible delivery operations.
 - The idempotency key must be unique within its relevant destination and operation scope.
-- Retries must not create duplicate external publications when the destination supports idempotency.
+- Retries must not create duplicate external deliveries when the destination supports idempotency.
 - Delivery attempts must remain traceable.
-- Delivery status must not be confused with publication approval.
+- A `PUBLICATION_LINK` delivery must reference a PublicationRecord whose publication operation is confirmed successful and still effective for that target.
+- `REPORT_CONTENT` or `NOTIFICATION` delivery may reference a PublicationRecord when relevant, but must be independently authorized by the applicable distribution policy.
+- Delivery status must not be confused with publication approval or publication success.
+- A delivery failure must not reverse or invalidate a confirmed publication.
 - The logical delivery operation must be distinct from individual delivery attempts.
 
 ### 12.2 DeliveryAttempt
@@ -1448,6 +1538,10 @@ The system must use explicit state transitions, idempotency keys, and recovery h
 If an external destination supports idempotency, the same key must be reused for retries of the same logical operation.
 
 If the destination does not support idempotency, the system must document the duplicate-delivery risk and apply a reconciliation strategy.
+
+Publication and delivery are independent operations. A delivery may reference a successful publication, but must not create, replace, or withdraw a publication.
+
+A delivery containing a publication link must not be created until the referenced publication is confirmed successful and effective. Direct delivery of report content remains subject to a separate distribution authorization.
 
 ## 13. Processing and Operational Data
 
@@ -1743,6 +1837,8 @@ The logical table inventory is:
 | `report_analysis_links` | Report analysis references |
 | `publication_decisions` | Publication policy history |
 | `review_records` | Human review records |
+| `publication_records` | Publish, replace, and withdraw operations |
+| `publication_attempts` | External publication attempt and reconciliation history |
 | `delivery_records` | Logical delivery operations |
 | `delivery_attempts` | Delivery retry history |
 | `processing_runs` | Workflow execution records |
@@ -1922,13 +2018,15 @@ The following operations require atomic transactions or an equivalent consistenc
 - Report version creation and report input links.
 - Publication decision persistence.
 - Review state changes.
+- Publication-operation creation and state transitions.
+- Publication-attempt persistence and reconciliation state changes.
 - Delivery state transitions.
 - Collection checkpoint updates after successful persistence.
 - Schedule occurrence registration and scheduled execution creation.
 
 A report must not be marked as published before the publication workflow has successfully recorded the publication outcome.
 
-External delivery operations cannot generally be included in a database transaction. They require idempotency keys, explicit state transitions, and recovery handling.
+External publication and delivery operations cannot generally be included in a database transaction. A durable PublicationRecord or DeliveryRecord must be persisted before the corresponding external side effect. The external result and attempt outcome must then be recorded through explicit state transitions. Idempotency keys and reconciliation handling are required. A timeout with an unknown publication outcome must not trigger an unconditional retry.
 
 ## 21. Idempotency, Reprocessing, and Recovery
 
@@ -1946,6 +2044,7 @@ Idempotency is required for:
 - Analysis generation.
 - Report generation.
 - Publication decisions.
+- Publication execution, including publish, replace, and withdraw operations.
 - Report delivery.
 - Collection checkpoint advancement.
 - Scheduled workflow execution.
@@ -2033,6 +2132,8 @@ Initial repository contracts include:
 - `ReportAnalysisLinkRepository`
 - `PublicationDecisionRepository`
 - `ReviewRepository`
+- `PublicationRepository`
+- `PublicationAttemptRepository`
 - `DeliveryRepository`
 - `DeliveryAttemptRepository`
 - `ProcessingRunRepository`
@@ -2157,7 +2258,9 @@ The initial implementation requires:
 - Report-event relationships where multi-event reporting is required.
 - Publication decisions.
 - Review records for held reports.
-- Delivery records with idempotency.
+- Publication operation records for publish, replace, and withdraw.
+- Publication attempt and reconciliation history.
+- Delivery records with idempotency and explicit delivery mode.
 - Delivery attempt history.
 - Processing runs and processing steps.
 - Basic LLM usage records.
@@ -2235,10 +2338,12 @@ The data model is acceptable for implementation when:
 12. Reports retain their article, evidence, analysis, and event references.
 13. Report versions are preserved.
 14. Multi-event reports are supported.
-15. Publication decisions are separately recorded.
-16. Held reports can enter a real review workflow.
-17. Delivery operations have idempotency and retry history.
-18. Processing runs and steps support recovery.
+15. Publication decisions are separately recorded from actual publication operations.
+16. Held reports can enter a real review workflow, and review approval cannot bypass a new effective publication decision.
+17. Publication, replacement, and withdrawal operations have immutable history, idempotency, and attempt records.
+18. Uncertain external publication outcomes require reconciliation before retry.
+19. Delivery operations have separate idempotency and retry history and cannot change publication state.
+20. Processing runs and steps support recovery.
 19. LLM usage and known costs can be recorded.
 20. Unknown values remain distinct from zero or false.
 21. Critical state changes are transactionally consistent.
