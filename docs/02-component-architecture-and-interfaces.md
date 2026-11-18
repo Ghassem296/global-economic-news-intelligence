@@ -981,7 +981,10 @@ Initial interfaces include:
 - `ArticleRepository`
 - `ArticleProcessingRepository`
 - `EventRepository`
-- `EventMatchCaseRepository`\n- `EventMatchCandidateRepository`\n- `EventMatchDecisionRepository`\n- `ArticleEventLinkRepository`
+- `EventMatchCaseRepository`
+- `EventMatchCandidateRepository`
+- `EventMatchDecisionRepository`
+- `ArticleEventLinkRepository`
 - `EntityRepository`
 - `EntityAliasRepository`
 - `ClaimRepository`
