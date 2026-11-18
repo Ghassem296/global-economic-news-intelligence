@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.18
+**Version:** 1.19
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -1601,14 +1601,16 @@ Review states may include:
 - `COMPLETED`
 - `CANCELLED`
 
-Review types identify the subject and required follow-up, including publication review and event-matching review. The exact type vocabulary and authorization matrix must be finalized under ADR-014.
+Review types identify the subject and required follow-up, including article-deduplication review, event-matching review, and publication review. The exact type vocabulary and authorization matrix must be finalized under ADR-014.
 
 Constraints and behavior:
 
 - Exactly one typed subject must be identified by `subject_type` and `subject_reference`; the reference must be validated by the application layer where a database foreign key cannot express the polymorphic relationship.
+- For article-deduplication review, the subject must identify a DuplicateCandidate and the related decision must identify the DuplicateDecision under review; a material outcome creates a successor DuplicateDecision for that same candidate.
 - For publication review, the subject and related decision must resolve to the relevant report version and PublicationDecision.
 - For event-matching review, the subject must identify an EventMatchCase and the related decision must identify the EventMatchDecision under review.
 - Review completion records the reviewer, time, and outcome. It does not mutate the related decision.
+- An article-deduplication review outcome that changes the effective result creates a new DuplicateDecision referencing the previous effective decision for the same candidate.
 - An event-matching review outcome that changes the effective result creates a new EventMatchDecision referencing the previous effective decision.
 - A publication review outcome that changes publication eligibility creates a new PublicationDecision.
 - Review history must not be silently overwritten. Reassignment and status changes must be auditable.

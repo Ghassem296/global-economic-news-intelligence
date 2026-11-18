@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.11  
+**Version:** 1.12  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -640,6 +640,8 @@ The primary domain entities include:
 - Article
 - ArticleProcessingRecord
 - ArticleRevision
+- DuplicateCandidate
+- DuplicateDecision
 - EventMatchCase
 - EventMatchCandidate
 - EventMatchDecision
@@ -648,11 +650,17 @@ The primary domain entities include:
 - Entity
 - EntityAlias
 - Claim
+- ClaimAssessment
+- ClaimAssessmentEvidenceLink
+- AssessmentHistory
 - Evidence
 - Analysis
 - Report
 - PublicationDecision
 - ReviewRecord
+- ReviewAction
+- PublicationRecord
+- PublicationAttempt
 - DeliveryRecord
 - ProcessingRun
 - EventHistory

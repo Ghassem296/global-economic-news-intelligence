@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.23  
+**Version:** 1.24  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -553,13 +553,14 @@ Responsibilities:
 - Maintain review queue status, priority, assignment, due dates, and escalation metadata.
 - Record review reasons, reviewer identity, authorized role, timestamps, and immutable review outcomes.
 - Link each review to the exact subject and decision under review.
+- Route article-deduplication review outcomes to the Article Deduplication Workflow for a successor DuplicateDecision.
 - Route event-matching review outcomes to the Event Resolution workflow.
 - Route publication review outcomes back to PublicationPolicy for a new PublicationDecision.
 - Preserve review actions and reassignment history.
 
 ReviewService manages review tasks and reviewer actions; it does not own event identity or publication eligibility decisions.
 
-For event matching, a material review outcome must create a new EventMatchDecision that supersedes the prior effective decision. For publication, a material review outcome must create a new effective PublicationDecision. ReviewService must not mutate either prior decision, bypass EventService or PublicationPolicy, or directly call an external publication target.
+For article deduplication, a material review outcome must create a successor DuplicateDecision for the same DuplicateCandidate. For event matching, a material review outcome must create a new EventMatchDecision that supersedes the prior effective decision. For publication, a material review outcome must create a new effective PublicationDecision. ReviewService must not mutate either prior decision, bypass EventService or PublicationPolicy, or directly call an external publication target.
 
 Reviewer identity and authorization must be enforced by the application's security layer. The initial implementation must define the authorized decision-maker and review mechanism for each review type.
 
@@ -1003,6 +1004,12 @@ Represents append-only audit events for ClaimAssessment lifecycle changes, such 
 
 It must identify the assessment, action, actor, reason, timestamp, and idempotency reference where applicable. It is an audit trail, not a second editable assessment result. The effective assessment remains determined by the Claim's current-assessment reference and the immutable supersession chain.
 
+### 5.13.3 ClaimAssessmentEvidenceLink
+
+Connects one immutable ClaimAssessment to the exact Evidence records considered by that assessment.
+
+It must preserve the ClaimAssessment reference, Evidence reference, relationship type (supports, contradicts, contextualizes, or mentions), relevance where available, and metadata. These links become immutable when the assessment is finalized. The evidence set must be reproducible from the links and the assessment's evidence-set fingerprint.
+
 ### 5.14 Analysis
 
 Represents a versioned analytical result or assessment.
@@ -1046,9 +1053,11 @@ It must preserve:
 - Assignment, due, creation, and completion timestamps.
 - Metadata and authorization context.
 
-Exactly one typed subject must be identified. For event-matching review, the subject must resolve to an EventMatchCase and the related decision to the EventMatchDecision under review. For publication review, the subject must resolve to the exact report version and PublicationDecision. The application/security layer must validate typed references and reviewer authority.
+Exactly one typed subject must be identified. For article-deduplication review, the subject must resolve to the exact DuplicateCandidate and the related decision to the DuplicateDecision under review. For event-matching review, the subject must resolve to an EventMatchCase and the related decision to the EventMatchDecision under review. For publication review, the subject must resolve to the exact report version and PublicationDecision. The application/security layer must validate typed references and reviewer authority.
 
-Review completion records who reviewed the task, when, and with what outcome. It does not mutate the related decision. A material event-matching outcome creates a successor EventMatchDecision; a publication outcome that changes eligibility creates a new PublicationDecision.
+Review completion records who reviewed the task, when, and with what outcome. It does not mutate the related decision. A material article-deduplication outcome creates a successor DuplicateDecision; an event-matching outcome creates a successor EventMatchDecision; a publication outcome that changes eligibility creates a new PublicationDecision.
+
+Review subject types may include `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `PUBLICATION`; the exact authorization matrix and role mapping remain governed by ADR-014 and must be approved before a review can authorize a material decision.
 
 ### 5.17.1 ReviewAction
 
