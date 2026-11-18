@@ -30,7 +30,7 @@ CONTROLLED_DOCUMENTS = [
     "docs/README.md",
     "docs/adr/README.md",
 ]
-EXPECTED_ADR_IDS = {f"GENI-ADR-{number:03d}" for number in range(1, 20)}
+EXPECTED_ADR_IDS = {f"GENI-ADR-{number:03d}" for number in range(1, 21)}
 VALID_ADR_STATUSES = {
     "Proposed", "Accepted", "Rejected", "Deprecated", "Superseded", "Withdrawn"
 }
@@ -656,18 +656,56 @@ def validate_root_readme_adr_authority() -> None:
 
 
 def validate_privacy_specification_contract() -> None:
-    """Ensure the privacy specification is substantive and linked from the security model."""
-    relative = "docs/14-data-protection-and-privacy-specification.md"
-    content = read_text(ROOT / relative).lower()
-    required = (
+    """Validate privacy policy coverage and executable cross-document architecture alignment."""
+    privacy = read_text(ROOT / "docs/14-data-protection-and-privacy-specification.md").lower()
+    policy_terms = (
         "data inventory", "purpose limitation", "data minimization", "lawful basis",
         "retention schedule", "data subject request", "international transfer",
         "processor", "subprocessor", "model provider", "deletion propagation",
         "privacy impact assessment", "special-category", "jurisdiction-specific",
     )
-    missing = [term for term in required if term not in content]
+    missing = [term for term in policy_terms if term not in privacy]
     if missing:
         fail(f"Privacy specification is incomplete; missing concepts: {missing}")
+
+    contracts = {
+        "docs/02-component-architecture-and-interfaces.md": (
+            "PrivacyManagementService", "PrivacyProcessingAuthorization",
+            "DataSubjectRequest", "PersonalDataLineageRepository",
+        ),
+        "docs/03-data-model-and-storage-design.md": (
+            "PersonalDataInventory", "ProcessingPurpose", "PrivacyProcessingBasis",
+            "DataSubjectReference", "DataSubjectRequestAction", "PrivacyDeletionRecord",
+            "ProcessorRegister", "InternationalTransferAssessment", "PrivacyImpactAssessment",
+            "PersonalDataLineage",
+        ),
+        "docs/08-security-architecture-and-threat-model.md": (
+            "PrivacyProcessingAuthorization", "ContentRightsService", "SharedLLMExecutionLayer",
+        ),
+        "docs/09-api-and-integration-contracts.md": (
+            "SubmitDataSubjectRequest", "DiscoverSubjectData", "ExecuteDataSubjectAction",
+            "RecordProcessorDeletionOutcome",
+        ),
+        "docs/12-testing-and-evaluation-strategy.md": (
+            "backup restore", "lineage", "canary", "provider",
+        ),
+        "docs/13-deployment-operations-and-observability.md": (
+            "Data-subject request", "Provider/model deletion", "Backup restore reconciliation",
+        ),
+    }
+    for relative, required in contracts.items():
+        content = read_text(ROOT / relative)
+        missing_contracts = [term for term in required if term.lower() not in content.lower()]
+        if missing_contracts:
+            fail(f"Privacy cross-document contract missing from {relative}: {missing_contracts}")
+
+    adr_path = ADR_DIR / "GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md"
+    adr = read_text(adr_path)
+    if "**ADR ID:** GENI-ADR-020" not in adr or "**Status:** Proposed" not in adr:
+        fail("GENI-ADR-020 must exist with its identifier and Proposed status")
+    adr_registry = read_text(ADR_REGISTRY)
+    if "GENI-ADR-020" not in adr_registry:
+        fail("ADR Registry must contain GENI-ADR-020")
     security = read_text(ROOT / "docs/08-security-architecture-and-threat-model.md")
     if "14-data-protection-and-privacy-specification.md" not in security:
         fail("Security architecture must reference the Data Protection and Privacy Specification")
@@ -941,7 +979,7 @@ def main() -> None:
     validate_distribution_authorization_contract()
     print(
         "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled versions and document ID/version/status registry parity, ADR title alignment and single-source inventory, duplicate versions, "
-        "all 19 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
+        "all 20 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
         "local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
         "event identity-operation history/recovery, multi-source distribution authorization, privacy specification coverage, validator source integrity, registry snapshot provenance, and exact roadmap/document inventory parity."
     )
