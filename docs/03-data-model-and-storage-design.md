@@ -1966,11 +1966,11 @@ Fields:
 - `content_fingerprint`
 - `created_at`
 
-The physical vector representation is not fixed by this document.
+The physical vector representation is not fixed by this document. Where an embedding is created from restricted source content or sent to an external provider, its creation/storage must reference the applicable operation-specific RightsAssessment. An embedding is a derived artifact and must be included in rights-aware retention/deletion where required.
 
 Embeddings may be stored in an approved vector-capable database, a compatible extension, or another search service.
 
-A dedicated vector database is not a mandatory Phase 1 dependency.
+A dedicated vector database is not a mandatory Phase 1 dependency. The semantic retrieval implementation remains optional and subject to GENI-ADR-012; a lexical retrieval baseline must remain available for evaluation and fallback.
 
 ### 14.3 Search and Retrieval
 
@@ -2376,6 +2376,8 @@ A versioned policy definition for permitted retention mode, purpose, duration/ex
 **DerivedArtifact**
 
 A versioned output derived from source content, such as a translation, embedding, extracted passage, or analytical artifact. It should preserve the exact source revision/content references, processing method/version, rights assessment(s), and applicable retention/distribution restrictions. Derived content is not automatically unrestricted merely because it is system-generated.
+
+For a translation artifact, preserve at least the source ArticleRevision, source and output languages, translator/provider and model identity where applicable, prompt/configuration and processing version, created time, quality/validation status, and rights assessment for temporary/external processing and resulting retention. The source ArticleRevision remains authoritative; translation output must never overwrite it. For an embedding artifact, preserve the exact normalized input fingerprint, model/version, dimensions/representation, and applicable rights assessment. A material input/model change creates a distinct versioned artifact.
 
 **ContentDeletionRequest / ContentDeletionRecord**
 
