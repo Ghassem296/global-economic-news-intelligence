@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-19
@@ -467,8 +467,8 @@ This inventory distinguishes defined state vocabulary from defined transition be
 | EventMatchDecision | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED | Immutable append/supersession; one effective decision pointer; outcome-specific invariants specified. These are outcomes, not mutable lifecycle states. | **Outcome contract specified; authorization/policy remains gated** |
 | ArticleEventLink | is_active true/false | Active only while authorizing MATCH decision is effective; successor decision deactivates/activates atomically. | **Derived transition contract specified** |
 | PublicationDecision | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT | Immutable decisions; material change creates successor; exact effective-predecessor selection rule not fully specified. | **Partially specified; provenance mismatch open** |
-| ProcessingRun | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED | No transition graph or terminal/retry/recovery transition rules. | **Blocked** |
-| ProcessingStep | Status field exists; no closed vocabulary or transition graph in Document 03. | Lease/fencing rules exist; status transition graph absent. | **Blocked** |
+| ProcessingRun | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED | Vocabulary only. Initial-state, allowed transitions, terminal/reopen rules, PARTIALLY_COMPLETED semantics, step aggregation, recovery identity, and transition-history requirements are not defined. | **Blocked** |
+| ProcessingStep | A status field exists; no closed vocabulary, initial state, transition graph, terminal rules, or run-aggregation semantics are defined. | Lease/fencing rules exist; they govern ownership and stale-writer rejection, not the missing status lifecycle. | **Blocked** |
 | PublicationRecord | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED | Expected operation lifecycle and reconciliation semantics defined in Document 03 §11.8. | **Specified at logical level; target adapter contract remains gated** |
 | PublicationAttempt | EXECUTE/RECONCILE; CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, RECONCILED_NOT_APPLIED | Attempt records are traceable; mapping from each attempt outcome to operation transition requires a formal table. | **Partially specified** |
 | DeliveryRecord | PENDING, IN_PROGRESS, DELIVERED, FAILED, CANCELLED | Status vocabulary and idempotent retry requirement exist in Document 03 §12.1; allowed transitions, terminal/retry semantics, and DeliveryAttempt outcome mapping are not defined. | **Partially specified; transition contract required before delivery implementation** |
@@ -480,14 +480,34 @@ This inventory distinguishes defined state vocabulary from defined transition be
 
 The following must be completed from approved policy and reconciled across Documents 01–04, 08, 09, 12, 13 and the applicable ADRs:
 
-1. ProcessingRun transition matrix, including initial state, allowed transitions, terminal states, retry/recovery path, cancellation behavior, partial completion semantics and ProcessingStep interaction.
-2. EventMatchCase transition matrix, including decision-to-case status mapping, review start/completion, cancellation, reopening, and whether RESOLVED can be reopened by a successor decision.
-3. EventMatchCandidate complete status vocabulary and transition matrix; candidate evaluation records are immutable, so any re-evaluation must create a successor record.
-4. PublicationDecision effective-successor algorithm and actor/authorization provenance reconciliation.
-5. PublicationAttempt outcome-to-PublicationRecord transition matrix, including unknown outcome and reconciliation.
-6. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014.
-7. DeliveryRecord transition matrix, including retry/cancellation semantics, and DeliveryAttempt outcome mapping.
-8. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
+1. ProcessingRun transition matrix, including initial state, allowed transitions, terminal states, retry/recovery path, cancellation behavior, partial-completion semantics, and ProcessingStep interaction.
+2. ProcessingStep status vocabulary and transition matrix, including initial state, retry/skip/cancel semantics, terminal states, and the distinction between step execution state and lease ownership.
+3. ProcessingRun/ProcessingStep aggregation and recovery contract: how step outcomes determine run status; whether recovery resumes the same run or creates a successor; how completed outputs are reused; how cancellation/deadline races are resolved; and whether a separate append-only transition history is required.
+4. EventMatchCase transition matrix, including decision-to-case status mapping, review start/completion, cancellation, reopening, and whether RESOLVED can be reopened by a successor decision.
+5. EventMatchCandidate complete status vocabulary and transition matrix; candidate evaluation records are immutable, so any re-evaluation must create a successor record.
+6. PublicationDecision effective-successor algorithm and actor/authorization provenance reconciliation.
+7. PublicationAttempt outcome-to-PublicationRecord transition matrix, including unknown outcome and reconciliation.
+8. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014.
+9. DeliveryRecord transition matrix, including retry/cancellation semantics, and DeliveryAttempt outcome mapping.
+10. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
+
+### 10.10.1 Processing execution lifecycle closure questions
+
+The following questions must be answered as one coherent contract before ProcessingRun or ProcessingStep lifecycle code is implemented. The source documents currently establish status vocabulary for ProcessingRun, but do not establish the answers below.
+
+| Decision | Required contract | Why it cannot be inferred |
+|---|---|---|
+| Run creation | Server-controlled initial status; caller authority over run identity; creation/idempotency behavior. | Document 03 lists statuses but does not define the initial transition or assignment owner. |
+| Run transitions | Allowed source/target pairs, guards, actor, reason requirements, terminal states, and whether a terminal run can be superseded or reopened. | Status names do not establish legal transitions or retry semantics. |
+| Partial completion | Exact meaning and entry conditions for PARTIALLY_COMPLETED; whether it is terminal or recoverable. | No step aggregation rule or partial-result policy is defined. |
+| Step lifecycle | Complete status enum, initial state, transition guards, retry/skip/cancel behavior, and terminal states. | Document 03 defines the status field but no vocabulary. |
+| Run/step aggregation | Deterministic mapping from all relevant step outcomes to the parent run status, including skipped, blocked, cancelled, retry-pending, and non-repeatable steps. | No aggregation rule exists in Documents 02/03/15. |
+| Recovery identity | Resume the existing run versus create a successor run; linkage between attempts/runs; reuse of completed step outputs. | Recovery and idempotency requirements exist, but the run identity strategy is unspecified. |
+| Cancellation and deadlines | Race behavior when cancellation/deadline occurs during a step or after an external side effect begins. | Cancellation propagation is required, but durable state precedence and reconciliation are not defined here. |
+| Transition audit | Whether a dedicated append-only run/step history is required, its atomicity, sequence, and projection-rebuild rules. | Other aggregates use explicit histories, but no ProcessingRun/ProcessingStep history contract is established. |
+| Recoverable query | Eligible statuses, lease-expiry cutoff, deterministic ordering, and consistency requirements for find_recoverable. | The query is intentionally bounded, but eligibility and ordering are TBD. |
+
+Lease state and processing state must remain separate. An expired ExecutionLease permits recovery to be considered but does not itself transition a run or step, prove that a worker stopped, or authorize a retry. Every state-changing worker write remains subject to current fencing-token validation. IdempotencyRecord protects the logical operation from duplicate effects; it does not replace the missing run/step lifecycle contract.
 
 No implementation may invent missing transitions or treat timestamps as substitutes for state.
 
@@ -511,6 +531,6 @@ No implementation may invent missing transitions or treat timestamps as substitu
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-19
 
-**Revision Note (v1.3):** Expanded the state-machine inventory to include the already-defined EventIdentityOperation lifecycle and the separately modeled DeliveryRecord lifecycle. Added the missing delivery transition/attempt mapping to the pre-implementation checklist. No new domain states or transition rules were invented; unresolved contracts remain explicitly blocked.
+**Revision Note (v1.4):** Expanded the ProcessingRun/ProcessingStep lifecycle blockers into an explicit cross-document decision checklist. Clarified that run status vocabulary, step status, lease ownership, step aggregation, recovery identity, cancellation races, and transition audit are separate contract concerns. No new statuses or transition rules were invented; implementation remains blocked pending resolution and Project Owner approval.
 
 **End of Document**
