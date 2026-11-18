@@ -40,6 +40,40 @@ class DocumentationValidatorTests(unittest.TestCase):
         self.assertEqual(missing, {"docs/nested/b.md"})
         self.assertEqual(unexpected, {"docs/extra.md"})
 
+    def test_unicode_repository_tree_parser_preserves_nested_paths(self) -> None:
+        tree = """```text
+global-economic-news-intelligence/
+├── README.md
+└── docs/
+    ├── README.md
+    └── adr/
+        └── decisions/
+            └── GENI-ADR-020.md
+```"""
+        self.assertEqual(
+            validator.parse_documentation_tree_paths(
+                tree, "global-economic-news-intelligence"
+            ),
+            {"README.md", "docs/README.md", "docs/adr/decisions/GENI-ADR-020.md"},
+        )
+
+    def test_ascii_docs_tree_parser_preserves_nested_paths(self) -> None:
+        tree = """```text
+docs/
+|-- README.md
++-- adr/
+    |-- README.md
+    +-- decisions/
+        +-- GENI-ADR-020.md
+```"""
+        self.assertEqual(
+            validator.parse_documentation_tree_paths(tree, "docs"),
+            {"README.md", "adr/README.md", "adr/decisions/GENI-ADR-020.md"},
+        )
+
+    def test_published_readme_documentation_trees_match_repository(self) -> None:
+        validator.validate_readme_documentation_trees()
+
     def test_root_readme_uses_adr_registry_as_single_inventory(self) -> None:
         validator.validate_root_readme_adr_authority()
 
