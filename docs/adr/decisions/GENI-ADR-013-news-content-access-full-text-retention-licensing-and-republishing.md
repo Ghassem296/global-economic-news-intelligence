@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-013  
 **Title:** News Content Access, Full-Text Retention, Licensing, and Republishing  
-**Version:** 1.4
+**Version:** 1.5
 **Status:** Proposed  
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
@@ -731,6 +731,45 @@ The system must distinguish successful deletion from a requested but incomplete 
 
 Where legal or contractual retention exceptions apply, those exceptions must be documented and restricted.
 
+### 6.15.1 Derived-Rights Invalidation and Downstream Reauthorization
+
+A permission change must propagate through the provenance dependency graph of every affected DerivedArtifact and report item. A permission to access, store, process, translate, embed, quote, transform, or distribute source content is operation-specific; permission for one operation does not automatically survive revocation or authorize another operation.
+
+ContentRightsService must identify the exact source/article revision, DerivedArtifact versions, transformations, and downstream report items that depend on the changed permission. It must invalidate or mark stale affected assessments and prevent new processing or distribution until the dependency chain has been re-evaluated. An existing CUSTOMER_DISTRIBUTION assessment is not sufficient if a required upstream permission has expired, been revoked, or materially changed.
+
+Before dispatch, ReportDelivery must require:
+- The exact linked CUSTOMER_DISTRIBUTION RightsAssessment set to remain current, effective, and ALLOWED.
+- The upstream rights dependencies captured in each source-derived artifact's provenance to remain effective for the operations actually performed.
+- A newly evaluated assessment and successor DistributionAuthorizationDecision when a rights change affects the prior authorization scope.
+
+The system must fail closed when dependency status is unknown or cannot be re-evaluated. It must not silently revive or mutate an earlier immutable assessment or authorization decision. A reduced payload may proceed only after prohibited items are actually excluded, the reduced manifest is fingerprinted, and a new complete authorization decision is recorded.
+
+Already completed deliveries remain immutable historical facts. Where a later rights change requires remedial action, the system must initiate the applicable correction, restriction, deletion, or withdrawal workflow; it must not rewrite delivery history or claim that an external recipient's copy was recalled unless that outcome is verified.
+
+### 6.15.2 Deterministic Distribution Fingerprints
+
+Distribution authorization must use reproducible fingerprints so that the authorized scope can be compared with the scope actually dispatched.
+
+The authorized_content_scope_fingerprint is the SHA-256 digest, represented as 64 lowercase hexadecimal characters, of a versioned ContentScopeManifest serialized as UTF-8 using RFC 8785 JSON Canonicalization Scheme (JCS). The manifest contains:
+- A manifest schema version and exact immutable report-version reference.
+- One entry per atomic outbound content item, with a stable item identifier.
+- Immutable ArticleRevision or DerivedArtifact/version references.
+- Transformation and output-language identifiers where applicable.
+- The SHA-256 digest of the exact UTF-8 content bytes of each item.
+- Complete typed source-scope lineage for every source-derived item.
+
+Set-valued arrays must be sorted by stable identifiers before canonical serialization. Arrays whose order changes meaning must retain their semantic order. Content bytes must not be normalized before item-level hashing. The same manifest rules apply when the scope is reduced.
+
+The rights_assessment_set_fingerprint is the SHA-256 digest of a versioned array containing the complete immutable RightsAssessment references required by every source-derived manifest item. Each entry identifies the assessment and version, exact operation, typed content-scope reference, outcome, policy/profile version, and validity boundary. Sort entries by (content_scope_reference, operation, rights_assessment_id, assessment_version) before JCS serialization. Only current ALLOWED CUSTOMER_DISTRIBUTION assessments qualify. A source-derived manifest requires a non-empty complete set; a manifest with no source-derived items has no rights links and a null rights-assessment-set fingerprint.
+
+The DeliveryRecord content_scope_fingerprint must equal the authorized manifest fingerprint. The digest of the channel-specific serialized outbound request is a separate outbound_payload_sha256; it must never be compared directly with the manifest fingerprint. The dispatcher must prove that the serialized request was constructed exclusively from the exact authorized manifest items and must reject additions, omissions, substitutions, or changed transformations before creating an external side effect.
+
+### 6.15.3 Canonicalization and Transaction Requirements
+
+All services must use one shared canonicalization implementation and test vectors. They must reject unsupported schema versions, duplicate item or assessment identifiers, missing required references, invalid Unicode, non-finite numbers, and ambiguous timestamps. Timestamps included in manifests must use UTC RFC 3339 form with a fixed precision; identifiers and digest strings must use their canonical case/format. JCS object-key ordering is authoritative; application code must not invent a second JSON key-ordering rule.
+
+The DistributionAuthorizationDecision and its complete immutable RightsAssessment link set must be committed in one UnitOfWork transaction. Fingerprints must be computed from the exact records committed by that transaction. A failed transaction must leave neither a partially linked decision nor an externally dispatchable authorization.
+
 ### 6.16 Syndication and Source Independence
 
 Multiple publishers may distribute identical or substantially similar content originating from the same news agency.
@@ -1152,6 +1191,7 @@ Source-specific rights and legal requirements must be verified before production
 | 1.2 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Canonicalized operation permissions, separated translation, embedding, audio, and video transformations, and aligned decision/review authority with the Project Owner role. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Defined complete per-source CUSTOMER_DISTRIBUTION rights coverage for composite reports and other multi-source derived outputs; clarified reduced-scope authorization. | AI Architecture Assistant |
+| 1.5 | 2026-11-18 | Proposed | Defined deterministic content-scope and rights-assessment fingerprints, upstream-rights revocation propagation, fail-closed reauthorization, and atomic persistence requirements. | AI Architecture Assistant |
 
 ---
 
@@ -1159,5 +1199,5 @@ Source-specific rights and legal requirements must be verified before production
 
 **ADR ID:** `GENI-ADR-013`  
 **File:** `GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md`  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Proposed
