@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.6  
+**Version:** 1.7  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -142,7 +142,7 @@ This ADR does not finalize:
 - The exact event matching algorithm.
 - The final numerical similarity or confidence thresholds.
 - The embedding model or vector database.
-- The complete event lifecycle and editorial status policy.
+- Domain-specific resolution criteria and quantitative monitoring/archival thresholds beyond the baseline lifecycle transition matrix defined in Section 6.14.
 - The event importance calculation methodology.
 - The full article deduplication algorithm.
 - The complete claim verification methodology.
@@ -501,18 +501,18 @@ Related events may be linked through explicit event relationships.
 
 The existence of a relationship must not collapse their identities.
 
-Proposed relationship types include:
+The canonical relationship taxonomy shared with Document 03 is:
 
-- `RELATED_TO`
-- `CAUSED_BY`
-- `RESULTED_FROM`
-- `RESPONDS_TO`
-- `PRECEDES`
-- `FOLLOWS`
-- `PART_OF`
-- `SUPERSEDES`
+- `RELATED_TO` — contextual relationship without a stronger asserted meaning; symmetric and stored once.
+- `CAUSED_BY` — the source event was caused by the target event; directed.
+- `TRIGGERED_BY` — the source event was directly initiated by the target event; directed and narrower than general causation.
+- `PART_OF` — the source event is a bounded constituent/sub-event of the target event; directed.
+- `FOLLOWED_BY` — the target event occurred after the source event; directed.
+- `ESCALATION_OF` — the source event is a distinct escalation in severity or scope of the target event; directed.
+- `CONTINUATION_OF` — the source event is a distinct later phase continuing the target development; directed.
+- `SUPERSEDES` — the source event supersedes the target event as the current occurrence/decision being tracked; directed.
 
-The final relationship taxonomy should be validated during domain-model implementation.
+The source/target orientation is normative and must not be replaced by a free-form direction field. Inverse navigation is derived rather than stored as a duplicate edge. The application rejects self-links, canonicalizes symmetric `RELATED_TO` links, and rejects cycles for `PART_OF`, `FOLLOWED_BY`, `ESCALATION_OF`, and `CONTINUATION_OF`. Causal cycles are rejected unless a future explicitly approved policy defines another treatment. A relationship does not establish identity and never authorizes a merge or an ArticleEventLink.
 
 ### 6.9 One Article and Multiple Events
 
@@ -565,6 +565,10 @@ Merged event identities must not be physically deleted merely because they are n
 Historical references to a merged identity must remain resolvable.
 
 A merge must be idempotent. Repeating the same logical merge operation must not produce duplicate history entries or duplicate downstream effects.
+
+Every MERGE, SPLIT, or IDENTITY_CORRECTION must be represented by one durable EventIdentityOperation with a stable operation identifier and required unique idempotency key. The record must include operation type, status (`PENDING`, `IN_PROGRESS`, `SUCCEEDED`, `FAILED`, or `RECONCILIATION_REQUIRED`), reason, policy version, actor type/reference, authorization reference, processing-run reference where applicable, and requested/started/completed timestamps. Input and output event links must be explicit and ordered. Every affected EventHistory record must reference the exact `event_identity_operation_id`. A retry reuses the same operation and idempotency key. An uncertain operation must be reconciled before downstream effects are repeated.
+
+Operation cardinality is validated: MERGE requires at least two input events and exactly one surviving output; SPLIT requires exactly one input event and at least two successor outputs. IDENTITY_CORRECTION must declare its permitted cardinality in the versioned policy. ArticleEventLink records must never be directly repointed by an identity operation: affected EventMatchCases are resolved through successor EventMatchDecision records and EventService.
 
 ### 6.11 Event Splitting
 
@@ -619,24 +623,42 @@ The system must distinguish automated decisions from human-approved decisions.
 
 ### 6.13 Event Identity Resolution
 
-The system must provide a way to resolve historical event identifiers to their current canonical identity.
+The system must provide a deterministic identity-resolution read contract for historical event identifiers.
 
 Resolution must support:
 
 - Original event identifier.
-- Current canonical event identifier.
-- Merge history.
-- Split history.
-- Successor relationships.
-- Identity operation history.
+- Current canonical event identifier where one exists.
+- Merge and split history.
+- Complete successor relationships.
+- Exact identity operation history.
+- Resolution status and the evidence/context needed for disambiguation.
 
-A merged identity may resolve to one canonical identity.
+The resolver returns one of `CANONICAL` (one current canonical event), `MULTIPLE_SUCCESSORS` (two or more successor event identifiers after a split), or `UNRESOLVED` (no safe deterministic resolution). A merged identifier may resolve to its one surviving canonical identity while preserving the merge lineage. A split identifier returns the complete successor set and the exact split operation; it must never select an arbitrary successor. A caller may choose among successors only with development-case/evidence context and must create a successor EventMatchDecision before applying a new ArticleEventLink. An unresolved identity must not produce a guessed association.
 
-A split identity may resolve to multiple successors and must not be silently resolved to an arbitrary single event.
+### 6.14 Event Lifecycle Policy
 
-Where a historical identity has multiple successors, callers must use the explicit successor relationships and relevant evidence to determine the appropriate current event.
+Lifecycle status is independent from event identity. The canonical lifecycle states are `DETECTED`, `ENRICHING`, `ACTIVE`, `MONITORING`, `RESOLVED`, and `ARCHIVED`.
 
-### 6.14 Recommendation Summary
+Allowed transitions are:
+
+| Current State | Allowed Next State | Required Guard |
+|---|---|---|
+| `DETECTED` | `ENRICHING` | Initial triage passed and accountable processing exists. |
+| `ENRICHING` | `ACTIVE` | Minimum identity, attribution, and evidence/enrichment requirements are met. |
+| `ENRICHING` | `RESOLVED` | A sufficiently evidenced short-lived development is already concluded. |
+| `ACTIVE` | `MONITORING` | No material new development is currently expected but monitoring remains justified. |
+| `ACTIVE` | `RESOLVED` | Domain-specific resolution criteria and supporting evidence are recorded. |
+| `MONITORING` | `ACTIVE` | A material new development requires active monitoring. |
+| `MONITORING` | `RESOLVED` | Domain-specific resolution criteria are met. |
+| `MONITORING` | `ARCHIVED` | Retention/archival policy permits it and no unresolved high-priority work remains. |
+| `RESOLVED` | `MONITORING` | New material or contradictory evidence justifies authorized reopening. |
+| `RESOLVED` | `ARCHIVED` | Retention and archival policy permits it. |
+| `ARCHIVED` | `MONITORING` | Authorized restoration identifies new material evidence or continuing monitoring need. |
+
+All other transitions are rejected. Same-state requests are idempotent no-ops. Reopen/restore requires actor, reason, supporting evidence/context, and policy version. Archival never deletes identity or history. A successful transition and its EventHistory record must be committed atomically, preserving previous/new state, actor/authorization, reason, policy version, and idempotency/correlation context. These transitions are the shared baseline in Document 01 and Document 03. Domain-specific resolution criteria and numeric monitoring/archival thresholds remain subject to product policy and evaluation.
+
+### 6.15 Recommendation Summary
 
 The recommended architecture establishes persistent event identity, explicit matching decisions, controlled identity operations, and historical traceability.
 
