@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-19
@@ -462,8 +462,8 @@ This inventory distinguishes defined state vocabulary from defined transition be
 |---|---|---|---|
 | Event lifecycle | DETECTED, ENRICHING, ACTIVE, MONITORING, RESOLVED, ARCHIVED | Complete guarded transition table exists in Document 03 §10.2. | Specified at logical level; policy/version/guard DTO details still required. |
 | EventIdentityOperation | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED; identity effect: NOT_APPLIED, APPLIED, UNKNOWN | Status and effect-state transitions, terminal rules, append-only history, and reconciliation semantics are defined in Document 03 §7.5–7.5.1. | Specified at logical level; policy-specific authorization and downstream reconciliation contracts remain gated. |
-| EventMatchCase | OPEN, PENDING_REVIEW, RESOLVED, CLOSED, CANCELLED | No allowed-transition graph, reopening rule, or precise status derivation from decisions/review is specified. | **Blocked** |
-| EventMatchCandidate | Illustrative GENERATED, EVALUATED, INELIGIBLE | Candidate immutable after EVALUATED/INELIGIBLE; complete enum and allowed transitions not closed. | **Partially specified** |
+| EventMatchCase | OPEN, PENDING_REVIEW, RESOLVED, CLOSED, CANCELLED | Vocabulary only; initial status, allowed transitions, decision/review-to-status derivation, terminal states, reopening/cancellation authority, and atomic coordination with effective-decision/link updates are not specified. | **Blocked** |
+| EventMatchCandidate | Illustrative GENERATED, EVALUATED, INELIGIBLE | Candidate evaluation is immutable after EVALUATED/INELIGIBLE and re-evaluation creates a successor record; complete enum, creation/evaluation boundary, and interrupted-generation semantics remain open. | **Partially specified** |
 | EventMatchDecision | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED | Immutable append/supersession; one effective decision pointer; outcome-specific invariants specified. These are outcomes, not mutable lifecycle states. | **Outcome contract specified; authorization/policy remains gated** |
 | ArticleEventLink | is_active true/false | Active only while authorizing MATCH decision is effective; successor decision deactivates/activates atomically. | **Derived transition contract specified** |
 | PublicationDecision | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT | Immutable decisions; material change creates successor; exact effective-predecessor selection rule not fully specified. | **Partially specified; provenance mismatch open** |
@@ -483,8 +483,8 @@ The following must be completed from approved policy and reconciled across Docum
 1. ProcessingRun transition matrix, including initial state, allowed transitions, terminal states, retry/recovery path, cancellation behavior, partial-completion semantics, and ProcessingStep interaction.
 2. ProcessingStep status vocabulary and transition matrix, including initial state, retry/skip/cancel semantics, terminal states, and the distinction between step execution state and lease ownership.
 3. ProcessingRun/ProcessingStep aggregation and recovery contract: how step outcomes determine run status; whether recovery resumes the same run or creates a successor; how completed outputs are reused; how cancellation/deadline races are resolved; and whether a separate append-only transition history is required.
-4. EventMatchCase transition matrix, including decision-to-case status mapping, review start/completion, cancellation, reopening, and whether RESOLVED can be reopened by a successor decision.
-5. EventMatchCandidate complete status vocabulary and transition matrix; candidate evaluation records are immutable, so any re-evaluation must create a successor record.
+4. EventMatchCase lifecycle contract, including initial state, allowed transitions, decision/review-to-status mapping, close/cancel guards, terminal states, reopening by successor decision, and atomic coordination with effective-decision and ArticleEventLink changes.
+5. EventMatchCandidate complete status vocabulary and creation/evaluation contract, including eligibility guards, interrupted generation, idempotent evaluation, and immutable successor-record behavior for changed inputs/policy.
 6. PublicationDecision effective-successor algorithm and actor/authorization provenance reconciliation.
 7. PublicationAttempt outcome-to-PublicationRecord transition matrix, including unknown outcome and reconciliation.
 8. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014.
@@ -509,6 +509,24 @@ The following questions must be answered as one coherent contract before Process
 
 Lease state and processing state must remain separate. An expired ExecutionLease permits recovery to be considered but does not itself transition a run or step, prove that a worker stopped, or authorize a retry. Every state-changing worker write remains subject to current fencing-token validation. IdempotencyRecord protects the logical operation from duplicate effects; it does not replace the missing run/step lifecycle contract.
 
+### 10.10.2 Event matching lifecycle closure questions
+
+EventMatchCase and EventMatchCandidate must be specified together with EventMatchDecision and ReviewRecord. The existing documents define the decision outcomes and important immutability/association invariants, but do not close the case or candidate lifecycle.
+
+| Decision | Required contract | Why it cannot be inferred |
+|---|---|---|
+| Case creation | Server-controlled initial status; authorized creator; idempotent reuse for the same ArticleRevision and development_key. | Document 03 requires stable case reuse but does not define the initial status or actor authority. |
+| Case transitions | Allowed source/target pairs, guards, terminal states, close/cancel behavior, and whether CLOSED/CANCELLED may ever be reopened. | The five listed case states are a vocabulary only. |
+| Decision-to-case mapping | Exact case-status effect of MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, and REVIEW_REQUIRED, including whether the mapping depends on event creation or review completion. | Decision outcomes are explicitly separate from case lifecycle states. |
+| Review integration | When PENDING_REVIEW begins/ends; how assignment, cancellation, completion, and a material review outcome affect case status; how a successor decision updates the case. | ADR-014 defines review as a task and successor-decision workflow, not the case-status mapping. |
+| Reopening | Whether a RESOLVED or CLOSED case can be reopened, which successor decision/action permits it, and how the previous effective decision/link remains historical. | The current case model does not define a reopening rule. |
+| Atomicity | Exact write set for case status, effective_decision_id, decision supersession, and ArticleEventLink activation/deactivation. | Atomic decision/link reconciliation is defined, but case-status participation is not fully specified. |
+| Candidate enum | Complete candidate_status values and the meaning of each value. | GENERATED/EVALUATED/INELIGIBLE are examples, not a closed enum. |
+| Candidate evaluation | Creation/evaluation boundary, eligibility guards, behavior after interrupted generation, and idempotent handling of identical fingerprints. | Candidate records are immutable after evaluation, but the pre-evaluation lifecycle is not defined. |
+| Candidate supersession | Whether every re-evaluation must reference the previous record, how a chain is selected, and how duplicate concurrent evaluations converge. | The model supports a nullable supersedes_candidate_id but does not define a complete chain/concurrency contract. |
+
+Candidate evaluation status must never encode case-level acceptance/rejection or a final event identity decision. Candidate scores remain distinct from decision confidence. A review task remains distinct from the authoritative EventMatchDecision. The case's effective-decision pointer remains a projection, and a new decision plus its association reconciliation must preserve the immutable history.
+
 No implementation may invent missing transitions or treat timestamps as substitutes for state.
 
 ## 11. Related documents
@@ -531,6 +549,6 @@ No implementation may invent missing transitions or treat timestamps as substitu
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-19
 
-**Revision Note (v1.4):** Expanded the ProcessingRun/ProcessingStep lifecycle blockers into an explicit cross-document decision checklist. Clarified that run status vocabulary, step status, lease ownership, step aggregation, recovery identity, cancellation races, and transition audit are separate contract concerns. No new statuses or transition rules were invented; implementation remains blocked pending resolution and Project Owner approval.
+**Revision Note (v1.5):** Expanded EventMatchCase and EventMatchCandidate lifecycle blockers into an explicit cross-document decision checklist, including decision/review status mapping, reopening, atomic association updates, candidate evaluation immutability, and supersession. No new statuses or transition rules were invented; implementation remains blocked pending resolution and Project Owner approval.
 
 **End of Document**
