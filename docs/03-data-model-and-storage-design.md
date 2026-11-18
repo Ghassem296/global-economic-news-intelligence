@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.33
+**Version:** 1.34
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -2859,6 +2859,9 @@ Initial repository contracts include:
 - `ContentUsageAuditRepository` (when GENI-ADR-013 is accepted)
 - `SourceHealthRepository`
 - `SourceRelationshipRepository`
+- `ArticleOriginRelationshipRepository`
+- `ExecutionLeaseRepository`
+- `IdempotencyRecordRepository`
 - `ArticleRepository`
 - `ArticleRevisionRepository`
 - `ArticleProcessingRepository`
@@ -3006,7 +3009,10 @@ Data-layer tests must cover:
 - Verification that delivery state changes do not mutate publication state.
 - Validation that publication-link delivery references a confirmed effective publication.
 - Processing run and step recovery.
-- Expired execution lease handling.
+- SourceRelationship direction, validity-window, versioning, and symmetric-only canonical uniqueness.
+- ArticleOriginRelationship exact-revision references, target cardinality, and unknown-origin behavior.
+- Expired execution lease handling, stale-worker fencing-token rejection, and atomic lease renewal/release.
+- IdempotencyRecord replay for the same key/fingerprint, conflict for a different fingerprint, and reconciliation of unknown external outcomes.
 - Atomic event history updates.
 - Atomic publication-operation and attempt persistence.
 - Collection checkpoint consistency.

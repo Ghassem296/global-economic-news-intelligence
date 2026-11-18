@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.44  
+**Version:** 1.45  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1271,11 +1271,15 @@ Initial repository interfaces include the following logical contracts. This inve
 - `DistributionAuthorizationRepository` (stores DistributionAuthorizationDecision and its immutable DistributionAuthorizationRightsLink set as one aggregate)
 - `ProcessingRunRepository`
 - `ProcessingStepRepository`
+- `ExecutionLeaseRepository`
+- `IdempotencyRecordRepository`
 - `CollectionCheckpointRepository`
 - `LLMUsageRepository`
 - `ScheduleRepository`
 - `ScheduledExecutionRepository`
 - `EmbeddingRepository`, when semantic storage is implemented.
+
+`ExecutionLeaseRepository` owns atomic lease acquisition, renewal, release, and current-fencing-token validation for ProcessingRun/ProcessingStep resources. `IdempotencyRecordRepository` owns atomic claim/lookup/completion and request-fingerprint conflict detection for scoped logical operations. These operations participate in the same UnitOfWork boundary as the associated local state change.
 
 Repositories provide persistence operations and query methods.
 
