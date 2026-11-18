@@ -1064,22 +1064,31 @@ New processing versions must not silently overwrite historical results.
 
 **Input:**
 
-- Processed article.
-- Candidate event information.
-- Existing event candidates.
-- Matching configuration.
+- Immutable ArticleRevision.
+- One independently identified development scope within that revision.
+- Matching configuration and policy version.
+- Existing event context and candidate retrieval signals.
 
 **Output:**
 
-- Matched event, new event candidate, or unresolved candidate.
-- Association confidence.
-- Matching method and version.
-- Decision factors.
-- Ambiguity information.
+- One EventMatchCase for the development scope.
+- Zero or more EventMatchCandidate records belonging to that case.
+- An immutable EventMatchDecision, or an explicit unresolved/review-required case.
+- An ArticleEventLink only when an eligible MATCH decision is applied.
+- Full decision, review, and association provenance.
 
-Ambiguous matching must be represented explicitly.
+**Workflow invariants:**
 
-New event creation and association must be coordinated through EventService.
+- One ArticleRevision may have multiple EventMatchCase records; each case represents one development and is resolved independently.
+- Candidate generation/evaluation does not issue the final decision and does not modify persistent event associations.
+- EventMatchCandidate status describes candidate processing only; ACCEPTED and REJECTED are not candidate statuses.
+- Every EventMatchDecision belongs to exactly one case. MATCH selects exactly one eligible candidate from that same case.
+- A non-MATCH outcome must not create an active ArticleEventLink.
+- Human review references the case and the decision under review. Its outcome creates a new EventMatchDecision that supersedes the prior effective decision.
+- Every ArticleEventLink references the exact MATCH decision that authorized it.
+- NEW_EVENT_CANDIDATE does not create an Event automatically; event creation follows the separate policy and idempotency rules.
+
+EventMatcher performs candidate evaluation. Event Resolution Workflow coordinates the case and decision lifecycle. EventService applies an authorized decision and maintains event and association invariants.
 
 ### 7.4 Event Intelligence Workflow
 
