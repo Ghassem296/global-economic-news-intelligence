@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-001
 **Title:** Event-Centric Intelligence Architecture
 **Status:** Proposed
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-11-18
 **Decision Owner:** Product Owner
 **Prepared By:** AI Architecture Assistant
@@ -563,7 +563,7 @@ The exact attributes, relationships, constraints, and persistence mechanisms are
 - `02-component-architecture-and-interfaces.md`
 - `03-data-model-and-storage-design.md`
 - `04-implementation-plan-and-roadmap.md`
-- `07-architecture-decision-records.md`
+- `05-architecture-decision-records.md`
 - `docs/adr/README.md`
 
 The generic Agent Template documents remain reference documents and are not required to implement the event-centric domain model.
@@ -708,6 +708,8 @@ The references above identify relevant project materials. They do not imply that
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
 | 1.0 | 2026-11-16 | Proposed | Initial proposal for an event-centric intelligence architecture. | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Clarified article/event identity and related document references. | AI Architecture Assistant |
+| 1.2 | 2026-11-18 | Proposed | Corrected the affected-document reference to the actual ADR governance document path. | AI Architecture Assistant |
 
 ---
 

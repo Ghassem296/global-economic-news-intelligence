@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-008  
 **Title:** Evidence Provenance and Uncertainty Representation  
 **Status:** Proposed  
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-11-18
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -956,7 +956,9 @@ Proposed domain entities include:
 - `Evidence`
 - `EvidenceLocation`
 - `ClaimEvidenceLink`
-- `ClaimAssessment`
+- `ClaimAssessment` — immutable, versioned result for one Claim and a defined evidence set.
+- `ClaimAssessmentEvidenceLink` — exact evidence considered by one assessment.
+- `AssessmentHistory` — append-only lifecycle/audit actions for claim assessments.
 - `Analysis`
 - `AnalysisInput`
 - `AnalysisEvidenceLink`
@@ -966,7 +968,7 @@ Proposed domain entities include:
 - `ReportArticleLink`
 - `AssessmentHistory`
 
-These are logical domain concepts. The final physical schema and repository boundaries must be defined in the data model and component architecture documents.
+These are logical domain concepts. The final physical schema and repository boundaries must be defined in Documents 02 and 03. Claim.verification_status and Claim.confidence are current projections only; the authoritative assessment is an immutable ClaimAssessment. A new assessment must preserve the prior assessment, its exact evidence links, method/policy version, rationale, and supersession reference. AssessmentHistory records append-only lifecycle actions.
 
 Proposed application operations include:
 
@@ -1167,6 +1169,8 @@ Such measurements must be established through representative datasets and evalua
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
 | 1.0 | 2026-11-16 | Proposed | Initial proposal covering evidence provenance, claim assessment, source independence, uncertainty, and analytical traceability. | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Clarified distinct assessment semantics and source/evidence provenance constraints. | AI Architecture Assistant |
+| 1.2 | 2026-11-18 | Proposed | Aligned ClaimAssessment, ClaimAssessmentEvidenceLink, AssessmentHistory, and Claim current-assessment projection with Documents 02 and 03. | AI Architecture Assistant |
 
 ---
 

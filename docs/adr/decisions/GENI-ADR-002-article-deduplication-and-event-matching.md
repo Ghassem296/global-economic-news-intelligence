@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.2
+**Version:** 1.3
 **Date:** 2026-11-18
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -528,8 +528,8 @@ The proposed high-level workflow is:
 1. Acquire an article and preserve source metadata.
 2. Normalize the article and record its revision or observed content version.
 3. Generate article duplicate candidates.
-4. Evaluate exact duplicates and near-duplicates.
-5. Record duplicate relationships and source relationships where supported.
+4. Evaluate exact duplicates and near-duplicates and persist immutable DuplicateCandidate records.
+5. Run the Article Deduplication Workflow to authorize and persist an immutable DuplicateDecision for each resolved candidate; create successor decisions for corrections and preserve all source records.
 6. Prepare article-level features for event matching.
 7. Identify each distinct development within the ArticleRevision and create one EventMatchCase per development.
 8. Generate and evaluate EventMatchCandidate records within each case.
@@ -559,11 +559,11 @@ The following concepts are required at the logical level:
 - Article identity and source-scoped identifiers.
 - Article revision or content observation.
 - Normalized content fingerprint and its normalization version.
-- Duplicate candidate relationships.
-- Duplicate decision outcomes.
+- Immutable DuplicateCandidate evaluations scoped to exact ArticleRevision pairs.
+- Immutable DuplicateDecision outcomes and supersession history.
 - Duplicate similarity and supporting signals.
 - Syndication or republication relationships where known.
-- Decision history and processing version.
+- Candidate input fingerprints, decision history, and processing/policy versions.
 
 ### 11.2 Event Matching Concepts
 
@@ -583,6 +583,7 @@ The following concepts are required at the logical level:
 - Reprocessing must not create duplicate domain effects.
 - A corrected decision must preserve the prior decision history.
 - Source and article records must not be deleted merely because another article is considered a duplicate.
+- DuplicateCandidate is immutable evaluation evidence; DuplicateDecision is the authoritative final outcome. Its effective decision and supersession chain must be persisted separately.
 - Physical tables, constraints, indexes, and repository interfaces must be defined consistently in Document 03 and Document 02.
 
 This ADR does not mandate a particular database engine or physical table layout.
@@ -841,9 +842,10 @@ The implementation roadmap should:
 
 1. Establish stable article identity and source provenance.
 2. Implement deterministic exact duplicate signals.
-3. Introduce duplicate candidate evaluation.
-4. Preserve syndication and revision relationships where known.
-5. Implement event candidate retrieval separately.
+3. Introduce immutable duplicate candidate evaluation over exact ArticleRevision pairs.
+4. Implement the Article Deduplication Workflow and immutable DuplicateDecision supersession history.
+5. Preserve syndication and revision relationships where known.
+6. Implement event candidate retrieval separately.
 6. Introduce event association decisions under ADR-011.
 7. Add near-duplicate and semantic capabilities as evaluation justifies them.
 8. Add independent metrics and monitoring for both operations.
@@ -896,5 +898,7 @@ Upon acceptance:
 |---|---|---|---|---|
 | 1.0 | 2026-11-16 | Proposed | Initial proposal separating article deduplication and event matching. | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Clarified per-ArticleRevision EventMatchCase scope, candidate/decision separation, immutable EventMatchDecision, exact ArticleEventLink provenance, and human-review outcome handling. | AI Architecture Assistant |
+| 1.2 | 2026-11-18 | Proposed | Clarified duplicate candidate and decision separation and the need to preserve duplicate decision history. | AI Architecture Assistant |
+| 1.3 | 2026-11-18 | Proposed | Defined immutable DuplicateCandidate evaluations over exact ArticleRevision pairs and a separate immutable DuplicateDecision with supersession history. | AI Architecture Assistant |
 
 **End of ADR-002**

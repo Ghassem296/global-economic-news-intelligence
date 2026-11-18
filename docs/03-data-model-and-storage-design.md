@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.16
+**Version:** 1.17
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -535,36 +535,64 @@ Constraints:
 
 ### 5.8 DuplicateCandidate
 
-Represents a possible duplicate relationship between two articles.
+Represents an immutable evaluation candidate comparing two exact ArticleRevision records for possible duplicate or near-duplicate content. It is candidate evidence only and does not hold the authoritative decision.
 
 Fields:
 
 - `id`
 - `article_id_a`
+- `article_revision_id_a`
 - `article_id_b`
-- `similarity_score`
+- `article_revision_id_b`
+- `similarity_score` nullable
 - `matching_method`
 - `matching_policy_version`
-- `decision`
-- `decision_reason`
-- `created_at`
-- `reviewed_at`
+- `input_fingerprint`
+- `evaluated_at`
 - `metadata`
-
-Possible decisions:
-
-- `PENDING`
-- `CONFIRMED_DUPLICATE`
-- `NOT_DUPLICATE`
-- `SUPERSEDED`
 
 Constraints:
 
-- The same article must not be compared with itself.
-- The article pair must be stored in a canonical order or protected by an equivalent uniqueness rule.
-- Duplicate confirmation must not erase the identity or provenance of either original article.
-- Duplicate detection must remain distinct from event matching.
-- Similarity scores must identify their method and policy version.
+- The same ArticleRevision must not be compared with itself.
+- The article/revision pair must be stored in canonical order.
+- Each revision must belong to its corresponding Article.
+- Repeated evaluation with the same canonical revision pair, method/policy version, and input fingerprint must be idempotent.
+- Candidate evaluations are immutable; changed inputs or policy versions create new evaluations.
+- A candidate score is not a final duplicate decision and must not be interpreted as a calibrated probability unless explicitly validated.
+
+### 5.9 DuplicateDecision
+
+Represents one immutable case-level decision for a DuplicateCandidate.
+
+Fields:
+
+- `id`
+- `duplicate_candidate_id`
+- `outcome`
+- `decision_reason`
+- `decision_method`
+- `decision_policy_version`
+- `decision_confidence` nullable, with documented semantics
+- `actor_reference`
+- `decided_at`
+- `supersedes_decision_id` nullable
+- `metadata`
+
+Outcomes:
+
+- `CONFIRMED_DUPLICATE`
+- `NOT_DUPLICATE`
+- `REVIEW_REQUIRED`
+
+Constraints and behavior:
+
+- A decision must reference a candidate and cannot select a candidate from another comparison scope.
+- A correction creates a successor decision; it never edits or deletes the prior decision.
+- At most one effective decision may exist for a candidate.
+- A superseding decision must reference a prior decision for the same candidate.
+- Duplicate confirmation must not erase either Article or ArticleRevision, source identity, or provenance.
+- The number of articles or candidate similarity must not be substituted for independent-source corroboration.
+- Candidate generation and decision authorization remain separate operations.
 
 ## 6. Topic Classification and Entity Model
 
@@ -926,7 +954,7 @@ Constraints:
 
 ### 8.1 Claim
 
-Represents a factual assertion, attributed statement, estimate, or forecast.
+Represents a factual assertion, attributed statement, estimate, or forecast. Claim identity and source observations are stable domain records; assessment outcomes are stored separately.
 
 Fields:
 
@@ -934,8 +962,9 @@ Fields:
 - `claim_text`
 - `claim_type`
 - `attribution`
-- `verification_status`
-- `confidence`
+- `current_assessment_id` nullable — reference to the effective ClaimAssessment for this Claim
+- `verification_status` — read-only current projection derived from the effective assessment; initially UNVERIFIED
+- `confidence` nullable — read-only projection of the effective assessment confidence
 - `first_observed_at`
 - `last_observed_at`
 - `created_at`
@@ -949,17 +978,19 @@ Claim types:
 - `ESTIMATE`
 - `FORECAST`
 
-Verification states:
+Verification projection states:
 
 - `UNVERIFIED`
 - `SUPPORTED`
 - `CONTRADICTED`
 - `PARTIALLY_SUPPORTED`
 - `DISPUTED`
+- `INSUFFICIENT_EVIDENCE`
+- `UNRESOLVED`
 
-A claim must not be considered verified merely because an LLM labels it credible.
+The Claim's verification status and confidence are not independently writable assessment facts. They must be derived from the exact effective ClaimAssessment and updated atomically with its current_assessment_id. When no assessment exists, status remains UNVERIFIED and confidence is null.
 
-A claim's verification status must be based on recorded evidence assessments and an explicit evaluation policy.
+A claim must not be considered verified merely because an LLM labels it credible. Verification must be based on recorded evidence assessments and an explicit evaluation policy.
 
 A Claim is a logical assertion. Its relationship to events and observations must be represented separately.
 
@@ -1092,7 +1123,70 @@ Relationships:
 
 The same evidence may relate to multiple claims.
 
-### 8.7 Evidence Independence
+### 8.7 ClaimAssessment
+
+Represents one immutable, versioned assessment of a Claim against a defined evidence set and assessment policy.
+
+Fields:
+
+- `id`
+- `claim_id`
+- `assessment_sequence`
+- `assessment_outcome`
+- `assessment_method`
+- `methodology_version`
+- `policy_version`
+- `evidence_set_fingerprint`
+- `rationale`
+- `confidence` nullable, with documented semantics
+- `model_provider` nullable
+- `model_id` nullable
+- `prompt_version` nullable
+- `schema_version` nullable
+- `assessed_at`
+- `assessor_reference` nullable
+- `supersedes_assessment_id` nullable
+- `created_at`
+- `metadata`
+
+Assessment outcomes must distinguish at least supported, contradicted, partially supported, disputed, insufficient evidence, and unresolved. A missing confidence value remains null. Confidence must not be described as probability unless calibrated for that interpretation.
+
+Each assessment is immutable. A new evaluation creates a new assessment that references the prior assessment it supersedes. The Claim.current_assessment_id projection and the new assessment must be committed atomically. The assessment must be reproducible from its recorded methodology/policy version and evidence-set fingerprint where source rights permit.
+
+### 8.8 ClaimAssessmentEvidenceLink
+
+Connects a ClaimAssessment to the exact Evidence records considered by that assessment.
+
+Fields:
+
+- `id`
+- `claim_assessment_id`
+- `evidence_id`
+- `relationship` — supports, contradicts, contextualizes, or mentions
+- `relevance` nullable
+- `metadata`
+
+The exact evidence set used by an assessment must be reconstructable. Evidence links are immutable once the assessment is finalized.
+
+### 8.9 AssessmentHistory
+
+Represents an append-only audit action concerning a ClaimAssessment.
+
+Fields:
+
+- `id`
+- `claim_assessment_id`
+- `action_type`
+- `actor_type`
+- `actor_reference` nullable
+- `reason` nullable
+- `idempotency_key`
+- `created_at`
+- `metadata`
+
+AssessmentHistory records creation, supersession, authorized correction, or review actions. It is an audit log, not a second mutable assessment result. Its action identity must be idempotent and historical records must not be silently overwritten.
+
+### 8.10 Evidence Independence
 
 Source independence must not be inferred from different domain names alone.
 
@@ -2013,7 +2107,8 @@ The logical table inventory is:
 | `article_event_links` | Decision-authorized article-event associations |
 | `event_match_cases` | Per-revision, per-development event-resolution cases |
 | `event_match_decisions` | Immutable case-level event matching outcomes |
-| `duplicate_candidates` | Article duplicate candidates |
+| `duplicate_candidates` | Immutable article duplicate evaluation candidates |
+| `duplicate_decisions` | Immutable duplicate outcomes and supersession history |
 | `events` | Current event state |
 | `event_match_candidates` | Candidate events evaluated within a matching case |
 | `event_history` | Event change history |
@@ -2022,12 +2117,15 @@ The logical table inventory is:
 | `event_identity_operation_inputs` | Input events to identity operations |
 | `event_identity_operation_outputs` | Result events from identity operations |
 | `event_entity_links` | Event entities |
-| `claims` | Logical claims |
+| `claims` | Logical claims and current assessment projection |
 | `event_claim_links` | Claim-event relationships |
 | `claim_observations` | Claim source observations |
 | `evidence` | Evidence records |
 | `evidence_locations` | Precise evidence provenance |
 | `claim_evidence_links` | Claim-evidence relationships |
+| `claim_assessments` | Immutable, versioned claim assessment results |
+| `claim_assessment_evidence_links` | Exact evidence set considered by each claim assessment |
+| `assessment_history` | Append-only claim-assessment audit actions |
 | `analyses` | Analytical results |
 | `analysis_evidence_links` | Analysis provenance |
 | `analysis_inputs` | Analysis input references |
@@ -2114,7 +2212,13 @@ Where applicable, enforce:
 - At most one active ArticleEventLink per EventMatchCase, with historical inactive links retained.
 - Review action sequence uniqueness within a review record.
 - Review action idempotency key uniqueness within a review record.
-- Canonical article pair uniqueness for duplicate candidates.
+- Canonical ArticleRevision-pair uniqueness for duplicate candidates, scoped by method/policy version and input fingerprint.
+- DuplicateDecision supersession-chain consistency and at most one effective decision per candidate.
+- ClaimAssessment sequence uniqueness within a Claim.
+- At most one direct successor per superseded ClaimAssessment.
+- Claim.current_assessment_id must reference an assessment belonging to that same Claim.
+- ClaimAssessmentEvidenceLink uniqueness per assessment/evidence/relationship.
+- AssessmentHistory idempotency-key uniqueness within its defined assessment scope.
 - Event-specific report version uniqueness.
 - Event analysis type and version uniqueness.
 - Source and checkpoint type uniqueness.
@@ -2145,6 +2249,12 @@ The following composite relationships must be enforced by database constraints w
 - A `DerivedArtifact` must retain typed provenance references to the source content/revision and processing/rights assessment records on which it depends.
 - A `ContentDeletionRecord` must reference its request and the affected content/artifact scope, and record whether deletion was confirmed or remains incomplete.
 - `Article(current_revision_id, id)` must resolve to an ArticleRevision whose `article_id` is that same Article.
+- `DuplicateCandidate` must reference the exact Article and ArticleRevision pair being compared; both revisions must belong to the referenced Articles.
+- `DuplicateDecision` and its superseded decision must reference the same DuplicateCandidate; one candidate cannot have multiple effective decisions.
+- `Claim.current_assessment_id` must reference a ClaimAssessment whose claim_id equals that Claim's id.
+- `ClaimAssessment.supersedes_assessment_id` must reference an assessment for the same Claim; a new assessment and current pointer update must be atomic.
+- `ClaimAssessmentEvidenceLink` must connect an assessment to evidence included in that assessment's immutable evidence set.
+- `AssessmentHistory` must reference an existing ClaimAssessment and preserve append-only action identity.
 - `EventMatchCase(id, effective_decision_id)` must resolve to `EventMatchDecision(case_id, id)`; the referenced decision must belong to that case.
 - `EventMatchDecision(case_id, selected_candidate_id)` must resolve to `EventMatchCandidate(case_id, id)`; a decision cannot select a candidate from another case.
 - `ArticleEventLink(event_match_case_id, event_match_decision_id)` must resolve to the same case and decision.
@@ -2418,6 +2528,7 @@ Initial repository contracts include:
 - `ArticleProcessingRepository`
 - `ArticleClassificationRepository`
 - `DuplicateCandidateRepository`
+- `DuplicateDecisionRepository`
 - `EntityRepository`
 - `EntityAliasRepository`
 - `ArticleEntityMentionRepository`
@@ -2434,6 +2545,9 @@ Initial repository contracts include:
 - `EvidenceRepository`
 - `EvidenceLocationRepository`
 - `ClaimEvidenceLinkRepository`
+- `ClaimAssessmentRepository`
+- `ClaimAssessmentEvidenceLinkRepository`
+- `AssessmentHistoryRepository`
 - `AnalysisRepository`
 - `AnalysisInputRepository`
 - `AnalysisEvidenceLinkRepository`
