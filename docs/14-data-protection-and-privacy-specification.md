@@ -149,7 +149,7 @@ Publication of these contracts is not evidence of implementation, operational ef
 ---
 
 **Document ID:** GENI-PRIV-014  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft — Under Architecture Review  
 
 
