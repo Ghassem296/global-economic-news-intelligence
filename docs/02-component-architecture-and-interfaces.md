@@ -1373,7 +1373,8 @@ The initial product release includes the following capabilities:
 - Event management and history.
 - Evidence management and assessment.
 - Importance ranking.
-- Economic impact analysis.
+- Separate economic relevance assessment.
+- Channel-based economic impact analysis.
 - Event dossier generation.
 - Report generation and immutable versioning.
 - Publication policy and immutable decisions.
