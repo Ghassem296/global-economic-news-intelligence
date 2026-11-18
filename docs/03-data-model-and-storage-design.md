@@ -1,9 +1,10 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.20
+**Version:** 1.21
 **Status:** Draft — Under Architecture Review
-**Project:** Global Economic News Intelligence
+**Project:** Global Economic News Intelligence  
+**Owner:** Project Owner
 **Last Updated:** 2026-11-18
 
 ---
