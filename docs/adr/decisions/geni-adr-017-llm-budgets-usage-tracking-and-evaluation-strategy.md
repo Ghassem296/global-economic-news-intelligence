@@ -3,9 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-017  
 **Title:** LLM Budgets, Usage Tracking, and Evaluation Strategy  
-**Version:** 0.2  
 **Status:** Proposed  
-**Priority:** P1  
+**Version:** 1.0  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -16,121 +15,136 @@
 
 ## 1. Context and Problem Statement
 
-LLM providers and models vary in cost, latency, availability, context limits, and output quality. Without task-level budgets and evaluation, provider changes can create hidden cost growth or quality regressions. Model-reported confidence is not automatically calibrated.
+LLM calls vary by model, provider, task, prompt size, latency, availability, and output quality. Without budgets and consistent usage telemetry, cost can grow unpredictably and quality regressions may go unnoticed. Model-reported confidence is not a calibrated measure of correctness. GENI must evaluate task quality independently from provider API success and connect usage to workflow and analysis versions.
 
-This ADR is a proposal for formal review. It does not approve an implementation or override another decision. The existence of this document does not imply acceptance.
+This ADR is a proposal for formal review; it does not authorize implementation as accepted architecture.
 
 ## 2. Decision Question
 
-How should model usage be bounded and measured, and how should model/prompt changes be evaluated before production use?
+How should LLM usage be budgeted, measured, evaluated, and governed across providers and workflow stages?
 
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-
-- Cost and latency control per workflow stage.
-- Provider-independent usage records with explicit unknown values.
-- Task-specific quality evaluation and regression detection.
-- Traceability of model, prompt, schema, and configuration versions.
-- Fallback behavior must not silently alter decision semantics.
+- Define configurable budgets at task, workflow, and operational levels.
+- Record provider, model, task, prompt/schema versions, token usage, latency, retry count, and known cost where available.
+- Distinguish provider-reported, internally estimated, and unavailable usage/cost.
+- Use task-specific quality datasets and rubrics.
+- Measure quality, cost, and latency together.
+- Make fallback explicit, observable, and subject to task compatibility.
+- Handle budget exhaustion without corrupting workflow state.
 
 ### 3.2 Technical Constraints
-
-- Domain contracts must not depend on a specific external provider unless explicitly approved.
-- All relevant policies, schemas, and derived outputs must be versioned.
-- Critical state transitions must be auditable and testable.
-- Missing or unavailable information must remain explicit.
+- Provider pricing and usage fields differ and may change.
+- Not all providers return reliable costs or token details.
+- Material task evaluation requires human-reviewed reference data.
+- Provider-independent execution is governed by ADR-006.
 
 ### 3.3 Business and Product Constraints
-
-- The initial product must remain operationally simple.
-- Implementation sequencing must follow documented dependencies.
-- Product claims must not exceed the capability or evidence actually available.
+- The initial product remains event-centric economic intelligence with text reports as its first release.
+- The design must support incremental implementation and explicit evaluation.
+- Proposals remain provisional until the decision owner records approval.
 
 ### 3.4 Security and Privacy Constraints
-
-- External source content and model output are untrusted input.
-- Credentials and sensitive operational data must not be exposed in ordinary logs.
-- Access to privileged actions must follow least-privilege authorization.
+- Source content and model output are untrusted until validated.
+- Only authorized application services and reviewers may change authoritative state.
+- Secrets and unnecessary protected content must not appear in ordinary logs.
 
 ### 3.5 Operational and Cost Constraints
-
-- Concurrency, retries, resource usage, and external service calls must be bounded.
-- Operational metrics must make failure and uncertainty visible.
-- Numeric thresholds must be based on measurements or explicit policy approval.
+- Avoid unnecessary distributed infrastructure in the initial release.
+- Measure cost and complexity against workload and reliability requirements.
+- Failures, retries, recovery, and audit must be observable.
 
 ### 3.6 Legal and Content-Rights Constraints
-
-- Technical access does not imply permission to store, process, transform, or republish content.
-- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed where applicable.
+- Access does not itself authorize retention, external processing, transformation, quotation, or republication.
+- Source terms, licensing, privacy, and jurisdictional restrictions must be reviewed before production use.
 
 ### 3.7 Explicit Non-Goals
-
-- This ADR does not set unmeasured numeric service levels or model-quality thresholds.
-- This ADR does not select a vendor or provider where comparative evidence is unavailable.
-- This ADR does not approve its recommendation; explicit Project Owner approval remains required.
+- This ADR does not invent unmeasured numerical thresholds or performance guarantees.
+- This ADR does not approve a provider, database, or model merely by listing it as an alternative.
+- This proposal does not supersede the ADR approval process.
 
 ## 4. Alternatives Considered
 
-### 4.1 A — Rely on provider defaults and invoices
+### 4.1 Alternative A — Unbounded model use
 
-**Advantages:** Minimal integration work.
+**Description:** Allow components to invoke models without shared budgets or consistent accounting.
 
-**Disadvantages:** No task-level attribution, weak budgets, and delayed detection of regressions.
+**Advantages:**
+- Minimal implementation work.
 
-**Risk:** High
+**Disadvantages:**
+- No cost ceiling or comparable telemetry.
 
-### 4.2 B — Apply one global request limit
+**Risks:**
+- Unexpected spend and unnoticed task proliferation.
 
-**Advantages:** Simple operational cap.
+**Estimated Complexity:** Low initially
 
-**Disadvantages:** Does not account for task criticality, token usage, quality, or provider price differences.
+### 4.2 Alternative B — Fixed global call cap
 
-**Risk:** Medium
+**Description:** Apply one request-count or token limit to the entire product.
 
-### 4.3 C — Versioned per-task budgets, usage telemetry, and evaluation gates
+**Advantages:**
+- Simple operational guardrail.
 
-**Advantages:** Links resource consumption to task quality and provider changes.
+**Disadvantages:**
+- Does not distinguish task value, pricing, or quality.
 
-**Disadvantages:** Requires normalized telemetry and evaluation datasets.
+**Risks:**
+- Useful tasks may be blocked while low-value usage continues.
 
-**Risk:** Medium
+**Estimated Complexity:** Low
 
+### 4.3 Alternative C — Task/workflow budgets with telemetry and evaluation
+
+**Description:** Apply scoped budgets, record normalized usage, and evaluate task quality/cost/latency with controlled fallback.
+
+**Advantages:**
+- Task-aware controls and comparable data.
+
+**Disadvantages:**
+- Requires usage schema, price catalog maintenance, and evaluation operations.
+
+**Risks:**
+- Incomplete provider data may limit cost accuracy.
+
+**Estimated Complexity:** Medium
 
 ## 5. Evaluation and Comparison
 
-The following qualitative comparison is an architectural assessment, not a measured benchmark.
+The comparison is qualitative and reflects architectural fit, not measured performance or cost.
 
-| Criterion | Alternative A | Alternative B | Alternative C |
+| Evaluation Criterion | Unbounded model use | Fixed global call cap | Task/workflow budgets with telemetry and evaluation |
 |---|---|---|---|
-| Fit with product requirements | Limited / context-dependent | Partial | Strongest overall fit |
-| Operational complexity | Low | Medium | Medium |
-| Auditability and traceability | Limited | Partial | Strong |
-| Ability to evolve | Low to Medium | Medium | High |
-| Principal trade-off | Simplicity or incomplete capability | Partial separation | More explicit contracts and governance |
+| Cost predictability | Low | Medium | High potential |
+| Task sensitivity | Low | Low | High |
+| Quality visibility | Low | Low | High |
+| Provider comparison | Low | Low | High |
 
-The recommendation favors Alternative C because it preserves the domain distinctions and operational controls required by the product. Any quantitative comparison must be performed against representative workload and evaluation data.
+The requirements in Section 3 are the primary decision drivers. Unmeasured cost and performance values are intentionally left unspecified.
 
 ## 6. Recommended Decision
 
-Apply configurable budgets at task, workflow, and deployment levels. Record provider/model, request type, prompt and schema versions, usage quantities where supplied, latency, retries, outcome, and estimated/actual cost with the cost source and timestamp. Preserve unknown usage/cost as unknown. Maintain task-specific evaluation datasets and regression baselines. Fallback models and providers must be explicitly configured and evaluated; budget exhaustion must produce a deterministic workflow outcome.
+**Recommended Alternative:** Alternative C — Task- and workflow-scoped budgets, normalized usage telemetry, and task-specific evaluation.
 
-### 6.1 Decision Boundaries
+The shared LLM execution layer should enforce configurable per-task and per-workflow limits, with an operational ceiling. Each execution records provider/model, task, prompt/schema/config versions, available token usage, latency, retry/fallback data, and cost provenance. Budget breach must produce an explicit normalized outcome or use an approved fallback; it must not silently change models or bypass the budget. Evaluation datasets and rubrics must measure task quality, cost, and latency. Numeric budgets and quality thresholds remain configuration decisions grounded in measured workload and approved economics.
 
-- Define normalized LLMUsageRecord fields and provider-specific raw metadata retention.
-- Separate input/output token counts, cached tokens, billed units, latency, and cost; do not infer unavailable provider metrics.
-- Define budgets per task class and maximum workflow spend/time.
-- Record model identifier, provider, prompt version, output schema version, temperature/configuration, and tool policy.
-- Build evaluation datasets for extraction, classification, matching assistance, summarization, and report generation.
-- Track task-specific precision/recall or rubric-based quality, schema validity, latency, and cost.
-- Require regression evaluation for model, prompt, or schema changes.
-- Define safe fallback and manual-review behavior when budgets or providers fail.
+**Rationale:**
+- Provides cost controls aligned with task value.
+- Makes provider/model performance comparable where telemetry permits.
+- Connects regression detection to reproducible task versions.
 
-### 6.2 Assumptions and Open Questions
+**Deferred Questions:**
+- Initial per-task token/cost budgets.
+- Provider-specific pricing catalog and refresh frequency.
+- Fallback policies and acceptable quality degradation.
+- Evaluation thresholds and sampling/review rates.
 
-- The recommendation is based on the current product and architecture documents.
-- Any numeric threshold, provider selection, or legal interpretation not supported by evidence remains open.
-- The Project Owner may accept, reject, or request revision of this recommendation.
+**Recommendation Prepared By:** AI Architecture Assistant  
+**Recommendation Date:** 2026-11-18
+
+A recommendation is not an approval. The Project Owner must explicitly accept or reject this proposal.
 
 ## 7. Final Decision
 
@@ -140,167 +154,154 @@ Apply configurable budgets at task, workflow, and deployment levels. Record prov
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded. The recommendation in Section 6 is awaiting review.
+**Decision Rationale:** Pending formal review; Section 6 contains the recommendation.
 
 **Conditions or Restrictions:**
-
-- Do not treat this proposal as an accepted architectural constraint.
-- Do not implement irreversible changes solely on the basis of this recommendation.
-- Record any interim implementation assumption and its review trigger.
+- Maintain Proposed status until explicit approval is recorded.
+- Do not treat deferred questions or example values as settled implementation details.
+- Any temporary implementation assumption must be reversible and documented with a review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-
-- Makes the relevant domain or operational boundary explicit.
-- Improves traceability and repeatability.
-- Provides a basis for measurable verification and future revision.
+- More predictable model usage.
+- Evidence-based provider/model decisions.
+- Quality and cost can be reviewed together.
 
 ### 8.2 Negative Consequences
-
-- Adds implementation and documentation work.
-- Some policy details remain open pending data, legal review, or operational measurements.
-- Dependent components may need coordinated changes after approval.
+- Requires telemetry normalization and pricing-data maintenance.
+- Evaluation datasets and human review consume resources.
 
 ### 8.3 Technical Trade-Offs
-
-Alternative C favors explicit contracts and traceability over the smallest possible implementation. Provider-specific behavior or domain-specific exceptions must remain visible rather than being hidden behind an abstraction that implies guarantees the system does not have.
+Budgets should be enforceable but task-aware. A single global call limit is too crude; unbounded per-task spending is unsafe. Cost estimates must retain provenance and must not be represented as exact when provider data is incomplete.
 
 ### 8.4 Operational Consequences
-
-The implementation will require monitoring, recovery, and review procedures appropriate to the selected capability. Failure modes and unknown outcomes must be observable.
+Monitor usage by task, provider, model, source class, and workflow. Alert on budget exhaustion, cost drift, retries, fallback, and quality regression.
 
 ### 8.5 Product and Business Consequences
-
-The recommendation is intended to support the product's evidence-based economic intelligence purpose. It must not create user-facing promises that exceed actual source coverage, data quality, or review capacity.
+The product can prioritize model calls that materially improve intelligence while controlling unpredictable costs.
 
 ### 8.6 Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Proposal mistaken for approval | Keep status Proposed until explicit approval is recorded. |
-| Over-specification without evidence | Leave thresholds and provider choices open until measured. |
-| Cross-document inconsistency | Synchronize affected documents and registry after approval. |
-| Implementation cannot satisfy a proposed guarantee | Report the conflict and revise the ADR rather than silently weakening the contract. |
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Cost estimation error | Medium | Medium | Record cost provenance and uncertainty; refresh pricing data. |
+| Quality regression after model change | Medium | High | Version tasks and run regression evaluation before rollout. |
+| Budget too restrictive | Medium | Medium | Tune using measured task value and explicit escalation. |
+| Silent fallback quality loss | Medium | High | Require explicit fallback policy and output comparison. |
 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-
-- Define normalized LLMUsageRecord fields and provider-specific raw metadata retention.
-- Separate input/output token counts, cached tokens, billed units, latency, and cost; do not infer unavailable provider metrics.
-- Define budgets per task class and maximum workflow spend/time.
-- Record model identifier, provider, prompt version, output schema version, temperature/configuration, and tool policy.
-- Build evaluation datasets for extraction, classification, matching assistance, summarization, and report generation.
-- Track task-specific precision/recall or rubric-based quality, schema validity, latency, and cost.
-- Require regression evaluation for model, prompt, or schema changes.
-- Define safe fallback and manual-review behavior when budgets or providers fail.
+- SharedLLMExecutionLayer
+- WorkflowOrchestrator
+- ObservabilityService
+- Task evaluation runners
 
 ### 9.2 Affected Data Models and Interfaces
-
-The relevant interfaces, persistence fields, constraints, and version metadata must be updated only after the proposal is approved and the implementation design is reviewed.
+- LLMUsageRecord
+- TaskExecutionRecord
+- Model/Prompt/Schema configuration versions
+- EvaluationRun and EvaluationResult
 
 ### 9.3 Affected Documents
-
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
+- docs/01-product-and-system-architecture.md
+- docs/02-component-architecture-and-interfaces.md
+- docs/03-data-model-and-storage-design.md
+- docs/04-implementation-plan-and-roadmap.md
 
 ### 9.4 Related ADRs
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-006 | Depends on | Defines the shared provider-independent LLM execution interface. |
+| GENI-ADR-007 | Related to | Defines bounded model reasoning inside deterministic workflows. |
+| GENI-ADR-016 | Related to | Defines durable budget outcomes and workflow recovery. |
+| GENI-ADR-008 | Related to | Defines uncertainty and limits on treating model confidence as truth. |
 
-See the related ADR references in the registry. These dependencies do not imply that related Proposed ADRs have been accepted.
+These relationships do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-
-- Define normalized LLMUsageRecord fields and provider-specific raw metadata retention.
-- Separate input/output token counts, cached tokens, billed units, latency, and cost; do not infer unavailable provider metrics.
-- Define budgets per task class and maximum workflow spend/time.
-- Record model identifier, provider, prompt version, output schema version, temperature/configuration, and tool policy.
-- Build evaluation datasets for extraction, classification, matching assistance, summarization, and report generation.
-- Track task-specific precision/recall or rubric-based quality, schema validity, latency, and cost.
-- Require regression evaluation for model, prompt, or schema changes.
-- Define safe fallback and manual-review behavior when budgets or providers fail.
+- Define normalized usage and cost-provenance schema.
+- Add task/workflow budget configuration and enforcement.
+- Record provider/model/prompt/schema/config identifiers.
+- Implement pricing catalog versioning where cost estimates are required.
+- Create human-reviewed task-specific reference datasets and rubrics.
+- Build quality/cost/latency reports and regression gates.
+- Define explicit provider fallback compatibility and observability.
 
 ### 10.2 Migration or Compatibility Requirements
-
-No runtime or database migration is authorized by this proposal. If accepted, existing records and historical provenance must be inspected before a migration is designed. Migration must preserve audit history and must be tested from the current baseline.
+Inspect the actual implementation and data before defining migration. This proposal does not claim that a migration or implementation is complete. Any migration must preserve applicable history, provenance, and compatibility.
 
 ### 10.3 Dependencies
-
-Implementation sequencing must respect the dependencies recorded in the ADR Registry and the related decision documents.
+- GENI-ADR-006 — Defines the shared provider-independent LLM execution interface.
+- GENI-ADR-007 — Defines bounded model reasoning inside deterministic workflows.
+- GENI-ADR-016 — Defines durable budget outcomes and workflow recovery.
+- GENI-ADR-008 — Defines uncertainty and limits on treating model confidence as truth.
 
 ### 10.4 Implementation Sequence
-
-1. Obtain explicit Project Owner approval.
-2. Update affected architecture and data-model contracts.
-3. Define versioned interfaces and migration requirements.
-4. Implement the smallest end-to-end slice.
-5. Add focused automated and integration tests.
-6. Validate operational behavior and update implementation status separately from ADR status.
+1. Define usage schema and budget scopes.
+2. Implement enforcement at task and workflow boundaries.
+3. Record provider/model/prompt/schema versions and usage provenance.
+4. Create representative datasets and evaluation rubrics.
+5. Compare model quality, cost, and latency by task.
+6. Introduce explicit fallback and rollout gates.
 
 ### 10.5 Verification Requirements
+- Test budget exhaustion before and during execution.
+- Verify unavailable cost is not recorded as zero.
+- Verify provider-reported and internally estimated costs remain distinguishable.
+- Compare models on the same task dataset and output schema.
+- Test fallback and ensure it is never silent.
+- Verify prompt/model changes trigger traceable evaluation.
 
-- Every LLM call is associated with a task and execution context.
-- Provider/model/prompt/schema versions are traceable for each result.
-- Unknown usage and cost are not represented as zero.
-- Budgets are enforced before or during execution at configured boundaries.
-- Fallback behavior is explicit and does not bypass decision or review policy.
-- Model/prompt updates run task-specific regression evaluation before release.
-- Cost and quality metrics are not combined into one opaque score.
+Implementation verification remains deferred until formal acceptance and implementation of the dependent capability.
 
 ## 11. Acceptance Criteria
-
-| ID | Acceptance Criterion | Verification |
+| ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | Every LLM call is associated with a task and execution context. | Architecture review and automated tests where applicable |
-| AC-02 | Provider/model/prompt/schema versions are traceable for each result. | Architecture review and automated tests where applicable |
-| AC-03 | Unknown usage and cost are not represented as zero. | Architecture review and automated tests where applicable |
-| AC-04 | Budgets are enforced before or during execution at configured boundaries. | Architecture review and automated tests where applicable |
-| AC-05 | Fallback behavior is explicit and does not bypass decision or review policy. | Architecture review and automated tests where applicable |
-| AC-06 | Model/prompt updates run task-specific regression evaluation before release. | Architecture review and automated tests where applicable |
-| AC-07 | Cost and quality metrics are not combined into one opaque score. | Architecture review and automated tests where applicable |
+| AC-01 | LLM execution records task, provider/model, and prompt/schema versions. | Telemetry tests |
+| AC-02 | Budget limits are enforced at configured scopes. | Policy tests |
+| AC-03 | Known, estimated, and unavailable cost are distinct. | Accounting tests |
+| AC-04 | Fallback is explicit and observable. | Execution integration tests |
+| AC-05 | Task quality is measured on reviewed reference data. | Evaluation report |
+| AC-06 | Budget and quality changes are versioned and auditable. | Configuration/history tests |
 
-Quantitative thresholds must be established using representative evaluation data or operational measurements. This ADR intentionally does not invent numerical targets.
+Any quantitative threshold must be supported by representative datasets, measurements, or formal policy review.
 
 ## 12. Review and Reconsideration
 
 ### 12.1 Review Triggers
-
-- A provider changes pricing or usage reporting.
-- A model or prompt version changes.
-- Actual usage exceeds configured budgets.
-- Quality regression or output-schema failure increases.
-- New regulated or sensitive data-processing constraints arise.
+- Provider pricing, usage telemetry, or model capabilities materially change.
+- Measured cost or quality violates an approved objective.
+- New high-cost task classes or external providers are introduced.
 
 ### 12.2 Review Schedule
-
 **Review Date:** Not scheduled  
 **Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
-
-Reconsider this proposal if its assumptions become invalid, evaluation results contradict the recommendation, or product/legal/operational requirements materially change. A replacement of an accepted decision requires a new ADR or an explicitly approved superseding record.
+Reconsider when assumptions are invalidated or measurements show the proposal fails project requirements. A replacement must be recorded through the ADR lifecycle.
 
 ## 13. References and Supporting Evidence
 
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/05-architecture-decision-records.md`
-- `docs/adr/README.md`
-- Related decision topics are listed in the ADR Registry.
+The references below are internal project sources used to establish documented context. They are not empirical performance benchmarks or legal opinions.
 
-The current internal documents establish architectural context. They do not substitute for external legal advice, provider capability verification, or empirical performance measurements.
+| Reference | Type | Relevance |
+|---|---|---|
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines SharedLLMExecutionLayer and normalized usage/error contracts. |
+| `docs/03-data-model-and-storage-design.md` | Internal | Defines LLM usage persistence. |
+| `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines shared LLM and evaluation stages. |
+| `GENI-ADR-006` | Internal | Provider-independent execution. |
+| `GENI-ADR-007` | Internal | Workflow-first bounded reasoning. |
+| `GENI-ADR-008` | Internal | Uncertainty representation. |
+
+External legal, provider, and empirical evidence must be added during formal review where relevant.
 
 ## 14. Decision History
 
-| Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
-| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+| Date | Version | Status | Change |
+|---|---|---|---|
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 
 **End of ADR**
