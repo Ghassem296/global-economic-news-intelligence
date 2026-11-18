@@ -395,36 +395,10 @@ def extract_section(content: str, start: str, end: str, label: str) -> str:
     return content[start_index:end_index]
 
 
-def repository_names_from_list(section: str) -> set[str]:
+def repository_names(section: str) -> set[str]:
+    """Extract Repository identifiers from exact Markdown code spans."""
     tick = chr(96)
-    values = set()
-    for line in section.splitlines():
-        stripped = line.strip()
-        if not stripped.startswith("- "):
-            continue
-        name = stripped[2:].strip()
-        if name.startswith(tick) and name.endswith(tick):
-            name = name[1:-1]
-        if name.endswith("Repository"):
-            values.add(name)
-    return values
-
-
-def repository_names_from_crosswalk(section: str) -> set[str]:
-    tick = chr(96)
-    values = set()
-    for line in section.splitlines():
-        if not line.strip().startswith("|"):
-            continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if not cells:
-            continue
-        name = cells[0]
-        if name.startswith(tick) and name.endswith(tick):
-            name = name[1:-1]
-        if name.endswith("Repository"):
-            values.add(name)
-    return values
+    return set(re.findall(tick + r"([A-Za-z0-9]+Repository)" + tick, section))
 
 
 def validate_repository_inventory_alignment() -> None:
@@ -449,9 +423,9 @@ def validate_repository_inventory_alignment() -> None:
         "## 7. Workflow Contracts",
         "Document 02 repository crosswalk",
     )
-    component_names = repository_names_from_list(component_list)
-    data_names = repository_names_from_list(data_list)
-    crosswalk_names = repository_names_from_crosswalk(crosswalk)
+    component_names = repository_names(component_list)
+    data_names = repository_names(data_list)
+    crosswalk_names = repository_names(crosswalk)
     if component_names != data_names:
         fail(
             "Repository inventory mismatch: "
