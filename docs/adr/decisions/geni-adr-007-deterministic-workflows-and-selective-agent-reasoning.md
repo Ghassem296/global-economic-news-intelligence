@@ -4,9 +4,9 @@
 **ADR ID:** GENI-ADR-007  
 **Title:** Deterministic Workflows and Selective Agent Reasoning  
 **Status:** Proposed  
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 2026-11-18  
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
@@ -324,5 +324,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | Date | Version | Status | Change |
 |---|---|---|---|
 | 2026-11-18 | 1.0 | Proposed | Initial proposal prepared for architecture review |
+| 2026-11-18 | 1.1 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. |
 
 **End of ADR**
