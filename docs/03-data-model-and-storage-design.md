@@ -741,11 +741,14 @@ Fields:
 - `overall_score`
 - `matching_method`
 - `matching_policy_version`
+- `candidate_input_fingerprint` — deterministic fingerprint of the ArticleRevision/development scope, candidate Event version, and evaluation inputs/configuration
 - `candidate_status`
 - `evaluation_reason`
 - `created_at`
 - `evaluated_at`
 - `metadata`
+
+Each candidate record represents one versioned evaluation of one candidate Event within one case. An evaluated candidate record is immutable. A changed matching policy or changed evaluation input creates a new candidate record rather than overwriting the earlier evaluation. Repeating an identical evaluation input must resolve to the same logical candidate record through its fingerprint.
 
 Candidate status describes processing only (for example `GENERATED`, `EVALUATED`, `INELIGIBLE`, or `SUPERSEDED`). `ACCEPTED` and `REJECTED` are prohibited candidate statuses because acceptance or rejection is a case-level decision, not a property of candidate retrieval.
 
@@ -794,6 +797,8 @@ Constraints:
 
 - Every EventMatchCandidate must belong to exactly one EventMatchCase.
 - Every EventMatchCase must identify exactly one ArticleRevision and one development scope.
+- `(case_id, candidate_event_id, matching_policy_version, candidate_input_fingerprint)` must be unique for idempotent candidate evaluation while permitting historical evaluations under changed inputs or policy versions.
+- An evaluated EventMatchCandidate is immutable; a new evaluation creates a new candidate record.
 - Every EventMatchDecision must belong to exactly one case.
 - A selected candidate must belong to the same case as its decision.
 - A case may have multiple historical decisions, but only one effective decision at a time; the EventMatchCase.effective_decision_id pointer identifies it.
@@ -2019,7 +2024,7 @@ Where applicable, enforce:
 - Source-scoped external article identity.
 - Article revision number uniqueness.
 - Event match case uniqueness by ArticleRevision and development key.
-- Candidate uniqueness by case and candidate Event.
+- Candidate evaluation uniqueness by case, candidate Event, matching-policy version, and candidate input fingerprint.
 - One effective decision pointer per EventMatchCase.
 - At most one direct successor per superseded EventMatchDecision.
 - At most one active ArticleEventLink per EventMatchCase, with historical inactive links retained.
