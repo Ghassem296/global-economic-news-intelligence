@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -663,6 +663,7 @@ The domain model must support:
 
 - Source identity.
 - External and canonical identifiers.
+- Current revision reference to the latest accepted ArticleRevision.
 - Original URL.
 - Title and available content references.
 - Original source language.
@@ -688,6 +689,7 @@ Fields:
 - `title`
 - `content_reference` — reference to content retained or accessed under the applicable rights policy
 - `content_hash`
+- `content_normalization_version`
 - `summary` nullable
 - `language`
 - `observed_at`
@@ -735,7 +737,7 @@ The domain model must support:
 - Resolution information.
 - Event history.
 
-Importance and economic impact assessments should be stored with their methodology and version metadata rather than treated as unqualified permanent properties.
+Event Importance, Economic Relevance, and Economic Impact assessments must be stored as separate versioned Analysis records with their methodology and schema metadata rather than treated as unqualified permanent Event properties.
 
 ### 5.6 EventMatchCase
 
