@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.39
+**Version:** 1.40
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1661,6 +1661,10 @@ A decision is an immutable record. A new decision must be created when the publi
 
 The system must preserve which policy version produced the decision. The current effective decision must be derived through an explicit supersession rule. Historical decisions must remain queryable.
 
+The effective-decision rule must yield at most one effective PublicationDecision for the exact immutable report version. The predecessor-selection and concurrent-append guard are not yet specified as a complete algorithm; timestamps or storage order must not be used as an implicit tie-breaker. A successor decision must preserve the exact predecessor and be committed under a concurrency check that prevents two competing effective successors.
+
+The current field catalogue does not include decision-actor identity or an authorization/provenance reference, although GENI-IMPL-015 §4.12 requires actor/provenance on the append command/result. This is a documented cross-document contract mismatch. The required provenance fields and their authoritative source must be reconciled before implementation; neither requirement may be silently dropped or represented by unvalidated free text.
+
 A `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision authorizes a publication operation only while it remains effective and all other authorization, rights, and target requirements are satisfied. It does not prove that publication occurred.
 
 For `PUBLISH_WITH_CAVEATS`, the caveats must be explicit and must be included in the published representation.
@@ -1883,6 +1887,8 @@ Attempt outcomes:
 - `RECONCILED_NOT_APPLIED`
 
 Each attempt must be separately traceable. An `OUTCOME_UNKNOWN` result must place the PublicationRecord in `RECONCILIATION_REQUIRED`. Reconciliation must determine whether the external effect occurred before the operation is retried or finalized.
+
+The complete mapping from every PublicationAttempt outcome to PublicationRecord status and permitted next action is not yet defined as a transition table. In particular, the contract must specify the result of `CONFIRMED_FAILURE`, the state after `RECONCILED_NOT_APPLIED`, the transition from reconciliation back to a retryable execution state, and the conditions under which a failed or cancelled logical operation is terminal. The documented same-operation retry rule retains the original idempotency key; it does not by itself define the status transition or authorize a new logical operation.
 
 ## 12. Delivery Records
 
