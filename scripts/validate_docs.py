@@ -150,28 +150,52 @@ def validate_adrs() -> None:
 
 
 
+def markdown_heading_anchors(content: str) -> set[str]:
+    """Return GitHub-style heading anchors and explicit HTML anchors."""
+    text = markdown_content_without_fences(content)
+    anchors: set[str] = set()
+    used: dict[str, int] = {}
+    for explicit in re.findall(r"""<(?:a|span)\b[^>]*\bid=["']([^"']+)["']""", text, re.IGNORECASE):
+        anchors.add(explicit)
+    tick = chr(96)
+    for line in text.splitlines():
+        match = re.match(r"^#{1,6}\s+(.+?)\s*#*\s*$", line)
+        if not match:
+            continue
+        heading = match.group(1)
+        heading = re.sub(r"!?\\[([^\\]]+)\\]\\([^)]+\\)", r"\1", heading)
+        heading = re.sub(re.escape(tick) + r"([^" + re.escape(tick) + r"]+)" + re.escape(tick), r"\1", heading)
+        heading = re.sub(r"<[^>]+>", "", heading)
+        heading = re.sub(r"[!*_~]", "", heading)
+        heading = heading.lower().strip()
+        slug = re.sub(r"[^\w\- ]", "", heading, flags=re.UNICODE)
+        slug = re.sub(r"\s+", "-", slug).strip("-")
+        count = used.get(slug, 0)
+        used[slug] = count + 1
+        anchors.add(slug if count == 0 else f"{slug}-{count}")
+    return anchors
+
+
 def validate_markdown_links() -> None:
-    """Verify every local inline Markdown link resolves inside the repository."""
-    link_pattern = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+    """Verify local Markdown file paths and fragment targets."""
+    link_pattern = re.compile(r"!?\\[[^\\]]*\\]\\(([^)]+)\\)")
     for source in sorted(ROOT.rglob("*.md")):
         if ".git" in source.parts:
             continue
-        content = read_text(source)
+        content = markdown_content_without_fences(read_text(source))
         for match in link_pattern.finditer(content):
             destination = match.group(1).strip()
             if destination.startswith("<") and ">" in destination:
                 destination = destination[1:destination.index(">")]
             else:
                 destination = destination.split(maxsplit=1)[0] if destination else ""
-            if not destination or destination.startswith("#"):
+            if not destination:
                 continue
             parsed = urlsplit(destination)
             if parsed.scheme or parsed.netloc:
                 continue
             relative_target = unquote(parsed.path)
-            if not relative_target:
-                continue
-            target = (
+            target = source if not relative_target else (
                 ROOT / relative_target.lstrip("/")
                 if relative_target.startswith("/")
                 else source.parent / relative_target
@@ -181,6 +205,58 @@ def validate_markdown_links() -> None:
                     f"Broken Markdown link in {source.relative_to(ROOT)}: "
                     f"{destination}"
                 )
+            if parsed.fragment:
+                fragment = unquote(parsed.fragment)
+                anchors = markdown_heading_anchors(read_text(target))
+                if fragment not in anchors:
+                    fail(
+                        f"Broken Markdown heading anchor in "
+                        f"{source.relative_to(ROOT)}: {destination}"
+                    )
+
+
+def validate_markdown_table_structure() -> None:
+    """Validate Markdown table header/separator widths and every data-row width."""
+    separator_pattern = re.compile(
+        r"^\\|\\s*:?-{3,}:?\\s*(?:\\|\\s*:?-{3,}:?\\s*)+\\|$"
+    )
+    for source in sorted(ROOT.rglob("*.md")):
+        if ".git" in source.parts:
+            continue
+        lines = markdown_content_without_fences(read_text(source)).splitlines()
+        index = 0
+        while index < len(lines) - 1:
+            header = lines[index].strip()
+            separator = lines[index + 1].strip()
+            if not (
+                header.startswith("|")
+                and header.endswith("|")
+                and separator_pattern.match(separator)
+            ):
+                index += 1
+                continue
+            expected = len(header[1:-1].split("|"))
+            separator_columns = len(separator[1:-1].split("|"))
+            if expected != separator_columns:
+                fail(
+                    f"Markdown table header/separator width mismatch in "
+                    f"{source.relative_to(ROOT)} at line {index + 1}: "
+                    f"header={expected}, separator={separator_columns}"
+                )
+            row = index + 2
+            while row < len(lines):
+                candidate = lines[row].strip()
+                if not (candidate.startswith("|") and candidate.endswith("|")):
+                    break
+                actual = len(candidate[1:-1].split("|"))
+                if actual != expected:
+                    fail(
+                        f"Markdown table row width mismatch in "
+                        f"{source.relative_to(ROOT)} at line {row + 1}: "
+                        f"expected={expected}, actual={actual}"
+                    )
+                row += 1
+            index = row
 
 
 def validate_review_contract_alignment() -> None:
@@ -527,6 +603,10 @@ def validate_distribution_authorization_contract() -> None:
         "docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md": (
             "every exact source-derived content scope",
             "complete set of exact allowed RightsAssessment references",
+            "RFC 8785 JSON Canonicalization Scheme",
+            "outbound_payload_sha256",
+            "upstream permission dependency",
+            "fail closed",
         ),
     }
     for relative, required_terms in required_by_document.items():
@@ -543,6 +623,7 @@ def main() -> None:
     validate_document_footer_metadata()
     validate_adr_history_versions()
     validate_markdown_links()
+    validate_markdown_table_structure()
     validate_review_contract_alignment()
     validate_first_slice_review_set()
     validate_repository_inventory_alignment()
@@ -551,7 +632,7 @@ def main() -> None:
     print(
         "Documentation validation passed: controlled and duplicate versions, "
         "all 19 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
-        "local Markdown links, Review family activation, repository inventory/crosswalk parity, "
+        "local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
         "event identity-operation history/recovery, and multi-source distribution authorization."
     )
 
