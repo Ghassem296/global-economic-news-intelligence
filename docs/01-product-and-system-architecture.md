@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.18  
+**Version:** 1.19  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -74,6 +74,8 @@ The initial release includes:
 - Basic monitoring, evaluation, and observability.
 
 The initial release must remain operationally simple and must not require audio, video, advanced personalization, or mandatory cloud infrastructure.
+
+The initial review implementation is limited to article-deduplication, event-matching, and publication reviews. Claim-assessment, report-version, and content-rights reviews remain architecturally mapped but are disabled until their successor workflows and authorization tests are implemented.
 
 ### 3.2 Future Product Releases
 
@@ -539,6 +541,8 @@ A timeout or connection failure must not be assumed to mean that an external pub
 
 Delivery must remain independent from publication. A delivery failure must not reverse a successful publication, and a successful delivery must not imply that a public publication exists. A delivery that sends a publication link must reference a confirmed successful publication operation. Direct delivery of report content may be allowed independently when the relevant delivery policy authorizes it.
 
+Every outbound recipient delivery must be authorized by an immutable, effective `DistributionAuthorizationDecision` bound to the exact report version, recipient, destination, delivery mode, channel, content scope, policy version, and validity interval. Where delivered content contains or derives from source material, the authorization must also reference the applicable allowed `CUSTOMER_DISTRIBUTION` RightsAssessment. A publication decision, source-rights permission, subscription record, or previously approved delivery must not independently substitute for this recipient- and operation-specific authorization. Missing, expired, revoked, denied, or review-required authorization blocks dispatch.
+
 The initial implementation must define the publication targets, authorized withdrawal mechanism, review owner, and supported delivery destinations. Secrets and credentials must be referenced through secure configuration and must not be stored in destination references or ordinary metadata.
 
 ### 5.11 Scheduling and Workflow Orchestration
@@ -847,13 +851,27 @@ Definitions:
 
 Not every event must pass through every state.
 
-State transitions must be validated against an explicit transition policy.
+The following transition matrix is the proposed baseline policy and must be enforced by the domain/application layer:
+
+| Current State | Allowed Next State | Guard |
+|---|---|---|
+| `DETECTED` | `ENRICHING` | Initial triage has passed and an accountable processing record exists. |
+| `ENRICHING` | `ACTIVE` | Minimum event identity, source attribution, and evidence/enrichment requirements are satisfied. |
+| `ENRICHING` | `RESOLVED` | A sufficiently evidenced short-lived development is already concluded; the resolution basis is recorded. |
+| `ACTIVE` | `MONITORING` | No material new development is currently expected, but continued monitoring remains justified. |
+| `ACTIVE` | `RESOLVED` | Explicit domain-specific resolution criteria and supporting evidence are recorded. |
+| `MONITORING` | `ACTIVE` | A material new development reactivates active monitoring. |
+| `MONITORING` | `RESOLVED` | Domain-specific resolution criteria are met and recorded. |
+| `MONITORING` | `ARCHIVED` | Retention/archival policy permits it and no unresolved high-priority work remains. |
+| `RESOLVED` | `MONITORING` | New material or contradictory evidence justifies an authorized reopening. |
+| `RESOLVED` | `ARCHIVED` | Retention and archival policy permits archival. |
+| `ARCHIVED` | `MONITORING` | Authorized restoration identifies new material evidence or a continuing monitoring need. |
+
+Any unlisted transition is rejected. A same-state request is an idempotent no-op and must not create a duplicate history event. Reopening or restoration requires an actor, reason, supporting evidence/context, and lifecycle-policy version. Archival does not delete an event or its history.
 
 `UPDATED` is not a persistent lifecycle state. It represents a material event-history occurrence that records a significant change in the event's information, evidence, or analytical understanding.
 
-Event history must preserve relevant transitions, updates, corrections, and resolution information.
-
-The complete transition rules and event identity policy are subject to the relevant ADRs and detailed specifications.
+Every accepted state transition must update the current event projection and append an EventHistory record in the same transaction. The record must contain previous and new states, actor, reason, policy version, and correlation/idempotency context. Lifecycle status must never be used as a substitute for event identity or merge/split disposition. The transition matrix and implementation gates are specified in Document 03 and GENI-ADR-011; any change must be reconciled across all three documents.
 
 ## 10. Publication Policy
 
