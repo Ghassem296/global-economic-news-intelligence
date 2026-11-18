@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.4
+**Version:** 1.5
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -840,7 +840,7 @@ This is the core product capability.
 5. Implement EventMatcher and semantic, lexical, entity, temporal, and geographic evaluation signals.
 6. Persist immutable EventMatchCandidate evaluations with matching-policy versions and input fingerprints.
 7. Implement case-level EventMatchDecision creation and supersession.
-8. Implement authorized event creation for NEW_EVENT_CANDIDATE outcomes; after creation, record the new Event as a candidate and create a subsequent MATCH decision before creating an ArticleEventLink.
+8. Implement the versioned EventCreationPolicy and authorized, idempotent creation for NEW_EVENT_CANDIDATE outcomes using the preassigned proposed_event_reference; after creation, record the new Event as a candidate and create a subsequent MATCH decision before creating an ArticleEventLink.
 9. Implement EventService application of MATCH decisions and case-scoped ArticleEventLink creation/deactivation.
 10. Implement ReviewService routing and successor-decision handling for ambiguous or corrected cases.
 11. Implement event lifecycle transitions, EventHistory, and event relationships.
