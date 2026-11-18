@@ -251,7 +251,7 @@ global-economic-news-intelligence/
 │   │       ├── GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md
 │   │       ├── GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md
 │   │       ├── GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md
-│   │       └── GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md
+│   │       ├── GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md
 │       └── GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md
 │   │
 │   └── references/
