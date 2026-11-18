@@ -195,7 +195,7 @@ This section records the formal outcome of the review.
 
 **Decision Status:** Proposed / Accepted / Rejected
 
-**Decision Owner:** Product Owner
+**Decision Owner:** Project Owner
 
 **Approved By:** [Name or Role / Not applicable]
 
@@ -340,7 +340,7 @@ Examples include:
 
 **Review Date:** [YYYY-MM-DD / Not scheduled]
 
-**Review Owner:** [Name or Role]
+**Review Owner:** [Name or Role; normally Project Owner unless delegated]
 
 ### 12.3 Reconsideration Conditions
 
