@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.17
+**Version:** 1.18
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -293,14 +293,26 @@ Defines environment separation, runtime responsibilities, deployment controls, o
 
 ## 3.14 Data Protection and Privacy Specification
 
-## 3.15 Privacy Architecture Decision
+**File:** `14-data-protection-and-privacy-specification.md`  
+**Document ID:** `GENI-PRIV-014`
 
-[GENI-ADR-020 — Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture](adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md) defines the proposed privacy execution model. See Documents 02, 03, 08, 09, 12, 13 and 14. The ADR remains Proposed pending explicit approval.
+Defines the proposed data-protection and privacy requirements, including the data inventory, processing purposes, minimization, retention and deletion, data-subject rights, processor and model-provider governance, international transfers, privacy incidents, and impact assessments.
 
-**File:** 14-data-protection-and-privacy-specification.md  
-**Document ID:** GENI-PRIV-014
+This is an engineering specification, not legal advice, a jurisdiction-specific compliance determination, or evidence that production processing is authorized.
 
-Defines data inventory, processing purposes, privacy principles, retention and deletion controls, data-subject request handling, processor/model-provider governance, international transfers, incident response, and privacy impact assessment expectations. This is a proposed engineering specification, not legal advice or evidence of compliance.
+**Consult this document when:**
+
+- Introducing or changing personal-data processing.
+- Sending data to an LLM or other external processor.
+- Defining retention, deletion, or data-subject request workflows.
+- Evaluating derived data, embeddings, exports, backups, or provider-held artifacts.
+- Reviewing international transfers, privacy incidents, or production readiness.
+
+**Authority:** Primary privacy and personal-data protection specification. Content-rights authorization remains a separate control.
+
+## 3.15 Related Privacy Architecture Decision
+
+[GENI-ADR-020 — Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture](adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md) defines the proposed privacy execution model across application workflows, data lineage, provider boundaries, and deletion propagation. It is related to Documents 02, 03, 08, 09, 12, 13, and 14. The ADR remains Proposed pending explicit approval.
 
 # 4. Architectural Decision Records
 
