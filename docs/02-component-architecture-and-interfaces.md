@@ -2,9 +2,10 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.26  
+**Version:** 1.27  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
+**Owner:** Project Owner  
 **Last Updated:** 2026-11-18
 
 ---
