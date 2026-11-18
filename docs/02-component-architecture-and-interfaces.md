@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.29  
+**Version:** 1.30  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1237,6 +1237,7 @@ The following map identifies the proposed authoritative application component fo
 | Source health and collection checkpoints | `NewsCollector` with `WorkflowOrchestrator` | Observations/checkpoints only; source configuration remains with `SourceRegistry`. |
 | Source rights profiles, permission assessments, retention and deletion records | `ContentRightsService` | Must fail closed on unknown permission and preserve policy/version provenance. |
 | Article current projection and immutable ArticleRevision | `ArticleRevisionService` | Atomically creates/reuses a revision and updates the current projection. |
+| ArticleProcessingRecord | Article Processing Workflow | Tracks article processing attempts and stage outcomes; it does not own source identity or immutable revision content. |
 | Duplicate candidates | `ArticleDeduplicator` | Produces immutable candidate evidence only; does not decide duplicate identity. |
 | Duplicate decisions | Article Deduplication Workflow | Applies the versioned duplicate policy and persists immutable DuplicateDecision/supersession history; never deletes source Articles. |
 | Topic classification | `TopicClassifier` | Versioned result for an exact ArticleRevision. |
