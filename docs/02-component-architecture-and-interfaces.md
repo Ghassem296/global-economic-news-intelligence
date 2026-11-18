@@ -674,7 +674,7 @@ Responsibilities:
 
 - Maintain and retrieve versioned source-rights profiles and policy references.
 - Record content-access provenance and the exact source/content revision where available.
-- Evaluate permissions separately for metadata access, full-text access, temporary processing, persistent storage, internal analysis, external LLM processing, embedding/translation, derived-output generation, quotation, customer distribution, and republication.
+- Evaluate permissions using the canonical operation catalog in GENI-ADR-013: `DISCOVERY`, `METADATA_ACCESS`, `FULL_TEXT_ACCESS`, `TEMPORARY_PROCESSING`, `PERSISTENT_STORAGE`, `INTERNAL_ANALYSIS`, `EXTERNAL_LLM_PROCESSING`, `DERIVED_OUTPUT_GENERATION`, `TRANSLATION`, `EMBEDDING_GENERATION`, `QUOTATION`, `AUDIO_TRANSFORMATION`, `VIDEO_TRANSFORMATION`, `CUSTOMER_DISTRIBUTION`, and `CONTENT_REPUBLICATION`. Do not collapse distinct operations into a combined `embedding/translation` permission. Each RightsAssessment must identify one exact operation and its content scope, policy version, and enforcement point.
 - Return an operation-specific rights outcome, policy/profile version, reason codes, supporting basis, and applicable handling/retention constraints.
 - Enforce fail-closed behavior when permission is unknown, denied, expired, revoked, or requires review.
 - Coordinate content retention expiry, restriction, deletion requests, execution records, and verification.
