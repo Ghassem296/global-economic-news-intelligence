@@ -518,25 +518,19 @@ A publication decision is an authorization outcome, not an instruction that an e
 
 Responsibilities:
 
-- Create review records for held reports.
-- Maintain review queue status.
-- Record review reasons.
-- Record reviewer or authorized decision-maker where applicable.
-- Record review ownership and timestamps.
-- Record review outcomes.
-- Route approved reports back to publication-decision processing.
-- Preserve review history.
+- Create typed review tasks for EventMatchCase records, held reports, and other policy-defined review subjects.
+- Maintain review queue status, priority, assignment, due dates, and escalation metadata.
+- Record review reasons, reviewer identity, authorized role, timestamps, and immutable review outcomes.
+- Link each review to the exact subject and decision under review.
+- Route event-matching review outcomes to the Event Resolution workflow.
+- Route publication review outcomes back to PublicationPolicy for a new PublicationDecision.
+- Preserve review actions and reassignment history.
 
-Possible review outcomes include:
+ReviewService manages review tasks and reviewer actions; it does not own event identity or publication eligibility decisions.
 
-- Approve publication.
-- Approve with caveats.
-- Request regeneration or additional evidence.
-- Reject publication.
+For event matching, a material review outcome must create a new EventMatchDecision that supersedes the prior effective decision. For publication, a material review outcome must create a new effective PublicationDecision. ReviewService must not mutate either prior decision, bypass EventService or PublicationPolicy, or directly call an external publication target.
 
-A held report must not be automatically published without an authorized review outcome. A material review outcome must result in a new effective PublicationDecision; ReviewService must not bypass PublicationPolicy or directly call a publication target.
-
-The initial implementation must define the actual review mechanism and the authorized decision-maker.
+Reviewer identity and authorization must be enforced by the application's security layer. The initial implementation must define the authorized decision-maker and review mechanism for each review type.
 
 ### 4.23 ReportVersionService
 
@@ -1090,7 +1084,32 @@ New processing versions must not silently overwrite historical results.
 
 EventMatcher performs candidate evaluation. Event Resolution Workflow coordinates the case and decision lifecycle. EventService applies an authorized decision and maintains event and association invariants.
 
-### 7.4 Event Intelligence Workflow
+### 7.4 Event Matching Review Workflow
+
+**Input:**
+
+- EventMatchCase identifier.
+- The current effective EventMatchDecision under review.
+- Review reason and policy-defined priority.
+- Authorized reviewer assignment and execution context.
+
+**Output:**
+
+- A ReviewRecord linked to the exact EventMatchCase and decision.
+- An immutable reviewer action and outcome.
+- A new EventMatchDecision when the outcome changes the effective matching result.
+- Updated case status and effective-decision pointer.
+
+**Workflow invariants:**
+
+- ReviewRecord is a task and audit record, not an EventMatchDecision.
+- A reviewer must be authorized for the requested action.
+- A review outcome that changes the result creates a new decision with a supersedes reference.
+- The previous decision and any prior ArticleEventLink remain historically traceable.
+- Any association correction is applied through EventService in the same controlled transaction as the effective decision update.
+- A review task cannot directly create an Event or call an external publication target.
+
+### 7.10 Event Intelligence Workflow
 
 **Input:**
 
