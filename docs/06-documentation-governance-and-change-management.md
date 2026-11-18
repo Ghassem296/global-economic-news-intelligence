@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-006  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-17  
+**Last Updated:** 2026-11-18  
 **Language:** English
 
 ---
@@ -667,7 +667,7 @@ The following governance decisions remain open and require future review:
 
 1. Whether GitHub branch protection and mandatory Pull Request approvals should be enforced immediately or introduced when development contributors are added.
 2. Whether the documentation registry should eventually use a machine-readable format in addition to Markdown.
-3. Whether CI should be extended beyond its existing baseline to validate additional semantic cross-document contracts, required-section policies, and Markdown heading-anchor targets.
+3. Which additional semantic cross-document contracts, required-section policies, and architecture-specific invariants should be added to CI as the system grows.
 4. Whether a formal documentation review checklist should be introduced as a separate controlled document.
 5. Whether documentation approval should be recorded through GitHub Pull Request approval, an explicit approval record, or both.
 
@@ -707,12 +707,11 @@ The governance process should be introduced incrementally.
 
 ### Phase 4 — Automate Quality Checks
 
-The initial automated quality baseline is already active through `scripts/validate_docs.py` and `.github/workflows/docs-validation.yml`. It currently validates controlled-document versions against the registry, all nineteen ADR identifiers/statuses/paths/versions and priority coverage, duplicate version metadata and ADR history consistency, local Markdown links, repository-list and crosswalk parity, the canonical Human Review families and first-slice activation set, and event identity-operation and distribution-authorization invariants.
+The initial automated quality baseline is already active through `scripts/validate_docs.py` and `.github/workflows/docs-validation.yml`. It currently validates controlled-document versions against the registry; all nineteen ADR identifiers, statuses, paths, versions, and priority coverage; duplicate version metadata and ADR history consistency; local Markdown file paths and heading anchors; Markdown table column structure; repository-list and crosswalk parity; canonical Human Review families and first-slice activation; event identity-operation invariants; and deterministic multi-source distribution-authorization and rights-revocation contracts.
 
 Further extensions may be introduced when justified by project size and risk:
 
 - Validate required sections and document-type-specific structural rules.
-- Check Markdown heading-anchor targets as well as file paths.
 - Detect missing or stale semantic ADR-to-document references.
 - Verify additional ownership and data-model invariants as new domain workflows are added.
 
@@ -746,5 +745,7 @@ Each controlled document and architectural decision must retain its own approval
 ## 20. Revision Note
 
 **Version 1.3 — 2026-11-18:** Aligned the reviewer role name with GENI-GOV-005, closed the outdated question about whether link/metadata CI checks should exist, and documented the active automated validation baseline and remaining extension opportunities.
+
+**Version 1.4 — 2026-11-18:** Updated the active CI baseline to include Markdown table structure and heading-anchor validation, and clarified the remaining governance questions for future semantic checks.
 
 **End of Document**
