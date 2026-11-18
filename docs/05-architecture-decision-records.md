@@ -2,7 +2,7 @@
 # Architecture Decision Records Governance
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Draft — Under Architecture Review  
 **Document Type:** Architecture Decision Management and Governance  
 **Project:** Global Economic News Intelligence  
@@ -616,9 +616,14 @@ Pull Request #1 has already been merged. This section describes the published `m
 
 The governance process becomes effective for an individual decision only when the required approval is explicitly recorded.
 
+## Privacy Architecture Decision
+
+GENI-ADR-020 defines the proposed cross-cutting architecture for privacy processing authorization, data-subject rights workflows, personal-data lineage, processor governance and derived-data deletion. It is independent of the content-rights decision in GENI-ADR-013. ADR-020 remains Proposed until explicitly approved by the Project Owner. Publication does not authorize production processing or establish legal compliance.
+
+
 **End of Document**
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Draft — Under Architecture Review  
 **Last Updated:** 2026-11-18
