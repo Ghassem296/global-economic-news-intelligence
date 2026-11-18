@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.20
+**Version:** 1.21
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -58,6 +58,7 @@ docs/
 |-- 12-testing-and-evaluation-strategy.md
 |-- 13-deployment-operations-and-observability.md
 |-- 14-data-protection-and-privacy-specification.md
+|-- 15-first-slice-implementation-contracts.md
 |
 |-- adr/
 |   |-- README.md
@@ -312,7 +313,23 @@ This is an engineering specification, not legal advice, a jurisdiction-specific 
 
 **Authority:** Primary privacy and personal-data protection specification. Content-rights authorization remains a separate control.
 
-## 3.15 Related Privacy Architecture Decision
+## 3.15 First-Slice Implementation Contracts
+
+**File:** `15-first-slice-implementation-contracts.md`  
+**Document ID:** `GENI-IMPL-015`
+
+Defines the proposed method-level repository contracts, logical input/output types, transaction write sets, idempotency and concurrency requirements, and approval/testing gates for the first implementation slice. It does not approve a database, programming-language serialization, provider, content-rights policy, or any Proposed ADR.
+
+**Consult this document when:**
+
+- Defining the first-slice repository interfaces and application commands.
+- Reviewing transaction boundaries and aggregate write ownership.
+- Writing repository contract, rollback, stale-write, and idempotency tests.
+- Checking whether an implementation is blocked by an unapproved ADR or authorization policy.
+
+**Authority:** Proposed implementation-contract baseline subordinate to approved ADRs and the architecture/data-model documents. It must not be treated as accepted until explicitly approved.
+
+## 3.16 Related Privacy Architecture Decision
 
 [GENI-ADR-020 — Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture](adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md) defines the proposed privacy execution model across application workflows, data lineage, provider boundaries, and deletion propagation. It is related to Documents 02, 03, 08, 09, 12, 13, and 14. The ADR remains Proposed pending explicit approval.
 
@@ -637,6 +654,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `docs/README.md`  
-**Version:** 1.20  
+**Version:** 1.21  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
