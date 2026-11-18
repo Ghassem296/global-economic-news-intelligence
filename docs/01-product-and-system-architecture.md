@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -290,6 +290,7 @@ External URL fetching must use defensive controls against:
 Responsibilities:
 
 - Normalize incoming articles.
+- Create immutable ArticleRevision records for material content changes and maintain the Article current projection atomically.
 - Extract canonical URLs.
 - Normalize timestamps.
 - Identify source language.
