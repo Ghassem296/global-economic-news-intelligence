@@ -143,6 +143,7 @@ The main documentation includes:
 | [12 — Testing and Evaluation Strategy](docs/12-testing-and-evaluation-strategy.md) | Test layers, datasets, metrics, and release quality gates |
 | [13 — Deployment, Operations, and Observability](docs/13-deployment-operations-and-observability.md) | Runtime, deployment, monitoring, recovery, and readiness |
 | [14 — Data Protection and Privacy Specification](docs/14-data-protection-and-privacy-specification.md) | Personal-data inventory, purposes, retention, deletion, rights requests, processors, and privacy risk controls |
+| [15 — First-Slice Implementation Contracts](docs/15-first-slice-implementation-contracts.md) | Repository method contracts, transaction boundaries, command DTOs, state-machine readiness, and implementation gates |
 
 ### Architecture Decision Records
 
@@ -213,6 +214,7 @@ global-economic-news-intelligence/
     ├── 12-testing-and-evaluation-strategy.md
     ├── 13-deployment-operations-and-observability.md
     ├── 14-data-protection-and-privacy-specification.md
+    ├── 15-first-slice-implementation-contracts.md
     │
     ├── adr/
     │   ├── README.md
