@@ -966,7 +966,6 @@ Proposed domain entities include:
 - `Report`
 - `ReportEvidenceLink`
 - `ReportArticleLink`
-- `AssessmentHistory`
 
 These are logical domain concepts. The final physical schema and repository boundaries must be defined in Documents 02 and 03. Claim.verification_status and Claim.confidence are current projections only; the authoritative assessment is an immutable ClaimAssessment. A new assessment must preserve the prior assessment, its exact evidence links, method/policy version, rationale, and supersession reference. AssessmentHistory records append-only lifecycle actions.
 
