@@ -2912,6 +2912,10 @@ Initial repository contracts include:
 - `ScheduleRepository`
 - `ScheduledExecutionRepository`
 - `EmbeddingRepository`, when semantic storage is implemented.
+- `PrivacyRequestRepository` (GENI-ADR-020; DataSubjectRequest, DataSubjectRequestAction and PrivacyDeletionRecord)
+- `PersonalDataLineageRepository` (GENI-ADR-020)
+- `PrivacyPolicyRepository` (GENI-ADR-020; inventory, purposes, processing bases, processor/transfer/PIA records)
+- `DataSubjectReferenceRepository` (GENI-ADR-020; restricted subject linkage)
 
 Additional repositories may be introduced when implementation needs justify them.
 
