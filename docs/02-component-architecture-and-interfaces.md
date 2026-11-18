@@ -2189,12 +2189,13 @@ The following items require formal review and corresponding ADRs or supporting s
 14. LLM budget, cost tracking, and evaluation.
 15. Source acquisition security and content retention.
 16. Content rights profiles, operation-specific permission checks, retention, deletion, and customer-distribution restrictions (GENI-ADR-013).
+17. Privacy processing authorization, data-subject rights, personal-data lineage, processor governance and transfer controls (GENI-ADR-020).
 
 The current individual ADR documents are listed in:
 
 `docs/adr/README.md`
 
-All nineteen registered decision topics currently have individual ADR documents published in the GitHub `main` branch. All nineteen remain Proposed; none is an accepted architectural decision until explicit Project Owner approval is recorded. In particular, translation capability/provider/quality policy (GENI-ADR-018) and semantic retrieval implementation/storage (GENI-ADR-012) remain optional and must not be assumed approved by the component placeholders in this document.
+All twenty registered decision topics currently have individual ADR documents published in the GitHub `main` branch. All twenty remain Proposed; none is an accepted architectural decision until explicit Project Owner approval is recorded. In particular, translation capability/provider/quality policy (GENI-ADR-018) and semantic retrieval implementation/storage (GENI-ADR-012) remain optional and must not be assumed approved by the component placeholders in this document.
 
 The ADR Registry is the authoritative inventory of document availability, status, priorities, and dependencies. The existence of an ADR file does not authorize implementation.
 
