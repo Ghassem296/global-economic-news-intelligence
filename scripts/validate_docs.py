@@ -233,16 +233,352 @@ def validate_event_identity_operation_contract() -> None:
             fail(f"Data-model identity-operation invariant is missing: {required}")
 
 
+
+def markdown_content_without_fences(content: str) -> str:
+    """Remove fenced code blocks before treating metadata-like examples as metadata."""
+    output: list[str] = []
+    fence_char: str | None = None
+    fence_length = 0
+    tick = chr(96)
+    for line in content.splitlines():
+        stripped = line.lstrip()
+        marker_char = None
+        if stripped.startswith("~~~"):
+            marker_char = "~"
+        elif stripped.startswith(tick * 3):
+            marker_char = tick
+        if fence_char is None:
+            if marker_char is not None:
+                fence_char = marker_char
+                fence_length = len(stripped) - len(stripped.lstrip(marker_char))
+                continue
+            output.append(line)
+            continue
+        if marker_char == fence_char:
+            marker_length = len(stripped) - len(stripped.lstrip(marker_char))
+            if marker_length >= fence_length:
+                fence_char = None
+                fence_length = 0
+        continue
+    return "\n".join(output)
+
+
+def validate_duplicate_version_metadata() -> None:
+    """Header/footer Version metadata must not disagree within a Markdown document."""
+    for path in sorted(ROOT.rglob("*.md")):
+        text = markdown_content_without_fences(read_text(path))
+        versions = re.findall(
+            r"^\*\*Version:\*\*\s*([0-9]+\.[0-9]+)\s*$",
+            text,
+            re.MULTILINE,
+        )
+        if versions and any(version != versions[0] for version in versions[1:]):
+            fail(
+                f"Duplicate Version metadata disagrees in {path.relative_to(ROOT)}: "
+                f"{versions}"
+            )
+
+
+def metadata_values(text: str, field: str) -> list[str]:
+    prefix = f"**{field}:**"
+    tick = chr(96)
+    values = []
+    for line in text.splitlines():
+        if line.startswith(prefix):
+            values.append(line[len(prefix):].strip().strip(tick).strip())
+    return values
+
+
+def validate_document_footer_metadata() -> None:
+    """Check duplicated document footer identity and version fields where defined."""
+    checks = {
+        "docs/04-implementation-plan-and-roadmap.md": {
+            "Document ID": "GENI-PLAN-004",
+        },
+        "docs/README.md": {
+            "Document ID": "GENI-DOC-INDEX-001",
+            "Document": "docs/README.md",
+        },
+    }
+    for relative, expected_fields in checks.items():
+        text = markdown_content_without_fences(read_text(ROOT / relative))
+        for field, expected in expected_fields.items():
+            values = metadata_values(text, field)
+            minimum = 1 if field == "Document" else 2
+            if len(values) < minimum or values[-1] != expected:
+                fail(
+                    f"Incorrect or missing footer {field} in {relative}: "
+                    f"expected {expected!r}, found {values}"
+                )
+        versions = metadata_values(text, "Version")
+        if len(versions) < 2 or versions[-1] != versions[0]:
+            fail(f"Footer version does not match header in {relative}: {versions}")
+
+
+def validate_adr_history_versions() -> None:
+    """The latest ADR decision-history row must match current header/footer metadata."""
+    tick = chr(96)
+    for path in sorted(ADR_DIR.glob("GENI-ADR-*.md")):
+        text = markdown_content_without_fences(read_text(path))
+        adr_id_match = re.search(
+            r"^\*\*ADR ID:\*\*\s*(GENI-ADR-[0-9]{3})",
+            text,
+            re.MULTILINE,
+        )
+        header_version = re.search(
+            r"^\*\*Version:\*\*\s*([0-9]+\.[0-9]+)",
+            text,
+            re.MULTILINE,
+        )
+        header_status = re.search(
+            r"^\*\*Status:\*\*\s*([A-Za-z]+)",
+            text,
+            re.MULTILINE,
+        )
+        filename_match = re.match(r"^(GENI-ADR-[0-9]{3})-", path.name)
+        if not adr_id_match or not header_version or not header_status or not filename_match:
+            fail(f"Missing ADR identity/version/status metadata: {path.name}")
+        if adr_id_match.group(1) != filename_match.group(1):
+            fail(f"ADR ID does not match filename: {path.name}")
+
+        footer_files = metadata_values(text, "File")
+        footer_ids = metadata_values(text, "ADR ID")
+        footer_versions = metadata_values(text, "Version")
+        footer_statuses = metadata_values(text, "Status")
+        if footer_files and footer_files[-1] != path.name:
+            fail(f"ADR footer filename does not match path: {path.name}")
+        if len(footer_ids) > 1 and footer_ids[-1] != filename_match.group(1):
+            fail(f"ADR footer ID does not match header: {path.name}")
+        if len(footer_versions) > 1 and footer_versions[-1] != header_version.group(1):
+            fail(f"ADR footer version does not match header: {path.name}")
+        if len(footer_statuses) > 1 and footer_statuses[-1] != header_status.group(1):
+            fail(f"ADR footer status does not match header: {path.name}")
+
+        history_section = re.search(
+            r"^##\s+[0-9]+\.\s+Decision History\s*$([\s\S]*)$",
+            text,
+            re.MULTILINE,
+        )
+        if not history_section:
+            fail(f"Missing Decision History section: {path.name}")
+        rows = re.findall(
+            r"^\|\s*([0-9]+\.[0-9]+)\s*\|\s*[^|]+\|\s*([^|]+)\|",
+            history_section.group(1),
+            re.MULTILINE,
+        )
+        if not rows:
+            fail(f"Missing versioned Decision History rows: {path.name}")
+        latest_version, latest_status = rows[-1]
+        if latest_version != header_version.group(1):
+            fail(
+                f"ADR history/header version mismatch in {path.name}: "
+                f"header={header_version.group(1)}, history={latest_version}"
+            )
+        if latest_status.strip() != header_status.group(1):
+            fail(
+                f"ADR history/header status mismatch in {path.name}: "
+                f"header={header_status.group(1)}, history={latest_status.strip()}"
+            )
+        numeric_versions = [
+            tuple(int(part) for part in version.split("."))
+            for version, _ in rows
+        ]
+        if numeric_versions != sorted(numeric_versions):
+            fail(f"ADR Decision History is not monotonic: {path.name}")
+
+
+def extract_section(content: str, start: str, end: str, label: str) -> str:
+    start_index = content.find(start)
+    end_index = content.find(end, start_index + len(start)) if start_index >= 0 else -1
+    if start_index < 0 or end_index < 0:
+        fail(f"Cannot locate {label} section boundaries")
+    return content[start_index:end_index]
+
+
+def repository_names_from_list(section: str) -> set[str]:
+    tick = chr(96)
+    values = set()
+    for line in section.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("- "):
+            continue
+        name = stripped[2:].strip()
+        if name.startswith(tick) and name.endswith(tick):
+            name = name[1:-1]
+        if name.endswith("Repository"):
+            values.add(name)
+    return values
+
+
+def repository_names_from_crosswalk(section: str) -> set[str]:
+    tick = chr(96)
+    values = set()
+    for line in section.splitlines():
+        if not line.strip().startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if not cells:
+            continue
+        name = cells[0]
+        if name.startswith(tick) and name.endswith(tick):
+            name = name[1:-1]
+        if name.endswith("Repository"):
+            values.add(name)
+    return values
+
+
+def validate_repository_inventory_alignment() -> None:
+    """The component repository list, data-model list, and ownership crosswalk must match."""
+    component = read_text(ROOT / "docs/02-component-architecture-and-interfaces.md")
+    data_model = read_text(ROOT / "docs/03-data-model-and-storage-design.md")
+    component_list = extract_section(
+        component,
+        "## 6. Repository Interfaces",
+        "### 6.1 Contract Completeness",
+        "Document 02 repository inventory",
+    )
+    data_list = extract_section(
+        data_model,
+        "## 23. Repository Contracts",
+        "## 24. Migration Strategy",
+        "Document 03 repository inventory",
+    )
+    crosswalk = extract_section(
+        component,
+        "## 6.3 Repository-to-Aggregate, Writer, and Transaction Crosswalk",
+        "## 7. Workflow Contracts",
+        "Document 02 repository crosswalk",
+    )
+    component_names = repository_names_from_list(component_list)
+    data_names = repository_names_from_list(data_list)
+    crosswalk_names = repository_names_from_crosswalk(crosswalk)
+    if component_names != data_names:
+        fail(
+            "Repository inventory mismatch: "
+            f"only Document 02={sorted(component_names - data_names)}; "
+            f"only Document 03={sorted(data_names - component_names)}"
+        )
+    if component_names != crosswalk_names:
+        fail(
+            "Repository ownership crosswalk mismatch: "
+            f"unmapped={sorted(component_names - crosswalk_names)}; "
+            f"unknown={sorted(crosswalk_names - component_names)}"
+        )
+
+
+def validate_first_slice_review_set() -> None:
+    """Keep all six review families and first-slice activation explicit across key documents."""
+    documents = [
+        "docs/01-product-and-system-architecture.md",
+        "docs/02-component-architecture-and-interfaces.md",
+        "docs/03-data-model-and-storage-design.md",
+        "docs/04-implementation-plan-and-roadmap.md",
+        "docs/adr/decisions/GENI-ADR-014-human-review-corrections-and-withdrawals.md",
+    ]
+    families = {
+        "ARTICLE_DEDUPLICATION",
+        "EVENT_MATCHING",
+        "CLAIM_ASSESSMENT",
+        "REPORT_VERSION",
+        "PUBLICATION_OPERATION",
+        "CONTENT_RIGHTS",
+    }
+    for relative in documents:
+        content = read_text(ROOT / relative)
+        missing = sorted(family for family in families if family not in content)
+        if missing:
+            fail(f"Review family vocabulary incomplete in {relative}: {missing}")
+        if "first implementation slice" not in content.lower():
+            fail(f"First-slice Review activation is not stated in {relative}")
+
+
+def validate_event_identity_operation_contract() -> None:
+    """Protect durable operation history, survivor cardinality, and recovery semantics."""
+    identity_documents = [
+        "docs/02-component-architecture-and-interfaces.md",
+        "docs/03-data-model-and-storage-design.md",
+        "docs/04-implementation-plan-and-roadmap.md",
+        "docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md",
+    ]
+    for relative in identity_documents:
+        content = read_text(ROOT / relative)
+        if "EventIdentityOperationHistory" not in content:
+            fail(f"Missing EventIdentityOperationHistory contract in {relative}")
+        if "RECONCILIATION_REQUIRED" not in content:
+            fail(f"Missing identity-operation reconciliation state in {relative}")
+    data_model = read_text(ROOT / "docs/03-data-model-and-storage-design.md")
+    required = (
+        "event_identity_operation_histories",
+        "EventIdentityOperationHistoryRepository",
+        "expected_event_history_version",
+        "exactly one output Event equal to that survivor",
+        "The only permitted input/output overlap is the MERGE survivor",
+    )
+    for term in required:
+        if term not in data_model:
+            fail(f"Data-model identity-operation invariant is missing: {term}")
+
+
+def validate_distribution_authorization_contract() -> None:
+    """Ensure delivery authorization covers exact payload and every source-derived scope."""
+    required_by_document = {
+        "docs/01-product-and-system-architecture.md": (
+            "content-scope fingerprint",
+            "every source-derived content scope",
+            "currently effective publication operation",
+        ),
+        "docs/02-component-architecture-and-interfaces.md": (
+            "DistributionAuthorizationRepository",
+            "DistributionAuthorizationRightsLink",
+            "authorized_content_scope_fingerprint",
+            "rights_assessment_set_fingerprint",
+            "content_scope_fingerprint",
+        ),
+        "docs/03-data-model-and-storage-design.md": (
+            "event_identity_operation_histories",
+            "distribution_authorization_rights_links",
+            "DistributionAuthorizationRepository",
+            "EventIdentityOperationHistoryRepository",
+            "authorized_content_scope_fingerprint",
+            "rights_assessment_set_fingerprint",
+            "content_scope_fingerprint",
+            "CUSTOMER_DISTRIBUTION",
+        ),
+        "docs/04-implementation-plan-and-roadmap.md": (
+            "DistributionAuthorizationRightsLink",
+            "rights-assessment-set fingerprint",
+            "content-scope fingerprint",
+            "CUSTOMER_DISTRIBUTION",
+        ),
+        "docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md": (
+            "every exact source-derived content scope",
+            "complete set of exact allowed RightsAssessment references",
+        ),
+    }
+    for relative, required_terms in required_by_document.items():
+        content = read_text(ROOT / relative)
+        for term in required_terms:
+            if term not in content:
+                fail(f"Distribution authorization contract missing {term!r} in {relative}")
+
+
 def main() -> None:
     validate_document_versions()
     validate_adrs()
+    validate_duplicate_version_metadata()
+    validate_document_footer_metadata()
+    validate_adr_history_versions()
     validate_markdown_links()
     validate_review_contract_alignment()
+    validate_first_slice_review_set()
+    validate_repository_inventory_alignment()
     validate_event_identity_operation_contract()
+    validate_distribution_authorization_contract()
     print(
-        "Documentation validation passed: controlled document versions, "
-        "all 19 ADR files/statuses/paths, ADR registry versions and priorities, "
-        "local Markdown links, Human Review family alignment, and event identity-operation invariants."
+        "Documentation validation passed: controlled and duplicate versions, "
+        "all 19 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
+        "local Markdown links, Review family activation, repository inventory/crosswalk parity, "
+        "event identity-operation history/recovery, and multi-source distribution authorization."
     )
 
 
