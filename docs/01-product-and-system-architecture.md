@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.9  
+**Version:** 1.10  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -581,7 +581,22 @@ The initial deployment should avoid unnecessary infrastructure dependencies.
 
 The persistence implementation must remain behind repository and infrastructure interfaces.
 
-## 6. High-Level Data Flow
+### 5.13 Content Rights Management
+
+Content rights management is a cross-cutting policy capability governing what the system may do with information obtained from external sources. It is distinct from network access control, source reliability assessment, publication eligibility, and recipient delivery authorization.
+
+The proposed capability must:
+
+- Maintain versioned source rights profiles and applicable license/contract references.
+- Record how a content artifact was accessed and which source/content revision it refers to.
+- Evaluate permission separately for metadata access, full-text access, temporary processing, persistent storage, internal analysis, external LLM processing, embedding/translation, derived-output generation, quotation, customer distribution, and republication.
+- Apply retention, expiration, restriction, and deletion requirements to original content and derived artifacts.
+- Preserve an auditable basis, policy version, outcome, and handling constraints for each material rights assessment.
+- Block restricted operations when permission is unknown, denied, expired, revoked, or requires review.
+
+A source being publicly reachable or previously collected does not establish permission for every subsequent operation. Rights checks must occur before content retrieval/storage, external provider transmission, and distribution as applicable. Temporary processing must not create an unauthorized retained copy in caches, queues, logs, backups, or external providers.
+
+The capability does not provide legal advice or infer permissions from technical accessibility. The Project Owner must approve the initial source-rights policy and its evidence basis. The detailed rights model and operations remain provisional under GENI-ADR-013 until accepted.
 
 The main processing pipeline is:
 
@@ -1170,6 +1185,8 @@ The implementation must preserve these constraints:
 - Original source language and content references are preserved.
 - SQLite is the proposed initial database implementation, not a domain-level dependency.
 - Full-text acquisition and storage must respect applicable rights and restrictions.
+- Content permission is operation-specific; unknown or unverified rights must not authorize restricted access, retention, external processing, quotation, or distribution.
+- Rights checks, publication decisions, and recipient-distribution authorization are separate controls.
 - Advanced infrastructure is deferred until justified by requirements.
 
 These constraints describe the current proposed architecture. Any change to an accepted architectural constraint must follow the applicable ADR and documentation governance processes.
