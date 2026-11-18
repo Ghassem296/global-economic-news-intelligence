@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.17  
+**Version:** 1.18  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -224,6 +224,8 @@ Responsibilities:
 It must not discard provenance or silently replace original content with translated content.
 
 ### 4.3.1 ArticleRevisionService
+
+This is a subordinate domain service within the Article Processing capability, not an additional top-level logical component in the component inventory.
 
 Responsibilities:
 
@@ -681,7 +683,7 @@ The domain model must support:
 
 - Source identity.
 - External and canonical identifiers.
-- Current revision reference to the latest accepted ArticleRevision.
+- Current revision reference to the latest valid persisted ArticleRevision.
 - Original URL.
 - Title and available content references.
 - Original source language.
@@ -693,7 +695,7 @@ The domain model must support:
 
 Full-text storage must comply with applicable source terms and content rights.
 
-Content availability must be represented explicitly. Article is the current searchable projection of its latest accepted ArticleRevision; it is not a second independently editable copy of revision content. Updating the current projection and creating a material new revision must be atomic.
+Content availability must be represented explicitly. Article is the current searchable projection of its latest valid persisted ArticleRevision; it is not a second independently editable copy of revision content. Updating the current projection and creating a material new revision must be atomic.
 
 ### 5.3 ArticleRevision
 
