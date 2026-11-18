@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.57
+**Version:** 1.58
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -251,7 +251,7 @@ Planned documentation must be tracked separately from existing files.
 
 A planned topic does not represent an existing document.
 
-The six technical specifications listed in Section 4 are now published as proposed documents. Additional future documents must be justified by a distinct requirement and checked for overlap before creation.
+The seven technical specifications listed in Section 4 (Documents 08–14) are now published as proposed documents. Additional future documents must be justified by a distinct requirement and checked for overlap before creation.
 
 Potential future documents include:
 
@@ -415,7 +415,7 @@ This refresh was performed directly against the published GitHub `main` branch. 
 
 ### 12.2 Core Documents
 
-The five primary product, architecture, data, planning, and ADR-governance documents and six proposed technical specifications (Documents 08–13) are present in `main`. Their actual versions and lifecycle statuses are recorded in Section 4.
+The five primary product, architecture, data, planning, and ADR-governance documents and seven proposed technical specifications (Documents 08–14) are present in `main`. Their actual versions and lifecycle statuses are recorded in Section 4.
 
 ### 12.3 Governance Documents
 
