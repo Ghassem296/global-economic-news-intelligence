@@ -2,7 +2,7 @@
 # Architecture Decision Records Governance
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Architecture Review  
 **Document Type:** Architecture Decision Management and Governance  
 **Project:** Global Economic News Intelligence  
@@ -598,30 +598,26 @@ The ADR governance process is considered operational when:
 
 ## 16. Current Governance State
 
-According to the pull-request branch snapshot inspected on 2026-11-18:
+According to the published GitHub `main` branch snapshot inspected on 2026-11-18:
 
-- The ADR governance document exists in the shared repository.
-- The ADR template exists in the shared repository.
-- The ADR registry exists in the shared repository.
-- Nineteen architectural decision topics have been identified.
-- All nineteen registered decision topics have individual ADR documents published in the current pull-request branch.
-- All nineteen published individual ADRs have status `Proposed`.
-- No individual ADR is recorded as `Accepted` in the current pull-request branch.
-- Publication does not imply approval; all nineteen published proposals remain unapproved.
-- Existing architectural descriptions that depend on unresolved ADRs remain provisional where applicable.
+- The ADR governance document exists in `main`.
+- The ADR template exists in `main`.
+- The ADR registry exists in `main`.
+- Nineteen architectural decision topics are registered.
+- All nineteen registered topics have individual ADR documents committed to and published in `main`.
+- All nineteen individual ADRs have status `Proposed`.
+- No individual ADR is recorded as `Accepted`.
+- Publication does not imply approval or implementation; all nineteen proposals remain unapproved.
+- Architectural descriptions that depend on unresolved ADRs remain provisional where applicable.
 - Implementation must not treat unresolved proposals as finalized architectural decisions.
 
-This is a pull-request-branch snapshot, not a statement about the `main` branch. The documentation registry snapshot on `main` remains intentionally unchanged until the pull request is merged.
-
-The next steps are to complete the documentation review, keep the central documentation registry and ADR registry synchronized with GitHub `main`, and publish any further authorized documentation changes.
+Pull Request #1 has already been merged. This section describes the published `main` branch, not a pull-request branch. The authoritative file inventory and current versions are maintained in `docs/07-documentation-registry.md`; ADR availability and decision status are maintained in `docs/adr/README.md`.
 
 The governance process becomes effective for an individual decision only when the required approval is explicitly recorded.
-
----
 
 **End of Document**
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.4  
+**Version:** 1.6  
 **Status:** Draft — Under Architecture Review  
-**Last Updated:** 2026-11-17
+**Last Updated:** 2026-11-18

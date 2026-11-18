@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-17  
+**Last Updated:** 2026-11-18  
 **Registry Scope:** Published GitHub `main` branch snapshot  
 **Language:** English
 
@@ -153,87 +153,75 @@ Each must be tracked independently.
 
 ## 4. Core Documentation Inventory
 
-The following inventory records the primary product, architecture, data, planning, and architectural governance documents.
+The versions and lifecycle states below were read from the actual file headers in the published GitHub `main` branch during this registry refresh.
 
-The versions below represent the documented baseline recorded in the inspected registry information. They must be verified against the actual file headers during each inventory refresh.
+| Document ID | Title | Repository Path | Actual Version | Lifecycle Status |
+|---|---|---|---:|---|
+| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.10 | Draft — Under Architecture Review |
+| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.21 | Draft — Under Architecture Review |
+| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.16 | Draft — Under Architecture Review |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.11 | Draft — Under Architecture Review |
+| GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.5 | Draft — Under Architecture Review |
 
-| Document ID | Title | Repository Path | Recorded Version | Lifecycle Status |
-|---|---|---|---|---|
-| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.2 | Draft — Under Architecture Review |
-| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.2 | Draft — Under Architecture Review |
-| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.2 | Draft — Under Architecture Review |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.1 | Draft — Under Architecture Review |
-| GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.4 | Draft — Under Architecture Review |
-
-**Important:** A proposed revision prepared during documentation review does not change the published version until the revised file is actually committed and published.
+The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
 
 ## 5. Documentation Governance and Index Inventory
 
-| Document ID | Document | Repository Path | Recorded Version | Lifecycle Status |
-|---|---|---|---|---|
+| Document ID | Document | Repository Path | Actual Version | Lifecycle Status |
+|---|---|---|---:|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.5 | Proposed — Pending Project Owner Approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.6 | Proposed — Pending Project Owner Approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.6 | Draft — Under Documentation Review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.7 | Draft — Under Documentation Review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.9 | Draft — Under Documentation Review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.0 | Template |
 
-The version and lifecycle information must be refreshed from the actual document headers.
-
-### 5.1 Document Responsibilities
-
-The following authority boundaries apply:
-
-| Document | Authoritative Responsibility |
-|---|---|
-| `docs/README.md` | Documentation navigation, reading order, and document descriptions |
-| `docs/05-architecture-decision-records.md` | ADR governance policy |
-| `docs/06-documentation-governance-and-change-management.md` | General documentation governance and change control |
-| `docs/07-documentation-registry.md` | Central inventory of all controlled project documents |
-| `docs/adr/README.md` | ADR topic inventory and individual ADR tracking |
-| `docs/adr/adr-template.md` | Standard ADR structure |
-
-These documents must reference one another without maintaining conflicting inventories or policies.
+The actual version and status values were checked against each file header. The ADR template is supporting material, not an architectural decision.
 
 ## 6. Architecture Decision Records Inventory
 
-The ADR registry and individual ADR files are the authoritative sources for ADR details.
+The published `main` branch contains all nineteen individual ADR documents. The file paths and versions below were checked against the actual repository files.
 
-The following six individual ADRs are published in the inspected GitHub `main` branch.
-
-| ADR ID | Title | Repository Path | Version | Lifecycle Status |
-|---|---|---|---|---|
-| GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.0 | Proposed |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.0 | Proposed |
-| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.0 | Proposed |
-| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.0 | Proposed |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.0 | Proposed |
-| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.0 | Proposed |
+| ADR ID | Title | Repository Path | Actual Version | Decision Status |
+|---|---|---|---:|---|
+| GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.1 | Proposed |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.2 | Proposed |
+| GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/geni-adr-003-economic-intelligence-as-primary-editorial-focus.md` | 1.1 | Proposed |
+| GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/geni-adr-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.0 | Proposed |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/geni-adr-005-initial-persistence-technology-and-migration-strategy.md` | 1.0 | Proposed |
+| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.1 | Proposed |
+| GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/geni-adr-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.0 | Proposed |
+| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.1 | Proposed |
+| GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | `docs/adr/decisions/geni-adr-009-near-real-time-news-acquisition-strategy.md` | 1.0 | Proposed |
+| GENI-ADR-010 | Phased Text, Audio, and Video Delivery | `docs/adr/decisions/geni-adr-010-phased-text-audio-and-video-delivery.md` | 1.0 | Proposed |
+| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.4 | Proposed |
+| GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `docs/adr/decisions/geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` | 1.0 | Proposed |
+| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.1 | Proposed |
+| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/geni-adr-014-human-review-corrections-and-withdrawals.md` | 1.1 | Proposed |
+| GENI-ADR-015 | Market Data Integration and Economic Impact Classification | `docs/adr/decisions/geni-adr-015-market-data-integration-and-economic-impact-classification.md` | 1.0 | Proposed |
+| GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | `docs/adr/decisions/geni-adr-016-persistence-async-execution-idempotency-and-recovery.md` | 1.0 | Proposed |
+| GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `docs/adr/decisions/geni-adr-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` | 1.0 | Proposed |
+| GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | `docs/adr/decisions/geni-adr-018-multilingual-source-processing-translation-and-language-policy.md` | 1.0 | Proposed |
+| GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | `docs/adr/decisions/geni-adr-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` | 1.0 | Proposed |
 
 ### 6.1 ADR Publication and Availability
 
-The inspected GitHub `main` branch contains all six individual ADR files listed above.
+- Individual ADR files in `main`: **19 of 19**.
+- Registered ADR topics without an individual file: **0**.
+- ADRs with status `Proposed`: **19**.
+- ADRs with status `Accepted`: **0**.
+- Publication and implementation completion are not implied by file availability.
 
-- All six ADR files are published in the shared repository.
-- All six ADRs have the lifecycle status Proposed.
-- None of the six represents a formally accepted architectural decision.
-- The remaining twelve registered ADR topics do not have individual ADR files in the inspected repository snapshot.
-
-Publication status and decision status are independent. The presence of an ADR file in GitHub does not imply that its proposal has been accepted.
-
-This is a repository-only snapshot; the local Working Tree was not inspected.
+Each decision status must match the metadata and approval record in its individual ADR. The Project Owner remains the approval authority under Document 05.
 
 ### 6.2 ADR Governance Rules
 
-- Every ADR must have a unique identifier.
-- Every ADR must have an individual lifecycle status.
+- Every ADR must have a unique identifier and a verified repository path.
 - Proposed ADRs must not be treated as accepted decisions.
 - Publication does not imply acceptance.
 - Acceptance does not automatically imply implementation.
 - Superseded and withdrawn decisions must remain traceable.
-- ADR changes must be reflected in the ADR registry.
-- Material changes to accepted decisions require a new ADR.
-
-The ADR registry must also track planned ADR topics that do not yet have individual files.
+- ADR changes must be reflected in this registry and in the central documentation registry.
+- Material changes to accepted decisions require the approval process defined in Document 05.
 
 ## 7. Reference Documentation Inventory
 
@@ -405,53 +393,32 @@ A periodic review should verify that the registry matches:
 
 ### 12.1 Snapshot Information
 
-**Inspection Date:** 2026-11-17  
+**Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
-**Reference Branch:** `main`
+**Reference Branch:** `main`  
+**Baseline Commit Inspected:** `2f0f1d0b02950a1bf5552f016b1532c981cb620b`
 
-The following findings are based exclusively on the GitHub `main` branch inspected on 2026-11-17. The local Working Tree was not inspected.
-
-They are a repository snapshot, not permanent project facts.
+This refresh was performed against the published GitHub `main` branch after Pull Request #1 had been merged. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
 ### 12.2 Core Documents
 
-Five primary product, architecture, data, planning, and architecture-governance documents are included in the documentation baseline.
-
-Their versions and statuses must be verified against their current file headers before approval or publication of a new registry snapshot.
+The five primary product, architecture, data, planning, and ADR-governance documents are present in `main`. Their actual versions and lifecycle statuses are recorded in Section 4.
 
 ### 12.3 Governance Documents
 
-Documents 06 and 07 have individual files and are classified as Proposed — Pending Project Owner Approval.
-
-Their publication state must be checked independently from their lifecycle status.
+Documents 06 and 07 are published in `main` but remain Proposed pending explicit Project Owner approval. Publication must not be treated as approval.
 
 ### 12.4 ADR Inventory
 
-The inspected GitHub `main` branch contains six individual ADR files: `GENI-ADR-001`, `GENI-ADR-002`, `GENI-ADR-006`, `GENI-ADR-008`, `GENI-ADR-011`, and `GENI-ADR-013`.
+All nineteen individual ADR files are present in `main`. All nineteen are Proposed; none is recorded as Accepted. There are no uncreated individual ADR files among the nineteen registered topics.
 
-All six are classified as Proposed. None is recorded as Accepted.
+### 12.5 Indexes and Reference Materials
 
-The remaining twelve registered ADR topics do not have individual ADR files in this repository snapshot.
-
-### 12.5 Documentation Index and ADR Registry
-
-The Documentation Index and ADR Registry have their own versions and lifecycle statuses.
-
-Their inventories must be reconciled with this central registry.
+The Documentation Index, ADR Registry, ADR Template, and three Agent Template reference documents are present in the repository. Their publication state is independent of their lifecycle or classification.
 
 ### 12.6 Snapshot Limitations
 
-The findings above must not be treated as a substitute for a fresh Git and repository inspection.
-
-Before approving this registry, verify:
-
-- Current GitHub `main` branch and commit.
-- Actual file availability.
-- Actual document headers and versions.
-- Current ADR file availability and lifecycle statuses.
-- Current publication and approval states.
-
-A local Working Tree snapshot must be recorded separately if local publication status is relevant.
+This is a repository-only snapshot. It does not establish local Working Tree state, formal document approval, implementation completion, CI success, or operational verification. Refresh the registry after material documentation changes and before formal baseline approval.
 
 ## 13. Acceptance Criteria
 

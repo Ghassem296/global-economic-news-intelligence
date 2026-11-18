@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.9  
+**Version:** 1.10  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -107,7 +107,7 @@ These are separate properties and must not be confused.
 
 ### 4.1 Individual ADR Documents
 
-The following nineteen individual ADR documents are committed to the current pull-request branch. All nineteen have status Proposed; none is an approved architectural decision.
+The following nineteen individual ADR documents are committed to the published main branch. All nineteen have status Proposed; none is an approved architectural decision.
 
 | ADR ID | Title | Document Availability | Decision Status | Repository Path |
 |---|---|---|---|---|
@@ -146,7 +146,7 @@ The existence of an ADR file does not imply that its implementation is complete.
 
 ### 4.2 Decision Topics Without Individual ADR Documents
 
-All nineteen registered decision topics currently have individual ADR files in this pull-request branch. There are no remaining uncreated topics in the current registry.
+All nineteen registered decision topics currently have individual ADR files in published main branch. There are no remaining uncreated topics in the current registry.
 
 Document publication does not imply approval. All nineteen ADRs remain Proposed pending explicit Project Owner decisions.
 
@@ -372,7 +372,7 @@ At the time of this revision:
 - The ADR template exists.
 - The ADR registry exists.
 - Nineteen architectural decision topics are registered.
-- All nineteen individual ADR documents are committed to the current pull-request branch.
+- All nineteen individual ADR documents are committed to the published main branch.
 - All nineteen ADRs have Proposed status.
 - No registered decision topic remains without an individual ADR document in this branch.
 - No individual ADR is currently recorded as Accepted in this registry.
