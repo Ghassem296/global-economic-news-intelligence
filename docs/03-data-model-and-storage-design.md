@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.24
+**Version:** 1.25
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -791,7 +791,7 @@ Each candidate record represents one versioned evaluation of one candidate Event
 
 Candidate status describes candidate-evaluation processing only (for example `GENERATED`, `EVALUATED`, or `INELIGIBLE`). `ACCEPTED`, `REJECTED`, and `SUPERSEDED` are not candidate statuses: acceptance/rejection are case-level decisions, and supersession is represented by a new immutable candidate record referencing the prior evaluation. After reaching `EVALUATED` or `INELIGIBLE`, a candidate evaluation is immutable.
 
-A candidate score is not a decision confidence and must not be interpreted as one.
+Every candidate score is nullable when its signal was not evaluated; a missing signal must remain null and must never be defaulted to zero. Every non-null score must use the scale, direction, normalization, and comparability rules defined by its recorded matching-policy/model version. `semantic_similarity` must remain null when semantic retrieval is disabled. Scores from different model or policy versions must not be compared as though they shared a calibrated scale. A candidate score is not a decision confidence and must not be interpreted as one.
 
 ### 7.3 EventMatchDecision
 
@@ -1663,7 +1663,7 @@ Fields:
 - `created_at`
 - `metadata`
 
-Action types may include `CREATED`, `ASSIGNED`, `REASSIGNED`, `STARTED`, `NOTE_ADDED`, `ESCALATED`, `COMPLETED`, `CANCELLED`, and `REOPENED`.
+Action types may include `CREATED`, `ASSIGNED`, `REASSIGNED`, `PRIORITY_CHANGED`, `STARTED`, `NOTE_ADDED`, `ESCALATED`, `COMPLETED`, `CANCELLED`, and `REOPENED`.
 
 Constraints:
 
