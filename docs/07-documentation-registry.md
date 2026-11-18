@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.13  
+**Version:** 1.14  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -154,54 +154,54 @@ Each must be tracked independently.
 
 The versions and lifecycle states below were read from the actual file headers in the published GitHub `main` branch during this registry refresh.
 
-| Document ID | Title | Repository Path | Actual Version | Lifecycle Status |
-|---|---|---|---:|---|
-| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.12 | Draft — Under Architecture Review |
-| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.26 | Draft — Under Architecture Review |
-| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.20 | Draft — Under Architecture Review |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.15 | Draft — Under Architecture Review |
-| GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.6 | Draft — Under Architecture Review |
+| Document ID | Title | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
+|---|---|---|---:|---|---|---|---|---|
+| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.13 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.27 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.21 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.16 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.7 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
 
 ## 5. Documentation Governance and Index Inventory
 
-| Document ID | Document | Repository Path | Actual Version | Lifecycle Status |
-|---|---|---|---:|---|
-| GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.13 | Proposed — Pending Project Owner Approval |
-| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.7 | Draft — Under Documentation Review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.10 | Draft — Under Documentation Review |
-| N/A | ADR Template | `docs/adr/adr-template.md` | 1.0 | Template |
-| N/A | Repository README / Project Entry Point | `README.md` | N/A | Published — Entry Point (no controlled-document lifecycle metadata) |
+| Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
+|---|---|---|---:|---|---|---|---|---|
+| GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-17 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.14 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.8 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.11 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
+| N/A | ADR Template | `docs/adr/adr-template.md` | 1.1 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
+| N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
 
-The actual version and status values were checked against each file header. The ADR template is supporting material, not an architectural decision. The root `README.md` is included as the published repository entry point; it currently has no controlled Document ID, version, or lifecycle metadata and is therefore classified separately.
+The version, lifecycle, owner, date, and approval-reference values were checked against the published file metadata and available approval evidence. The ADR template is supporting material, not an architectural decision. The root `README.md` is included as the published repository entry point; it currently has no controlled Document ID, version, owner, last-updated date, or lifecycle metadata and is therefore classified separately.
 
 ## 6. Architecture Decision Records Inventory
 
 The published `main` branch contains all nineteen individual ADR documents. The file paths and versions below were checked against the actual repository files.
 
-| ADR ID | Title | Repository Path | Actual Version | Decision Status |
-|---|---|---|---:|---|
-| GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.3 | Proposed |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.4 | Proposed |
-| GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/geni-adr-003-economic-intelligence-as-primary-editorial-focus.md` | 1.2 | Proposed |
-| GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/geni-adr-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.1 | Proposed |
-| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/geni-adr-005-initial-persistence-technology-and-migration-strategy.md` | 1.1 | Proposed |
-| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.2 | Proposed |
-| GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/geni-adr-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.1 | Proposed |
-| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.3 | Proposed |
-| GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | `docs/adr/decisions/geni-adr-009-near-real-time-news-acquisition-strategy.md` | 1.0 | Proposed |
-| GENI-ADR-010 | Phased Text, Audio, and Video Delivery | `docs/adr/decisions/geni-adr-010-phased-text-audio-and-video-delivery.md` | 1.0 | Proposed |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.4 | Proposed |
-| GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `docs/adr/decisions/geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` | 1.0 | Proposed |
-| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.1 | Proposed |
-| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/geni-adr-014-human-review-corrections-and-withdrawals.md` | 1.2 | Proposed |
-| GENI-ADR-015 | Market Data Integration and Economic Impact Classification | `docs/adr/decisions/geni-adr-015-market-data-integration-and-economic-impact-classification.md` | 1.0 | Proposed |
-| GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | `docs/adr/decisions/geni-adr-016-persistence-async-execution-idempotency-and-recovery.md` | 1.0 | Proposed |
-| GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `docs/adr/decisions/geni-adr-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` | 1.0 | Proposed |
-| GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | `docs/adr/decisions/geni-adr-018-multilingual-source-processing-translation-and-language-policy.md` | 1.0 | Proposed |
-| GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | `docs/adr/decisions/geni-adr-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` | 1.0 | Proposed |
+| ADR ID | Title | Repository Path | Actual Version | Decision Status | Publication State | Decision Owner | Decision Date | Approval Reference |
+|---|---|---|---:|---|---|---|---|---|
+| GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.4 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/geni-adr-003-economic-intelligence-as-primary-editorial-focus.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/geni-adr-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/geni-adr-005-initial-persistence-technology-and-migration-strategy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/geni-adr-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | `docs/adr/decisions/geni-adr-009-near-real-time-news-acquisition-strategy.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-010 | Phased Text, Audio, and Video Delivery | `docs/adr/decisions/geni-adr-010-phased-text-audio-and-video-delivery.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.4 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `docs/adr/decisions/geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/geni-adr-014-human-review-corrections-and-withdrawals.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-015 | Market Data Integration and Economic Impact Classification | `docs/adr/decisions/geni-adr-015-market-data-integration-and-economic-impact-classification.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | `docs/adr/decisions/geni-adr-016-persistence-async-execution-idempotency-and-recovery.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `docs/adr/decisions/geni-adr-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | `docs/adr/decisions/geni-adr-018-multilingual-source-processing-translation-and-language-policy.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | `docs/adr/decisions/geni-adr-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 
 ### 6.1 ADR Publication and Availability
 
@@ -396,7 +396,7 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `af596637ec031b11ef097629b2bb3c9dc8f61981`  
+**Baseline Commit Inspected:** `062f986e18fd1db96b690ff48c11347a58c76aab`  
 **Registry Refresh:** This inventory was checked against the published `main` branch at the baseline commit above, after the preceding architecture and ADR corrections. This registry revision is committed as the next change on `main`.
 
 This refresh was performed against the published GitHub `main` branch after Pull Request #1 had been merged. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
