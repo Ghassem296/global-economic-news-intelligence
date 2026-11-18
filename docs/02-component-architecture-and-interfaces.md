@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.19  
+**Version:** 1.20  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -90,6 +90,7 @@ Contains:
 - Review workflow.
 - Delivery workflow.
 - Reprocessing and recovery coordination.
+- Rights authorization and content-lifecycle coordination.
 
 Application workflows coordinate components but must not duplicate domain business rules.
 
@@ -169,6 +170,7 @@ Contains:
 - Workflow execution support.
 - Source adapters.
 - Delivery adapters.
+- Content-rights, retention, and deletion adapters behind explicit interfaces.
 - Configuration.
 - Logging, metrics, and tracing.
 - Application lifecycle and health checks.
@@ -192,6 +194,8 @@ It must not collect articles.
 
 Source reliability is an assessed attribute and must not be treated as an absolute guarantee of factual accuracy.
 
+Source access restrictions and content-use permissions are distinct. SourceRegistry stores source metadata and the applicable versioned rights-profile reference; ContentRightsService evaluates whether a specific operation is permitted. Technical accessibility must not be treated as permission for persistent storage, external processing, quotation, or redistribution.
+
 ### 4.2 NewsCollector
 
 Responsibilities:
@@ -206,7 +210,7 @@ Responsibilities:
 
 It must not perform event matching or economic analysis.
 
-It must not bypass source access restrictions or licensing requirements.
+It must not bypass source access restrictions or licensing requirements. Before discovery, metadata retrieval, or full-text retrieval, it must obtain an operation-specific authorization from ContentRightsService. Unknown, expired, revoked, denied, or review-required permission must block the affected operation; a separately permitted metadata-only path may continue.
 
 ### 4.3 ArticleNormalizer
 
@@ -379,6 +383,14 @@ EventService owns event-level business rules and the application of authorized e
 For new-event creation, EventService must require the effective NEW_EVENT_CANDIDATE decision for the case, validate the versioned EventCreationPolicy and any required review authorization, and use the decision's preassigned `proposed_event_reference` as the Event identifier. Creation must be idempotent: retrying the same authorized decision must return the same Event and must not create a duplicate. EventService creates the Event but does not create the ArticleEventLink from the NEW_EVENT_CANDIDATE decision; the new Event must first be recorded as a candidate and selected by a subsequent MATCH decision.
 
 EventService must not implement low-level similarity calculations or database-specific query logic.
+
+#### EventCreationPolicy contract
+
+`EventCreationPolicy` is a versioned domain policy evaluated by EventService before creating an Event from a `NEW_EVENT_CANDIDATE` decision. The matching decision alone does not authorize creation.
+
+The policy evaluation must consider the exact EventMatchCase and its current effective decision, the stable `proposed_event_reference`, the decision method and evidence context, the actor and authorization context, any required completed ReviewRecord, and the active policy version. Its result must distinguish `ALLOW`, `REQUIRE_REVIEW`, and `DENY`, and preserve the policy version and reason codes.
+
+Missing, stale, or unknown policy configuration must fail closed and must not authorize creation. The Project Owner is the approval authority for the policy; EventService enforces it and records the policy and authorization provenance. Exact allow/review/deny criteria remain open until reviewed against representative cases.
 
 ### 4.12 EventHistoryService
 
@@ -821,7 +833,7 @@ Fields:
 - `case_id`
 - `outcome`
 - `selected_candidate_id` — required only for MATCH
-- `proposed_event_reference` — optional reference for NEW_EVENT_CANDIDATE
+- `proposed_event_reference` — required stable, preassigned Event identifier for `NEW_EVENT_CANDIDATE`; used as the deterministic identity for separately authorized, idempotent Event creation
 - `decision_method`
 - `decision_confidence` — optional and distinct from candidate similarity
 - `decision_rationale`
@@ -1062,6 +1074,43 @@ Database-specific query logic belongs in infrastructure implementations.
 Repository contracts must support the transaction boundaries required by their corresponding application workflows.
 
 Repositories must not expose database-specific types to domain or application layers. A repository may encapsulate multiple closely related tables when doing so preserves a clear aggregate and transaction boundary.
+
+### 6.1 Contract Completeness and Implementation Gate
+
+The repository list above is an inventory, not a method-level, code-ready API specification. Before an interface is implemented, its contract must define exact method names and supported operations; typed request and response structures; required fields, nullability, identifiers, and version references; validation rules; expected errors and retry classification; transaction/UnitOfWork boundaries; idempotency and uniqueness scope; concurrency/stale-update behavior; authorization and audit requirements; and pagination, ordering, and query limits where applicable.
+
+The same requirement applies to application workflows. Each workflow must have typed input/output contracts, explicit state transitions, side effects, failure outcomes, and recovery behavior. The prose contracts in Section 7 establish responsibilities and invariants but are not substitutes for executable DTO and method definitions.
+
+At minimum, the first vertical slice requires method-level contracts and repository tests for `SourceRepository`, `ArticleRepository`, `ArticleRevisionRepository`, `EventRepository`, `EventMatchCaseRepository`, `EventMatchCandidateRepository`, `EventMatchDecisionRepository`, `ArticleEventLinkRepository`, `EvidenceRepository`, `AnalysisRepository`, `ReportRepository`, `PublicationDecisionRepository`, and `ProcessingRunRepository`. Additional interfaces must be specified before their dependent stage begins.
+
+### 6.2 Data and Write Ownership
+
+The following map identifies the proposed authoritative application component for domain writes. It does not require one repository per table; persistence may be grouped by aggregate where transaction boundaries remain explicit.
+
+| Domain state / records | Authoritative writer or coordinator | Boundary |
+|---|---|---|
+| Source configuration and source relationships | `SourceRegistry` | Does not collect articles or approve content rights by implication. |
+| Source health and collection checkpoints | `NewsCollector` with `WorkflowOrchestrator` | Observations/checkpoints only; source configuration remains with `SourceRegistry`. |
+| Source rights profiles, permission assessments, retention and deletion records | `ContentRightsService` | Must fail closed on unknown permission and preserve policy/version provenance. |
+| Article current projection and immutable ArticleRevision | `ArticleRevisionService` | Atomically creates/reuses a revision and updates the current projection. |
+| Duplicate candidates | `ArticleDeduplicator` | Does not merge article identity or establish event association. |
+| Topic classification | `TopicClassifier` | Versioned result for an exact ArticleRevision. |
+| Entity mentions and canonical entity/alias resolution | `EntityExtractor` and `EntityResolver` | Extraction creates mentions; resolver owns canonical resolution and ambiguity. |
+| EventMatchCase and EventMatchCandidate | Event Resolution Workflow and `EventMatcher` | Matcher evaluates candidates; workflow owns case lifecycle and coordinates decisions. |
+| EventMatchDecision | Event Resolution Workflow, including authorized review routing | Immutable case-level decision; no direct mutation by a review task. |
+| Event and ArticleEventLink | `EventService` | Applies authorized decisions and identity operations transactionally. |
+| EventHistory | `EventHistoryService`, invoked through `EventService` | Append-only history; not a second event-state owner. |
+| Claims and evidence relationships | `EvidenceService` | Stores source-attributed claims/evidence; extraction alone does not verify claims. |
+| Analysis and analysis provenance links | Event Intelligence Workflow with the relevant assessor/analyzer | Assessors produce typed outputs; workflow persists versioned results and inputs. |
+| Report versions and lineage | `ReportVersionService` | `ReportGenerator` creates content but does not own immutable version persistence. |
+| PublicationDecision | `PublicationPolicy` through Publication Decision Workflow | Eligibility only; no external side effect. |
+| ReviewRecord and ReviewAction | `ReviewService` | Task lifecycle and reviewer audit only; no domain-decision override. |
+| PublicationRecord and PublicationAttempt | `PublicationService` | External publication operations and reconciliation. |
+| DeliveryRecord and DeliveryAttempt | `ReportDelivery` | Recipient delivery only; cannot mutate publication state. |
+| ProcessingRun, ProcessingStep, schedules and executions | `WorkflowOrchestrator` | Execution state remains separate from domain state. |
+| LLMUsageRecord | `SharedLLMExecutionLayer` | Records provider usage/cost where available. |
+
+Where a capability is not yet defined or its ADR remains Proposed, this map describes a proposed ownership boundary and is not approval to implement it.
 
 ## 7. Workflow Contracts
 
@@ -1327,6 +1376,32 @@ A publication-link delivery must reference a confirmed successful publication. D
 
 Reprocessing must not silently overwrite published or historical records.
 
+### 7.11 Rights Authorization and Content Lifecycle Workflow
+
+**Input:**
+
+- Source, Article, ArticleRevision, or derived-artifact reference.
+- Requested operation, such as metadata access, full-text access, temporary processing, persistent storage, internal analysis, external LLM processing, embedding, quotation, customer distribution, or republication.
+- Applicable source/content rights-profile reference and policy version where known.
+- Actor, destination/provider, retention context, and execution context.
+
+**Output:**
+
+- Operation-specific rights result: `ALLOWED`, `DENIED`, `UNKNOWN`, `EXPIRED`, `REVOKED`, or `REQUIRES_REVIEW`.
+- Rights-policy/profile version and supporting basis/reference.
+- Permitted content scope, retention mode/expiry, and required attribution/handling constraints where applicable.
+- Audit record and, for deletion, a traceable request and result.
+
+**Workflow invariants:**
+
+- Permission is evaluated per operation; metadata access does not authorize full-text storage, external processing, quotation, or distribution.
+- `UNKNOWN`, `DENIED`, `EXPIRED`, `REVOKED`, and `REQUIRES_REVIEW` must not authorize the requested restricted operation.
+- Rights checks occur before content retrieval, persistent storage, external LLM submission, embedding generation, and report/media distribution as applicable.
+- Temporary processing must not create an unauthorized retained copy in a file, cache, queue, log, backup, or provider system.
+- Rights/profile changes and deletion requests trigger the applicable restriction, expiry, deletion, and verification workflows.
+- A rights decision does not replace publication eligibility or recipient-distribution authorization; these controls remain separate.
+- Detailed rights schemas and legal/contractual interpretations remain subject to GENI-ADR-013 approval.
+
 ## 8. Execution and Error Contracts
 
 All external operations must have explicit timeout and resource-limit behavior.
@@ -1339,6 +1414,10 @@ Suggested categories:
 - `RATE_LIMITED`
 - `SOURCE_UNAVAILABLE`
 - `SOURCE_ACCESS_RESTRICTED`
+- `CONTENT_RIGHTS_DENIED`
+- `CONTENT_RIGHTS_UNKNOWN`
+- `CONTENT_RIGHTS_REVIEW_REQUIRED`
+- `CONTENT_RETENTION_EXPIRED`
 - `INVALID_SOURCE_RESPONSE`
 - `NORMALIZATION_ERROR`
 - `DEDUPLICATION_ERROR`
@@ -1555,6 +1634,9 @@ Critical tests include:
 - Correcting and deactivating an ArticleEventLink without losing its history.
 - Event identity preservation.
 - Event merge and split history.
+- Rights checks for metadata/full-text access, persistent retention, external LLM processing, derived artifacts, and distribution.
+- Fail-closed behavior for unknown, denied, expired, revoked, and review-required permissions.
+- Traceable content deletion and verification where required by the approved rights policy.
 - Importance assessment behavior independently of economic relevance and impact.
 - Economic relevance classification for direct, indirect, contextual, not-established, and unknown cases.
 - Economic impact direction and magnitude assessment by channel with explicit evidence status.
@@ -1683,6 +1765,7 @@ The following items require formal review and corresponding ADRs or supporting s
 13. Workflow recovery, idempotency, and retry guarantees.
 14. LLM budget, cost tracking, and evaluation.
 15. Source acquisition security and content retention.
+16. Content rights profiles, operation-specific permission checks, retention, deletion, and customer-distribution restrictions (GENI-ADR-013).
 
 The current individual ADR documents are listed in:
 
@@ -1702,6 +1785,8 @@ The system uses explicit interfaces and dependency inversion to keep the product
 
 Application workflows coordinate deterministic processing stages, while the Shared LLM Execution Layer provides controlled language-model capabilities.
 
-The design preserves event identity, evidence provenance, historical traceability, controlled publication, and recoverable execution.
+The design preserves event identity, evidence provenance, historical traceability, controlled publication, content-rights enforcement, and recoverable execution.
+
+Method-level interface signatures and typed DTO schemas must be completed at the implementation gate defined in Section 6.1. Content-rights authorization is a required cross-cutting boundary proposed by GENI-ADR-013; it must not be represented as implemented or formally approved while that ADR remains Proposed.
 
 Future expansion must not compromise the simplicity, reliability, and explicit boundaries of the initial product release.
