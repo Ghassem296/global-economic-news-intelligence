@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.13
+**Version:** 1.14
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -1403,15 +1403,21 @@ Fields:
 
 ### 11.4 ReportArticleLink
 
-Connects reports to source articles.
+Connects a report version to the exact source ArticleRevision used to generate or support it. The parent Article is resolved through ArticleRevision.article_id; a report must not rely only on a mutable current Article projection.
 
 Fields:
 
 - `id`
 - `report_id`
-- `article_id`
+- `article_revision_id`
 - `reference_type`
 - `created_at`
+
+Constraints:
+
+- The referenced ArticleRevision must exist and must be permitted for the report's use under the applicable content-rights policy.
+- Replacing an Article's current projection must not change the revision referenced by an existing report.
+- The same report version must not contain duplicate links to the same ArticleRevision for the same reference_type.
 
 ### 11.5 ReportAnalysisLink
 
@@ -1982,7 +1988,7 @@ The logical table inventory is:
 | `reports` | Report versions |
 | `report_event_links` | Report-event relationships |
 | `report_evidence_links` | Report evidence references |
-| `report_article_links` | Report article references |
+| `report_article_links` | Report references to exact ArticleRevision records |
 | `report_analysis_links` | Report analysis references |
 | `publication_decisions` | Publication policy history |
 | `review_records` | Human review records |
@@ -2285,7 +2291,7 @@ The model must distinguish:
 
 Retention rules must define which content can be stored, for how long, and for what purpose.
 
-Published reports must preserve sufficient provenance to identify their sources, subject to legal and contractual restrictions.
+Published reports must preserve sufficient provenance to identify their sources, subject to legal and contractual restrictions. ReportArticleLink must point to the exact ArticleRevision used, not only to the mutable current Article projection.
 
 Deletion or withdrawal requests must not be silently ignored. The system needs an auditable correction, withdrawal, or restricted-retention process.
 
