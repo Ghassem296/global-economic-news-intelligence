@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.9
+**Version:** 1.10
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -1273,7 +1273,16 @@ Fields:
 - `new_state`
 - `change_reason`
 - `processing_run_id` nullable
+- `actor_type`
+- `actor_reference` nullable
+- `event_match_case_id` nullable
+- `source_event_match_decision_id` nullable
+- `event_creation_policy_version` nullable
+- `idempotency_key` nullable
+- `metadata`
 - `created_at`
+
+For an Event created from a NEW_EVENT_CANDIDATE decision, the initial `CREATED` history record must preserve the exact EventMatchCase, source NEW_EVENT_CANDIDATE decision, EventCreationPolicy version, actor/authorization reference, and idempotency key. These references must be written atomically with Event creation.
 
 Possible change types:
 
@@ -1293,7 +1302,7 @@ Possible change types:
 - `MERGED`
 - `SPLIT`
 
-History should be append-only from the application perspective.
+History should be append-only from the application perspective. A non-null EventHistory idempotency_key must be unique. For candidate-driven creation, the source decision must belong to event_match_case_id and have outcome NEW_EVENT_CANDIDATE; retries must reuse the same Event identifier and creation-history idempotency key.
 
 ### 10.2 Lifecycle Transitions
 
