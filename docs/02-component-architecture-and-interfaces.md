@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.45  
+**Version:** 1.46  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1352,6 +1352,7 @@ The following crosswalk assigns every repository in the initial Document 03 inve
 | `ContentUsageAuditRepository` | ContentUsageAuditRecord | ContentRightsService | Append-only operation audit transaction (ADR-013) |
 | `SourceHealthRepository` | SourceHealthRecord | NewsCollector | One source-health observation transaction |
 | `SourceRelationshipRepository` | SourceRelationship | SourceRegistry | Source relationship update transaction |
+| `ArticleOriginRelationshipRepository` | ArticleOriginRelationship | EvidenceService | Exact ArticleRevision origin-link and provenance transaction |
 | `ArticleRepository` | Article current projection | ArticleRevisionService | Atomic Article projection and revision transaction |
 | `ArticleRevisionRepository` | ArticleRevision | ArticleRevisionService | Atomic immutable revision and current-projection transaction |
 | `ArticleProcessingRepository` | ArticleProcessingRecord | Article Processing Workflow | One idempotent processing-stage state transition |
@@ -1397,6 +1398,8 @@ The following crosswalk assigns every repository in the initial Document 03 inve
 | `DistributionAuthorizationRepository` | DistributionAuthorizationDecision and DistributionAuthorizationRightsLink | ReportDelivery through Distribution Authorization Workflow | Decision, authorized content-scope fingerprint, complete rights-assessment link set/fingerprint, validity, and supersession in one transaction |
 | `ProcessingRunRepository` | ProcessingRun | WorkflowOrchestrator | Run lifecycle/lease state transaction |
 | `ProcessingStepRepository` | ProcessingStep | WorkflowOrchestrator | Step state/idempotency transaction |
+| `ExecutionLeaseRepository` | ExecutionLease | WorkflowOrchestrator | Atomic lease claim/renew/release and fencing-token validation transaction |
+| `IdempotencyRecordRepository` | IdempotencyRecord | WorkflowOrchestrator and relevant application service | Scoped key/fingerprint claim and local domain-effect transaction |
 | `CollectionCheckpointRepository` | CollectionCheckpoint | NewsCollector with WorkflowOrchestrator | Checkpoint and collection progress transaction |
 | `LLMUsageRepository` | LLMUsageRecord | SharedLLMExecutionLayer | Append-only provider usage/cost record transaction |
 | `ScheduleRepository` | Schedule | WorkflowOrchestrator | Versioned schedule configuration transaction |
