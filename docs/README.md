@@ -654,6 +654,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `docs/README.md`  
-**Version:** 1.22  
+**Version:** 1.23  
 **Status:** Draft — Under Documentation Review  
-**Last Updated:** 2026-11-18
+**Last Updated:** 2026-11-19
