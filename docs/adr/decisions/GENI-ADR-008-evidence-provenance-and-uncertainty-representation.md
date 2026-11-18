@@ -4,9 +4,9 @@
 **ADR ID:** GENI-ADR-008  
 **Title:** Evidence Provenance and Uncertainty Representation  
 **Status:** Proposed  
-**Version:** 1.2
+**Version:** 1.3
 **Date:** 2026-11-18
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
@@ -1171,6 +1171,7 @@ Such measurements must be established through representative datasets and evalua
 | 1.0 | 2026-11-16 | Proposed | Initial proposal covering evidence provenance, claim assessment, source independence, uncertainty, and analytical traceability. | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Clarified distinct assessment semantics and source/evidence provenance constraints. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Aligned ClaimAssessment, ClaimAssessmentEvidenceLink, AssessmentHistory, and Claim current-assessment projection with Documents 02 and 03. | AI Architecture Assistant |
+| 1.3 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 
 ---
 
