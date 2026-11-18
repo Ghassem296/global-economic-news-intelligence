@@ -2283,6 +2283,7 @@ Data-layer tests must cover:
 - Evidence location traceability.
 - Analysis provenance.
 - Analysis input validation.
+- Separate, versioned importance, economic relevance, and economic impact assessment records using explicit Analysis types.
 - Report version uniqueness.
 - Multi-event report relationships.
 - Published report immutability.
@@ -2333,6 +2334,7 @@ The initial implementation requires:
 - Claims and evidence.
 - Claim observations and evidence links.
 - Analysis records and evidence links.
+- Independent, versioned importance, economic relevance, and economic impact assessment outputs using distinct Analysis types.
 - Report versions and source references.
 - Report-event relationships where multi-event reporting is required.
 - Publication decisions.
