@@ -815,11 +815,97 @@ def validate_cross_document_contracts() -> None:
         fail("Documentation index Section 4 must follow all Section 3 document entries")
 
 
+
+def validate_document_registry_metadata_alignment() -> None:
+    """Require every controlled document's ID, version, and lifecycle status to match its registry row."""
+    registry_text = read_text(DOC_REGISTRY)
+    for relative in CONTROLLED_DOCUMENTS:
+        path = ROOT / relative
+        content = markdown_content_without_fences(read_text(path))
+        values = {
+            field: metadata_values(content, field)
+            for field in ("Document ID", "Version", "Status")
+        }
+        for field, found in values.items():
+            if len(found) != 1:
+                fail(
+                    f"Expected exactly one {field} metadata value in {relative}; "
+                    f"found {len(found)}"
+                )
+
+        matching_rows: list[list[str]] = []
+        for line in registry_text.splitlines():
+            if not line.lstrip().startswith("|"):
+                continue
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if chr(96) + relative + chr(96) in cells:
+                matching_rows.append(cells)
+
+        if len(matching_rows) != 1:
+            fail(
+                f"Expected exactly one documentation-registry row for {relative}; "
+                f"found {len(matching_rows)}"
+            )
+        row = matching_rows[0]
+        if len(row) < 5:
+            fail(f"Incomplete documentation-registry row for {relative}: {row}")
+        expected = (values["Document ID"][0], values["Version"][0], values["Status"][0])
+        actual = (row[0], row[3], row[4])
+        if actual != expected:
+            fail(
+                f"Document metadata/registry mismatch for {relative}: "
+                f"file(ID, version, status)={expected}; "
+                f"registry(ID, version, status)={actual}"
+            )
+
+
+def validate_documentation_index_adr_authority() -> None:
+    """The Documentation Index must link to, not duplicate, the ADR Registry inventory."""
+    index = read_text(ROOT / "docs/README.md")
+    if "## 4.3 Individual ADR Documents" not in index:
+        fail("Documentation Index must retain its Individual ADR Documents guidance section")
+    if re.search(r"^\\|\\s*GENI-ADR-\\d{3}\\s*\\|", index, re.MULTILINE):
+        fail("Documentation Index duplicates individual ADR inventory rows")
+    if "[ADR Registry](adr/README.md)" not in index:
+        fail("Documentation Index must link to the authoritative ADR Registry")
+
+
+def validate_adr_registry_title_alignment() -> None:
+    """Keep each ADR title in its file metadata identical to the authoritative registry."""
+    registry_text = read_text(ADR_REGISTRY)
+    for path in sorted(ADR_DIR.glob("GENI-ADR-*.md")):
+        content = markdown_content_without_fences(read_text(path))
+        title = re.search(r"^\\*\\*Title:\\*\\*\\s*(.+?)\\s*$", content, re.MULTILINE)
+        if not title:
+            fail(f"Missing ADR title metadata: {path.name}")
+        adr_id_match = re.match(r"^(GENI-ADR-\\d{3})-", path.name)
+        if not adr_id_match:
+            fail(f"Invalid ADR filename: {path.name}")
+        adr_id = adr_id_match.group(1)
+        rows = []
+        for line in registry_text.splitlines():
+            if not line.lstrip().startswith("|"):
+                continue
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if cells and cells[0] == adr_id:
+                rows.append(cells)
+        if len(rows) != 1 or len(rows[0]) < 5:
+            fail(f"Expected exactly one complete ADR registry row for {adr_id}")
+        if rows[0][1] != title.group(1):
+            fail(
+                f"ADR title mismatch for {adr_id}: "
+                f"file={title.group(1)!r}, registry={rows[0][1]!r}"
+            )
+
+
 def main() -> None:
     validate_registry_snapshot_provenance()
     validate_roadmap_document_inventory()
     validate_cross_document_contracts()
     validate_document_versions()
+    validate_document_registry_metadata_alignment()
+    validate_documentation_index_adr_authority()
+    validate_adr_registry_title_alignment()
     validate_adrs()
     validate_duplicate_version_metadata()
     validate_document_footer_metadata()
@@ -832,7 +918,7 @@ def main() -> None:
     validate_event_identity_operation_contract()
     validate_distribution_authorization_contract()
     print(
-        "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled and duplicate versions, "
+        "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled versions and document ID/version/status registry parity, ADR title alignment and single-source inventory, duplicate versions, "
         "all 19 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
         "local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
         "event identity-operation history/recovery, multi-source distribution authorization, registry snapshot provenance, and roadmap/document inventory parity."
