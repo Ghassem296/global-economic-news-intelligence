@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.14
+**Version:** 1.15
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
@@ -375,9 +375,9 @@ At the time of this revision:
 - The ADR governance document exists.
 - The ADR template exists.
 - The ADR registry exists.
-- Nineteen architectural decision topics are registered.
-- All nineteen individual ADR documents are committed to the published main branch.
-- All nineteen ADRs have Proposed status.
+- Twenty architectural decision topics are registered.
+- All twenty individual ADR documents are committed to the published main branch.
+- All twenty ADRs have Proposed status.
 - No registered decision topic remains without an individual ADR document in this branch.
 - No individual ADR is currently recorded as Accepted in this registry.
 - No claim of implementation completion is implied by the existence or publication of an ADR.
