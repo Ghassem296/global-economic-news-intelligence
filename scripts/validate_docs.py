@@ -88,6 +88,27 @@ def validate_document_versions() -> None:
             )
 
 
+def validate_repeated_document_metadata() -> None:
+    """Ensure repeated footer metadata agrees with each controlled document header."""
+    labels = ("Document ID", "Version", "Status")
+    for relative in CONTROLLED_DOCUMENTS:
+        content = read_text(ROOT / relative)
+        for label in labels:
+            pattern = re.compile(
+                rf"^\\*\\*{re.escape(label)}:\\*\\*\\s*(?:`([^`]+)`|(.+?))\\s*$",
+                re.MULTILINE,
+            )
+            values = [
+                (match.group(1) or match.group(2) or "").strip()
+                for match in pattern.finditer(content)
+            ]
+            if len(values) > 1 and values[0] != values[-1]:
+                fail(
+                    f"Repeated {label} metadata mismatch in {relative}: "
+                    f"header={values[0]!r}, final={values[-1]!r}"
+                )
+
+
 def validate_adrs() -> None:
     paths = sorted(ADR_DIR.glob("GENI-ADR-*.md"))
     ids: list[str] = []
@@ -1038,6 +1059,7 @@ def main() -> None:
     validate_roadmap_document_inventory()
     validate_cross_document_contracts()
     validate_document_versions()
+    validate_repeated_document_metadata()
     validate_document_registry_metadata_alignment()
     validate_documentation_index_adr_authority()
     validate_adr_registry_title_alignment()
