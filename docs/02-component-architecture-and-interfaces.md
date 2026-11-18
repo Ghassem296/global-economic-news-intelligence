@@ -2,10 +2,10 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
-**Last Updated:** 2026-11-17
+**Last Updated:** 2026-11-18
 
 ---
 
@@ -463,15 +463,14 @@ Semantic retrieval and vector storage are separate architectural decisions.
 
 Responsibilities:
 
-- Generate structured event reports.
+- Generate structured report content from an event dossier and approved analysis inputs.
 - Apply report templates.
-- Include evidence references.
-- Separate facts from source claims and analysis.
+- Include evidence and source references.
+- Separate observed facts, source-attributed claims, analysis, and forecasts.
 - Include uncertainty and limitations.
-- Generate immutable report versions.
-- Record the analysis and template versions used.
+- Produce report content and generation metadata.
 
-It must not make publication decisions or deliver reports.
+It must not make publication decisions, create publication operations, or deliver reports. Immutable report-version creation and lineage are managed by ReportVersionService.
 
 ### 4.20 PublicationPolicy
 
@@ -481,9 +480,9 @@ Responsibilities:
 - Apply evidence and confidence requirements.
 - Detect duplicate publication risk.
 - Evaluate provenance completeness.
-- Evaluate security and content-policy requirements.
-- Determine publication outcome.
-- Record decision reasons and policy version.
+- Evaluate security, content-rights, and content-policy requirements.
+- Determine publication eligibility.
+- Record decision reasons, caveats, and policy version.
 
 It returns one of:
 
@@ -492,7 +491,7 @@ It returns one of:
 - `HOLD_FOR_REVIEW`
 - `REJECT`
 
-It must not perform delivery.
+A publication decision is an authorization outcome, not an instruction that an external publication has succeeded. PublicationPolicy must not execute publication or delivery operations.
 
 ### 4.21 ReviewService
 
@@ -502,9 +501,9 @@ Responsibilities:
 - Maintain review queue status.
 - Record review reasons.
 - Record reviewer or authorized decision-maker where applicable.
-- Record review timestamps.
+- Record review ownership and timestamps.
 - Record review outcomes.
-- Route approved reports back to publication processing.
+- Route approved reports back to publication-decision processing.
 - Preserve review history.
 
 Possible review outcomes include:
@@ -514,7 +513,7 @@ Possible review outcomes include:
 - Request regeneration or additional evidence.
 - Reject publication.
 
-A held report must not be automatically published without an authorized review outcome.
+A held report must not be automatically published without an authorized review outcome. A material review outcome must result in a new effective PublicationDecision; ReviewService must not bypass PublicationPolicy or directly call a publication target.
 
 The initial implementation must define the actual review mechanism and the authorized decision-maker.
 
@@ -522,34 +521,51 @@ The initial implementation must define the actual review mechanism and the autho
 
 Responsibilities:
 
-- Create report versions.
-- Preserve previous versions.
-- Record corrections and supersession.
-- Record withdrawal.
-- Maintain publication history.
+- Create immutable report versions from generated content.
+- Assign and validate version identity.
+- Preserve previous report versions.
+- Record report-level correction and supersession lineage.
+- Maintain report-generation history.
 - Ensure historical report content remains auditable.
 
-Published report versions must be immutable.
+A correction creates a new report version; it must not overwrite a previously generated or published report. ReportVersionService manages report-version lineage only. It does not execute an external replacement or withdrawal and does not own publication-target state.
 
-A correction or withdrawal must create a traceable status or version transition rather than silently replacing previous content.
-
-### 4.23 ReportDelivery
+### 4.23 PublicationService
 
 Responsibilities:
 
-- Deliver approved reports.
-- Track delivery attempts.
+- Execute authorized `PUBLISH`, `REPLACE`, and `WITHDRAW` operations.
+- Validate the effective publication decision and required review authorization.
+- Validate the report version, publication target, and any existing publication being replaced or withdrawn.
+- Persist a durable PublicationRecord before an external side effect.
+- Create and update PublicationAttempt records.
+- Generate and reuse stable idempotency keys for retries of the same logical operation.
+- Invoke a target-specific publication adapter through an explicit interface.
+- Record confirmed external references, URLs, timestamps, and outcomes.
+- Reconcile uncertain external outcomes before another side-effecting attempt.
+- Preserve the history of successful, failed, superseded, and withdrawn publication operations.
+
+It must not generate report content, decide publication eligibility, silently alter a report version, or perform subscriber delivery.
+
+A failed replacement must leave the previous confirmed publication effective. A failed or uncertain withdrawal must not be represented as completed. A publication operation with an uncertain external outcome must enter reconciliation rather than being blindly retried.
+
+### 4.24 ReportDelivery
+
+Responsibilities:
+
+- Deliver approved report content, confirmed publication links, or notifications to configured recipients and delivery destinations.
+- Track logical delivery operations and individual delivery attempts.
 - Prevent duplicate delivery.
-- Record destination and delivery references.
+- Record destination and external delivery references.
 - Record delivery outcomes.
 - Support future delivery channels.
 - Handle retryable delivery failures.
 
-It must not generate report content or determine publication eligibility.
+It must not generate report content, determine publication eligibility, or execute public publication, replacement, or withdrawal operations. A delivery containing a publication link must reference a confirmed successful PublicationRecord. Delivery outcomes must not change publication state.
 
 Delivery operations must use stable idempotency keys.
 
-### 4.24 WorkflowOrchestrator
+### 4.25 WorkflowOrchestrator
 
 Responsibilities:
 
@@ -566,9 +582,9 @@ Responsibilities:
 
 It must not contain domain-specific event matching or analytical algorithms.
 
-Workflow state must be distinct from article, event, analysis, and publication state.
+Workflow state must be distinct from article, event, analysis, publication, and delivery state.
 
-### 4.25 SharedLLMExecutionLayer
+### 4.26 SharedLLMExecutionLayer
 
 Responsibilities:
 
@@ -587,7 +603,7 @@ It must not own product-specific news intelligence logic.
 
 General conversational memory, autonomous agent loops, and unrestricted tool execution are not initial-release requirements.
 
-### 4.26 ObservabilityService
+### 4.27 ObservabilityService
 
 Responsibilities:
 
@@ -596,6 +612,7 @@ Responsibilities:
 - Support distributed or local trace correlation as appropriate.
 - Track workflow outcomes.
 - Track provider usage and errors.
+- Track publication-operation and delivery outcomes separately.
 - Redact sensitive information.
 - Provide operational health information.
 
@@ -793,6 +810,41 @@ Event history must be append-oriented and auditable.
 
 It must preserve relevant lifecycle transitions, material updates, corrections, merges, and splits.
 
+### 5.17 PublicationRecord
+
+Represents one logical operation against a publication target.
+
+It must preserve:
+
+- Report-version identity.
+- Applicable publication-decision reference.
+- Publication-target reference.
+- Operation type: `PUBLISH`, `REPLACE`, or `WITHDRAW`.
+- Reference to the earlier publication for replacement or withdrawal.
+- Stable idempotency key.
+- Operation status and timestamps.
+- External publication reference and URL where available.
+- Authorization and reason information for withdrawal.
+- Error and reconciliation information.
+
+A PublicationRecord represents an operation, not merely a policy decision or a delivery. Its successful operation history is the basis for determining whether a report version is currently available at a publication target.
+
+### 5.18 PublicationAttempt
+
+Represents one execution attempt for a PublicationRecord.
+
+It must preserve:
+
+- Publication-operation identity.
+- Attempt number.
+- Start and completion timestamps.
+- Outcome.
+- External reference where available.
+- Error classification and summary.
+- Reconciliation information and metadata.
+
+Attempts must remain separately traceable. Retrying an operation must not create a new logical publication operation or a new idempotency key.
+
 ## 6. Repository Interfaces
 
 All persistence access must use repository interfaces.
@@ -812,6 +864,8 @@ Initial interfaces include:
 - `ReportRepository`
 - `PublicationDecisionRepository`
 - `ReviewRepository`
+- `PublicationRepository`
+- `PublicationAttemptRepository`
 - `DeliveryRepository`
 - `ProcessingRunRepository`
 - `EventHistoryRepository`
@@ -824,7 +878,7 @@ Database-specific query logic belongs in infrastructure implementations.
 
 Repository contracts must support the transaction boundaries required by their corresponding application workflows.
 
-Repositories must not expose database-specific types to domain or application layers.
+Repositories must not expose database-specific types to domain or application layers. A repository may encapsulate multiple closely related tables when doing so preserves a clear aggregate and transaction boundary.
 
 ## 7. Workflow Contracts
 
@@ -930,37 +984,57 @@ Observed, source-reported, and inferred economic impacts must remain distinguish
 
 **Output:**
 
-- Immutable report version.
+- Generated report content.
 - Report generation metadata.
-- Publication evaluation request or result.
+- Report-version creation request.
 
-Report generation must not itself publish or deliver the report.
+Report generation must not itself create an external publication or delivery operation. ReportVersionService creates the immutable report version and preserves its lineage.
 
-### 7.6 Publication and Review Workflow
+### 7.6 Publication Decision and Review Workflow
 
 **Input:**
 
-- Generated report.
+- Generated report version.
 - Publication policy configuration.
-- Relevant evidence and provenance information.
+- Relevant evidence, provenance, security, and content-rights information.
 
 **Output:**
 
-- Publication decision.
-- Decision reasons.
+- Immutable publication decision.
+- Decision reasons and caveats.
 - Review record when required.
 - Next permitted workflow action.
 
-A held report must be routed to a defined review mechanism.
+A held report must be routed to a defined review mechanism. An authorized review outcome must be recorded, and a material outcome must produce a new effective publication decision. This workflow does not perform an external publication.
 
-The workflow must not bypass review requirements.
-
-### 7.7 Delivery Workflow
+### 7.7 Publication Execution Workflow
 
 **Input:**
 
-- Approved report version.
-- Delivery destination.
+- Report version.
+- Effective publication decision for `PUBLISH` or `PUBLISH_WITH_CAVEATS`, when applicable.
+- Publication target reference.
+- Operation type: `PUBLISH`, `REPLACE`, or `WITHDRAW`.
+- Earlier PublicationRecord reference for replacement or withdrawal.
+- Stable idempotency key and required authorization context.
+
+**Output:**
+
+- PublicationRecord.
+- PublicationAttempt history.
+- Confirmed external publication reference and URL where available.
+- Operation outcome or reconciliation requirement.
+
+The workflow must persist the logical operation before calling the external target. A replacement must not supersede the previous publication until success is confirmed. A withdrawal must not be marked complete until the target outcome is confirmed. An uncertain external outcome must be reconciled before another side-effecting attempt.
+
+### 7.8 Delivery Workflow
+
+**Input:**
+
+- Report version.
+- Delivery mode: report content, publication link, or notification.
+- Delivery destination and recipient reference.
+- PublicationRecord reference when delivering a publication link.
 - Stable idempotency key.
 
 **Output:**
@@ -969,9 +1043,9 @@ The workflow must not bypass review requirements.
 - Delivery reference.
 - Attempt metadata.
 
-The workflow must prevent unintended duplicate publication or delivery when retried.
+A publication-link delivery must reference a confirmed successful publication. Direct report-content delivery may occur independently when its distribution policy permits it. The workflow must prevent unintended duplicate delivery and must not change publication state.
 
-### 7.8 Reprocessing Workflow
+### 7.9 Reprocessing Workflow
 
 **Input:**
 
@@ -1013,6 +1087,9 @@ Suggested categories:
 - `IMPACT_ANALYSIS_ERROR`
 - `REPORT_GENERATION_ERROR`
 - `PUBLICATION_REJECTED`
+- `PUBLICATION_ERROR`
+- `PUBLICATION_OUTCOME_UNKNOWN`
+- `WITHDRAWAL_ERROR`
 - `REVIEW_REQUIRED`
 - `PERSISTENCE_ERROR`
 - `DELIVERY_ERROR`
@@ -1150,6 +1227,10 @@ Examples:
 - `analysis.completed`
 - `report.generated`
 - `report.publication_decided`
+- `report.publication_operation.started`
+- `report.publication_operation.succeeded`
+- `report.publication_operation.failed`
+- `report.publication_operation.reconciliation_required`
 - `report.review.created`
 - `report.review.completed`
 - `report.corrected`
@@ -1199,6 +1280,12 @@ Critical tests include:
 - Source independence assessment.
 - Publication policy enforcement.
 - Review queue behavior.
+- Publication execution only after an effective authorization decision.
+- Publication idempotency and duplicate prevention.
+- Publication replacement success and failure behavior.
+- Publication withdrawal authorization and history.
+- Reconciliation of uncertain external publication outcomes.
+- Independent publication and delivery state transitions.
 - Report version consistency.
 - Report correction and withdrawal.
 - Duplicate delivery prevention.
@@ -1245,10 +1332,11 @@ The initial product release includes the following capabilities:
 - Importance ranking.
 - Economic impact analysis.
 - Event dossier generation.
-- Report generation and versioning.
-- Publication policy.
+- Report generation and immutable versioning.
+- Publication policy and immutable decisions.
 - A defined review mechanism for held reports.
-- Text delivery.
+- Publication execution records and attempts for publish, replace, and withdraw operations.
+- Text delivery with separate delivery records and attempts.
 - Basic scheduling and workflow recovery.
 - Shared LLM Execution Layer.
 - Evaluation and observability.
