@@ -3,9 +3,9 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.10
+**Version:** 1.11
 **Status:** Draft — Under Architecture Review
-**Last Updated:** 2026-11-16
+**Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence
 
 ---
@@ -342,10 +342,11 @@ Establish a consistent architecture baseline and resolve decisions that block sa
 9. Define initial product scope.
 10. Define the initial economic topic taxonomy.
 11. Define initial report and publication requirements.
-12. Define the initial source and content-rights policy.
+12. Define the initial source and content-rights policy, including operation-specific permissions and a fail-closed rule for unknown rights.
 13. Define initial event identity and correlation rules.
-14. Define the review process for held reports.
+14. Define reviewer roles, authorization, and the review process for held reports.
 15. Define the first evaluation cases.
+16. Define the typed method-level contracts and transaction boundaries required by the first vertical slice.
 
 ### Required Architectural Topics
 
@@ -357,8 +358,8 @@ The following topics must be resolved or explicitly bounded before dependent imp
 - EventCreationPolicy authorization, stable proposed Event identifiers, and idempotent recovery after partial creation.
 - Semantic similarity and embedding strategy.
 - Initial persistence and async execution strategy.
-- News acquisition and full-text access rights.
-- Publication, review, correction, and withdrawal policy.
+- News acquisition and full-text access rights, including the rights-profile owner and mandatory permission checks before retrieval, persistent storage, external processing, and distribution.
+- Publication, review, correction, and withdrawal policy, including reviewer authorization and the separation of publication eligibility from recipient-distribution authorization.
 - Market data availability and impact classification.
 - Separate Event Importance, Economic Relevance, and Economic Impact assessment methodology (GENI-ADR-019).
 - Processing recovery and idempotency.
@@ -377,7 +378,9 @@ Not every future capability must be fully designed before the first implementati
 
 - Critical architecture conflicts are resolved.
 - Decisions blocking the first implementation slice are accepted or explicitly bounded.
-- EventCreationPolicy and human-approval conditions are accepted or explicitly bounded before NEW_EVENT_CANDIDATE can cause automatic Event creation.
+- EventCreationPolicy has an approved, versioned decision rule and authorization owner; until then, automatic Event creation from NEW_EVENT_CANDIDATE is disabled and requires explicit authorized handling.
+- Initial source rights profiles and operation-specific permission rules are approved or bounded for the selected test sources; unknown rights block restricted operations.
+- Reviewer identity, role, and authority are defined for each review type before a review can authorize a material decision.
 - The initial product scope is clear.
 - The documents identify which choices remain provisional.
 - No dependent implementation begins on the assumption that a Proposed ADR is already Accepted.
@@ -593,7 +596,8 @@ This stage intentionally occurs before the full implementation of all intelligen
 8. Track token usage and cost when available.
 9. Record model execution provenance.
 10. Treat source content as untrusted input.
-11. Prevent analysis stages from receiving unrestricted tool access.
+11. Check the applicable rights assessment before submitting source content to an external LLM provider; an internal processing permission does not imply external-processing permission.
+12. Prevent analysis stages from receiving unrestricted tool access.
 
 The LLM layer should remain an execution capability. It must not own product workflows or domain state transitions.
 
@@ -674,6 +678,8 @@ It does not need to support every event type or delivery channel.
 - The generated report retains source and evidence references.
 - Event association is applied only through a case-level MATCH decision; a test stub may simulate candidate retrieval but must not bypass the decision and link invariants.
 - Publication decisions cannot be bypassed.
+- External LLM calls use only content whose operation-specific rights assessment permits that provider and processing purpose.
+- The vertical slice uses explicit source fixtures or approved test sources; it must not assume a production source license or content-retention permission.
 
 ---
 
@@ -699,6 +705,8 @@ Collect international economic news from configured and approved sources.
 12. Record collection provenance.
 13. Add collection observability.
 14. Implement source URL and redirect safety checks.
+15. Implement the initial source rights profile and ContentRightsService integration; check permission separately for discovery, metadata retrieval, and full-text retrieval.
+16. Persist ContentAccessRecord and RightsAssessment provenance for each applicable acquisition operation; support a permitted metadata-only route when full-text rights are unavailable.
 
 ### Initial Source Strategy
 
@@ -749,6 +757,8 @@ Source ingestion must defend against:
 - Collection execution records.
 - Source health visibility.
 - Content-access policy enforcement.
+- Versioned source-rights profiles and operation-specific acquisition checks.
+- Content-access provenance and explicit metadata-only/restricted-source outcomes.
 
 ### Exit Criteria
 
@@ -759,6 +769,9 @@ Source ingestion must defend against:
 - Collection can resume after interruption.
 - Unsafe URLs and redirects are rejected.
 - Content is retained only according to the configured rights policy.
+- Unknown, denied, expired, revoked, or review-required permissions block the restricted acquisition/storage operation.
+- Metadata retrieval does not silently authorize full-text retrieval or persistent storage.
+- Source terms, rights-profile version, and access outcome are traceable for each collected content artifact.
 
 ---
 
@@ -783,8 +796,9 @@ Transform collected publications into normalized article records.
 11. Implement entity resolution foundations.
 12. Implement ArticleRevisionService and ArticleRevisionRepository; create immutable revisions only for material content changes and atomically update the Article current projection.
 13. Implement processing status management.
-14. Implement translation support only where required by the approved language policy.
-15. Add processing evaluation cases.
+14. Implement translation support only where required by the approved language policy; retain the original ArticleRevision as authoritative and create a separately versioned translation artifact with provenance and quality state.
+15. Apply rights checks before temporary processing, persistent storage, derived-artifact creation, and external processing of article content.
+16. Add processing evaluation cases.
 
 ### Article Deduplication
 
@@ -822,6 +836,8 @@ A similarity score alone must not cause irreversible deletion or merging.
 - Processing can be repeated safely.
 - Repeated collection of unchanged content does not create a new ArticleRevision.
 - A material content change creates a new immutable ArticleRevision and atomically updates the Article current projection.
+- Rights checks are performed before persistent content storage and derived-artifact creation; temporary processing does not leave unauthorized copies.
+- Translation is not enabled for an input unless its artifact lineage, supported language, quality state, and applicable external-processing/storage permissions are defined.
 
 ---
 
@@ -1049,6 +1065,7 @@ Convert event intelligence into structured, versioned reports.
 12. Implement report correction and replacement lineage without overwriting prior versions.
 13. Implement confirmed withdrawal and uncertain-outcome reconciliation.
 14. Implement report storage and add report evaluation datasets.
+15. Apply rights checks for source attribution, quotations, derived-output use, publication, and recipient distribution; preserve permitted source references independently of full-text retention.
 
 ### Initial Report Structure
 
@@ -1131,7 +1148,11 @@ The system must preserve a correction or withdrawal history and maintain links b
 - External publication operations are persisted before execution and have attempt history.
 - A failed replacement leaves the previous confirmed publication effective.
 - A withdrawal is complete only after target confirmation; unknown outcomes require reconciliation.
-- Invalid or unapproved reports cannot be published or delivered.
+- External publication requires an effective publication decision for the exact report version and all applicable rights/target authorizations.
+- A report or notification must not be delivered merely because a publication decision exists or because public publication succeeded; each recipient-delivery operation requires its separate distribution authorization.
+- `PUBLICATION_LINK` delivery requires a confirmed successful and currently effective PublicationRecord.
+- `REPORT_CONTENT` delivery may occur without public publication only when a separate distribution policy and applicable content rights explicitly authorize it; delivery does not imply publication.
+- Invalid or unapproved reports cannot be externally published; report-content delivery is separately governed by distribution policy and content rights.
 
 ---
 
@@ -1199,7 +1220,9 @@ Publication-link delivery requires a confirmed successful and currently effectiv
 
 - Collection and processing can run automatically.
 - New information can update existing events.
-- Reports are delivered only under the publication policy.
+- Every recipient-delivery operation is authorized by its applicable distribution policy and content-rights constraints.
+- `PUBLICATION_LINK` delivery requires a confirmed successful and currently effective PublicationRecord.
+- `REPORT_CONTENT` delivery may occur without public publication only when separately authorized; it must not change or imply publication state.
 - Duplicate delivery is controlled within documented guarantees.
 - Failed operations are visible and recoverable.
 - Scheduled execution can resume after interruption.
@@ -1381,8 +1404,9 @@ Prepare the initial product for controlled operation.
 12. Review observability and alerting.
 13. Document deployment.
 14. Document operational procedures.
-15. Review content rights and retention controls.
-16. Prepare release and rollback procedures.
+15. Review content rights and retention controls, including rights-profile expiry/revocation and derived-artifact restrictions.
+16. Test content deletion/restriction requests across storage, caches, indexes, queues, backups, and supported external processors, and verify completion evidence.
+17. Prepare release and rollback procedures.
 
 ### Deliverables
 
@@ -1395,7 +1419,7 @@ Prepare the initial product for controlled operation.
 
 ### Exit Criteria
 
-The application can operate within its documented deployment model and recover from expected failures without corrupting core data, losing audit history, or bypassing publication controls.
+The application can operate within its documented deployment model and recover from expected failures without corrupting core data, losing audit history, bypassing publication controls, or continuing restricted content operations after rights expiry/revocation. Required content deletion/restriction operations must have verifiable outcomes.
 
 ---
 
@@ -1709,5 +1733,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.1
+**Version:** 1.11
 **Status:** Draft — Under Architecture Review
