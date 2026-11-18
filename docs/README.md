@@ -3,9 +3,9 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Documentation Review  
-**Last Updated:** 2026-11-17
+**Last Updated:** 2026-11-18
 
 ---
 
@@ -283,20 +283,31 @@ It provides a consistent format for documenting:
 
 Individual architectural decision records are stored in this directory.
 
-The published repository currently contains six individual ADR documents:
+The published repository currently contains all nineteen individual ADR documents. All nineteen have status `Proposed`; none is recorded as `Accepted`.
 
 | ADR ID | Subject | File |
 |---|---|---|
 | GENI-ADR-001 | Event-Centric Intelligence Architecture | `GENI-ADR-001-event-centric-intelligence-architecture.md` |
-| GENI-ADR-002 | Article Deduplication and Event Matching | `GENI-ADR-002-article-deduplication-and-event-matching.md` |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `GENI-ADR-002-article-deduplication-and-event-matching.md` |
+| GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `geni-adr-003-economic-intelligence-as-primary-editorial-focus.md` |
+| GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `geni-adr-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `geni-adr-005-initial-persistence-technology-and-migration-strategy.md` |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `GENI-ADR-006-provider-independent-llm-execution-architecture.md` |
+| GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `geni-adr-007-deterministic-workflows-and-selective-agent-reasoning.md` |
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` |
+| GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | `geni-adr-009-near-real-time-news-acquisition-strategy.md` |
+| GENI-ADR-010 | Phased Text, Audio, and Video Delivery | `geni-adr-010-phased-text-audio-and-video-delivery.md` |
 | GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` |
+| GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `geni-adr-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` |
 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` |
+| GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `geni-adr-014-human-review-corrections-and-withdrawals.md` |
+| GENI-ADR-015 | Market Data Integration and Economic Impact Classification | `geni-adr-015-market-data-integration-and-economic-impact-classification.md` |
+| GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | `geni-adr-016-persistence-async-execution-idempotency-and-recovery.md` |
+| GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `geni-adr-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` |
+| GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | `geni-adr-018-multilingual-source-processing-translation-and-language-policy.md` |
+| GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | `geni-adr-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` |
 
-The existence of an ADR document does not imply that its proposal has been formally accepted.
-
-The current decision status, priority, and implementation state must be checked in the individual ADR and the ADR registry.
+The existence of an ADR document does not imply that its proposal has been formally accepted. The current decision status, priority, and implementation state must be checked in the individual ADR and the ADR registry.
 
 ### Important ADR Rules
 
@@ -572,6 +583,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `README.md`  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Documentation Review  
-**Last Updated:** 2026-11-17
+**Last Updated:** 2026-11-18
