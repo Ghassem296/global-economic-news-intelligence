@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-008  
 **Title:** Evidence Provenance and Uncertainty Representation  
 **Status:** Proposed  
-**Version:** 1.4
+**Version:** 1.5
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -608,17 +608,16 @@ Proposed values:
 | `DISPUTED` | Material evidence or credible sources remain in unresolved conflict; preserve both supporting and contradicting links. |
 | `INSUFFICIENT_EVIDENCE` | The available evidence set is too limited to support or contradict the claim. |
 | `UNRESOLVED` | Evidence has been examined, but the assessment cannot reliably resolve the claim. |
-| `WITHDRAWN` | The claim or assessment has been withdrawn under an explicit correction or review process. |
 
 The outcome must be interpreted in context.
 
 `SUPPORTED` does not mean absolute certainty.
 
-`UNVERIFIED` does not mean false.
+`INSUFFICIENT_EVIDENCE` does not mean false; it means the available evidence set is inadequate.
 
 `CONTRADICTED` must identify the relevant conflicting evidence.
 
-`MIXED` must preserve the distinction between the different supporting and contradicting items.
+`DISPUTED` must preserve the distinct supporting and contradicting evidence and explain why the conflict remains unresolved.
 
 ### 6.8 Uncertainty Representation
 
@@ -1172,6 +1171,7 @@ Such measurements must be established through representative datasets and evalua
 | 1.2 | 2026-11-18 | Proposed | Aligned ClaimAssessment, ClaimAssessmentEvidenceLink, AssessmentHistory, and Claim current-assessment projection with Documents 02 and 03. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Aligned claim-assessment outcomes and evidence-link relationships with Documents 02 and 03; separated evidence class from representation type and lifecycle states. | AI Architecture Assistant |
+| 1.5 | 2026-11-18 | Proposed | Removed lifecycle states from the assessment outcome enum and clarified the canonical uncertainty semantics. | AI Architecture Assistant |
 
 ---
 
