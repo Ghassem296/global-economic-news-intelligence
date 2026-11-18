@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.11
+**Version:** 1.12
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence
@@ -901,9 +901,9 @@ The system must preserve:
 - Review task and reviewer outcome where applicable.
 - Exact case and decision references on every applied ArticleEventLink.
 
-Semantic similarity is a required matching capability, but a dedicated vector database is not automatically required.
+Semantic similarity is a supported matching signal, not a mandatory dependency of the initial implementation. The initial EventMatcher must operate against a documented lexical/entity/temporal/geographic baseline. Semantic retrieval may be added only after GENI-ADR-012 is accepted and a labeled evaluation demonstrates incremental value; a dedicated vector database is not automatically required.
 
-The initial implementation may use an approved embedding service and a simple storage or retrieval strategy. The exact approach must follow the relevant ADR. Semantic retrieval may be deferred while lexical candidate retrieval and case-level decision invariants are implemented and evaluated.
+Until GENI-ADR-012 is accepted, semantic retrieval and embedding generation remain deferred/optional. Implement and evaluate the lexical baseline and case-level decision invariants first. A later semantic adapter must be compared against that same baseline using a versioned labeled dataset before it is enabled.
 
 No universal similarity threshold should be assumed without evaluation and calibration. The candidate-retrieval adapter must not own final decisions or article-event associations.
 

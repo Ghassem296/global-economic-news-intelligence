@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.10  
+**Version:** 1.11  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -1185,7 +1185,7 @@ The implementation must preserve these constraints:
 - Processing state is separate from domain state.
 - Phase 1 is text-only.
 - Original source language and content references are preserved.
-- SQLite is the proposed initial database implementation, not a domain-level dependency.
+- SQLite and PostgreSQL remain candidates under GENI-ADR-005. No database engine is approved until the required workload and concurrency proof-of-concept is completed and the ADR is accepted.
 - Full-text acquisition and storage must respect applicable rights and restrictions.
 - Content permission is operation-specific; unknown or unverified rights must not authorize restricted access, retention, external processing, quotation, or distribution.
 - Rights checks, publication decisions, and recipient-distribution authorization are separate controls.
@@ -1197,7 +1197,7 @@ These constraints describe the current proposed architecture. Any change to an a
 
 Architectural decisions must be documented and tracked through the ADR governance process.
 
-The project has nineteen registered architectural decision topics, and all nineteen have individual ADR documents in the current pull-request branch.
+The project has nineteen registered architectural decision topics, and all nineteen have individual ADR documents published in the GitHub `main` branch.
 
 All nineteen ADRs currently have status Proposed. None is an accepted architectural decision until the Project Owner explicitly records approval.
 

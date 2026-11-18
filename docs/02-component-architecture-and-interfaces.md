@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.21  
+**Version:** 1.22  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -255,7 +255,9 @@ Responsibilities:
 
 It must not merge articles merely because they describe the same event.
 
-A duplicate candidate must be distinguishable from a confirmed duplicate relationship.
+It generates DuplicateCandidate evaluation records only. The Article Deduplication Workflow owns policy application and immutable DuplicateDecision creation/supersession. Neither candidate scoring nor duplicate decision may delete the source Article or erase source provenance.
+
+A duplicate candidate is evaluation evidence only. It must not store or impersonate the authoritative final decision. A separate immutable DuplicateDecision records the effective outcome and any supersession history.
 
 ### 4.5 TopicClassifier
 
@@ -963,6 +965,29 @@ The domain model must support evidence origin, source attribution, evidence type
 
 Claim-to-evidence relationships must support appropriate relationship types, including support and contradiction.
 
+### 5.13.1 ClaimAssessment
+
+Represents one immutable, versioned assessment of a Claim against a defined evidence set and assessment policy.
+
+It must preserve:
+
+- Claim reference and assessment sequence.
+- Assessment outcome, including supported, contradicted, partially supported, disputed, insufficient evidence, or unresolved.
+- Assessment method and methodology/policy version.
+- Evidence-set fingerprint and exact supporting/contradicting evidence references.
+- Rationale and confidence with documented semantics, where available.
+- Model, prompt, and schema versions where used.
+- Evaluated timestamp and actor or execution provenance.
+- Reference to the assessment it supersedes, when applicable.
+
+A ClaimAssessment is an assessment result, not a mutation of the Claim's identity or source observations. A new evaluation creates a new record; it must not overwrite a prior assessment. The Claim's current-assessment reference is a projection updated atomically with the new assessment.
+
+### 5.13.2 AssessmentHistory
+
+Represents append-only audit events for ClaimAssessment lifecycle changes, such as creation, supersession, authorized correction, or review.
+
+It must identify the assessment, action, actor, reason, timestamp, and idempotency reference where applicable. It is an audit trail, not a second editable assessment result. The effective assessment remains determined by the Claim's current-assessment reference and the immutable supersession chain.
+
 ### 5.14 Analysis
 
 Represents a versioned analytical result or assessment.
@@ -994,16 +1019,35 @@ A publication decision records eligibility and authorization only. It does not p
 
 ### 5.17 ReviewRecord
 
-Represents a review request and its outcome.
+Represents an operational human-review task for a typed domain subject. It is a task and audit projection, not an authoritative event-matching or publication decision.
 
 It must preserve:
 
-- Report reference.
-- Review status.
-- Review reason.
-- Reviewer reference where applicable.
-- Creation and completion timestamps.
-- Review outcome.
+- `id`, `review_type`, `subject_type`, and `subject_reference`.
+- Related decision reference, when applicable.
+- Report and PublicationDecision references when the review concerns a report.
+- Review status, reason, notes, and outcome.
+- Assignee and reviewer references.
+- Assignment, due, creation, and completion timestamps.
+- Metadata and authorization context.
+
+Exactly one typed subject must be identified. For event-matching review, the subject must resolve to an EventMatchCase and the related decision to the EventMatchDecision under review. For publication review, the subject must resolve to the exact report version and PublicationDecision. The application/security layer must validate typed references and reviewer authority.
+
+Review completion records who reviewed the task, when, and with what outcome. It does not mutate the related decision. A material event-matching outcome creates a successor EventMatchDecision; a publication outcome that changes eligibility creates a new PublicationDecision.
+
+### 5.17.1 ReviewAction
+
+Represents one immutable action in the lifecycle of a ReviewRecord.
+
+It must preserve:
+
+- ReviewRecord reference and monotonically assigned action sequence.
+- Action type, actor type/reference/role, and authorization reference.
+- Previous and new status where applicable.
+- Assignee change, review outcome, and reason/notes where applicable.
+- Idempotency key, timestamp, and metadata.
+
+ReviewAction records are append-only. The pair (ReviewRecord, action sequence) must be unique, and a non-null idempotency key must be unique within its ReviewRecord. Current status and assignee are projections rebuildable from action history. A completion action must record the final reviewer outcome and actor.
 
 ### 5.18 DeliveryRecord
 
@@ -1094,6 +1138,8 @@ Initial interfaces include:
 - `ArticleRepository`
 - `ArticleRevisionRepository`
 - `ArticleProcessingRepository`
+- `DuplicateCandidateRepository`
+- `DuplicateDecisionRepository`
 - `EventRepository`
 - `EventMatchCaseRepository`
 - `EventMatchCandidateRepository`
@@ -1103,6 +1149,8 @@ Initial interfaces include:
 - `EntityAliasRepository`
 - `ClaimRepository`
 - `EvidenceRepository`
+- `ClaimAssessmentRepository`
+- `AssessmentHistoryRepository`
 - `AnalysisRepository`
 - `ReportRepository`
 - `PublicationDecisionRepository`
@@ -1141,14 +1189,14 @@ The following map identifies the proposed authoritative application component fo
 | Source health and collection checkpoints | `NewsCollector` with `WorkflowOrchestrator` | Observations/checkpoints only; source configuration remains with `SourceRegistry`. |
 | Source rights profiles, permission assessments, retention and deletion records | `ContentRightsService` | Must fail closed on unknown permission and preserve policy/version provenance. |
 | Article current projection and immutable ArticleRevision | `ArticleRevisionService` | Atomically creates/reuses a revision and updates the current projection. |
-| Duplicate candidates | `ArticleDeduplicator` | Does not merge article identity or establish event association. |
+| Duplicate candidates | `ArticleDeduplicator` | Produces candidate evidence only; does not decide identity or establish event association. |
 | Topic classification | `TopicClassifier` | Versioned result for an exact ArticleRevision. |
 | Entity mentions and canonical entity/alias resolution | `EntityExtractor` and `EntityResolver` | Extraction creates mentions; resolver owns canonical resolution and ambiguity. |
 | EventMatchCase and EventMatchCandidate | Event Resolution Workflow and `EventMatcher` | Matcher evaluates candidates; workflow owns case lifecycle and coordinates decisions. |
 | EventMatchDecision | Event Resolution Workflow, including authorized review routing | Immutable case-level decision; no direct mutation by a review task. |
 | Event and ArticleEventLink | `EventService` | Applies authorized decisions and identity operations transactionally. |
 | EventHistory | `EventHistoryService`, invoked through `EventService` | Append-only history; not a second event-state owner. |
-| Claims and evidence relationships | `EvidenceService` | Stores source-attributed claims/evidence; extraction alone does not verify claims. |
+| Claims, evidence, ClaimAssessment, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
 | Analysis and analysis provenance links | Event Intelligence Workflow with the relevant assessor/analyzer | Assessors produce typed outputs; workflow persists versioned results and inputs. |
 | Report versions and lineage | `ReportVersionService` | `ReportGenerator` creates content but does not own immutable version persistence. |
 | PublicationDecision | `PublicationPolicy` through Publication Decision Workflow | Eligibility only; no external side effect. |
@@ -1821,7 +1869,7 @@ The current individual ADR documents are listed in:
 
 `docs/adr/README.md`
 
-All nineteen registered decision topics currently have individual ADR documents in this pull-request branch. All nineteen remain Proposed; none is an accepted architectural decision until explicit Project Owner approval is recorded. In particular, translation capability/provider/quality policy (GENI-ADR-018) and semantic retrieval implementation/storage (GENI-ADR-012) remain optional and must not be assumed approved by the component placeholders in this document.
+All nineteen registered decision topics currently have individual ADR documents published in the GitHub `main` branch. All nineteen remain Proposed; none is an accepted architectural decision until explicit Project Owner approval is recorded. In particular, translation capability/provider/quality policy (GENI-ADR-018) and semantic retrieval implementation/storage (GENI-ADR-012) remain optional and must not be assumed approved by the component placeholders in this document.
 
 The ADR Registry is the authoritative inventory of document availability, status, priorities, and dependencies. The existence of an ADR file does not authorize implementation.
 
