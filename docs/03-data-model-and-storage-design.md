@@ -3172,8 +3172,6 @@ Database engine selection, semantic storage, content retention, and other unreso
 
 This document defines the intended logical data model. Physical schema design and migration implementation must follow the approved architecture and the component contracts defined in Document 02.
 
----
-
 ## 31. Privacy Domain Records and Personal Data Lineage
 
 These are logical model contracts proposed by GENI-ADR-020 and required by GENI-PRIV-014. A logical record does not mandate one physical table; approved persistence design may use aggregates, normalized tables, immutable events or protected references.
@@ -3210,5 +3208,9 @@ Backups may expire under an approved schedule. A deletion ledger/tombstone must 
 - No physical schema, legal basis, retention duration or jurisdictional rule is selected here.
 
 See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
+
+---
+
+
 
 ---
