@@ -631,6 +631,7 @@ def validate_cross_document_contracts() -> None:
     adr_008 = read_text(ADR_DIR / "GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md")
     adr_010 = read_text(ADR_DIR / "GENI-ADR-010-phased-text-audio-and-video-delivery.md")
     adr_011 = read_text(ADR_DIR / "GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md")
+    adr_016 = read_text(ADR_DIR / "GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md")
     index = read_text(ROOT / "docs/README.md")
 
     if "Energy and Natural Resources" in readme:
@@ -650,9 +651,40 @@ def validate_cross_document_contracts() -> None:
         if term not in data_model:
             fail(f"Data-model cross-document contract missing {term!r}")
 
-    for term in ("ArticleOriginRelationshipRepository", "SourceRelationshipRepository"):
+    required_repositories = (
+        "ArticleOriginRelationshipRepository",
+        "SourceRelationshipRepository",
+        "ExecutionLeaseRepository",
+        "IdempotencyRecordRepository",
+    )
+    for term in required_repositories:
         if term not in components:
             fail(f"Component repository contract missing {term!r}")
+        if term not in data_model:
+            fail(f"Data-model repository inventory missing {term!r}")
+
+    required_execution_terms = (
+        "atomic lease acquisition, renewal, release",
+        "current-fencing-token validation",
+        "same UnitOfWork boundary",
+        "request-fingerprint conflict detection",
+    )
+    for term in required_execution_terms:
+        if term not in components:
+            fail(f"Component execution/recovery contract missing {term!r}")
+
+    required_recovery_terms = (
+        "stale-worker fencing-token rejection",
+        "atomic lease renewal/release",
+        "IdempotencyRecord replay",
+        "unknown external outcomes",
+    )
+    for term in required_recovery_terms:
+        if term not in data_model:
+            fail(f"Data-model recovery verification missing {term!r}")
+    for term in ("fencing token", "request fingerprint", "unknown outcome", "reconciled before retry"):
+        if term not in adr_016.lower():
+            fail(f"ADR-016 persistence/recovery decision missing {term!r}")
     if "ArticleOriginRelationship" not in source_spec:
         fail("Source credibility specification does not define article-origin provenance")
     if "ORIGINAL_REPORTING is an evidence/source role" not in source_spec:
