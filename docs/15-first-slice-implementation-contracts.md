@@ -504,7 +504,7 @@ No implementation may invent missing transitions or treat timestamps as substitu
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.0  
+**Version:** 1.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-18
 
