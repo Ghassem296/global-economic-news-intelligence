@@ -6,7 +6,7 @@
 **Status:** Proposed
 **Version:** 1.0
 **Date:** YYYY-MM-DD
-**Decision Owner:** Product Owner
+**Decision Owner:** Project Owner
 **Prepared By:** AI Architecture Assistant
 **Approved By:** Not yet approved
 **Approval Date:** N/A
