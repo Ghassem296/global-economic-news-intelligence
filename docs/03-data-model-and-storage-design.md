@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.23
+**Version:** 1.24
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1652,6 +1652,9 @@ Fields:
 - `actor_role` nullable
 - `previous_status` nullable
 - `new_status` nullable
+- `previous_priority` nullable
+- `new_priority` nullable
+- `priority_policy_version` nullable — required for a priority change.
 - `assignee_reference` nullable
 - `review_outcome` nullable
 - `reason_or_notes` nullable
