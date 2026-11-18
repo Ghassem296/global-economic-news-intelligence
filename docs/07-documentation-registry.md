@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.51
+**Version:** 1.52
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -157,17 +157,17 @@ The versions and lifecycle states below were read from the actual file headers i
 | Document ID | Title | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.23 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.46 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.34 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.25 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.7 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-API-009 | API and Integration Contracts | `docs/09-api-and-integration-contracts.md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.47 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.35 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.26 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.8 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-API-009 | API and Integration Contracts | `docs/09-api-and-integration-contracts.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-SRC-010 | Source Credibility and Independence Specification | `docs/10-source-credibility-and-independence.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-TAX-011 | Economic Taxonomy Specification | `docs/11-economic-taxonomy-specification.md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-EVAL-012 | Testing and Evaluation Strategy | `docs/12-testing-and-evaluation-strategy.md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-EVAL-012 | Testing and Evaluation Strategy | `docs/12-testing-and-evaluation-strategy.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
 
@@ -186,7 +186,7 @@ The version, lifecycle, owner, date, and approval-reference values were checked 
 
 ## 6. Architecture Decision Records Inventory
 
-The published `main` branch contains all nineteen individual ADR documents. The file paths and versions below were checked against the actual repository files. The date column records the latest proposal/revision date only; it is not an approval or acceptance date. Approval remains unrecorded for every Proposed ADR.
+The published `main` branch contains all twenty individual ADR documents. The file paths and versions below were checked against the actual repository files. The date column records the latest proposal/revision date only; it is not an approval or acceptance date. Approval remains unrecorded for every Proposed ADR.
 
 | ADR ID | Title | Repository Path | Actual Version | Decision Status | Publication State | Decision Owner | Proposal / Revision Date | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
@@ -209,12 +209,13 @@ The published `main` branch contains all nineteen individual ADR documents. The 
 | GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `docs/adr/decisions/GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | `docs/adr/decisions/GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | `docs/adr/decisions/GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-020 | Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture | `docs/adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 
 ### 6.1 ADR Publication and Availability
 
-- Individual ADR files in `main`: **19 of 19**.
+- Individual ADR files in `main`: **20 of 20**.
 - Registered ADR topics without an individual file: **0**.
-- ADRs with status `Proposed`: **19**.
+- ADRs with status `Proposed`: **20**.
 - ADRs with status `Accepted`: **0**.
 - Publication and implementation completion are not implied by file availability.
 
@@ -292,12 +293,12 @@ The following relationships provide a high-level guide for change impact analysi
 | GENI-GOV-005 | ADR Template, ADR Registry, individual ADRs |
 | GENI-GOV-006 | Documentation Index, Documentation Registry, all controlled documents |
 | GENI-GOV-007 | Documentation Index, Documentation Governance, ADR Registry, all controlled documents |
-| GENI-SEC-008 | Documents 02, 03, 09, 10, 12, and 13; security-related ADRs |
-| GENI-API-009 | Documents 02, 03, 08, and 12; integration and persistence ADRs |
+| GENI-SEC-008 | Documents 02, 03, 09, 10, 12, 13, and 14; GENI-ADR-020 and security-related ADRs |
+| GENI-API-009 | Documents 02, 03, 08, 12, 13, and 14; GENI-ADR-020 and integration/persistence ADRs |
 | GENI-SRC-010 | Documents 02, 03, 12; GENI-ADR-008 and GENI-ADR-019 |
 | GENI-TAX-011 | Documents 01, 02, 03, and 12; GENI-ADR-003, 018, and 019 |
 | GENI-EVAL-012 | Documents 04, 08, 10, 11, and 13; GENI-ADR-017 |
-| GENI-OPS-013 | Documents 04, 08, 09, and 12; GENI-ADR-005, 013, 016, and 017 |
+| GENI-OPS-013 | Documents 04, 08, 09, 12, and 14; GENI-ADR-005, 013, 016, 017, and 020 |
 | Individual ADRs | All documents and components affected by the decision |
 
 This is a high-level dependency guide, not a complete technical dependency graph.
@@ -422,7 +423,7 @@ Documents 06 and 07 are published in `main` but remain Proposed pending explicit
 
 ### 12.4 ADR Inventory
 
-All nineteen individual ADR files are present in `main`. All nineteen are Proposed; none is recorded as Accepted. There are no uncreated individual ADR files among the nineteen registered topics.
+All twenty individual ADR files are present in `main`. All twenty are Proposed; none is recorded as Accepted. There are no uncreated individual ADR files among the nineteen registered topics.
 
 ### 12.5 Indexes and Reference Materials
 
