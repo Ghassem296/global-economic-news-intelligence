@@ -1223,19 +1223,19 @@ Enable controlled automated processing and text report delivery.
 3. Implement DistributionAuthorizationRepository and persist an immutable DistributionAuthorizationDecision plus its complete DistributionAuthorizationRightsLink set and rights-assessment-set fingerprint in one transaction.
 4. Define the versioned ContentScopeManifest and deterministic fingerprint contract using RFC 8785 JCS, UTF-8, and SHA-256; keep the manifest fingerprint distinct from the serialized outbound-payload digest.
 5. Implement complete source-lineage and upstream-rights revalidation at dispatch. Expired, revoked, or materially changed upstream permissions must fail closed until ContentRightsService re-evaluates the dependency chain and a successor authorization decision is issued.
-4. Bind each decision to the exact report version, recipient, destination, delivery mode, channel, authorized content scope, and content-scope fingerprint. For every source-derived content item, require an exact allowed CUSTOMER_DISTRIBUTION RightsAssessment; composite reports may require multiple assessments.
-5. Persist each DeliveryRecord with the exact authorization-decision reference and matching content-scope fingerprint before dispatch.
-6. Implement delivery intent records.
-7. Implement delivery attempt history.
-8. Implement idempotent delivery operations.
-9. Re-check decision expiry/revocation, every linked RightsAssessment, and the actual outbound content-scope fingerprint before dispatch; preserve completed delivery history.
-10. Implement scheduled collection.
-11. Implement scheduled processing.
-12. Implement event monitoring.
-13. Implement update detection.
-14. Implement operational status reporting.
-15. Implement retry and reconciliation behavior.
-16. Add delivery and scheduling integration tests.
+6. Bind each decision to the exact report version, recipient, destination, delivery mode, channel, authorized content scope, and content-scope fingerprint. For every source-derived content item, require an exact allowed CUSTOMER_DISTRIBUTION RightsAssessment; composite reports may require multiple assessments.
+7. Persist each DeliveryRecord with the exact authorization-decision reference and matching content-scope fingerprint before dispatch.
+8. Implement delivery intent records.
+9. Implement delivery attempt history.
+10. Implement idempotent delivery operations.
+11. Re-check decision expiry/revocation, every linked RightsAssessment, and the actual outbound content-scope fingerprint before dispatch; preserve completed delivery history.
+12. Implement scheduled collection.
+13. Implement scheduled processing.
+14. Implement event monitoring.
+15. Implement update detection.
+16. Implement operational status reporting.
+17. Implement retry and reconciliation behavior.
+18. Add delivery and scheduling integration tests.
 
 ### Scheduling Strategy
 
@@ -1283,7 +1283,7 @@ Publication-link delivery requires a confirmed successful and currently effectiv
 - Every recipient-delivery operation is authorized by its exact effective DistributionAuthorizationDecision and all applicable content-rights constraints.
 - Every source-derived content scope in an authorized report payload is covered by an exact allowed CUSTOMER_DISTRIBUTION RightsAssessment linked to that decision.
 - The rights-assessment-set fingerprint is reproducible from the complete immutable link set; no source or artifact permission is reused for a different content scope.
-- The DeliveryRecord content-scope fingerprint matches the actual outbound payload and the referenced decision; altered or expanded payloads are blocked.
+- The DeliveryRecord content-scope fingerprint matches the canonical manifest fingerprint authorized by the referenced decision; dispatch verifies each exact manifest item and records the serialized outbound payload digest separately.
 - `PUBLICATION_LINK` delivery requires a confirmed successful and currently effective PublicationRecord.
 - `REPORT_CONTENT` delivery may occur without public publication only when separately authorized; it must not change or imply publication state.
 - A multi-source report cannot be distributed under a single representative source assessment; all included source-derived scopes must be covered or explicitly excluded from the authorized payload.
