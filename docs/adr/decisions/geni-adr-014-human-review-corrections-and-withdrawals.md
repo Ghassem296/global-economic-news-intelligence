@@ -3,9 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-014  
 **Title:** Human Review, Corrections, and Withdrawals  
-**Version:** 0.2  
 **Status:** Proposed  
-**Priority:** P0  
+**Version:** 1.0  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -16,121 +15,140 @@
 
 ## 1. Context and Problem Statement
 
-Automated extraction, matching, analysis, and publication can be incomplete or incorrect. The platform needs accountable human review for ambiguous and high-risk cases, plus correction and withdrawal paths that preserve the original evidence and decisions. A review comment must not be mistaken for an authorized domain decision.
+Automated extraction, event matching, evidence assessment, report generation, and publication can be ambiguous or wrong. Some cases require human judgment due to uncertainty, material consequences, rights constraints, or policy exceptions. Direct edits to authoritative records would destroy traceability. The product needs a review workflow that records the subject, reviewer authority, evidence context, rationale, outcome, and successor decision or corrective operation.
 
-This ADR is a proposal for formal review. It does not approve an implementation or override another decision. The existence of this document does not imply acceptance.
+This ADR is a proposal for formal review; it does not authorize implementation as accepted architecture.
 
 ## 2. Decision Question
 
-How should review tasks, authorization, outcomes, corrections, and withdrawals be modeled across event matching and publication workflows?
+How should human review be triggered, authorized, recorded, and applied to event matching and reporting, and how should corrections and withdrawals preserve prior history?
 
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-
-- Explicit separation between review tasks and authoritative domain decisions.
-- Role-based authorization and accountability.
-- Immutable historical decision and report lineage.
-- A review must not bypass publication policy or event identity rules.
-- External withdrawal and replacement outcomes require confirmation and reconciliation.
+- Define triggers for ambiguity, low confidence, high impact, rights restrictions, policy exceptions, and reported errors.
+- Persist review tasks with typed subject references, reason, priority, assignment, timestamps, and status.
+- Record reviewer identity and authorization through the security layer.
+- Separate review outcome from the authoritative successor domain decision.
+- Use immutable successor decisions for material corrections.
+- Preserve incorrect article-event links as deactivated historical associations rather than deleting them.
+- Coordinate report correction, publication replacement, and withdrawal through explicit operations.
+- Support escalation, reassignment, overdue detection, and audit.
 
 ### 3.2 Technical Constraints
-
-- Domain contracts must not depend on a specific external provider unless explicitly approved.
-- All relevant policies, schemas, and derived outputs must be versioned.
-- Critical state transitions must be auditable and testable.
-- Missing or unavailable information must remain explicit.
+- Reviewer identity and authorization belong to the security layer.
+- Event identity is governed by ADR-011; publication policy by ADR-004; content rights by ADR-013.
+- External withdrawal may be unsupported by some publication targets.
 
 ### 3.3 Business and Product Constraints
-
-- The initial product must remain operationally simple.
-- Implementation sequencing must follow documented dependencies.
-- Product claims must not exceed the capability or evidence actually available.
+- The initial product remains event-centric economic intelligence with text reports as its first release.
+- The design must support incremental implementation and explicit evaluation.
+- Proposals remain provisional until the decision owner records approval.
 
 ### 3.4 Security and Privacy Constraints
-
-- External source content and model output are untrusted input.
-- Credentials and sensitive operational data must not be exposed in ordinary logs.
-- Access to privileged actions must follow least-privilege authorization.
+- Source content and model output are untrusted until validated.
+- Only authorized application services and reviewers may change authoritative state.
+- Secrets and unnecessary protected content must not appear in ordinary logs.
 
 ### 3.5 Operational and Cost Constraints
-
-- Concurrency, retries, resource usage, and external service calls must be bounded.
-- Operational metrics must make failure and uncertainty visible.
-- Numeric thresholds must be based on measurements or explicit policy approval.
+- Avoid unnecessary distributed infrastructure in the initial release.
+- Measure cost and complexity against workload and reliability requirements.
+- Failures, retries, recovery, and audit must be observable.
 
 ### 3.6 Legal and Content-Rights Constraints
-
-- Technical access does not imply permission to store, process, transform, or republish content.
-- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed where applicable.
+- Access does not itself authorize retention, external processing, transformation, quotation, or republication.
+- Source terms, licensing, privacy, and jurisdictional restrictions must be reviewed before production use.
 
 ### 3.7 Explicit Non-Goals
-
-- This ADR does not set unmeasured numeric service levels or model-quality thresholds.
-- This ADR does not select a vendor or provider where comparative evidence is unavailable.
-- This ADR does not approve its recommendation; explicit Project Owner approval remains required.
+- This ADR does not invent unmeasured numerical thresholds or performance guarantees.
+- This ADR does not approve a provider, database, or model merely by listing it as an alternative.
+- This proposal does not supersede the ADR approval process.
 
 ## 4. Alternatives Considered
 
-### 4.1 A — Fully automated decisions
+### 4.1 Alternative A — No human review
 
-**Advantages:** High throughput and low human operating cost.
+**Description:** Allow automated workflows to complete every case.
 
-**Disadvantages:** Unresolved ambiguity and high-risk corrections can pass without accountable review.
+**Advantages:**
+- Low operating burden
+- high automation.
 
-**Risk:** High
+**Disadvantages:**
+- Cannot resolve consequential ambiguity or exceptions.
 
-### 4.2 B — Human approval for every operation
+**Risks:**
+- Systematic mistakes may persist without accountable intervention.
 
-**Advantages:** Strong human oversight.
+**Estimated Complexity:** Low
 
-**Disadvantages:** Operational bottleneck; unnecessary review of routine low-risk actions.
+### 4.2 Alternative B — Direct privileged override
 
-**Risk:** High
+**Description:** Allow privileged operators to edit domain records directly.
 
-### 4.3 C — Policy-driven review with typed subjects and domain-specific decisions
+**Advantages:**
+- Fast for one-off incidents.
 
-**Advantages:** Human effort is focused on ambiguous, risky, or corrective cases; domain decisions remain explicit.
+**Disadvantages:**
+- Weak lineage and unclear authorization
+- history can be overwritten.
 
-**Disadvantages:** Requires a review queue, authorization model, and audit trail.
+**Risks:**
+- Silent corruption and inconsistent accountability.
 
-**Risk:** Medium
+**Estimated Complexity:** Low initially; high risk
 
+### 4.3 Alternative C — Persistent review workflow with successor decisions
+
+**Description:** Create review tasks and apply outcomes only through authorized domain services and immutable successor decisions.
+
+**Advantages:**
+- Auditable
+- clear authority
+- preserves history.
+
+**Disadvantages:**
+- Requires queue operations, access control, and workflow integration.
+
+**Risks:**
+- Review queues can become bottlenecks.
+
+**Estimated Complexity:** Medium to High
 
 ## 5. Evaluation and Comparison
 
-The following qualitative comparison is an architectural assessment, not a measured benchmark.
+The comparison is qualitative and reflects architectural fit, not measured performance or cost.
 
-| Criterion | Alternative A | Alternative B | Alternative C |
+| Evaluation Criterion | No human review | Direct privileged override | Persistent review workflow with successor decisions |
 |---|---|---|---|
-| Fit with product requirements | Limited / context-dependent | Partial | Strongest overall fit |
-| Operational complexity | Low | Medium | Medium |
-| Auditability and traceability | Limited | Partial | Strong |
-| Ability to evolve | Low to Medium | Medium | High |
-| Principal trade-off | Simplicity or incomplete capability | Partial separation | More explicit contracts and governance |
+| Auditability | Low | Low | High |
+| Correction traceability | Low | Low | High |
+| Authority control | Low | Medium | High |
+| Operational workload | Low | Variable | Explicit and measurable |
 
-The recommendation favors Alternative C because it preserves the domain distinctions and operational controls required by the product. Any quantitative comparison must be performed against representative workload and evaluation data.
+The requirements in Section 3 are the primary decision drivers. Unmeasured cost and performance values are intentionally left unspecified.
 
 ## 6. Recommended Decision
 
-Use a generic ReviewRecord task model with a typed subject reference, review type, reason, priority, status, assignment, due time, reviewer, outcome, and audit history. ReviewRecord is not an authoritative decision. For event matching, the reviewer outcome creates a new EventMatchDecision that supersedes the previous effective decision. For publication, the outcome creates a new PublicationDecision. Corrections create new immutable report or association versions. Withdrawal is a separate authorized external operation and is complete only when the target confirms it or a documented reconciliation/manual path resolves the outcome.
+**Recommended Alternative:** Alternative C — Persistent review workflow with immutable successor decisions.
 
-### 6.1 Decision Boundaries
+A review task must reference the immutable decision, assessment, report version, or publication operation under review. It records reason, priority, evidence/context, assignment, reviewer identity, authorization, rationale, and outcome. A material outcome creates a new authoritative decision or corrective operation through the relevant domain service. The review record is not itself permission to change event identity or publish a report. Corrections preserve the original decision and association; publication replacement or withdrawal remains a separate external operation.
 
-- Define review types and permitted subject types, including EventMatchCase and report/publication decision subjects.
-- Define roles and permissions for assignment, review, approval, correction, rejection, and withdrawal authorization.
-- Record task creation, assignment, reassignment, comments, outcome, actor, and timestamps without overwriting prior actions.
-- Link each event-matching review to the case and exact decision under review.
-- Link each publication review to the report version and exact PublicationDecision under review.
-- Ensure a review completion triggers a new domain decision where policy requires it.
-- Preserve before/after references for corrected associations and reports.
-- Use the publication operation lifecycle for target withdrawal; reconcile unknown external outcomes before retry.
+**Rationale:**
+- Prevents unaudited edits to authoritative records.
+- Makes reviewer authority and accountability explicit.
+- Preserves decision lineage and external publication history.
 
-### 6.2 Assumptions and Open Questions
+**Deferred Questions:**
+- Detailed reviewer role matrix and separation-of-duties requirements.
+- Review service-level objectives, queue capacity, and escalation intervals.
+- Whether the first review interface is internal tooling or an external platform.
+- Target-specific withdrawal limitations and manual escalation.
 
-- The recommendation is based on the current product and architecture documents.
-- Any numeric threshold, provider selection, or legal interpretation not supported by evidence remains open.
-- The Project Owner may accept, reject, or request revision of this recommendation.
+**Recommendation Prepared By:** AI Architecture Assistant  
+**Recommendation Date:** 2026-11-18
+
+A recommendation is not an approval. The Project Owner must explicitly accept or reject this proposal.
 
 ## 7. Final Decision
 
@@ -140,166 +158,164 @@ Use a generic ReviewRecord task model with a typed subject reference, review typ
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded. The recommendation in Section 6 is awaiting review.
+**Decision Rationale:** Pending formal review; Section 6 contains the recommendation.
 
 **Conditions or Restrictions:**
-
-- Do not treat this proposal as an accepted architectural constraint.
-- Do not implement irreversible changes solely on the basis of this recommendation.
-- Record any interim implementation assumption and its review trigger.
+- Maintain Proposed status until explicit approval is recorded.
+- Do not treat deferred questions or example values as settled implementation details.
+- Any temporary implementation assumption must be reversible and documented with a review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-
-- Makes the relevant domain or operational boundary explicit.
-- Improves traceability and repeatability.
-- Provides a basis for measurable verification and future revision.
+- Accountable review and correction process.
+- Preserved audit trail and decision lineage.
+- Consistent authority across event matching and publication.
 
 ### 8.2 Negative Consequences
-
-- Adds implementation and documentation work.
-- Some policy details remain open pending data, legal review, or operational measurements.
-- Dependent components may need coordinated changes after approval.
+- Adds workflow, security, and operational complexity.
+- Human review can delay event association or publication.
 
 ### 8.3 Technical Trade-Offs
-
-Alternative C favors explicit contracts and traceability over the smallest possible implementation. Provider-specific behavior or domain-specific exceptions must remain visible rather than being hidden behind an abstraction that implies guarantees the system does not have.
+Prefer traceable corrective operations over mutable overrides. Emergency handling may be expedited, but actor, authorization, reason, and state transition must still be recorded.
 
 ### 8.4 Operational Consequences
-
-The implementation will require monitoring, recovery, and review procedures appropriate to the selected capability. Failure modes and unknown outcomes must be observable.
+Queues require ownership, escalation, overdue detection, secure access, and operational reporting. External publication effects require independent reconciliation.
 
 ### 8.5 Product and Business Consequences
-
-The recommendation is intended to support the product's evidence-based economic intelligence purpose. It must not create user-facing promises that exceed actual source coverage, data quality, or review capacity.
+Ambiguous or high-risk items may be delayed, but corrections become explainable and auditable.
 
 ### 8.6 Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Proposal mistaken for approval | Keep status Proposed until explicit approval is recorded. |
-| Over-specification without evidence | Leave thresholds and provider choices open until measured. |
-| Cross-document inconsistency | Synchronize affected documents and registry after approval. |
-| Implementation cannot satisfy a proposed guarantee | Report the conflict and revise the ADR rather than silently weakening the contract. |
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Unauthorized override | Low to Medium | Critical | Role-based authorization, separation of duties, immutable history. |
+| Review backlog | Medium | High | Queue ownership, prioritization, deadlines, and escalation metrics. |
+| External withdrawal cannot be completed | Medium | High | Distinguish request from confirmed result and provide manual escalation. |
+| Conflicting concurrent reviews | Low to Medium | High | Optimistic concurrency and non-branching successor constraints. |
 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-
-- Define review types and permitted subject types, including EventMatchCase and report/publication decision subjects.
-- Define roles and permissions for assignment, review, approval, correction, rejection, and withdrawal authorization.
-- Record task creation, assignment, reassignment, comments, outcome, actor, and timestamps without overwriting prior actions.
-- Link each event-matching review to the case and exact decision under review.
-- Link each publication review to the report version and exact PublicationDecision under review.
-- Ensure a review completion triggers a new domain decision where policy requires it.
-- Preserve before/after references for corrected associations and reports.
-- Use the publication operation lifecycle for target withdrawal; reconcile unknown external outcomes before retry.
+- EventMatchReviewService
+- ReviewService
+- EventService
+- PublicationPolicy
+- ReportVersionService
+- PublicationService
+- Authorization service
 
 ### 9.2 Affected Data Models and Interfaces
-
-The relevant interfaces, persistence fields, constraints, and version metadata must be updated only after the proposal is approved and the implementation design is reviewed.
+- EventMatchReviewRecord
+- ReviewRecord
+- EventMatchDecision
+- ArticleEventLink
+- ReportVersion
+- PublicationRecord
+- EventHistory
 
 ### 9.3 Affected Documents
-
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
+- docs/01-product-and-system-architecture.md
+- docs/02-component-architecture-and-interfaces.md
+- docs/03-data-model-and-storage-design.md
+- docs/04-implementation-plan-and-roadmap.md
 
 ### 9.4 Related ADRs
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-002 | Related to | Defines matching ambiguity and decision history. |
+| GENI-ADR-004 | Depends on / Related to | Defines publication gates that may route reports to review. |
+| GENI-ADR-008 | Related to | Provides evidence and uncertainty context. |
+| GENI-ADR-011 | Depends on / Related to | Defines event identity and association correction semantics. |
+| GENI-ADR-013 | Related to | Rights restrictions may require correction, deletion, or withdrawal. |
+| GENI-ADR-016 | Related to | Review tasks require durable state and idempotent processing. |
 
-See the related ADR references in the registry. These dependencies do not imply that related Proposed ADRs have been accepted.
+These relationships do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-
-- Define review types and permitted subject types, including EventMatchCase and report/publication decision subjects.
-- Define roles and permissions for assignment, review, approval, correction, rejection, and withdrawal authorization.
-- Record task creation, assignment, reassignment, comments, outcome, actor, and timestamps without overwriting prior actions.
-- Link each event-matching review to the case and exact decision under review.
-- Link each publication review to the report version and exact PublicationDecision under review.
-- Ensure a review completion triggers a new domain decision where policy requires it.
-- Preserve before/after references for corrected associations and reports.
-- Use the publication operation lifecycle for target withdrawal; reconcile unknown external outcomes before retry.
+- Define review types, triggers, reason codes, priorities, and statuses.
+- Persist review tasks and assignment history.
+- Expose only evidence and source content permitted by rights policy.
+- Enforce reviewer authorization and separation of duties where required.
+- Apply outcomes through EventService, PublicationPolicy, ReportVersionService, or PublicationService.
+- Preserve old decisions, links, and report versions; create successor lineage.
+- Monitor overdue, abandoned, conflicting, and failed corrective tasks.
 
 ### 10.2 Migration or Compatibility Requirements
-
-No runtime or database migration is authorized by this proposal. If accepted, existing records and historical provenance must be inspected before a migration is designed. Migration must preserve audit history and must be tested from the current baseline.
+Inspect the actual implementation and data before defining migration. This proposal does not claim that a migration or implementation is complete. Any migration must preserve applicable history, provenance, and compatibility.
 
 ### 10.3 Dependencies
-
-Implementation sequencing must respect the dependencies recorded in the ADR Registry and the related decision documents.
+- GENI-ADR-002 — Defines matching ambiguity and decision history.
+- GENI-ADR-004 — Defines publication gates that may route reports to review.
+- GENI-ADR-008 — Provides evidence and uncertainty context.
+- GENI-ADR-011 — Defines event identity and association correction semantics.
+- GENI-ADR-013 — Rights restrictions may require correction, deletion, or withdrawal.
+- GENI-ADR-016 — Review tasks require durable state and idempotent processing.
 
 ### 10.4 Implementation Sequence
-
-1. Obtain explicit Project Owner approval.
-2. Update affected architecture and data-model contracts.
-3. Define versioned interfaces and migration requirements.
-4. Implement the smallest end-to-end slice.
-5. Add focused automated and integration tests.
-6. Validate operational behavior and update implementation status separately from ADR status.
+1. Define reviewer roles and authorization boundaries.
+2. Implement persistent review queue and task lifecycle.
+3. Integrate event-match review with EventMatchDecisionService and EventService.
+4. Integrate report review with PublicationPolicy and ReportVersionService.
+5. Integrate correction, replacement, and withdrawal with PublicationService.
+6. Add audit, escalation, and incident exercises.
 
 ### 10.5 Verification Requirements
+- Test unauthorized actors cannot complete or approve reviews.
+- Test a review record alone cannot create an event association or publish a report.
+- Test material review outcomes create successor decisions without mutating originals.
+- Test corrected links preserve the old inactive link and create a traceable successor.
+- Test report correction creates a new version and separate publication replacement operation.
+- Test recovery, reassignment, and duplicate review submissions.
 
-- A reviewer cannot approve a task outside their authorization scope.
-- Every required review task identifies one typed subject and the decision under review.
-- A completed event-matching review creates a new EventMatchDecision; it does not mutate the prior decision.
-- A completed publication review creates a new PublicationDecision where eligibility changes.
-- No review outcome directly calls a publication target or bypasses PublicationPolicy.
-- A correction preserves previous report and ArticleEventLink history.
-- A withdrawal is not marked externally complete without confirmation or documented reconciliation.
+Implementation verification remains deferred until formal acceptance and implementation of the dependent capability.
 
 ## 11. Acceptance Criteria
-
-| ID | Acceptance Criterion | Verification |
+| ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | A reviewer cannot approve a task outside their authorization scope. | Architecture review and automated tests where applicable |
-| AC-02 | Every required review task identifies one typed subject and the decision under review. | Architecture review and automated tests where applicable |
-| AC-03 | A completed event-matching review creates a new EventMatchDecision; it does not mutate the prior decision. | Architecture review and automated tests where applicable |
-| AC-04 | A completed publication review creates a new PublicationDecision where eligibility changes. | Architecture review and automated tests where applicable |
-| AC-05 | No review outcome directly calls a publication target or bypasses PublicationPolicy. | Architecture review and automated tests where applicable |
-| AC-06 | A correction preserves previous report and ArticleEventLink history. | Architecture review and automated tests where applicable |
-| AC-07 | A withdrawal is not marked externally complete without confirmation or documented reconciliation. | Architecture review and automated tests where applicable |
+| AC-01 | Review tasks are persistent and queryable by status, assignee, due date, and subject. | Repository tests |
+| AC-02 | Reviewer identity and permissions are validated. | Security tests |
+| AC-03 | Material review outcomes create immutable successor decisions. | Lineage tests |
+| AC-04 | Association corrections retain the deactivated prior link. | Integration tests |
+| AC-05 | Report correction and external publication withdrawal are distinct operations. | Lifecycle tests |
+| AC-06 | Review backlog, overdue items, and failed corrective actions are observable. | Operational tests |
 
-Quantitative thresholds must be established using representative evaluation data or operational measurements. This ADR intentionally does not invent numerical targets.
+Any quantitative threshold must be supported by representative datasets, measurements, or formal policy review.
 
 ## 12. Review and Reconsideration
 
 ### 12.1 Review Triggers
-
-- A new review category or authorization role is introduced.
-- Review backlog or time-to-resolution becomes operationally unacceptable.
-- A security or editorial incident reveals a missing review gate.
-- Legal or contractual obligations change correction/withdrawal handling.
+- A material error or rights incident reveals missing review controls.
+- Review volume exceeds capacity or service objectives.
+- Authorization or publication-target capabilities change.
 
 ### 12.2 Review Schedule
-
 **Review Date:** Not scheduled  
 **Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
-
-Reconsider this proposal if its assumptions become invalid, evaluation results contradict the recommendation, or product/legal/operational requirements materially change. A replacement of an accepted decision requires a new ADR or an explicitly approved superseding record.
+Reconsider when assumptions are invalidated or measurements show the proposal fails project requirements. A replacement must be recorded through the ADR lifecycle.
 
 ## 13. References and Supporting Evidence
 
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/05-architecture-decision-records.md`
-- `docs/adr/README.md`
-- Related decision topics are listed in the ADR Registry.
+The references below are internal project sources used to establish documented context. They are not empirical performance benchmarks or legal opinions.
 
-The current internal documents establish architectural context. They do not substitute for external legal advice, provider capability verification, or empirical performance measurements.
+| Reference | Type | Relevance |
+|---|---|---|
+| `docs/01-product-and-system-architecture.md` | Internal | Defines review, publication, and correction boundaries. |
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines ReviewService and EventMatchReviewService. |
+| `docs/03-data-model-and-storage-design.md` | Internal | Defines review records and immutable decisions. |
+| `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines review and correction stages. |
+| `GENI-ADR-004` | Internal | Publication decisions and quality gates. |
+| `GENI-ADR-011` | Internal | Event identity and corrections. |
+
+External legal, provider, and empirical evidence must be added during formal review where relevant.
 
 ## 14. Decision History
 
-| Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
-| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+| Date | Version | Status | Change |
+|---|---|---|---|
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 
 **End of ADR**
