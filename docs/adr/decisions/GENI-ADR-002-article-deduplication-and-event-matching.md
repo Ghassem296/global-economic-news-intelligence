@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.4
+**Version:** 1.5
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -112,7 +112,7 @@ The following terms have specific meanings in this ADR.
 | Exact Duplicate | An article observation whose normalized content or identity matches another article under an explicitly defined exact-match rule. |
 | Near-Duplicate | An article whose content substantially overlaps with another article but is not identical. |
 | Syndicated Publication | A publication that reproduces or adapts content originating from another publisher or news agency. |
-| Duplicate Candidate | A pair or group of articles identified for possible duplicate evaluation. |
+| Duplicate Candidate | An immutable pairwise evaluation of two exact ArticleRevision records; multi-article groups are derived from pairwise candidates and effective decisions. |
 | Duplicate Decision | A recorded outcome of duplicate evaluation. |
 | Event | A real-world development represented as a domain entity in the intelligence system. |
 | Event Candidate | An existing event considered as a possible match for an article. |
@@ -275,7 +275,7 @@ Both operations must retain independently traceable decisions.
 
 ### 7.1 Candidate Generation
 
-Candidate generation should identify article pairs or groups that may represent duplicate or near-duplicate content.
+Candidate generation should identify article pairs that may represent duplicate or near-duplicate content. Multi-article duplicate groups must be derived from pairwise candidate evaluations and their effective decisions; a group must not replace the immutable pairwise evidence.
 
 Candidate signals may include:
 
@@ -369,6 +369,27 @@ When the same publisher updates an existing article:
 - Event matching should be able to use the relevant revision without losing the history of earlier associations.
 
 The exact article revision persistence model is defined in Document 03 and remains subject to its relevant architecture decisions.
+
+
+### 7.6 Duplicate Decision and History
+
+Each immutable DuplicateCandidate evaluates one canonical pair of exact ArticleRevision records. Candidate generation and similarity scoring are evidence-producing operations only; neither creates an authoritative duplicate relationship.
+
+The Article Deduplication Workflow must create an immutable DuplicateDecision for a candidate when policy permits a decision. The decision outcome vocabulary is:
+
+| Outcome | Meaning |
+|---|---|
+| CONFIRMED_DUPLICATE | The exact ArticleRevision pair is confirmed as duplicate or near-duplicate under the recorded policy. |
+| NOT_DUPLICATE | The evaluated pair is not considered duplicate under the recorded policy. |
+| REVIEW_REQUIRED | Available evidence or policy requires authorized human review; no effective duplicate relationship is authorized by this outcome. |
+
+Each DuplicateDecision must reference exactly one DuplicateCandidate and preserve its outcome, rationale, decision method, policy version, actor, timestamp, confidence semantics where applicable, and superseded decision reference.
+
+A correction or reassessment creates a successor DuplicateDecision for the same candidate. At most one effective decision may exist per candidate. Prior decisions and their evidence must remain immutable and traceable.
+
+A confirmed duplicate relationship is derived from the effective CONFIRMED_DUPLICATE decision. It must not delete or collapse either Article or ArticleRevision, erase source identity, or imply that two publications are independent corroboration. Multi-article groups, where needed, are derived from the graph of effective pairwise duplicate relationships and must preserve every pairwise decision and its provenance.
+
+The detailed fields, uniqueness rules, referential constraints, and repository contracts are defined in Document 03 and Document 02. Human correction and review are governed by ADR-014.
 
 ## 8. Event Matching Design
 
@@ -901,5 +922,6 @@ Upon acceptance:
 | 1.2 | 2026-11-18 | Proposed | Clarified duplicate candidate and decision separation and the need to preserve duplicate decision history. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Defined immutable DuplicateCandidate evaluations over exact ArticleRevision pairs and a separate immutable DuplicateDecision with supersession history. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
+| 1.5 | 2026-11-18 | Proposed | Defined pairwise duplicate decision outcomes, immutable supersession, and group derivation from effective pairwise decisions. | AI Architecture Assistant |
 
 **End of ADR-002**
