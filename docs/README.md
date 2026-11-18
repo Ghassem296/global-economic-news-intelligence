@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.25
+**Version:** 1.26
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-19
 
@@ -318,7 +318,7 @@ This is an engineering specification, not legal advice, a jurisdiction-specific 
 **File:** `15-first-slice-implementation-contracts.md`  
 **Document ID:** `GENI-IMPL-015`
 
-Defines the proposed method-level repository contracts, field-level DTO schema tranche, state-machine inventory, transaction write sets, idempotency and concurrency requirements, and approval/testing gates for the first implementation slice. ProcessingRun and ProcessingStep lifecycle contracts, EventMatchCase transitions, EventMatchCandidate evaluation lifecycle, PublicationDecision effective-successor rules, and PublicationAttempt outcome mapping remain explicitly blocked pending cross-document reconciliation and Project Owner approval. It does not approve a database, programming-language serialization, provider, content-rights policy, or any Proposed ADR.
+Defines the proposed method-level repository contracts, field-level DTO schema tranche, state-machine inventory, transaction write sets, idempotency and concurrency requirements, and approval/testing gates for the first implementation slice. ProcessingRun and ProcessingStep lifecycle contracts, EventMatchCase transitions, EventMatchCandidate evaluation lifecycle, PublicationDecision effective-successor rules, PublicationAttempt outcome mapping, ReviewRecord lifecycle, and DeliveryRecord/DeliveryAttempt transitions remain explicitly blocked pending cross-document reconciliation and Project Owner approval. It does not approve a database, programming-language serialization, provider, content-rights policy, or any Proposed ADR.
 
 **Consult this document when:**
 
@@ -654,6 +654,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `docs/README.md`  
-**Version:** 1.25  
+**Version:** 1.26  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-19
