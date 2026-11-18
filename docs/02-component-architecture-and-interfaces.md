@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -676,6 +676,35 @@ Full-text storage must comply with applicable source terms and content rights.
 
 Content availability must be represented explicitly.
 
+### 5.4 ArticleRevision
+
+Represents an immutable, meaningful observed version of an Article's published content.
+
+Fields:
+
+- `id`
+- `article_id`
+- `revision_number`
+- `title`
+- `content_reference` — reference to content retained or accessed under the applicable rights policy
+- `content_hash`
+- `summary` nullable
+- `language`
+- `observed_at`
+- `change_reason`
+- `rights_status`
+- `metadata`
+
+Constraints:
+
+- `(article_id, revision_number)` must be unique.
+- Repeated collection of unchanged content must not create a new revision.
+- A material content change creates a new revision and preserves earlier revisions subject to retention policy.
+- Content references and derived artifacts must comply with source rights and retention rules.
+- Hashes and evidence offsets must identify the exact text representation and normalization version to which they apply.
+- The Article current projection must reference the latest accepted revision and must be updated atomically with revision creation.
+- EventMatchCase must reference one exact immutable ArticleRevision; a later revision does not silently mutate or reuse the prior revision's matching cases.
+
 ### 5.3 ArticleProcessingRecord
 
 Represents a processing attempt or version for an article.
@@ -691,7 +720,7 @@ It must preserve:
 
 Processing history must not be confused with current article content.
 
-### 5.4 Event
+### 5.5 Event
 
 Represents a real-world development.
 
@@ -708,7 +737,7 @@ The domain model must support:
 
 Importance and economic impact assessments should be stored with their methodology and version metadata rather than treated as unqualified permanent properties.
 
-### 5.5 EventMatchCase
+### 5.6 EventMatchCase
 
 Represents one independent attempt to resolve the event identity of one development identified within one immutable ArticleRevision.
 
@@ -728,7 +757,7 @@ The effective-decision pointer is a current-state projection; historical EventMa
 
 A separate case is required for each independently identifiable development in an article revision. The case is the unit of candidate evaluation, final decision, and human review. A case must not be silently reused for a materially different article revision or development scope.
 
-### 5.6 EventMatchCandidate
+### 5.7 EventMatchCandidate
 
 Represents one existing Event considered as a possible match within an EventMatchCase. Candidate generation and evaluation do not establish an association.
 
@@ -755,7 +784,7 @@ Candidate status describes processing only (for example GENERATED, EVALUATED, IN
 
 A candidate score is not a decision confidence and must not be interpreted as one.
 
-### 5.7 EventMatchDecision
+### 5.8 EventMatchDecision
 
 Represents an immutable, authoritative outcome for one EventMatchCase.
 
@@ -793,7 +822,7 @@ Constraints:
 - Historical decisions are immutable.
 - A review record is not a decision; an authorized review outcome must be materialized as a new EventMatchDecision.
 
-### 5.8 ArticleEventLink
+### 5.9 ArticleEventLink
 
 Represents an applied, decision-authorized association between an ArticleRevision and an Event.
 
@@ -828,19 +857,19 @@ Constraints:
 - A correction creates a new decision and a new association where appropriate; it must not rewrite the historical decision or silently repoint an existing link.
 - A single article may have multiple active links when separate EventMatchCase records justify them.
 
-### 5.9 Entity
+### 5.10 Entity
 
 Represents a real-world entity.
 
 The domain model must support canonical identity, entity type, geographic information, external identifiers, and metadata.
 
-### 5.10 EntityAlias
+### 5.11 EntityAlias
 
 Represents an alternative name or identifier associated with a canonical entity.
 
 Aliases must preserve language and alias type where relevant.
 
-### 5.11 Claim
+### 5.12 Claim
 
 Represents a source-attributed assertion or analytical assertion.
 
@@ -848,7 +877,7 @@ Claim provenance must be represented through explicit relationships to articles,
 
 A claim must not be considered verified solely because it has been extracted from an article.
 
-### 5.12 Evidence
+### 5.13 Evidence
 
 Represents information supporting, qualifying, or contradicting a claim.
 
@@ -856,13 +885,13 @@ The domain model must support evidence origin, source attribution, evidence type
 
 Claim-to-evidence relationships must support appropriate relationship types, including support and contradiction.
 
-### 5.13 Analysis
+### 5.14 Analysis
 
 Represents a versioned analytical result or assessment.
 
 Analysis records must preserve references to relevant claims, evidence, processing inputs, model configuration, prompt version, result-schema version, and methodology version where applicable. The initial assessment types must keep `IMPORTANCE_ASSESSMENT`, `ECONOMIC_RELEVANCE_ASSESSMENT`, and `ECONOMIC_IMPACT_ASSESSMENT` as separate results. A shared workflow or evidence set does not permit these assessment types to be merged into one score.
 
-### 5.14 Report
+### 5.15 Report
 
 Represents one generated report version.
 
@@ -870,7 +899,7 @@ Reports must be versioned and preserve their relationship to the event, analysis
 
 Publication decisions and delivery outcomes must be stored separately from report content.
 
-### 5.15 PublicationDecision
+### 5.16 PublicationDecision
 
 Represents a publication policy evaluation.
 
@@ -885,7 +914,7 @@ It must preserve:
 
 A publication decision records eligibility and authorization only. It does not prove that a report has been published at an external target.
 
-### 5.16 ReviewRecord
+### 5.17 ReviewRecord
 
 Represents a review request and its outcome.
 
@@ -898,7 +927,7 @@ It must preserve:
 - Creation and completion timestamps.
 - Review outcome.
 
-### 5.17 DeliveryRecord
+### 5.18 DeliveryRecord
 
 Represents a logical delivery operation.
 
@@ -915,7 +944,7 @@ It must preserve:
 
 Delivery status is independent of publication status. A delivery operation must not create, replace, withdraw, or otherwise mutate a publication.
 
-### 5.18 ProcessingRun
+### 5.19 ProcessingRun
 
 Represents one workflow or processing execution.
 
@@ -923,7 +952,7 @@ It must preserve execution identity, target, run type, status, timestamps, error
 
 ProcessingRun represents execution state, not domain state.
 
-### 5.19 EventHistory
+### 5.20 EventHistory
 
 Represents a historical occurrence or material change associated with an event.
 
@@ -931,7 +960,7 @@ Event history must be append-oriented and auditable.
 
 It must preserve relevant lifecycle transitions, material updates, corrections, merges, and splits.
 
-### 5.20 PublicationRecord
+### 5.21 PublicationRecord
 
 Represents one logical operation against a publication target.
 
@@ -952,7 +981,7 @@ It must preserve:
 
 A PublicationRecord represents an operation, not merely a policy decision or a delivery. Its successful operation history is the basis for determining whether a report version is currently available at a publication target.
 
-### 5.21 PublicationAttempt
+### 5.22 PublicationAttempt
 
 Represents one execution attempt for a PublicationRecord.
 
