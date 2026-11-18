@@ -1148,7 +1148,7 @@ Source-specific rights and legal requirements must be verified before production
 | 1.0 | 2026-11-17 | Proposed | Initial proposal covering source access, full-text retention, licensing, processing, attribution, and republication. | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Synchronized version history and end-of-document metadata with the current Proposed ADR revision; no approval status changed. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
-| 1.3 | 2026-11-18 | Proposed | Canonicalized operation permissions and separated translation, embedding, audio, and video transformations; aligned review authority. | AI Architecture Assistant |
+| 1.3 | 2026-11-18 | Proposed | Canonicalized operation permissions, separated translation, embedding, audio, and video transformations, and aligned decision/review authority with the Project Owner role. | AI Architecture Assistant |
 
 ---
 
