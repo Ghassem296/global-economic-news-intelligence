@@ -2,10 +2,11 @@
 # Architecture Decision Records Governance
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Architecture Review  
 **Document Type:** Architecture Decision Management and Governance  
 **Project:** Global Economic News Intelligence  
+**Owner:** Project Owner  
 **Last Updated:** 2026-11-18
 
 ---
@@ -618,6 +619,6 @@ The governance process becomes effective for an individual decision only when th
 **End of Document**
 
 **Document ID:** GENI-GOV-005  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Architecture Review  
 **Last Updated:** 2026-11-18
