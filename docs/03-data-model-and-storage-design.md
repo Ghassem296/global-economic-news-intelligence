@@ -1,10 +1,10 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.2
+**Version:** 1.16
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
-**Last Updated:** 2026-11-16
+**Last Updated:** 2026-11-18
 
 ---
 
@@ -77,6 +77,8 @@ Examples:
 - An unverified claim must not be represented as confirmed.
 - Missing market data must not be replaced with an invented market reaction.
 - Model confidence must not be treated as objective probability unless calibrated and explicitly defined.
+- Event importance, economic relevance, and economic impact must not be represented as one interchangeable score.
+- An event with unknown economic impact must not automatically receive low importance or low economic relevance.
 
 ### 2.4 Historical Integrity
 
@@ -120,17 +122,21 @@ The logical model describes the capabilities and relationships required by the p
 
 It does not require every logical entity to become a separate physical table in the first migration. Initial implementation must prioritize the first usable end-to-end workflow while preserving the ability to evolve.
 
+### 2.9 Separate Assessment Semantics
+
+Event importance, economic relevance, and economic impact are three different assessment questions. They must be represented as separately versioned analytical results, with independent result schemas and methodology versions. A shared execution pipeline or shared evidence inputs do not make the assessments interchangeable.
+
+The Event record is not the authoritative storage location for these assessment results. The versioned Analysis records are authoritative. A current-value projection or cache may be maintained for efficient reads only if it can be rebuilt from the underlying Analysis history.
+
 ## 3. Persistence Strategy
 
 ### 3.1 Initial Relational Storage
 
-SQLite is the proposed initial relational database, subject to formal architecture approval.
+SQLite is a candidate for the initial relational persistence proof-of-concept, not a selected production engine. The initial engine must be chosen under GENI-ADR-005 after measuring the expected workload, concurrent writers, locking and transaction behavior, backup/restore needs, deployment model, and operational capacity. PostgreSQL remains an alternative for the initial selection if those measurements require it.
 
-The initial implementation should support:
+The selected initial implementation should support:
 
-- Local development.
-- Single-instance operation.
-- Early deployment validation.
+- Local development and the intended deployment model.
 - Relational integrity.
 - Versioned migrations.
 - Transactional updates.
@@ -153,7 +159,7 @@ SQLite concurrency limitations must be documented. Concurrent asynchronous workf
 
 ### 3.2 Future Relational Storage
 
-PostgreSQL is a potential future implementation when operational requirements justify it.
+PostgreSQL is an alternative initial engine as well as a possible future implementation. Whether it is selected initially or introduced later must follow the workload proof-of-concept and formal approval under GENI-ADR-005.
 
 Possible triggers include:
 
@@ -207,6 +213,16 @@ Source
   +---- Article
           |
           +---- ArticleRevision
+                    |
+                    +---- EventMatchCase
+                           |
+                           +---- EventMatchCandidate --------> Event
+                           |
+                           +---- EventMatchDecision
+                                  |
+                                  +---- ArticleEventLink -----> Event
+                                  |
+                                  +---- ReviewRecord
           |
           +---- ArticleProcessingRecord
           |
@@ -215,18 +231,16 @@ Source
           +---- ArticleEntityMention
           |
           +---- DuplicateCandidate
-          |
-          +---- ArticleEventLink
-                    |
-                    +---- Event
-                           |
-                           +---- EventHistory
-                           |
-                           +---- EventRelationship
-                           |
-                           +---- EventEntityLink
-                           |
-                           +---- Claim
+
+Event
+  |
+  +---- EventHistory
+  |
+  +---- EventRelationship
+  |
+  +---- EventEntityLink
+  |
+  +---- Claim
                            |      |
                            |      +---- ClaimObservation
                            |      |
@@ -405,7 +419,7 @@ A unique constraint on `(source_id, external_id)` should apply only when `extern
 
 The exact treatment of nullable unique values must be verified for each database implementation.
 
-**Current content ownership rule:** `Article` is the current searchable projection of the latest accepted article revision. `ArticleRevision` is the historical record of meaningful content changes. Updates to the current projection and creation of a revision must occur atomically. The application must not maintain two independently editable copies of the same current content.
+**Current content ownership rule:** `Article` is the current searchable projection of the latest valid persisted article revision. `ArticleRevision` is the historical record of meaningful content changes. Updates to the current projection and creation of a revision must occur atomically. The application must not maintain two independently editable copies of the same current content.
 
 ### 5.5 ArticleRevision
 
@@ -419,6 +433,7 @@ Fields:
 - `title`
 - `content_reference`
 - `content_hash`
+- `content_normalization_version`
 - `summary`
 - `language`
 - `observed_at`
@@ -432,7 +447,7 @@ Constraints:
 - Repeated collection of unchanged content must not create a revision.
 - Material changes must preserve the previous revision.
 - Content references must comply with the project's content retention and licensing policy.
-- A revision must identify the text representation to which its hashes and offsets refer.
+- A revision must identify the text representation and content-normalization version to which its hashes and offsets refer.
 
 `content_reference` may point to relationally stored content or an approved external content store. The physical storage method is an implementation decision.
 
@@ -455,9 +470,6 @@ Fields:
 | occurrence_end_at | timestamp/null | Estimated or observed end |
 | occurrence_time_precision | string/null | Exact, approximate, date-only, unknown |
 | status | string | Current lifecycle state |
-| importance_score | decimal/null | Importance assessment |
-| economic_relevance_score | decimal/null | Economic relevance assessment |
-| score_policy_version | string/null | Scoring policy version |
 | first_observed_at | timestamp | First system observation |
 | last_updated_at | timestamp | Latest meaningful update |
 | resolved_at | timestamp/null | Resolution time |
@@ -469,7 +481,8 @@ Constraints:
 - Event identifiers remain stable during ordinary updates.
 - Event identity changes must use explicit merge or split operations.
 - Lifecycle transitions must be validated against an approved transition policy.
-- Scores must include a documented scale and assessment version.
+- Importance, economic relevance, and economic impact assessments must be stored as separate versioned Analysis records rather than independent scalar fields on Event.
+- A latest-assessment projection, if maintained, must be rebuildable from Analysis history.
 - Missing occurrence time must remain null.
 - `UPDATED` is not a persistent lifecycle state. It is represented through event history and update events.
 
@@ -477,21 +490,23 @@ The event record represents current state. `EventHistory` preserves meaningful p
 
 ### 5.7 ArticleEventLink
 
-Associates an article with an event.
+Represents an applied, decision-authorized association between an ArticleRevision and an Event.
 
 Fields:
 
 - `id`
-- `article_id`
+- `article_revision_id`
+- `event_match_case_id` — the EventMatchCase that authorized this specific association
 - `event_id`
 - `relationship_type`
 - `association_confidence`
 - `association_method`
 - `matching_policy_version`
+- `event_match_decision_id`
 - `associated_at`
 - `is_active`
 - `deactivated_at`
-- `decision_reference`
+- `deactivated_by_decision_id`
 - `metadata`
 
 Relationship types may include:
@@ -505,12 +520,18 @@ Relationship types may include:
 
 Constraints:
 
-- An active association must not be duplicated.
-- Confidence must use a documented range and semantics.
-- Association method and policy version must be recorded.
-- Deactivation must preserve historical association information.
-- A rejected match must not be represented as an active association.
-- Association changes must be traceable to an event-matching decision or an explicit authorized correction.
+- Every association must reference the exact EventMatchCase and EventMatchDecision that authorized its creation.
+- The referenced EventMatchDecision must belong to the referenced EventMatchCase, have outcome MATCH and must identify the linked event through its selected candidate.
+- At most one active ArticleEventLink may exist for an EventMatchCase; historical inactive links must be retained.
+- The link's article_revision_id must equal the ArticleRevision referenced by its EventMatchCase.
+- The link's event_id must equal the Event selected by the referenced MATCH decision.
+- A link is active only while its authorizing MATCH decision remains the effective decision for that case.
+- Association confidence must use documented semantics and must not be copied from candidate similarity without an explicit calibration rule.
+- Deactivation must preserve the original link and identify the successor EventMatchDecision in the same case that deactivated it.
+- An inactive link must have both `deactivated_at` and `deactivated_by_decision_id`; an active link must have neither.
+- `deactivated_by_decision_id` must reference a decision in the same case whose `supersedes_decision_id` identifies the link's authorizing decision.
+- A correction creates a new decision and a new association where appropriate; it must not rewrite historical decisions or silently repoint an existing link.
+- A rejected, ambiguous, or review-required match must not be represented as an active association.
 
 ### 5.8 DuplicateCandidate
 
@@ -686,14 +707,32 @@ An event may be linked to multiple entities with different roles.
 
 ## 7. Event Matching and Identity History
 
-### 7.1 EventMatchCandidate
+### 7.1 EventMatchCase
 
-Represents a candidate match between an incoming article or observation and an existing event.
+Represents one independent event-resolution case for one development identified within one immutable ArticleRevision. An article revision may have multiple cases when it describes multiple distinct developments.
 
 Fields:
 
 - `id`
-- `article_id`
+- `article_revision_id`
+- `development_key` — deterministic, stable within the ArticleRevision, and identifying one development scope using a stable source-span/section anchor or canonical development-scope fingerprint; it must not be a random run identifier
+- `scope_description`
+- `case_status`
+- `effective_decision_id` — nullable pointer to the current effective EventMatchDecision; a projection updated transactionally when a new decision is recorded
+- `created_at`
+- `closed_at`
+- `metadata`
+
+Case states may include `OPEN`, `PENDING_REVIEW`, `RESOLVED`, `CLOSED`, and `CANCELLED`. The case is the unit of candidate evaluation, final decision, and human review. A case must not be reused for a materially different article revision or development scope. Reprocessing the same ArticleRevision and same development scope must reuse the same development_key and case. The effective-decision pointer is a mutable current-state projection; historical EventMatchDecision records remain immutable.
+
+### 7.2 EventMatchCandidate
+
+Represents one existing Event considered as a possible match within an EventMatchCase. Candidate generation and evaluation do not establish an association.
+
+Fields:
+
+- `id`
+- `case_id`
 - `candidate_event_id`
 - `lexical_similarity`
 - `semantic_similarity`
@@ -703,31 +742,88 @@ Fields:
 - `overall_score`
 - `matching_method`
 - `matching_policy_version`
+- `candidate_input_fingerprint` — deterministic fingerprint of the ArticleRevision/development scope, candidate Event version, and evaluation inputs/configuration
+- `supersedes_candidate_id` — nullable reference to the prior evaluation of the same candidate Event in the same case
 - `candidate_status`
-- `decision_reason`
+- `evaluation_reason`
 - `created_at`
-- `decided_at`
+- `evaluated_at`
+- `metadata`
 
-Candidate states may include:
+Each candidate record represents one versioned evaluation of one candidate Event within one case. An evaluated candidate record is immutable. A changed matching policy or changed evaluation input creates a new candidate record rather than overwriting the earlier evaluation. Repeating an identical evaluation input must resolve to the same logical candidate record through its fingerprint.
 
-- `PENDING`
-- `ACCEPTED`
-- `REJECTED`
-- `INCONCLUSIVE`
-- `SUPERSEDED`
+Candidate status describes candidate-evaluation processing only (for example `GENERATED`, `EVALUATED`, or `INELIGIBLE`). `ACCEPTED`, `REJECTED`, and `SUPERSEDED` are not candidate statuses: acceptance/rejection are case-level decisions, and supersession is represented by a new immutable candidate record referencing the prior evaluation. After reaching `EVALUATED` or `INELIGIBLE`, a candidate evaluation is immutable.
 
-The system must preserve the difference between:
+A candidate score is not a decision confidence and must not be interpreted as one.
 
-- A candidate match.
-- An accepted association.
-- A rejected association.
-- A newly created event.
+### 7.3 EventMatchDecision
 
-A similarity score is not, by itself, a final event identity decision.
+Represents an immutable, authoritative outcome for one EventMatchCase.
 
-The matching policy must define how candidate signals are interpreted and when a candidate requires review or creation of a new event. Exact thresholds and decision rules require a formal architecture decision or approved policy.
+Fields:
 
-### 7.2 Event Identity Operations
+- `id`
+- `case_id`
+- `outcome`
+- `selected_candidate_id` — required only for `MATCH`
+- `proposed_event_reference` — required stable, preassigned Event identifier for `NEW_EVENT_CANDIDATE`; used to make authorized Event creation idempotent
+- `decision_method`
+- `decision_confidence` — optional and distinct from candidate similarity
+- `decision_rationale`
+- `matching_policy_version`
+- `decided_by_type`
+- `decided_by_reference`
+- `supersedes_decision_id`
+- `created_at`
+- `metadata`
+
+Allowed outcomes:
+
+- `MATCH`
+- `NEW_EVENT_CANDIDATE`
+- `NO_MATCH`
+- `AMBIGUOUS`
+- `REVIEW_REQUIRED`
+
+Outcome semantics:
+
+- `MATCH` selects exactly one eligible EventMatchCandidate belonging to this case.
+- `NEW_EVENT_CANDIDATE` proposes event creation but does not itself create an Event or authorize an ArticleEventLink. After separate authorized and idempotent event creation, the new Event must be recorded as a candidate and a subsequent MATCH decision must authorize association.
+- `NO_MATCH` means none of the evaluated candidates matches the development represented by this case. It does not prevent another case from the same ArticleRevision from matching another Event.
+- `AMBIGUOUS` means the available candidates/evidence do not support a reliable selection.
+- `REVIEW_REQUIRED` means policy requires an authorized human review before the case can be resolved.
+
+Constraints:
+
+- `MATCH` must reference exactly one eligible candidate belonging to the same case.
+- Non-`MATCH` outcomes must not authorize an active ArticleEventLink.
+- `NEW_EVENT_CANDIDATE` must carry a stable `proposed_event_reference`; it proposes event creation but does not itself create an Event or authorize an ArticleEventLink.
+- Event creation is permitted only when this is the effective case decision and the versioned EventCreationPolicy authorizes it (including any required human review).
+- The proposed Event identifier is used as the idempotency key for creation. Retrying the same authorized creation must resolve to the same Event and must not create a duplicate.
+- After creation, the Event is persisted as an EventMatchCandidate in the same case and a new MATCH EventMatchDecision must supersede the NEW_EVENT_CANDIDATE decision before an ArticleEventLink can be activated.
+- A later reassessment or human correction creates a new decision and references the decision it supersedes.
+- Historical decisions are immutable.
+- A review record is not a decision; an authorized review outcome must be materialized as a new EventMatchDecision.
+- Decision confidence, candidate similarity, and reviewer certainty are separate measurements and must not be substituted for one another.
+
+### 7.4 Event Matching Case and Decision Constraints
+
+- Every EventMatchCandidate must belong to exactly one EventMatchCase.
+- Every EventMatchCase must identify exactly one ArticleRevision and one development scope.
+- `(case_id, candidate_event_id, matching_policy_version, candidate_input_fingerprint)` must be unique for idempotent candidate evaluation while permitting historical evaluations under changed inputs or policy versions.
+- An evaluated EventMatchCandidate is immutable; a new evaluation creates a new candidate record whose `supersedes_candidate_id`, when present, references a prior evaluation of the same candidate Event in the same case. The application must reject cross-case or cross-Event supersession references.
+- Every EventMatchDecision must belong to exactly one case.
+- A selected candidate must belong to the same case as its decision.
+- A case may have multiple historical decisions, but only one effective decision at a time; the EventMatchCase.effective_decision_id pointer identifies it.
+- A new decision supersedes the prior effective decision without modifying it and updates the case pointer in the same transaction.
+- In that same transaction, all active ArticleEventLinks authorized by the prior effective decision must be deactivated; if the new effective decision is MATCH, a new ArticleEventLink referencing that exact decision must be activated.
+- A non-MATCH effective decision leaves the case with no active ArticleEventLink.
+- A decision may supersede at most one prior decision, and a prior decision may have at most one direct successor in the same case.
+- A decision for one case must not implicitly decide another case from the same article revision.
+- Human review must reference the case and the decision under review; the review outcome must be recorded as a new decision.
+- Database constraints and application validation must prevent cross-case candidate references and invalid decision-to-link references.
+
+### 7.5 Event Identity Operations
 
 Event merging and splitting must preserve stable identifiers and historical traceability.
 
@@ -793,7 +889,7 @@ Constraints:
 - The system must not silently delete or reuse event identifiers after a merge or split.
 - Survivor-selection and aliasing rules require a formal event identity policy.
 
-### 7.3 EventRelationship
+### 7.6 EventRelationship
 
 Represents relationships between distinct events.
 
@@ -1041,7 +1137,9 @@ Analysis types may include:
 
 - `EVENT_SUMMARY`
 - `IMPORTANCE_ASSESSMENT`
-- `ECONOMIC_IMPACT`
+- `ECONOMIC_RELEVANCE_ASSESSMENT`
+- `ECONOMIC_IMPACT_ASSESSMENT`
+- `MARKET_REACTION_ASSESSMENT`
 - `MARKET_IMPLICATIONS`
 - `RISK_ASSESSMENT`
 - `EVIDENCE_ASSESSMENT`
@@ -1049,7 +1147,9 @@ Analysis types may include:
 
 An analysis should be immutable after successful completion.
 
-A new analysis execution must create a new record or version rather than silently overwrite a completed result.
+A new analysis execution must create a new record or version rather than silently overwrite a completed result. For event assessments, the combination of event identity, analysis type, and version must identify a distinct immutable result. The methodology and schema versions must be recorded independently of the model or prompt version.
+
+The `confidence` field describes the degree of evidential support or reliability of the analytical assessment under its defined methodology. It must not be used as a substitute for importance, economic relevance, economic-effect magnitude, or forecast probability. Forecast probability, when supplied, must be a separately defined and calibrated output.
 
 ### 9.2 AnalysisEvidenceLink
 
@@ -1101,29 +1201,44 @@ Where practical, frequently used input types should use dedicated relational lin
 
 The application layer must validate that every referenced input exists and is eligible for use.
 
-### 9.4 Analysis Output Classification
+### 9.4 Assessment Output Classification
 
 Analytical content must distinguish:
 
-- Observed facts.
-- Source-attributed claims.
+- Observed facts and measurements.
+- Source-attributed claims and reported effects.
 - AI-generated interpretation.
 - Forecasts and scenarios.
-- Explicitly unknown or unavailable information.
+- Explicitly unknown, unavailable, or not-established information.
 
-A free-text analysis field alone is insufficient for important structured conclusions.
+A free-text analysis field alone is insufficient for important structured conclusions. Every assessment type must use a versioned structured-output schema and preserve material claims, uncertainty, methodology version, and supporting or contradicting evidence references.
 
-Structured analysis output should use a versioned schema. The schema must identify material claims, uncertainty, and supporting evidence references.
+The three event assessments use separate structured output contracts:
 
-### 9.5 Market Impact Evidence
+**Importance assessment (`IMPORTANCE_ASSESSMENT`)** should preserve the importance dimensions considered, qualitative rank or optional numeric score, rationale, evidence references, uncertainty, and methodology/schema versions. It must not derive its result by adding the economic relevance or impact outputs.
 
-Market impact must not be inferred as observed fact when no market data is available.
+**Economic relevance assessment (`ECONOMIC_RELEVANCE_ASSESSMENT`)** should preserve a relevance classification, identified direct/indirect/contextual transmission pathways, affected entities and geographies, supporting evidence references, and uncertainty. Suggested classifications are `DIRECT`, `INDIRECT`, `CONTEXTUAL`, `NO_MATERIAL_LINK_ESTABLISHED`, and `UNKNOWN`. These are descriptive classifications, not numeric magnitudes.
+
+**Economic impact assessment (`ECONOMIC_IMPACT_ASSESSMENT`)** should preserve one or more channel-level impact results. Each result should identify the channel, affected entity or geography, transmission mechanism, direction (`POSITIVE`, `NEGATIVE`, `MIXED`, `NEUTRAL`, or `UNCLEAR`), magnitude or defensible range where supported, time horizon/duration, evidence status, evidence references, and uncertainty. The result must not force distinct channels into one aggregate value.
+
+Evidence status for an economic effect must distinguish:
+
+1. `OBSERVED_ECONOMIC_EFFECT` — supported by an identified economic or market observation.
+2. `SOURCE_REPORTED_EFFECT` — reported by a source but not independently verified by integrated data.
+3. `INFERRED_POTENTIAL_EFFECT` — an analytical inference or forward-looking consequence.
+4. `UNKNOWN` — insufficient information to characterize the effect.
+
+The schema may also preserve separate forecast probability when a validated forecasting methodology supports it. Assessment confidence, forecast probability, effect direction, and magnitude must remain distinct values.
+
+### 9.5 Market Reaction and Market Data Evidence
+
+A market reaction is an observed or reported market response, not the same concept as economic relevance or the full economic impact of an event.
 
 The model must distinguish at least:
 
-1. `OBSERVED_MARKET_REACTION` — supported by an identified market data source.
-2. `SOURCE_REPORTED_REACTION` — reported by a publication or other source.
-3. `AI_INFERRED_IMPACT` — analytical interpretation without direct observed market data.
+1. `OBSERVED_MARKET_REACTION` — supported by an identified market data source and observation.
+2. `SOURCE_REPORTED_REACTION` — reported by a publication but not independently confirmed by integrated market data.
+3. `INFERRED_MARKET_IMPLICATION` — an analytical expectation or interpretation without direct observed market data.
 4. `UNKNOWN` — insufficient information.
 
 Where market data is integrated, a `MarketObservation` entity may record:
@@ -1143,7 +1258,7 @@ Where market data is integrated, a `MarketObservation` entity may record:
 
 Market data integration and its source rights require a separate architecture decision.
 
-A market observation must preserve its measurement time, source, unit, and baseline context. It must not imply causation between an event and a market movement without an explicit analytical assessment.
+A market observation must preserve its measurement time, source, unit, and baseline context. It records a market measurement; it does not establish that an event caused the movement. Any causal interpretation must be a separate analysis with its own evidence, methodology, and uncertainty.
 
 ## 10. Event History
 
@@ -1161,7 +1276,16 @@ Fields:
 - `new_state`
 - `change_reason`
 - `processing_run_id` nullable
+- `actor_type`
+- `actor_reference` nullable
+- `event_match_case_id` nullable
+- `source_event_match_decision_id` nullable
+- `event_creation_policy_version` nullable
+- `idempotency_key` nullable
+- `metadata`
 - `created_at`
+
+For an Event created from a NEW_EVENT_CANDIDATE decision, the initial `CREATED` history record must preserve the exact EventMatchCase, source NEW_EVENT_CANDIDATE decision, EventCreationPolicy version, actor/authorization reference, and idempotency key. These references must be written atomically with Event creation.
 
 Possible change types:
 
@@ -1169,7 +1293,9 @@ Possible change types:
 - `TITLE_UPDATED`
 - `DESCRIPTION_UPDATED`
 - `STATUS_CHANGED`
-- `IMPORTANCE_UPDATED`
+- `IMPORTANCE_ASSESSED`
+- `ECONOMIC_RELEVANCE_ASSESSED`
+- `ECONOMIC_IMPACT_ASSESSED`
 - `ENTITY_ADDED`
 - `ARTICLE_ASSOCIATED`
 - `ARTICLE_DISASSOCIATED`
@@ -1179,7 +1305,7 @@ Possible change types:
 - `MERGED`
 - `SPLIT`
 
-History should be append-only from the application perspective.
+History should be append-only from the application perspective. A non-null EventHistory idempotency_key must be unique. For candidate-driven creation, the source decision must belong to event_match_case_id and have outcome NEW_EVENT_CANDIDATE; retries must reuse the same Event identifier and creation-history idempotency key.
 
 ### 10.2 Lifecycle Transitions
 
@@ -1235,7 +1361,7 @@ Generation status may include:
 - `FAILED`
 - `SUPERSEDED`
 
-Publication status must not be duplicated as an independently mutable field on Report. It is represented by PublicationDecision and the publication workflow's current state.
+Publication status must not be stored as an independently mutable field on Report and must not be inferred from PublicationDecision. PublicationDecision records eligibility; PublicationRecord records external publication operations. The effective publication state for a target is derived from the history of successful PublicationRecord operations.
 
 Constraints:
 
@@ -1277,15 +1403,21 @@ Fields:
 
 ### 11.4 ReportArticleLink
 
-Connects reports to source articles.
+Connects a report version to the exact source ArticleRevision used to generate or support it. The parent Article is resolved through ArticleRevision.article_id; a report must not rely only on a mutable current Article projection.
 
 Fields:
 
 - `id`
 - `report_id`
-- `article_id`
+- `article_revision_id`
 - `reference_type`
 - `created_at`
+
+Constraints:
+
+- The referenced ArticleRevision must exist and must be permitted for the report's use under the applicable content-rights policy.
+- Replacing an Article's current projection must not change the revision referenced by an existing report.
+- The same report version must not contain duplicate links to the same ArticleRevision for the same reference_type.
 
 ### 11.5 ReportAnalysisLink
 
@@ -1312,6 +1444,7 @@ Fields:
 - `decision`
 - `reason_codes`
 - `explanation`
+- `caveats` nullable
 - `policy_version`
 - `decided_at`
 - `supersedes_decision_id` nullable
@@ -1324,29 +1457,37 @@ Decision values:
 - `HOLD_FOR_REVIEW`
 - `REJECT`
 
-A decision is an immutable record. A new decision must be created when the publication outcome changes.
+A decision is an immutable record. A new decision must be created when the publication outcome changes or a review produces a material outcome.
 
-The system must preserve which policy version produced the decision.
+The system must preserve which policy version produced the decision. The current effective decision must be derived through an explicit supersession rule. Historical decisions must remain queryable.
 
-The current effective decision must be derived through an explicit supersession rule. Historical decisions must remain queryable.
+A `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision authorizes a publication operation only while it remains effective and all other authorization, rights, and target requirements are satisfied. It does not prove that publication occurred.
 
-A `HOLD_FOR_REVIEW` decision must create or reference an operational review task. It must not silently remain unprocessed.
+For `PUBLISH_WITH_CAVEATS`, the caveats must be explicit and must be included in the published representation.
+
+A `HOLD_FOR_REVIEW` decision must create or reference an operational review task. It must not silently remain unprocessed. An authorized review outcome must produce a new effective publication decision when it changes eligibility; the original decision and review record must remain intact.
 
 ### 11.7 ReviewRecord
 
-Represents a human review or review action.
+Represents an operational human-review task for a typed domain subject. ReviewRecord is a task and audit record; it is not itself an authoritative event-matching or publication decision.
 
 Fields:
 
 - `id`
-- `report_id`
-- `publication_decision_id`
+- `review_type`
+- `subject_type`
+- `subject_reference`
+- `related_decision_reference` nullable
+- `report_id` nullable
+- `publication_decision_id` nullable
 - `review_status`
-- `reviewer_reference` nullable
-- `assigned_at` nullable
+- `assignee_reference` nullable
+- `reviewer_reference` nullable — reviewer who completed the task, when applicable
+- `assigned_at` nullable — current assignment projection
 - `due_at` nullable
 - `review_reason`
 - `review_notes`
+- `review_outcome` nullable
 - `created_at`
 - `completed_at`
 - `metadata`
@@ -1355,37 +1496,168 @@ Review states may include:
 
 - `PENDING`
 - `IN_PROGRESS`
-- `APPROVED`
-- `CHANGES_REQUESTED`
-- `REJECTED`
+- `COMPLETED`
 - `CANCELLED`
 
-A review record must support a real operational review queue.
+Review types identify the subject and required follow-up, including publication review and event-matching review. The exact type vocabulary and authorization matrix must be finalized under ADR-014.
 
-The operational review queue must support:
+Constraints and behavior:
 
-- Finding pending reviews.
-- Assigning or reassigning a reviewer.
-- Recording review ownership.
-- Recording due dates where required.
-- Recording review actions and outcomes.
-- Identifying overdue or abandoned reviews.
-- Creating a new publication decision after a material review outcome where required.
+- Exactly one typed subject must be identified by `subject_type` and `subject_reference`; the reference must be validated by the application layer where a database foreign key cannot express the polymorphic relationship.
+- For publication review, the subject and related decision must resolve to the relevant report version and PublicationDecision.
+- For event-matching review, the subject must identify an EventMatchCase and the related decision must identify the EventMatchDecision under review.
+- Review completion records the reviewer, time, and outcome. It does not mutate the related decision.
+- An event-matching review outcome that changes the effective result creates a new EventMatchDecision referencing the previous effective decision.
+- A publication review outcome that changes publication eligibility creates a new PublicationDecision.
+- Review history must not be silently overwritten. Reassignment and status changes must be auditable.
+- Reviewer identity and authorization must be managed by the application's security layer.
+- ReviewRecord is the current task/projection; all lifecycle actions, assignment changes, reviewer notes, escalation, completion, and cancellation must be preserved in append-only ReviewAction records.
+- Current status and assignee fields on ReviewRecord must be rebuildable from its ReviewAction history. Final reviewer outcome and completion actor/time must be represented by an immutable completion action and must not be silently overwritten.
 
-Review history must not be silently overwritten.
+### 11.7.1 ReviewAction
 
-Reviewer identity and authorization must be managed by the application's security layer.
+Represents one immutable action in the lifecycle of a ReviewRecord.
 
-## 12. Delivery Records
+Fields:
 
-### 12.1 DeliveryRecord
+- `id`
+- `review_record_id`
+- `action_sequence`
+- `action_type`
+- `actor_type`
+- `actor_reference`
+- `actor_role` nullable
+- `previous_status` nullable
+- `new_status` nullable
+- `assignee_reference` nullable
+- `review_outcome` nullable
+- `reason_or_notes` nullable
+- `authorization_reference` nullable
+- `idempotency_key`
+- `created_at`
+- `metadata`
 
-Represents a logical delivery operation for a report.
+Action types may include `CREATED`, `ASSIGNED`, `REASSIGNED`, `STARTED`, `NOTE_ADDED`, `ESCALATED`, `COMPLETED`, `CANCELLED`, and `REOPENED`.
+
+Constraints:
+
+- ReviewAction records are append-only and immutable.
+- `(review_record_id, action_sequence)` must be unique and assigned atomically.
+- A non-null idempotency_key must be unique within the ReviewRecord.
+- Actor identity and role must be validated by the authorization layer at action time.
+- `COMPLETED` must record the final reviewer outcome and actor; a material outcome must create the required successor EventMatchDecision or PublicationDecision through the appropriate domain workflow.
+- `REOPENED` creates a new task lifecycle segment; it must not delete or rewrite the previous completion action.
+- ReviewAction must reference exactly one existing ReviewRecord.
+
+### 11.8 PublicationRecord
+
+Represents one logical operation against a publication target. It is distinct from a PublicationDecision and from a DeliveryRecord.
 
 Fields:
 
 - `id`
 - `report_id`
+- `publication_decision_id` nullable for withdrawal operations
+- `publication_target_reference`
+- `publication_key`
+- `operation_sequence`
+- `operation_type`
+- `target_publication_id` nullable
+- `status`
+- `idempotency_key`
+- `external_reference` nullable
+- `external_url` nullable
+- `authorization_reference` nullable
+- `reason` nullable
+- `requested_by` nullable
+- `requested_at`
+- `started_at` nullable
+- `completed_at` nullable
+- `error_category` nullable
+- `error_summary` nullable
+- `created_at`
+- `metadata`
+
+Operation types:
+
+- `PUBLISH`
+- `REPLACE`
+- `WITHDRAW`
+
+Operation statuses:
+
+- `PENDING`
+- `IN_PROGRESS`
+- `SUCCEEDED`
+- `FAILED`
+- `CANCELLED`
+- `RECONCILIATION_REQUIRED`
+
+The status represents the current state of the logical operation. The expected transitions are `PENDING` to `IN_PROGRESS`, followed by a confirmed terminal result or `RECONCILIATION_REQUIRED`. After reconciliation confirms that the external effect did not occur, a retry may resume the same logical operation under its original idempotency key and with a new attempt. A confirmed successful operation must not be reset and executed again.
+
+Operation semantics and constraints:
+
+- A publication key identifies one logical publication slot within a target. A target may host many independent publication keys.
+- `PUBLISH` requires an effective `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision and must not reference a previous publication as its target. It may establish a new publication chain only when that target/key has no currently effective publication.
+- `REPLACE` requires an effective publication decision for the new report version and a reference to the currently effective earlier publication it intends to supersede. The target and publication key must match the referenced operation.
+- `WITHDRAW` requires a reference to the currently effective publication for the same target and publication key and explicit authorization/reason information. Its `report_id` must match the referenced publication's report. Its publication-decision reference may be null because withdrawal is an authorized lifecycle operation rather than permission to publish content.
+- The target publication and new operation must refer to the same configured publication target.
+- The operation sequence must be assigned atomically and increase within the target/publication-key chain.
+- A stable idempotency key must be unique within the target and publication-key scope.
+- The same logical operation must reuse its idempotency key on retry.
+- Only one unresolved side-effecting operation may exist for a target/publication-key chain at a time; unrelated keys at the same target may proceed independently.
+- A successful replacement supersedes the earlier publication. A failed or uncertain replacement leaves the earlier confirmed publication effective.
+- A successful withdrawal records that the target has withdrawn the referenced publication. A failed or uncertain withdrawal must not be treated as complete.
+- A timeout or transport failure with an unknown external outcome must produce `RECONCILIATION_REQUIRED`; the operation must be reconciled before another side-effecting attempt.
+- The current effective publication for a target/publication-key pair is derived from its ordered chain of successful operations: PUBLISH establishes the publication, REPLACE supersedes the referenced publication and establishes the replacement, and WITHDRAW removes the referenced publication from the effective state. Failed, cancelled, or unresolved operations must not silently replace the last confirmed effective state.
+- Publication operation history must remain append-oriented and auditable. Corrections must not overwrite previous report content or publication records.
+
+### 11.9 PublicationAttempt
+
+Represents one external execution attempt for a PublicationRecord.
+
+Fields:
+
+- `id`
+- `publication_record_id`
+- `attempt_number`
+- `attempt_type`
+- `started_at`
+- `completed_at` nullable
+- `outcome`
+- `external_reference` nullable
+- `error_category` nullable
+- `error_summary` nullable
+- `reconciliation_reference` nullable
+- `metadata`
+
+Attempt types:
+
+- `EXECUTE`
+- `RECONCILE`
+
+Attempt outcomes:
+
+- `CONFIRMED_SUCCESS`
+- `CONFIRMED_FAILURE`
+- `OUTCOME_UNKNOWN`
+- `RECONCILED_SUCCESS`
+- `RECONCILED_NOT_APPLIED`
+
+Each attempt must be separately traceable. An `OUTCOME_UNKNOWN` result must place the PublicationRecord in `RECONCILIATION_REQUIRED`. Reconciliation must determine whether the external effect occurred before the operation is retried or finalized.
+
+## 12. Delivery Records
+
+### 12.1 DeliveryRecord
+
+Represents a logical delivery operation for a report or a notification related to a report.
+
+Fields:
+
+- `id`
+- `report_id`
+- `publication_record_id` nullable
+- `delivery_mode`
 - `channel`
 - `destination_reference`
 - `idempotency_key`
@@ -1401,6 +1673,12 @@ Fields:
 - `updated_at`
 - `metadata`
 
+Delivery modes:
+
+- `REPORT_CONTENT`
+- `PUBLICATION_LINK`
+- `NOTIFICATION`
+
 Possible statuses:
 
 - `PENDING`
@@ -1413,9 +1691,12 @@ Constraints:
 
 - An idempotency key must be present for externally visible delivery operations.
 - The idempotency key must be unique within its relevant destination and operation scope.
-- Retries must not create duplicate external publications when the destination supports idempotency.
+- Retries must not create duplicate external deliveries when the destination supports idempotency.
 - Delivery attempts must remain traceable.
-- Delivery status must not be confused with publication approval.
+- A `PUBLICATION_LINK` delivery must reference a PublicationRecord whose publication operation is confirmed successful and still effective for that target.
+- `REPORT_CONTENT` or `NOTIFICATION` delivery may reference a PublicationRecord when relevant, but must be independently authorized by the applicable distribution policy.
+- Delivery status must not be confused with publication approval or publication success.
+- A delivery failure must not reverse or invalidate a confirmed publication.
 - The logical delivery operation must be distinct from individual delivery attempts.
 
 ### 12.2 DeliveryAttempt
@@ -1448,6 +1729,10 @@ The system must use explicit state transitions, idempotency keys, and recovery h
 If an external destination supports idempotency, the same key must be reused for retries of the same logical operation.
 
 If the destination does not support idempotency, the system must document the duplicate-delivery risk and apply a reconciliation strategy.
+
+Publication and delivery are independent operations. A delivery may reference a successful publication, but must not create, replace, or withdraw a publication.
+
+A delivery containing a publication link must not be created until the referenced publication is confirmed successful and effective. Direct delivery of report content remains subject to a separate distribution authorization.
 
 ## 13. Processing and Operational Data
 
@@ -1681,11 +1966,11 @@ Fields:
 - `content_fingerprint`
 - `created_at`
 
-The physical vector representation is not fixed by this document.
+The physical vector representation is not fixed by this document. Where an embedding is created from restricted source content or sent to an external provider, its creation/storage must reference the applicable operation-specific RightsAssessment. An embedding is a derived artifact and must be included in rights-aware retention/deletion where required.
 
 Embeddings may be stored in an approved vector-capable database, a compatible extension, or another search service.
 
-A dedicated vector database is not a mandatory Phase 1 dependency.
+A dedicated vector database is not a mandatory Phase 1 dependency. The semantic retrieval implementation remains optional and subject to GENI-ADR-012; a lexical retrieval baseline must remain available for evaluation and fallback.
 
 ### 14.3 Search and Retrieval
 
@@ -1708,6 +1993,15 @@ The logical table inventory is:
 | Table | Purpose |
 |---|---|
 | `sources` | Source configuration |
+| `source_rights_profiles` | Versioned source rights and license context |
+| `source_licenses` | Referenced licenses and contractual terms associated with sources |
+| `content_access_records` | Source/content access and retrieval provenance |
+| `rights_assessments` | Operation-specific permission outcomes |
+| `content_retention_policies` | Versioned content retention rules |
+| `content_deletion_requests` | Requested content restriction/deletion work |
+| `content_deletion_records` | Deletion execution and verification history |
+| `content_usage_audit_records` | Audit trail for content use and external transmission |
+| `derived_artifacts` | Versioned derived outputs with source-rights provenance |
 | `source_health_records` | Source health history |
 | `source_relationships` | Known source relationships |
 | `articles` | Current normalized article projection |
@@ -1716,10 +2010,12 @@ The logical table inventory is:
 | `article_entity_mentions` | Extracted entity mentions |
 | `entities` | Resolved entities |
 | `entity_aliases` | Alternative entity names |
-| `article_event_links` | Article-event associations |
+| `article_event_links` | Decision-authorized article-event associations |
+| `event_match_cases` | Per-revision, per-development event-resolution cases |
+| `event_match_decisions` | Immutable case-level event matching outcomes |
 | `duplicate_candidates` | Article duplicate candidates |
 | `events` | Current event state |
-| `event_match_candidates` | Event matching candidates |
+| `event_match_candidates` | Candidate events evaluated within a matching case |
 | `event_history` | Event change history |
 | `event_relationships` | Relationships between events |
 | `event_identity_operations` | Event merge and split operations |
@@ -1739,10 +2035,13 @@ The logical table inventory is:
 | `reports` | Report versions |
 | `report_event_links` | Report-event relationships |
 | `report_evidence_links` | Report evidence references |
-| `report_article_links` | Report article references |
+| `report_article_links` | Report references to exact ArticleRevision records |
 | `report_analysis_links` | Report analysis references |
 | `publication_decisions` | Publication policy history |
 | `review_records` | Human review records |
+| `review_actions` | Append-only human-review lifecycle and audit actions |
+| `publication_records` | Publish, replace, and withdraw operations |
+| `publication_attempts` | External publication attempt and reconciliation history |
 | `delivery_records` | Logical delivery operations |
 | `delivery_attempts` | Delivery retry history |
 | `processing_runs` | Workflow execution records |
@@ -1774,16 +2073,22 @@ Indexes should support:
 - Event lookup by status, topic, and update time.
 - Event lookup by occurrence time.
 - Article-event lookup in both directions.
-- Event match candidate lookup by status and score.
+- Event match case lookup by ArticleRevision and development key.
+- Event match candidate lookup by case, status, and score.
+- Event match decision lookup by case and decision time.
+- Event match review lookup by status, assignment, and due date.
 - Duplicate candidate lookup.
 - Claim lookup by event and observation.
 - Evidence lookup by source, article, and origin type.
-- Analysis lookup by event and type.
+- Analysis lookup by event, analysis type, status, version, and creation time.
 - Report lookup by event and version.
 - Report-event lookup in both directions.
 - Publication decision lookup by report and decision.
+- Publication operation lookup by target, publication key, status, report, and operation sequence.
+- Publication attempt lookup by operation and attempt number.
 - Review queue lookup by status, assignment, due date, and creation time.
-- Delivery lookup by status and scheduled time.
+- Delivery lookup by status, target, and scheduled time.
+- Delivery lookup by referenced publication where applicable.
 - Delivery attempt lookup by delivery operation.
 - Processing run lookup by type, status, target, and lease expiry.
 - Processing step lookup by run and status.
@@ -1795,16 +2100,37 @@ Indexes should support:
 Where applicable, enforce:
 
 - Source-scoped external article identity.
+- Source rights-profile version uniqueness within a source.
+- Content-access and rights-assessment identifiers must be unique and auditable.
+- Content-deletion request/record identity and idempotency keys must be unique within their defined operation scope.
 - Article revision number uniqueness.
-- Active article-event association uniqueness.
+- Composite uniqueness of `(article_id, id)` on ArticleRevision for same-Article current-revision references.
+- Event match case uniqueness by ArticleRevision and development key.
+- Composite uniqueness of `(id, article_revision_id)` on EventMatchCase for case/article-revision consistency.
+- Composite uniqueness of `(case_id, id)` on EventMatchCandidate and EventMatchDecision for case-scoped references.
+- Candidate evaluation uniqueness by case, candidate Event, matching-policy version, and candidate input fingerprint.
+- One effective decision pointer per EventMatchCase.
+- At most one direct successor per superseded EventMatchDecision.
+- At most one active ArticleEventLink per EventMatchCase, with historical inactive links retained.
+- Review action sequence uniqueness within a review record.
+- Review action idempotency key uniqueness within a review record.
 - Canonical article pair uniqueness for duplicate candidates.
 - Event-specific report version uniqueness.
+- Event analysis type and version uniqueness.
 - Source and checkpoint type uniqueness.
 - Processing step identity within a run.
+- Publication operation sequence uniqueness within a target/publication-key chain.
+- Publication idempotency key uniqueness within its target/publication-key scope.
+- Publication attempt number uniqueness within a publication operation.
 - Delivery idempotency key uniqueness within its scope.
 - Schedule occurrence uniqueness.
 - Event identity operation input/output uniqueness.
+- EventMatchDecision selected-candidate and case consistency.
+- EventMatchDecision supersession-chain consistency.
+- EventMatchCase.effective_decision_id must reference a decision belonging to that same case.
 - Entity alias uniqueness where the language and alias type make it unambiguous.
+
+Only one unresolved side-effecting publication operation should be allowed to modify the same target/publication-key chain at a time; enforce this through an appropriate transaction/locking rule or database constraint for the selected engine. Do not serialize unrelated publication keys merely because they share a target.
 
 All uniqueness rules involving nullable fields must be tested against the selected database engine.
 
@@ -1812,23 +2138,54 @@ All uniqueness rules involving nullable fields must be tested against the select
 
 Foreign keys should protect ordinary relational relationships.
 
-Polymorphic references must be explicitly documented and validated by the application layer.
+The following composite relationships must be enforced by database constraints where supported, or by application validation inside the same UnitOfWork transaction when the selected database cannot express them directly:
+
+- `SourceRightsProfile.source_id` must reference an existing Source; a rights assessment must reference the exact rights-profile/policy version used for its operation.
+- `ContentAccessRecord` must reference the source and, where applicable, the exact Article/ArticleRevision and RightsAssessment that authorized access.
+- A `DerivedArtifact` must retain typed provenance references to the source content/revision and processing/rights assessment records on which it depends.
+- A `ContentDeletionRecord` must reference its request and the affected content/artifact scope, and record whether deletion was confirmed or remains incomplete.
+- `Article(current_revision_id, id)` must resolve to an ArticleRevision whose `article_id` is that same Article.
+- `EventMatchCase(id, effective_decision_id)` must resolve to `EventMatchDecision(case_id, id)`; the referenced decision must belong to that case.
+- `EventMatchDecision(case_id, selected_candidate_id)` must resolve to `EventMatchCandidate(case_id, id)`; a decision cannot select a candidate from another case.
+- `ArticleEventLink(event_match_case_id, event_match_decision_id)` must resolve to the same case and decision.
+- `ArticleEventLink(event_match_case_id, article_revision_id)` must resolve to the case's exact ArticleRevision.
+- The linked `event_id` must equal the `candidate_event_id` selected by the referenced MATCH decision.
+- `EventHistory(event_match_case_id, source_event_match_decision_id)`, when both are present, must reference the same case and its NEW_EVENT_CANDIDATE decision.
+- A link may be active only while its authorizing MATCH decision is the effective decision for that case.
+
+The corresponding database constraints and application checks must be covered by repository contract and transactional integration tests. If composite/deferred foreign keys are used, their migration and behavior must be verified against the selected engine.
+
+Polymorphic references must be explicitly documented and validated by the application layer. PublicationAttempt must reference an existing PublicationRecord. A replacement or withdrawal target_publication_id must reference an earlier successful PublicationRecord with the same publication target and publication key. A DeliveryRecord in PUBLICATION_LINK mode must reference a confirmed effective publication operation; this semantic constraint must be enforced by the application workflow even where it cannot be expressed as a simple foreign key.
 
 Deletion policies must protect historical evidence, reports, and provenance. Cascading deletion must not silently remove records referenced by published reports.
 
 ## 17. Score and Confidence Semantics
 
-Scores must not be treated as interchangeable values.
+Scores and assessment outputs must not be treated as interchangeable values.
 
-For each score type, the system must document:
+The system must preserve the following distinctions:
 
-- What is being measured.
-- Valid range and scale.
+| Assessment | Question answered | What it must not represent |
+|---|---|---|
+| Event Importance | How significant and attention-worthy is this event overall? | Economic transmission strength, economic-effect magnitude, or forecast probability |
+| Economic Relevance | How direct and material is the event's connection to economic activity, policy, institutions, or markets? | The size, direction, or certainty of the resulting economic effect |
+| Economic Impact | What realized or potential economic consequences exist, by channel and time horizon? | Overall editorial importance or proof of causal market attribution |
+| Market Reaction | What market movement is observed or reported at a defined time and context? | Proof that the event caused that movement |
+
+For each assessment or score type, the system must document:
+
+- The question and construct being measured.
+- Valid categories, range, and scale where applicable.
 - Whether higher values indicate stronger or weaker results.
 - Calculation or assessment method.
-- Policy or model version.
+- Methodology, policy, and schema version.
 - Whether the value is calibrated.
-- Whether it is comparable across models, sources, or time periods.
+- Whether it is comparable across models, sources, event classes, or time periods.
+- Evidence requirements and uncertainty handling.
+
+Numeric values are optional. A numeric score must not be persisted or displayed without its defined scale, direction, interpretation, methodology version, and calibration status. Scores from different assessment types must not be added, averaged, or compared unless a separately approved and evaluated composite methodology explicitly defines that operation.
+
+An assessment's confidence value describes support for the assessment, not its importance or impact magnitude. A forecast probability must be represented separately and may be described as a probability only when its methodology and calibration support that interpretation.
 
 At minimum, separate semantics must be defined for:
 
@@ -1840,11 +2197,11 @@ At minimum, separate semantics must be defined for:
 - Claim verification confidence.
 - Event importance.
 - Economic relevance.
+- Economic impact by channel.
 - Analytical confidence.
+- Forecast probability, where used.
 
-A score must not be interpreted as a probability unless the calculation and calibration support that interpretation.
-
-Missing scores must remain null.
+Unknown, unavailable, not-established, and not-applicable values must remain distinguishable. Missing values must remain null or use the explicitly defined unknown state; they must not silently become zero, neutral, or a low score.
 
 ## 18. JSON Storage Policy
 
@@ -1922,13 +2279,15 @@ The following operations require atomic transactions or an equivalent consistenc
 - Report version creation and report input links.
 - Publication decision persistence.
 - Review state changes.
+- Publication-operation creation and state transitions.
+- Publication-attempt persistence and reconciliation state changes.
 - Delivery state transitions.
 - Collection checkpoint updates after successful persistence.
 - Schedule occurrence registration and scheduled execution creation.
 
 A report must not be marked as published before the publication workflow has successfully recorded the publication outcome.
 
-External delivery operations cannot generally be included in a database transaction. They require idempotency keys, explicit state transitions, and recovery handling.
+External publication and delivery operations cannot generally be included in a database transaction. A durable PublicationRecord or DeliveryRecord must be persisted before the corresponding external side effect. The external result and attempt outcome must then be recorded through explicit state transitions. Idempotency keys and reconciliation handling are required. A timeout with an unknown publication outcome must not trigger an unconditional retry.
 
 ## 21. Idempotency, Reprocessing, and Recovery
 
@@ -1946,6 +2305,7 @@ Idempotency is required for:
 - Analysis generation.
 - Report generation.
 - Publication decisions.
+- Publication execution, including publish, replace, and withdraw operations.
 - Report delivery.
 - Collection checkpoint advancement.
 - Scheduled workflow execution.
@@ -1988,11 +2348,53 @@ The model must distinguish:
 
 Retention rules must define which content can be stored, for how long, and for what purpose.
 
-Published reports must preserve sufficient provenance to identify their sources, subject to legal and contractual restrictions.
+Published reports must preserve sufficient provenance to identify their sources, subject to legal and contractual restrictions. ReportArticleLink must point to the exact ArticleRevision used, not only to the mutable current Article projection.
 
 Deletion or withdrawal requests must not be silently ignored. The system needs an auditable correction, withdrawal, or restricted-retention process.
 
 Where content must be deleted, the system should preserve legally permissible metadata and audit information without retaining prohibited content.
+
+### 22.1 Content Rights Records and Enforcement Boundaries
+
+The following are proposed logical records aligned with GENI-ADR-013. Their final fields, permission vocabulary, retention/deletion mechanics, and physical persistence design remain subject to formal ADR acceptance and detailed implementation design.
+
+**SourceRightsProfile**
+
+A versioned profile linked to a Source and, where applicable, one or more SourceLicense records. It should preserve the rights-document reference, profile status, permitted and restricted operation categories, content types, effective dates, verification date, retention-policy reference, supersession lineage, and the reviewer/authority that recorded the profile. Source defaults must not override more restrictive content-specific terms.
+
+**SourceLicense**
+
+A referenced license or contractual instrument associated with a SourceRightsProfile. It should identify the licensor/provider, license or agreement reference, scope and permitted use categories, restrictions, effective/expiry dates, and supporting evidence reference. The system stores provenance and approved policy interpretation; it does not generate legal conclusions.
+
+**ContentAccessRecord**
+
+An immutable record of a retrieval/access event. It should identify the Source, content and exact ArticleRevision where available, acquisition method, metadata/full-text/temporary-access mode, time, applicable rights profile, and resulting content reference or access limitation. It must not itself imply a continuing permission to retain or redistribute the content.
+
+**RightsAssessment**
+
+An immutable, operation-specific assessment. It should identify the subject/content, requested operation, outcome (`ALLOWED`, `DENIED`, `UNKNOWN`, `EXPIRED`, `REVOKED`, or `REQUIRES_REVIEW`), rights-policy and source-profile versions, supporting basis/reference, evaluator/actor, timestamp, and reason codes. Each materially different operation requires its own assessment; an allowed metadata read does not authorize full-text storage or external LLM processing.
+
+**ContentRetentionPolicy**
+
+A versioned policy definition for permitted retention mode, purpose, duration/expiry, deletion behavior, backup treatment, and treatment of derived artifacts. A policy definition must not be confused with a per-content RightsAssessment.
+
+**DerivedArtifact**
+
+A versioned output derived from source content, such as a translation, embedding, extracted passage, or analytical artifact. It should preserve the exact source revision/content references, processing method/version, rights assessment(s), and applicable retention/distribution restrictions. Derived content is not automatically unrestricted merely because it is system-generated.
+
+For a translation artifact, preserve at least the source ArticleRevision, source and output languages, translator/provider and model identity where applicable, prompt/configuration and processing version, created time, quality/validation status, and rights assessment for temporary/external processing and resulting retention. The source ArticleRevision remains authoritative; translation output must never overwrite it. For an embedding artifact, preserve the exact normalized input fingerprint, model/version, dimensions/representation, and applicable rights assessment. A material input/model change creates a distinct versioned artifact.
+
+**ContentDeletionRequest / ContentDeletionRecord**
+
+A request and its execution history for restriction or deletion across primary content storage, temporary files, caches, indexes, queues, backups, and external processors where required and supported. The records must distinguish requested, in-progress, confirmed, partially completed, and failed outcomes; a request must not be marked complete without verification evidence.
+
+**ContentUsageAuditRecord**
+
+An append-only record of material content-use operations, including operation type, subject, actor, destination/provider where relevant, RightsAssessment and policy version, timestamp, outcome, and audit reference. Sensitive source content and credentials must not be copied into the audit record.
+
+**Fail-closed invariant:** absent, unknown, expired, revoked, denied, or review-required permission must not authorize a restricted operation. Technical access, public availability, or an earlier permission for a different operation is insufficient. Rights authorization is separate from publication eligibility and recipient-distribution authorization.
+
+The `rights_status` field on Article/ArticleRevision is only a summary projection. It is not a substitute for versioned, operation-specific RightsAssessment records. Exact schema and policy rules remain provisional until GENI-ADR-013 is accepted.
 
 ## 23. Repository Contracts
 
@@ -2001,6 +2403,14 @@ The application layer should depend on domain-oriented repository interfaces.
 Initial repository contracts include:
 
 - `SourceRepository`
+- `SourceRightsProfileRepository` (when GENI-ADR-013 is accepted)
+- `SourceLicenseRepository` (when GENI-ADR-013 is accepted)
+- `ContentAccessRepository` (when GENI-ADR-013 is accepted)
+- `RightsAssessmentRepository` (when GENI-ADR-013 is accepted)
+- `ContentRetentionPolicyRepository` (when GENI-ADR-013 is accepted)
+- `ContentDeletionRepository` (when GENI-ADR-013 is accepted)
+- `DerivedArtifactRepository` (when GENI-ADR-013 is accepted)
+- `ContentUsageAuditRepository` (when GENI-ADR-013 is accepted)
 - `SourceHealthRepository`
 - `SourceRelationshipRepository`
 - `ArticleRepository`
@@ -2013,7 +2423,9 @@ Initial repository contracts include:
 - `ArticleEntityMentionRepository`
 - `EventRepository`
 - `ArticleEventLinkRepository`
+- `EventMatchCaseRepository`
 - `EventMatchCandidateRepository`
+- `EventMatchDecisionRepository`
 - `EventHistoryRepository`
 - `EventRelationshipRepository`
 - `EventIdentityOperationRepository`
@@ -2033,6 +2445,8 @@ Initial repository contracts include:
 - `ReportAnalysisLinkRepository`
 - `PublicationDecisionRepository`
 - `ReviewRepository`
+- `PublicationRepository`
+- `PublicationAttemptRepository`
 - `DeliveryRepository`
 - `DeliveryAttemptRepository`
 - `ProcessingRunRepository`
@@ -2096,12 +2510,20 @@ Data-layer tests must cover:
 
 - Foreign key enforcement.
 - Unique constraints.
+- Operation-specific rights assessment and fail-closed permission handling.
+- Source rights-profile versioning and content-access provenance.
+- Content retention expiry and deletion request/verification lifecycle.
+- Derived-artifact provenance and rights inheritance/restriction checks.
+- Content usage audit completeness without sensitive-content leakage.
 - Article ingestion idempotency.
 - Article revision creation.
 - Current article projection consistency.
 - Duplicate candidate behavior.
 - Event identity preservation.
-- Event matching decisions.
+- Event matching cases, candidates, and immutable decisions.
+- Candidate-to-case and decision-to-case referential integrity.
+- Human review creating a superseding decision.
+- Link activation and deactivation with exact decision provenance.
 - Event merge and split history.
 - Many-to-many article-event relationships.
 - Topic classification history.
@@ -2111,17 +2533,26 @@ Data-layer tests must cover:
 - Evidence location traceability.
 - Analysis provenance.
 - Analysis input validation.
+- Separate, versioned importance, economic relevance, and economic impact assessment records using explicit Analysis types.
 - Report version uniqueness.
 - Multi-event report relationships.
 - Published report immutability.
-- Publication decision history.
-- Review queue state transitions.
-- Delivery idempotency.
-- Delivery attempt history.
+- Publication decision history and decision supersession.
+- Review queue state transitions and reviewer authorization.
+- Publication idempotency by target and operation.
+- Publication attempt history and attempt-number uniqueness.
+- Replacement success and failure, including preservation of the previous effective publication on failure.
+- Withdrawal authorization, success, and failure behavior.
+- Reconciliation after an unknown external publication outcome.
+- Publication-key isolation so independent items can publish concurrently to the same target.
+- Prevention of concurrent conflicting publication operations within the same target/publication-key chain.
+- Delivery idempotency and delivery attempt history.
+- Verification that delivery state changes do not mutate publication state.
+- Validation that publication-link delivery references a confirmed effective publication.
 - Processing run and step recovery.
 - Expired execution lease handling.
 - Atomic event history updates.
-- Atomic publication state changes.
+- Atomic publication-operation and attempt persistence.
 - Collection checkpoint consistency.
 - LLM usage recording.
 - Schedule execution idempotency.
@@ -2153,11 +2584,14 @@ The initial implementation requires:
 - Claims and evidence.
 - Claim observations and evidence links.
 - Analysis records and evidence links.
+- Independent, versioned importance, economic relevance, and economic impact assessment outputs using distinct Analysis types.
 - Report versions and source references.
 - Report-event relationships where multi-event reporting is required.
 - Publication decisions.
 - Review records for held reports.
-- Delivery records with idempotency.
+- Publication operation records for publish, replace, and withdraw.
+- Publication attempt and reconciliation history.
+- Delivery records with idempotency and explicit delivery mode.
 - Delivery attempt history.
 - Processing runs and processing steps.
 - Basic LLM usage records.
@@ -2207,12 +2641,12 @@ The following topics require formal ADRs or explicit approval before their imple
 3. Embedding generation and semantic search storage.
 4. Article full-text acquisition, retention, and licensing.
 5. Source reliability assessment and calibration.
-6. Publication review and correction workflow.
+6. Publication review, target-adapter capabilities, idempotency/reconciliation guarantees, correction, replacement, and withdrawal workflow.
 7. Market data sources and observed impact classification.
 8. Reprocessing, checkpoint, and workflow recovery guarantees.
 9. Multilingual content storage, translation, and reporting policy.
 10. Retention, archival, and deletion requirements.
-11. Score semantics, calibration, and versioning.
+11. Separate methodology, scales, calibration, and evaluation for event importance, economic relevance, and economic impact (GENI-ADR-019).
 12. Scheduling and worker execution strategy.
 
 Until the relevant decisions are accepted, implementation choices must remain replaceable and must not be presented as approved architecture.
@@ -2235,20 +2669,27 @@ The data model is acceptable for implementation when:
 12. Reports retain their article, evidence, analysis, and event references.
 13. Report versions are preserved.
 14. Multi-event reports are supported.
-15. Publication decisions are separately recorded.
-16. Held reports can enter a real review workflow.
-17. Delivery operations have idempotency and retry history.
-18. Processing runs and steps support recovery.
-19. LLM usage and known costs can be recorded.
-20. Unknown values remain distinct from zero or false.
-21. Critical state changes are transactionally consistent.
-22. Migrations are versioned and tested.
-23. Repository interfaces hide database-specific implementation details.
-24. Backup and restore procedures are documented and tested.
-25. Content retention respects applicable rights and licensing restrictions.
-26. Scores have documented semantics and versioning.
-27. Scheduled workflow execution can be tracked and made idempotent where scheduling is implemented.
-28. The model is consistent with Document 02 component and interface contracts.
+15. Publication decisions are separately recorded from actual publication operations.
+16. Held reports can enter a real review workflow, and review approval cannot bypass a new effective publication decision.
+17. Publication, replacement, and withdrawal operations have immutable history, idempotency, attempt records, and a stable key that scopes each publication chain within a target.
+18. Uncertain external publication outcomes require reconciliation before retry.
+19. Delivery operations have separate idempotency and retry history and cannot change publication state.
+20. Publication-link deliveries reference a confirmed effective publication.
+21. Processing runs and steps support recovery.
+22. LLM usage and known costs can be recorded.
+23. Unknown values remain distinct from zero or false.
+24. Critical state changes are transactionally consistent.
+25. Migrations are versioned and tested.
+26. Repository interfaces hide database-specific implementation details.
+27. Backup and restore procedures are documented and tested.
+28. Content retention respects applicable rights and licensing restrictions.
+29. Event importance is independently represented and versioned.
+30. Economic relevance is separately represented with direct/indirect/contextual, not-established, and unknown outcomes.
+31. Economic impact is represented by channel, direction, magnitude where supported, time horizon, evidence status, and uncertainty.
+32. Scores and assessment confidence have distinct semantics, methodology/schema versions, and calibration metadata where applicable.
+33. Scheduled workflow execution can be tracked and made idempotent where scheduling is implemented.
+34. The model is consistent with Document 02 component and interface contracts.
+35. Content access, processing, storage, external transmission, quotation, and distribution can be authorized independently under versioned rights policies; unknown rights do not authorize restricted operations.
 
 ## 30. Final Design Statement
 

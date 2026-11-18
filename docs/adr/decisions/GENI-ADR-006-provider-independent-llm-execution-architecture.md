@@ -3,9 +3,9 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-006  
 **Title:** Provider-Independent LLM Execution Architecture  
-**Version:** 1.0  
+**Version:** 1.1
 **Status:** Proposed  
-**Date:** 2026-11-17  
+**Date:** 2026-11-18
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -725,6 +725,10 @@ The relevant sections must be updated after formal acceptance.
 | GENI-ADR-002 | Related to | Defines deduplication and event matching responsibilities that may use LLM-assisted tasks |
 | GENI-ADR-008 | Related to | Defines evidence provenance and uncertainty handling for outputs produced by intelligence tasks |
 | GENI-ADR-011 | Related to | Defines event identity and lifecycle behavior that must remain controlled by application logic |
+| GENI-ADR-007 | Related to | Defines deterministic workflow boundaries and selective use of bounded reasoning. |
+| GENI-ADR-014 | Related to | Defines human review when model-assisted outputs are ambiguous or consequential. |
+| GENI-ADR-017 | Related to | Defines task/workflow budgets, normalized usage telemetry, and evaluation. |
+| GENI-ADR-018 | Related to | Translation and multilingual processing may use the shared execution interface subject to rights and quality constraints. |
 
 These relationships do not imply that the related ADRs have been accepted.
 

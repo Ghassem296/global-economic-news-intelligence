@@ -2,10 +2,10 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.2  
+**Version:** 1.10  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
-**Last Updated:** 2026-11-17
+**Last Updated:** 2026-11-18
 
 ---
 
@@ -290,6 +290,7 @@ External URL fetching must use defensive controls against:
 Responsibilities:
 
 - Normalize incoming articles.
+- Create immutable ArticleRevision records for material content changes and maintain the Article current projection atomically.
 - Extract canonical URLs.
 - Normalize timestamps.
 - Identify source language.
@@ -310,7 +311,7 @@ Event matching determines whether different articles describe the same real-worl
 
 The processing system must support multilingual source content from the initial release. Language identification and preservation of original content are initial-release requirements.
 
-Translation may be used as an intermediate processing aid, but translated text must not silently replace original source content.
+Translation is optional and may be used only under an approved language policy and applicable content-rights authorization. When enabled, it must create a separately versioned derived artifact linked to the exact ArticleRevision, preserving source/output languages, translator/provider and model/configuration provenance, and quality status. Translated text must never replace the original source revision. Cross-language matching must not depend on an unsupported or unevaluated translation.
 
 ### 5.4 Event Intelligence
 
@@ -333,9 +334,11 @@ The proposed approach is a hybrid method combining:
 - Entity and attribute comparisons.
 - Temporal and geographic context.
 - Textual similarity.
-- Semantic similarity where appropriate.
+- Semantic similarity through a replaceable candidate-retrieval adapter where appropriate.
 - Confidence evaluation.
 - Explicit decision thresholds.
+
+Semantic retrieval is optional and must be evaluated against a lexical baseline. Its adapter may generate candidates but must never make the final event decision or create an article-event association. Embedding provider/storage and quantitative thresholds remain subject to GENI-ADR-012 and must not be assumed approved while that ADR is Proposed.
 
 A new article must not automatically create a new event merely because its wording differs from previously collected articles.
 
@@ -430,44 +433,44 @@ They may be introduced only through a documented requirement and an accepted arc
 
 Responsibilities:
 
-- Evaluate event importance.
-- Evaluate economic relevance.
-- Analyze potential economic consequences.
-- Identify affected countries, institutions, industries, and markets.
-- Identify risks and uncertainties.
-- Separate observed information from inferred conclusions.
-- Maintain analytical versions and methodology references.
+- Assess the overall importance of an event.
+- Assess the event's economic relevance independently of its overall importance.
+- Analyze the nature, direction, scale, and timing of potential or realized economic consequences.
+- Identify affected countries, institutions, industries, sectors, and markets.
+- Identify economic transmission mechanisms, risks, and uncertainties.
+- Distinguish observed outcomes, source-reported effects, analytical inferences, and forecasts.
+- Maintain separate versioned assessment results and methodology references.
 
-Importance and economic impact are separate concepts.
+The system must produce three distinct assessments. They answer different questions and must not be collapsed into one score.
 
-Importance measures the overall significance of an event.
+**Event Importance** answers: *How significant is this event overall, and how much attention or monitoring priority does it warrant?*
 
-Economic impact describes the nature and potential magnitude of its economic consequences.
+Importance concerns the event's overall significance and urgency. It may consider institutional significance, geographic and population scope, novelty or materiality, time sensitivity, and expected duration. It is not a measurement of economic relevance, the magnitude of economic consequences, or the probability that a forecast will occur.
 
-The system must distinguish at least three categories of market and economic impact:
+**Economic Relevance** answers: *How directly and materially is this event connected to economic activity, policy, institutions, or markets?*
 
-1. **Observed Market Reaction:** A reaction supported by actual market data available to the system.
-2. **Source-Reported Reaction:** A reaction reported by a news source but not independently verified by integrated market data.
-3. **AI-Inferred Economic Impact:** A potential or expected consequence inferred from available evidence and analytical reasoning.
+Economic relevance evaluates the existence and strength of plausible economic transmission pathways. It identifies whether the connection is direct, indirect, contextual, not established, or unknown. It does not measure the size, direction, or certainty of the resulting economic effect.
 
-The system must not describe an inferred impact as an observed market reaction.
+**Economic Impact** answers: *What economic consequences have occurred or may occur, through which channels, with what direction, magnitude, and time horizon?*
 
-In the absence of reliable market data, the system may describe possible economic consequences but must explicitly identify them as analytical assessments.
+Economic impact evaluates consequences across relevant channels such as inflation, interest rates, growth, employment, currencies, trade, energy, public finance, industrial production, and financial stability. It must distinguish potential from realized effects and describe affected entities, geography, direction, magnitude, duration, and uncertainty where supported.
 
-Scoring dimensions may include:
+A high-importance event may have low or unestablished economic relevance. An event may be highly economically relevant even when its eventual impact is not yet known. A material economic impact must not be inferred solely from a high importance or relevance assessment.
 
-- Geographic scope.
-- Number and significance of affected entities.
-- Institutional significance.
-- Market relevance.
-- Time sensitivity.
-- Magnitude of development.
-- Potential duration.
-- Economic transmission channels.
+The system must distinguish at least the following evidence states for economic effects:
 
-Scoring methodology, scales, calibration, thresholds, and versioning must be formally specified and evaluated.
+1. **Observed Economic Effect:** An outcome supported by an identified economic or market data source.
+2. **Source-Reported Effect:** An effect described by a source but not independently confirmed by the system's integrated data.
+3. **Inferred Potential Effect:** A possible consequence derived through explicit analytical reasoning and evidence.
+4. **Unknown:** Available information is insufficient to characterize the effect.
 
-Unknown or unavailable information must not automatically be interpreted as zero impact or zero importance.
+Observed market reaction is a narrower concept than economic impact. A measured price or yield movement may be an observed market reaction, but the movement's causal relationship to an event remains a separate analytical question. Market observations must not be treated as proof that the event caused the observed movement. Market-data acquisition is optional: provider, instrument universe, frequency, licensing, and retention remain subject to GENI-ADR-015. Without an authorized and suitable observation source, market reaction must remain unknown/unavailable rather than inferred as measured.
+
+Importance, economic relevance, and economic impact must be stored and evaluated as separate versioned assessment results. A single composite score must not silently combine them. Numeric scores are optional and may be used only when their scale, direction, methodology, version, calibration, and evaluation criteria are explicit. Qualitative levels and structured dimensions may be more appropriate than a single number.
+
+Assessment confidence, forecast probability, economic-effect magnitude, and overall importance are different quantities. They must not share a field or be described as interchangeable. Missing or unavailable information must remain unknown rather than being converted to zero, neutral impact, or low importance.
+
+Assessment methodologies, scales, calibration, thresholds, and acceptance criteria require formal specification and evaluation before they are used for automated production ranking or publication decisions.
 
 ### 5.9 Report Generation
 
@@ -492,19 +495,23 @@ A revised report must create a new version rather than silently overwriting prev
 Responsibilities:
 
 - Evaluate publication eligibility.
-- Apply publication quality gates.
-- Publish eligible reports.
-- Route held reports to a review queue.
-- Record review outcomes.
-- Distribute event updates.
-- Prevent duplicate publication.
-- Maintain delivery status.
-- Support corrections and withdrawals.
-- Support future delivery channels.
+- Apply publication quality and security gates.
+- Execute approved publication, replacement, and withdrawal operations.
+- Route held reports to an operational review queue.
+- Preserve publication-operation and attempt history.
+- Distribute reports or notifications through separate delivery operations.
+- Prevent unintended duplicate publication and delivery.
+- Record external publication and delivery references.
+- Support corrections, supersession, and withdrawal.
+- Support future publication targets and delivery channels.
 
-Publication and delivery are separate responsibilities.
+Publication and delivery are separate business operations with separate records, state transitions, retry policies, and observability.
 
-A report may be generated without being approved for publication.
+**Publication** makes an approved report version available at a configured publication target, such as a public website, public API, or public content feed. A channel must be explicitly classified as a publication target when it makes content publicly or generally available.
+
+**Delivery** sends a report, a publication link, or a notification to a configured recipient or delivery destination, such as an email recipient or subscriber channel. A destination may support more than one operation, but each operation must be classified and recorded separately.
+
+A publication decision is an authorization outcome, not proof that publication occurred. A report is considered published at a target only when a corresponding publication operation has a confirmed successful result.
 
 The publication policy must support:
 
@@ -513,17 +520,25 @@ The publication policy must support:
 - `HOLD_FOR_REVIEW`
 - `REJECT`
 
-A held report must be associated with a review record or queue entry containing its status, reason, timestamps, and eventual outcome.
+A held report must be associated with a review record or queue entry containing its status, reason, timestamps, and eventual outcome. An authorized review outcome must be recorded. Approval after review must result in a new publication decision; the earlier decision and review history must not be overwritten.
 
-The initial implementation must define who or what consumes the review queue.
+The publication execution workflow must create a durable publication-operation record before making an external side effect. The operation must identify the report version, publication target, stable publication key (the logical publication slot within that target), operation type, applicable publication decision, and idempotency key. Each external attempt must be recorded separately. A single target may host many independent publication keys; replacement and withdrawal must operate only within the referenced key.
 
-If no authorized reviewer is available, the system must not silently publish held content.
+Publication operations must distinguish:
 
-Published reports must support correction, supersession, and withdrawal.
+- `PUBLISH`: make an approved report version available at a target.
+- `REPLACE`: publish a corrected or superseding report version in place of an earlier publication.
+- `WITHDRAW`: remove or formally withdraw an existing publication where the target supports it.
 
-Previous versions and publication history must remain traceable.
+A replacement must reference the earlier publication it supersedes and use the same publication target and publication key. The previous publication remains the effective publication for that key until the replacement is confirmed successful. A failed replacement must not silently invalidate the previous publication.
 
-Delivery operations must be idempotent so that retries do not produce unintended duplicate publications.
+A withdrawal must reference the publication being withdrawn and preserve its reason and authorization context. If a target cannot physically remove content, the system must record the limitation and apply the approved withdrawal or tombstone procedure.
+
+A timeout or connection failure must not be assumed to mean that an external publication failed. When the target outcome is uncertain, the operation must enter reconciliation before another side-effecting attempt is made. Retries must reuse the same logical operation and idempotency key.
+
+Delivery must remain independent from publication. A delivery failure must not reverse a successful publication, and a successful delivery must not imply that a public publication exists. A delivery that sends a publication link must reference a confirmed successful publication operation. Direct delivery of report content may be allowed independently when the relevant delivery policy authorizes it.
+
+The initial implementation must define the publication targets, authorized withdrawal mechanism, review owner, and supported delivery destinations. Secrets and credentials must be referenced through secure configuration and must not be stored in destination references or ordinary metadata.
 
 ### 5.11 Scheduling and Workflow Orchestration
 
@@ -568,7 +583,22 @@ The initial deployment should avoid unnecessary infrastructure dependencies.
 
 The persistence implementation must remain behind repository and infrastructure interfaces.
 
-## 6. High-Level Data Flow
+### 5.13 Content Rights Management
+
+Content rights management is a cross-cutting policy capability governing what the system may do with information obtained from external sources. It is distinct from network access control, source reliability assessment, publication eligibility, and recipient delivery authorization.
+
+The proposed capability must:
+
+- Maintain versioned source rights profiles and applicable license/contract references.
+- Record how a content artifact was accessed and which source/content revision it refers to.
+- Evaluate permission separately for metadata access, full-text access, temporary processing, persistent storage, internal analysis, external LLM processing, embedding/translation, derived-output generation, quotation, customer distribution, and republication.
+- Apply retention, expiration, restriction, and deletion requirements to original content and derived artifacts.
+- Preserve an auditable basis, policy version, outcome, and handling constraints for each material rights assessment.
+- Block restricted operations when permission is unknown, denied, expired, revoked, or requires review.
+
+A source being publicly reachable or previously collected does not establish permission for every subsequent operation. Rights checks must occur before content retrieval/storage, external provider transmission, and distribution as applicable. Temporary processing must not create an unauthorized retained copy in caches, queues, logs, backups, or external providers.
+
+The capability does not provide legal advice or infer permissions from technical accessibility. The Project Owner must approve the initial source-rights policy and its evidence basis. The detailed rights model and operations remain provisional under GENI-ADR-013 until accepted.
 
 The main processing pipeline is:
 
@@ -581,16 +611,22 @@ The main processing pipeline is:
 7. Entity extraction.
 8. Candidate claim extraction.
 9. Candidate event detection.
-10. Event matching.
-11. Event association or new event creation.
-12. Evidence enrichment and verification.
-13. Event importance assessment.
-14. Economic impact analysis.
-15. Event dossier generation.
-16. Publication policy evaluation.
-17. Review routing when required.
-18. Report publication and delivery.
-19. Event monitoring and subsequent updates.
+10. Create an EventMatchCase for each distinct development identified in an ArticleRevision.
+11. Generate and evaluate EventMatchCandidate records within each case.
+12. Record an immutable EventMatchDecision for each resolved case, or route the case for authorized human review.
+13. Apply an eligible MATCH decision through EventService and create the corresponding ArticleEventLink.
+14. Propose new event creation only through the approved event-creation workflow.
+15. Evidence enrichment and verification.
+16. Economic relevance assessment.
+17. Event importance assessment.
+18. Economic impact analysis.
+19. Event dossier generation.
+20. Publication policy evaluation.
+21. Review routing when required.
+22. Report publication and delivery.
+23. Event monitoring and subsequent updates.
+
+Importance, economic relevance, and economic impact assessments must remain separate outputs even when they share source evidence or analytical execution resources.
 
 The pipeline must support controlled reprocessing when classification, extraction, matching, scoring, or analysis logic changes.
 
@@ -603,6 +639,10 @@ The primary domain entities include:
 - Source
 - Article
 - ArticleProcessingRecord
+- ArticleRevision
+- EventMatchCase
+- EventMatchCandidate
+- EventMatchDecision
 - Event
 - ArticleEventLink
 - Entity
@@ -627,7 +667,13 @@ An article preserves source identity, publication metadata, collection metadata,
 
 Article identity is independent of event identity.
 
-### 7.2 Event
+### 7.2 ArticleRevision
+
+Represents an immutable, meaningful observed version of an Article's published content.
+
+Each ArticleRevision belongs to exactly one Article and preserves the content/version metadata used by downstream extraction, evidence, and event matching. A material change to the publication creates a new revision; unchanged repeated collection does not. An EventMatchCase must reference the exact ArticleRevision it evaluates. Later revisions must not silently rewrite or reuse the earlier revision's cases, evidence spans, or decisions.
+
+### 7.3 Event
 
 Represents a real-world development or a connected sequence of developments.
 
@@ -635,22 +681,19 @@ An event may be associated with multiple articles.
 
 Event identity must be stable and must not be derived solely from a headline or article URL.
 
-### 7.3 ArticleEventLink
+### 7.4 Event Matching Case and Decision
 
-Represents the relationship between an article and an event.
+Event matching is performed independently for each development identified within an immutable ArticleRevision. Each EventMatchCase may contain multiple EventMatchCandidate records, but candidates are proposals for evaluation and are not decisions.
 
-The relationship may include:
+An immutable EventMatchDecision records the authoritative outcome for one case. A single article revision may therefore produce multiple independent matching decisions. Ambiguous cases are routed for authorized human review; the review outcome must be recorded as a new decision that supersedes the previous effective decision.
 
-- Relevance.
-- Association confidence.
-- Relationship type.
-- Association timestamp.
-- Matching method and version.
-- Review or correction metadata where applicable.
+### 7.5 ArticleEventLink
 
-An article may be associated with more than one event when justified.
+Represents an applied association between an ArticleRevision and an Event. Every link must reference the exact EventMatchCase and EventMatchDecision with outcome MATCH that authorized its creation.
 
-### 7.4 Claim and Evidence
+A link must not be created from a candidate score, a review comment, or a non-MATCH outcome. Corrections deactivate the previous link with an explicit superseding decision and preserve the original association history. An article revision may have multiple event links when separate matching cases justify them.
+
+### 7.6 Claim and Evidence
 
 A Claim represents an assertion extracted from or attributed to a source, or an analytical assertion generated by the system.
 
@@ -660,13 +703,13 @@ Claims and evidence must preserve source attribution and provenance.
 
 A source claim is not automatically an established fact.
 
-### 7.5 Analysis
+### 7.7 Analysis
 
 Represents a versioned analytical assessment of an event.
 
 An analysis must identify its relevant evidence, methodology, model configuration where applicable, and uncertainty.
 
-### 7.6 Event Dossier
+### 7.8 Event Dossier
 
 An event dossier is a structured representation of the current understanding of an event.
 
@@ -706,43 +749,72 @@ An article may have multiple topic classifications, each with an associated conf
 
 Classification results must be versioned so that changes in taxonomy or classification logic can be evaluated and reprocessed.
 
-## 9. Importance and Economic Impact
+## 9. Importance, Economic Relevance, and Economic Impact
 
-Importance and economic impact are separate concepts.
+### 9.1 Event Importance
 
-**Importance** measures the overall significance of an event.
+Importance measures the overall significance of an event and its priority for attention, monitoring, and editorial coverage.
 
-**Economic impact** describes the nature and potential magnitude of its economic consequences.
+Potential dimensions include:
 
-Importance dimensions may include:
+- Institutional or public significance.
+- Geographic and population scope.
+- Novelty and materiality of the development.
+- Time sensitivity and urgency.
+- Expected duration or persistence.
+- Relevance to the product's stated monitoring priorities.
 
-- Geographic scope.
-- Number of affected entities.
-- Institutional significance.
-- Market relevance.
-- Time sensitivity.
-- Development magnitude.
-- Potential duration.
+Importance must not be calculated by simply adding economic relevance and economic impact. The importance methodology must state whether economic considerations contribute to the assessment and how double-counting is prevented.
 
-Economic impact dimensions may include:
+### 9.2 Economic Relevance
 
-- Inflation.
-- Interest rates.
-- Currency.
-- Trade.
-- Energy.
-- Employment.
-- Public finance.
-- Financial stability.
-- Industrial production.
+Economic relevance measures the strength of the event's connection to economic activity, policy, institutions, or markets.
 
-The system must distinguish measured data from qualitative analysis and model-generated estimates.
+The assessment should identify:
 
-Scoring must have a documented scale, methodology, version, and evaluation process.
+- Direct economic links, such as a central-bank rate decision or a change in a fiscal measure.
+- Indirect links, such as geopolitical developments that may affect trade routes or supply chains.
+- Contextual links where an economic connection is relevant background but not yet a demonstrated transmission pathway.
+- Whether a material economic connection has not been established.
+- Whether available information is insufficient to make the assessment.
 
-Scores must not imply a level of precision unsupported by available evidence.
+The result must identify the relevant transmission channels, affected entities, geographic scope, and supporting evidence where available. Relevance does not establish that an effect has occurred or determine its magnitude.
 
-Missing information must be represented as unknown or unavailable rather than automatically converted to zero.
+### 9.3 Economic Impact
+
+Economic impact describes realized or potential consequences of an event.
+
+An impact assessment should identify, where supported:
+
+- Economic channel or dimension.
+- Affected country, institution, sector, industry, market, or group.
+- Direct or indirect transmission mechanism.
+- Direction of effect, such as positive, negative, mixed, neutral, or unclear.
+- Magnitude or defensible range, with its unit and reference context where applicable.
+- Expected or observed time horizon and duration.
+- Evidence status: observed, source-reported, inferred, or unknown.
+- Supporting and conflicting evidence.
+- Uncertainty and limitations.
+
+A single aggregate impact number must not conceal materially different effects across countries, sectors, instruments, or time horizons. An aggregate score may be introduced only through an explicit, evaluated methodology.
+
+### 9.4 Market Reaction and Causality
+
+An observed market reaction requires identifiable market data, instrument identity, measurement time, source, and a suitable comparison or baseline where relevant.
+
+A market reaction is not, by itself, proof of event causality. The system must distinguish a measured market movement from a source's explanation of that movement and from the system's own causal interpretation.
+
+When no suitable market data is available, the system may describe potential market implications as analysis, but must not label them as observed market reactions.
+
+### 9.5 Scoring and Uncertainty Rules
+
+Each assessment type must use its own versioned result schema and methodology. Numeric scales, if used, must define their valid range, direction, interpretation, comparability, and calibration status.
+
+An assessment confidence value expresses the strength of support for the assessment; it is not the event's importance, the magnitude of impact, or the probability of a forecast unless a separately defined and calibrated probability is explicitly provided.
+
+Unknown, unavailable, contradictory, and not-applicable inputs must remain distinguishable. Missing information must not automatically lower a score, become zero impact, or be interpreted as evidence that no effect exists.
+
+The methodology and quantitative acceptance thresholds for importance, economic relevance, and economic impact must be documented and evaluated independently.
 
 ## 10. Event Lifecycle
 
@@ -776,14 +848,14 @@ The complete transition rules and event identity policy are subject to the relev
 
 ## 11. Publication Policy
 
-Every generated report receives a publication decision.
+Every generated report receives an immutable publication decision. A publication decision describes whether a report version is eligible for publication; it does not record the external publication operation itself.
 
 | Decision | Meaning |
 |---|---|
-| `PUBLISH` | Sufficient quality and evidence for publication |
-| `PUBLISH_WITH_CAVEATS` | Publish with explicit limitations or uncertainty |
-| `HOLD_FOR_REVIEW` | Do not publish automatically; route to review |
-| `REJECT` | Invalid, irrelevant, or insufficiently useful output |
+| `PUBLISH` | The report version meets the requirements for publication |
+| `PUBLISH_WITH_CAVEATS` | The report version may be published only with explicit caveats and limitations |
+| `HOLD_FOR_REVIEW` | Do not publish; route to an authorized review process |
+| `REJECT` | The report version is not eligible for publication |
 
 Publication decisions should consider:
 
@@ -798,18 +870,51 @@ Publication decisions should consider:
 - Report validity.
 - Provenance completeness.
 - Security and content-policy checks.
+- Applicable content-access and licensing restrictions.
 
-Publication decisions must be recorded independently of report content and delivery outcomes.
+A decision must preserve its reasons, policy version, timestamp, and relationship to any decision it supersedes. A changed outcome creates a new decision rather than mutating the earlier record.
 
-A held report must remain unpublished until an authorized review outcome permits further action.
+A `HOLD_FOR_REVIEW` decision must create or reference an operational review task. The report remains unpublished until an authorized review outcome permits further processing. An approval, approval with caveats, or other material review outcome must be represented by a new effective publication decision. A review record alone is not a publication authorization.
 
-A rejected report must retain its decision and reason for auditability.
+For `PUBLISH_WITH_CAVEATS`, the caveats must be explicit, persisted, and included in the published representation. The publication execution must not silently omit them.
 
-Published reports must support correction, supersession, and withdrawal.
+## 11.1 Publication Execution
 
-Automatic publication must never bypass security, quality, or provenance requirements.
+Publication execution is a separate workflow from policy evaluation and review.
 
-The detailed publication, quality-gate, human-review, correction, and withdrawal policies must remain consistent with their corresponding ADRs and governance documents.
+Only a report version with an effective `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision may be submitted for publication. The execution must also verify that the decision has not been superseded or invalidated and that all required review, rights, security, and target-specific conditions are satisfied.
+
+Each logical publication operation must record:
+
+- The report version.
+- The effective publication decision, when required.
+- The publication target.
+- The operation type: `PUBLISH`, `REPLACE`, or `WITHDRAW`.
+- The target publication reference for replacement or withdrawal.
+- A stable idempotency key.
+- The operation status and timestamps.
+- External references and outcome information.
+- Each individual attempt and any recovery or reconciliation action.
+
+A successful publication operation is the evidence that the report version became available at the specified target and publication key. The effective publication state must be derived from the successful operation chain for that target and key, not inferred from the policy decision or from a delivery record.
+
+A new corrected report must be a new immutable report version. Publishing it as a replacement must reference the earlier publication. The earlier publication remains effective if replacement fails; it becomes superseded only after the target confirms the replacement.
+
+A withdrawal must reference the currently effective publication for the same target and publication key and retain its reason and authorization context. A failed or uncertain withdrawal must not be represented as completed.
+
+If an external request times out after it may have succeeded, the operation must be marked for reconciliation. The system must query or otherwise reconcile the target before retrying a side effect. Where the target does not support idempotency or status lookup, the duplicate-publication risk and manual reconciliation path must be documented.
+
+## 11.2 Delivery
+
+Delivery is the separate act of sending report content, a confirmed publication link, or a notification to a recipient or delivery destination.
+
+Delivery may occur after publication or independently when an approved delivery policy permits direct distribution of report content. A delivery that contains a publication link must reference a confirmed successful publication operation.
+
+Delivery status and history must not change publication status. Publication status and history must not be inferred from delivery status. Each operation must have its own idempotency key, attempts, external reference, and recovery handling.
+
+A rejected or held report must not be delivered through a path that bypasses its applicable publication or distribution policy.
+
+Automatic publication must never bypass security, quality, provenance, review, or content-rights requirements.
 
 ## 12. Report Structure
 
@@ -821,13 +926,15 @@ A text event report should contain:
 4. Latest Developments.
 5. Timeline.
 6. Key Entities.
-7. Economic Significance.
-8. Potential Market and Sector Impact.
-9. Supporting Evidence.
-10. Conflicting or Unconfirmed Information.
-11. Risks and Uncertainties.
-12. Analytical Assessment.
-13. Sources.
+7. Event Importance — why the development deserves attention or follow-up.
+8. Economic Relevance — the direct, indirect, or contextual economic transmission pathways.
+9. Observed Market Reaction, when supported by actual market observations.
+10. Economic Impact — realized or potential consequences by channel, direction, magnitude, and time horizon where supported.
+11. Supporting Evidence.
+12. Conflicting or Unconfirmed Information.
+13. Risks and Uncertainties.
+14. Analytical Assessment.
+15. Sources.
 
 Each report must identify:
 
@@ -847,22 +954,15 @@ The initial product output language is English.
 
 ## 13. Persistence Strategy
 
-SQLite is the proposed initial persistence implementation.
+SQLite is a candidate for the initial persistence proof-of-concept, not a selected or approved database engine. ADR-005 requires the initial engine to be selected after testing the expected workload, concurrent writers, transaction behavior, backup/restore requirements, deployment model, and operational capacity.
 
-Reasons include:
+SQLite may be selected if those tests demonstrate that its single-instance concurrency and operational model satisfy the initial workload. PostgreSQL remains an alternative for the initial selection if the measured requirements exceed SQLite's suitable operating envelope; it may also be a later migration target if requirements grow.
 
-- Low operational complexity.
-- Local development support.
-- Suitability for an initial single-instance deployment.
-- Simple backup and migration workflows.
-
-The SQLite decision remains subject to formal architectural approval.
+Until ADR-005 is formally accepted, no implementation or document may treat either engine as the approved production choice.
 
 Persistence must be accessed through repository interfaces.
 
-The domain model must not depend directly on SQLite.
-
-PostgreSQL may be introduced later if justified by concurrency, deployment, operational, or scaling requirements.
+The domain model must not depend directly on a specific database engine.
 
 The initial persistence design must explicitly address:
 
@@ -924,6 +1024,7 @@ The system must track:
 - Event matching confidence and outcomes.
 - Event creation, merge, and split operations.
 - Evidence and verification outcomes.
+- Importance, economic relevance, and economic impact assessment outcomes, including unknown/insufficient-data rates and methodology versions.
 - Publication decisions.
 - Review queue status and age.
 - LLM usage and cost when known.
@@ -960,6 +1061,8 @@ The system must establish evaluation procedures for:
 - Event matching.
 - Evidence attribution.
 - Importance assessment.
+- Economic relevance assessment.
+- Economic impact assessment by channel and evidence status.
 - Publication decisions.
 - Report quality.
 
@@ -998,12 +1101,13 @@ The high-level implementation sequence is:
 - Event detection and matching.
 - Event lifecycle and history.
 - Evidence management.
+- Economic relevance assessment and its initial evaluation.
 - Event matching evaluation.
 
 ### Development Phase C — Analysis and Publication
 
 - Importance assessment.
-- Economic impact analysis.
+- Economic impact analysis by channel.
 - Event dossier generation.
 - Publication quality gates.
 - Review handling.
@@ -1042,19 +1146,22 @@ The initial release is functionally complete when the following capabilities are
 14. Event history records material changes and lifecycle transitions.
 15. Claims and evidence are traceable to source material.
 16. Reports distinguish source claims, supported facts, analysis, and forecasts.
-17. Economic significance is explicitly evaluated.
-18. Importance assessment uses a documented and versioned methodology.
-19. Market reactions are not presented as observed without supporting market data.
-20. Publication policy is enforced.
-21. Held reports are routed to a defined review mechanism.
-22. Reports can be generated, versioned, corrected, and withdrawn.
-23. Reports can be delivered without unintended duplicate publication.
-24. Processing failures and recovery operations are observable.
-25. The system can restart without corrupting existing data.
-26. Reprocessing does not silently overwrite historical analytical or publication records.
-27. LLM execution respects configured budgets, deadlines, and output validation.
-28. External content is handled as untrusted input.
-29. The initial system operates without mandatory distributed or cloud infrastructure.
+17. Event importance is assessed independently using a documented and versioned methodology.
+18. Economic relevance is assessed separately, including its direct or indirect transmission pathways and an explicit unknown/not-established outcome.
+19. Economic impact is analyzed by channel, direction, magnitude, time horizon, evidence status, and uncertainty where supported.
+20. Observed market reactions are supported by market data and are not presented as proof of event causality.
+21. Publication policy is enforced and publication decisions are immutable and versioned.
+22. Held reports are routed to a defined review mechanism, and review approval cannot bypass a new effective publication decision.
+23. Reports can be generated and corrected through immutable report versions with traceable report-level lineage.
+24. Publication, replacement, and withdrawal are recorded as separate idempotent operations, and publication success is confirmed by the target rather than inferred from a policy decision.
+25. Uncertain external publication outcomes are reconciled before another side-effecting attempt; a failed replacement does not invalidate the previous confirmed publication.
+26. Delivery operations are recorded separately from publication, prevent unintended duplicate delivery, and do not change publication status.
+27. Processing failures and recovery operations are observable.
+28. The system can restart without corrupting existing data.
+29. Reprocessing does not silently overwrite historical analytical, report, publication, or delivery records.
+30. LLM execution respects configured budgets, deadlines, and output validation.
+31. External content is handled as untrusted input.
+32. The initial system operates without mandatory distributed or cloud infrastructure.
 
 Quantitative acceptance thresholds for extraction quality, event matching, classification, and report quality must be established in the evaluation specification before the relevant capabilities are considered production-ready.
 
@@ -1071,14 +1178,17 @@ The implementation must preserve these constraints:
 - External content is untrusted.
 - Evidence provenance is mandatory.
 - Reports and analyses are versioned.
-- Publication is subject to explicit quality gates.
+- Publication eligibility decisions, external publication operations, and recipient delivery operations are distinct and independently traceable.
 - Held reports must not be silently published.
+- Publication replacement and withdrawal must preserve external-operation history and require confirmed outcomes.
 - Event lifecycle state is separate from event-history occurrences.
 - Processing state is separate from domain state.
 - Phase 1 is text-only.
 - Original source language and content references are preserved.
 - SQLite is the proposed initial database implementation, not a domain-level dependency.
 - Full-text acquisition and storage must respect applicable rights and restrictions.
+- Content permission is operation-specific; unknown or unverified rights must not authorize restricted access, retention, external processing, quotation, or distribution.
+- Rights checks, publication decisions, and recipient-distribution authorization are separate controls.
 - Advanced infrastructure is deferred until justified by requirements.
 
 These constraints describe the current proposed architecture. Any change to an accepted architectural constraint must follow the applicable ADR and documentation governance processes.
@@ -1087,30 +1197,20 @@ These constraints describe the current proposed architecture. Any change to an a
 
 Architectural decisions must be documented and tracked through the ADR governance process.
 
-The following individual ADR documents are currently published in the project documentation set:
+The project has nineteen registered architectural decision topics, and all nineteen have individual ADR documents in the current pull-request branch.
 
-| ADR | Subject | Current Status |
-|---|---|---|
-| GENI-ADR-001 | Event-Centric Intelligence Architecture | Proposed |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | Proposed |
-| GENI-ADR-006 | Provider-Independent LLM Execution Architecture | Proposed |
-| GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | Proposed |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | Proposed |
-| GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | Proposed |
+All nineteen ADRs currently have status Proposed. None is an accepted architectural decision until the Project Owner explicitly records approval.
 
-The project has identified eighteen architectural decision topics. Six currently have individual ADR documents. The remaining twelve topics are tracked in the ADR Registry and do not yet have individual decision documents.
+The topics cover:
 
-All six published ADRs currently have the status Proposed. None must be treated as an accepted architectural decision until explicit approval is recorded.
-
-Other architectural topics requiring formal decisions include:
-
-- Semantic search, embedding generation, and vector storage.
-- Publication quality gates and automated publishing policy.
-- Human review, corrections, and withdrawals.
-- Persistence technology, SQLite concurrency, and migration strategy.
-- Recovery, idempotency, and workflow execution guarantees.
-- Market data integration and market-impact classification.
-- LLM budgets, cost tracking, and evaluation methodology.
+- Event-centric architecture, article deduplication, and event identity/matching.
+- Editorial focus, importance, economic relevance, and economic impact.
+- Evidence provenance and uncertainty.
+- LLM execution, deterministic workflows, budgets, and evaluation.
+- News acquisition, multilingual processing, and content rights.
+- Persistence, semantic retrieval, idempotency, and recovery.
+- Publication quality gates, human review, corrections, withdrawals, and delivery channels.
+- Market data integration and impact classification.
 
 The complete list of decision topics and their current tracking status is maintained in:
 

@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.0  
-**Date:** 2026-11-16  
+**Version:** 1.4  
+**Date:** 2026-11-18  
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -431,35 +431,41 @@ The matching process should produce one of the following structured outcomes:
 | Outcome | Meaning |
 |---|---|
 | `MATCH` | The candidate is sufficiently supported as describing an existing event. |
-| `NEW_EVENT_CANDIDATE` | No existing event is sufficiently supported; a new event may be created. |
+| `NEW_EVENT_CANDIDATE` | No existing event is sufficiently supported; creation of a new event may be proposed for a separate authorized workflow. |
 | `AMBIGUOUS` | Multiple plausible event identities exist or the evidence is insufficient to distinguish them. |
 | `NO_MATCH` | The candidate does not match the evaluated event. |
 | `REVIEW_REQUIRED` | The case requires an explicit review decision under the applicable policy. |
 
-`NO_MATCH` applies to an evaluated candidate-event pair. It does not necessarily mean that the article cannot match another event.
+`NO_MATCH` is a case-level outcome recorded after evaluating the case's candidate set. It means that none of the evaluated candidate Events matches the single development represented by that EventMatchCase. It does not prevent another EventMatchCase for a different development in the same ArticleRevision from resolving to a different Event.
 
-`NEW_EVENT_CANDIDATE` is not equivalent to automatic permission to create a new event. Creation must follow the applicable event-creation policy and idempotency rules.
+`NEW_EVENT_CANDIDATE` is not permission to create an event by itself. The decision must carry a stable, preassigned `proposed_event_reference` that will become the Event identifier. Creation is allowed only when the decision is still effective and a versioned EventCreationPolicy authorizes it, including any required human review. The initial EventHistory record must retain the source EventMatchCase, NEW_EVENT_CANDIDATE decision, EventCreationPolicy version, actor/authorization reference, and idempotency key. Retrying the same authorized creation must return the same Event. After creation, the Event is recorded as an EventMatchCandidate in the original case and a successor MATCH decision must select it before an ArticleEventLink is activated.
 
 `AMBIGUOUS` must not be silently converted into `MATCH`.
 
-### 6.6 Candidate Generation and Confirmation
+### 6.6 Candidate Generation, Matching Cases, and Confirmation
 
-Candidate generation and confirmed event association must be separate operations.
+Candidate generation, case-level decision, and application of an article-event association are three distinct operations.
+
+The matching unit is an EventMatchCase scoped to exactly one immutable ArticleRevision and one independently identified development within that revision. An article revision may therefore create multiple EventMatchCase records. Each case owns its own candidate set, decision history, and review context.
 
 The proposed sequence is:
 
-1. An article or new development is normalized.
-2. Relevant entities, dates, actions, locations, and event-defining information are extracted.
-3. Candidate events are retrieved using available matching signals.
-4. Candidate-event pairs are evaluated.
-5. A structured matching outcome is produced.
-6. The outcome is validated against policy.
-7. A confirmed association is persisted, or the case is deferred for further processing or review.
-8. The decision and its provenance are recorded.
+1. Normalize an ArticleRevision and identify each distinct development described in it.
+2. Create or retrieve one EventMatchCase for each development scope.
+3. Retrieve plausible existing events for that case.
+4. Persist EventMatchCandidate records with their signals, scores, method, and matching-policy version.
+5. Evaluate candidate eligibility and case-level evidence.
+6. Create an immutable EventMatchDecision for the case.
+7. If the outcome is AMBIGUOUS or REVIEW_REQUIRED, route the case to the authorized human-review workflow defined by ADR-014.
+8. Record the human outcome as a new EventMatchDecision that supersedes the previous effective decision; do not mutate the previous decision.
+9. Apply an eligible MATCH decision through EventService and create an ArticleEventLink that references that exact decision.
+10. Handle NEW_EVENT_CANDIDATE through a separate event-creation policy; the matching decision alone does not create an Event.
 
-Candidate generation must not directly modify event identity.
+EventMatchCandidate is a candidate/evaluation record, not a decision. Candidate status must describe processing and must not use ACCEPTED or REJECTED to represent the case outcome. Each evaluated candidate is an immutable, versioned evaluation identified by its case, candidate Event, matching-policy version, and input fingerprint; a changed policy or input creates a new candidate record. Candidate similarity, decision confidence, and reviewer certainty are distinct values.
 
-A candidate relationship must not be treated as a confirmed article-event association.
+EventMatchDecision is the authoritative case-level outcome. MATCH must select exactly one eligible candidate from the same case. A non-MATCH outcome must not authorize an active ArticleEventLink.
+
+Candidate generation must not directly modify event identity or persistent article-event associations. A candidate relationship must never be treated as a confirmed association.
 
 ### 6.7 Event Continuation
 
@@ -516,11 +522,13 @@ The system must support many-to-many article-event relationships.
 
 For each association, the system should record:
 
-- Article identifier.
+- ArticleRevision identifier.
+- EventMatchCase identifier.
 - Event identifier.
 - Relationship type or editorial role.
-- Association status.
-- Matching decision reference.
+- Association status and active/deactivated timestamps.
+- Exact EventMatchDecision identifier authorizing the link.
+- Superseding decision identifier when deactivated.
 - Relevant article section or evidence span, where available.
 - Confidence or assessment metadata, where applicable.
 - Policy and model version.
@@ -546,6 +554,9 @@ The merge operation should:
 8. Record the operation's actor, time, policy version, and affected records.
 9. Update current identity resolution.
 10. Trigger controlled downstream reconciliation where required.
+11. Identify affected EventMatchCase and ArticleEventLink records.
+12. Where an association must be redirected to the surviving Event, resolve the affected case through a new EventMatchDecision and apply the successor ArticleEventLink through EventService.
+13. Preserve the prior link as inactive history; identity operations must not silently repoint ArticleEventLink.event_id.
 
 The surviving identity should be selected according to a documented policy. The system must not assume that the newest or oldest event is always the correct survivor.
 
@@ -578,6 +589,9 @@ A split operation should:
 8. Reconcile existing reports and analyses through controlled versioning.
 9. Record the operation's actor, time, and affected records.
 10. Make the split operation auditable and recoverable.
+11. Re-evaluate each affected EventMatchCase against the successor Event identities.
+12. Record successor EventMatchDecision records for resolved cases and apply any new ArticleEventLinks through EventService.
+13. Deactivate prior associations only through their successor decision in the same case. If the correct successor cannot be established, preserve the case as unresolved and do not invent a replacement link.
 
 The original event identity must not simply be deleted and replaced.
 
@@ -958,7 +972,11 @@ Such measurements must be obtained through a representative evaluation dataset b
 
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
-| 1.0 | 2026-11-16 | Proposed | Initial proposal covering event identity, matching, continuation, merging, splitting, and historical traceability. | AI Architecture Assistant |
+| 1.0 | 2026-11-16 | Proposed | Initial proposal covering event identity, matching, continuation, merging, splitting, and historical traceability. | AI Architecture Assistant | 
+| 1.1 | 2026-11-18 | Proposed | Defined per-revision matching cases, immutable case-level decisions, candidate boundaries, review supersession, and decision-authorized ArticleEventLink creation. | AI Architecture Assistant |
+| 1.2 | 2026-11-18 | Proposed | Clarified case-level NO_MATCH semantics and immutable, fingerprinted candidate-evaluation history. | AI Architecture Assistant |
+| 1.3 | 2026-11-18 | Proposed | Defined preassigned event identity, versioned EventCreationPolicy, creation provenance/idempotency, and the successor MATCH requirement. | AI Architecture Assistant |
+| 1.4 | 2026-11-18 | Proposed | Defined case-level re-resolution and successor-decision requirements for article-event associations affected by merge and split operations. | AI Architecture Assistant |
 
 ---
 

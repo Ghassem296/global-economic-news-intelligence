@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.0  
-**Date:** 2026-11-16  
+**Version:** 1.2
+**Date:** 2026-11-18
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -423,11 +423,21 @@ The event matching operation should support explicit outcomes such as:
 | NO_MATCH | Evaluated candidates do not represent the same event. |
 | REVIEW_REQUIRED | The case requires human evaluation under the applicable review policy. |
 
-These are proposed logical outcomes. Their final names, persistence representation, and relationship to event lifecycle states must be aligned with ADR-011 and ADR-014.
+These outcomes are the case-level decision vocabulary used by the current proposed model. Their persistence and relationship to event identity operations are defined by ADR-011 and the EventMatchCase / EventMatchDecision contracts in Document 03. They remain Proposed until approval.
 
-A `NEW_EVENT_CANDIDATE` outcome must not automatically imply that a fully established event has been created.
+A `NEW_EVENT_CANDIDATE` outcome is a proposal only; it does not create an Event or an ArticleEventLink.
 
-### 8.4 Multiple Event Associations
+### 8.4 Event-Matching Case and Decision Boundaries
+
+Each matching operation must be scoped to one independently identified development within one immutable ArticleRevision. The persistent unit is EventMatchCase. A single article revision may therefore have multiple cases, each with its own candidate set, review history, and final decision.
+
+EventMatchCandidate records are retrieval and evaluation evidence. Their processing states must not use ACCEPTED or REJECTED to represent the case outcome. Candidate similarity values are not decision confidence and are not probabilities unless independently calibrated.
+
+EventMatchDecision is the immutable, authoritative outcome for one case. A MATCH decision selects exactly one eligible candidate from that case. Non-MATCH outcomes do not authorize an active ArticleEventLink. A later automated reassessment or human correction creates a new decision that references the prior decision it supersedes.
+
+ArticleEventLink must reference the exact EventMatchDecision that authorized its creation. A review task or comment is not a decision. Human review must result in a new EventMatchDecision under the authorization process defined by ADR-014. The complete persistence contract and referential constraints are specified in Document 03.
+
+### 8.5 Multiple Event Associations
 
 An article may describe multiple distinct events.
 
@@ -521,11 +531,12 @@ The proposed high-level workflow is:
 4. Evaluate exact duplicates and near-duplicates.
 5. Record duplicate relationships and source relationships where supported.
 6. Prepare article-level features for event matching.
-7. Generate candidate events.
-8. Evaluate article-to-event relationships.
-9. Record supported associations or unresolved outcomes.
-10. Update event intelligence through the policies defined in ADR-011.
-11. Continue evidence extraction, analysis, and reporting.
+7. Identify each distinct development within the ArticleRevision and create one EventMatchCase per development.
+8. Generate and evaluate EventMatchCandidate records within each case.
+9. Record one immutable EventMatchDecision per resolved case, or route it for authorized human review.
+10. Apply a MATCH decision through EventService and create the ArticleEventLink with its exact decision reference.
+11. Apply new-event creation only through the approved event-creation workflow defined by ADR-011.
+12. Continue evidence extraction, analysis, and reporting.
 
 This sequence is a logical processing order, not a requirement for one monolithic synchronous pipeline.
 
@@ -782,6 +793,8 @@ This is preferable to silently deleting source records, merging unrelated events
 | GENI-ADR-012 | Defines semantic retrieval, similarity calculation, and embedding storage options. |
 | GENI-ADR-016 | Defines persistence, asynchronous execution, idempotency, and recovery. |
 | GENI-ADR-017 | Defines LLM budgets, usage tracking, and evaluation strategy. |
+| GENI-ADR-014 | Defines human review and authorized correction of ambiguous or incorrect event associations. |
+| GENI-ADR-018 | Defines language and translation constraints relevant to multilingual duplicate detection and event matching. |
 | Document 02 | Defines the component and interface contracts that must preserve the separation. |
 | Document 03 | Defines the logical data model and persistence implications. |
 | Document 04 | Defines implementation sequencing and delivery priorities. |
@@ -876,5 +889,12 @@ Upon acceptance:
 - ADR-011 must define event identity and lifecycle behavior consistently.
 - ADR-012 must define semantic retrieval decisions without conflating article duplication with event matching.
 - Relevant evaluation and operational specifications must define independent quality criteria.
+
+## 20. Decision History
+
+| Version | Date | Status | Change Summary | Author or Reviewer |
+|---|---|---|---|---|
+| 1.0 | 2026-11-16 | Proposed | Initial proposal separating article deduplication and event matching. | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Clarified per-ArticleRevision EventMatchCase scope, candidate/decision separation, immutable EventMatchDecision, exact ArticleEventLink provenance, and human-review outcome handling. | AI Architecture Assistant |
 
 **End of ADR-002**

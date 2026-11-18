@@ -3,9 +3,9 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.1
+**Version:** 1.11
 **Status:** Draft — Under Architecture Review
-**Last Updated:** 2026-11-16
+**Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence
 
 ---
@@ -140,7 +140,7 @@ The following technologies are candidates for the initial implementation. Choice
 | Package management | uv |
 | Data validation | Pydantic |
 | LLM integration | Provider-independent adapter, with LiteLLM as a candidate |
-| Database | Relational database; SQLite is a candidate for the initial deployment |
+| Database | Relational database; SQLite and PostgreSQL are candidates pending the GENI-ADR-005 workload proof-of-concept |
 | Database access | SQLAlchemy or an equivalent repository-backed approach |
 | Migrations | Alembic or an equivalent migration mechanism |
 | Testing | pytest |
@@ -169,7 +169,7 @@ If SQLite is selected for the initial deployment, its implementation must explic
 
 The system must not assume that SQLite provides the same concurrency characteristics as a client-server database.
 
-PostgreSQL may be considered as a future deployment option, but migration must not be assumed to be automatic merely because repositories are used.
+PostgreSQL may be selected for the initial deployment if the GENI-ADR-005 proof-of-concept demonstrates that SQLite does not meet the workload or operational constraints; it may also be considered for a later deployment. Migration must not be assumed to be automatic merely because repositories are used.
 
 ### 4.3 Development Tools
 
@@ -342,10 +342,11 @@ Establish a consistent architecture baseline and resolve decisions that block sa
 9. Define initial product scope.
 10. Define the initial economic topic taxonomy.
 11. Define initial report and publication requirements.
-12. Define the initial source and content-rights policy.
+12. Define the initial source and content-rights policy, including operation-specific permissions and a fail-closed rule for unknown rights.
 13. Define initial event identity and correlation rules.
-14. Define the review process for held reports.
+14. Define reviewer roles, authorization, and the review process for held reports.
 15. Define the first evaluation cases.
+16. Define the typed method-level contracts and transaction boundaries required by the first vertical slice.
 
 ### Required Architectural Topics
 
@@ -354,11 +355,13 @@ The following topics must be resolved or explicitly bounded before dependent imp
 - Workflow-first architecture and shared LLM execution.
 - Article deduplication versus event matching.
 - Event identity, matching, merging, and splitting.
+- EventCreationPolicy authorization, stable proposed Event identifiers, and idempotent recovery after partial creation.
 - Semantic similarity and embedding strategy.
 - Initial persistence and async execution strategy.
-- News acquisition and full-text access rights.
-- Publication, review, correction, and withdrawal policy.
+- News acquisition and full-text access rights, including the rights-profile owner and mandatory permission checks before retrieval, persistent storage, external processing, and distribution.
+- Publication, review, correction, and withdrawal policy, including reviewer authorization and the separation of publication eligibility from recipient-distribution authorization.
 - Market data availability and impact classification.
+- Separate Event Importance, Economic Relevance, and Economic Impact assessment methodology (GENI-ADR-019).
 - Processing recovery and idempotency.
 
 Not every future capability must be fully designed before the first implementation. However, unresolved decisions must not be disguised as accepted architecture.
@@ -375,6 +378,9 @@ Not every future capability must be fully designed before the first implementati
 
 - Critical architecture conflicts are resolved.
 - Decisions blocking the first implementation slice are accepted or explicitly bounded.
+- EventCreationPolicy has an approved, versioned decision rule and authorization owner; until then, automatic Event creation from NEW_EVENT_CANDIDATE is disabled and requires explicit authorized handling.
+- Initial source rights profiles and operation-specific permission rules are approved or bounded for the selected test sources; unknown rights block restricted operations.
+- Reviewer identity, role, and authority are defined for each review type before a review can authorize a material decision.
 - The initial product scope is clear.
 - The documents identify which choices remain provisional.
 - No dependent implementation begins on the assumption that a Proposed ADR is already Accepted.
@@ -435,18 +441,19 @@ Implement only the domain concepts needed for the first end-to-end workflow, whi
 The first implementation slice should introduce the minimum required concepts, including:
 
 - Source.
-- Article and ArticleRevision.
+- Article.
+- ArticleRevision as an immutable content version.
 - Topic classification.
 - Entity and entity mention.
 - Event.
-- Article-event association.
+- EventMatchCase, EventMatchCandidate, and EventMatchDecision as separate matching records.
+- ArticleEventLink as a decision-authorized association.
 - ProcessingRun and ProcessingStep.
 - Evidence and evidence references.
-- Analysis.
-- Report.
-- PublicationDecision.
-- Review task or equivalent review queue record.
-- Delivery intent and delivery attempt.
+- Separate Analysis records for each assessment type.
+- Report with immutable version lineage.
+- PublicationDecision and typed ReviewRecord.
+- DeliveryRecord and DeliveryAttempt.
 
 Additional concepts from the approved data model should be introduced when required by a concrete workflow.
 
@@ -458,7 +465,10 @@ Implement and test:
 
 - Article identity and revision behavior.
 - Article deduplication boundaries.
-- Event association rules.
+- Per-ArticleRevision EventMatchCase creation and uniqueness.
+- Candidate evaluation separate from case-level EventMatchDecision.
+- MATCH-only ArticleEventLink creation with exact case and decision references.
+- Event association correction through immutable successor decisions.
 - Event lifecycle transitions.
 - Event history append-only behavior.
 - Claim and evidence relationships.
@@ -494,6 +504,9 @@ The dataset should evolve as the system develops.
 - Core domain rules are tested.
 - Domain code does not depend on database or LLM SDKs.
 - Event identity is not based solely on topic similarity.
+- Article revisions are immutable and material changes create a new revision.
+- Candidate scores and statuses cannot substitute for case-level decisions.
+- Every active article-event association is authorized by the effective MATCH decision for its case.
 - Evaluation cases are version-controlled and reproducible.
 - The first workflow can be implemented without inventing domain semantics.
 
@@ -533,6 +546,12 @@ The persistence layer must support:
 - Processing status and error records.
 - Recovery after interruption.
 - Auditability of publication and review decisions.
+- Unique EventMatchCase identity per ArticleRevision and development key.
+- Versioned, immutable candidate evaluations with deterministic input fingerprints.
+- Atomic EventMatchDecision creation and EventMatchCase.effective_decision_id updates.
+- Case-scoped candidate and decision references that prevent cross-case selection.
+- Atomic ArticleEventLink activation/deactivation with its authorizing decision.
+- At most one effective decision and one active ArticleEventLink per case.
 
 A polymorphic reference without enforceable integrity must not silently replace required foreign-key relationships.
 
@@ -577,7 +596,8 @@ This stage intentionally occurs before the full implementation of all intelligen
 8. Track token usage and cost when available.
 9. Record model execution provenance.
 10. Treat source content as untrusted input.
-11. Prevent analysis stages from receiving unrestricted tool access.
+11. Check the applicable rights assessment before submitting source content to an external LLM provider; an internal processing permission does not imply external-processing permission.
+12. Prevent analysis stages from receiving unrestricted tool access.
 
 The LLM layer should remain an execution capability. It must not own product workflows or domain state transitions.
 
@@ -598,7 +618,26 @@ Normalize and Persist
 Classify the Article
        |
        v
-Create or Match an Event
+Resolve an EventMatchCase
+       |
+       v
+Evaluate EventMatchCandidate records
+       |
+       v
+Record EventMatchDecision
+       |
+       +---- AMBIGUOUS / REVIEW_REQUIRED ---> Authorized Review
+       |
+       +---- NEW_EVENT_CANDIDATE ----------> Authorized Event Creation
+       |                                      |
+       |                                      v
+       |                               Persist New Candidate
+       |                                      |
+       |                                      v
+       |                               Record MATCH Decision
+       |
+       v
+Apply ArticleEventLink only for effective MATCH
        |
        v
 Attach Initial Evidence
@@ -637,7 +676,10 @@ It does not need to support every event type or delivery channel.
 - Usage is recorded where provider data is available.
 - The workflow can be rerun without uncontrolled duplication.
 - The generated report retains source and evidence references.
+- Event association is applied only through a case-level MATCH decision; a test stub may simulate candidate retrieval but must not bypass the decision and link invariants.
 - Publication decisions cannot be bypassed.
+- External LLM calls use only content whose operation-specific rights assessment permits that provider and processing purpose.
+- The vertical slice uses explicit source fixtures or approved test sources; it must not assume a production source license or content-retention permission.
 
 ---
 
@@ -663,6 +705,8 @@ Collect international economic news from configured and approved sources.
 12. Record collection provenance.
 13. Add collection observability.
 14. Implement source URL and redirect safety checks.
+15. Implement the initial source rights profile and ContentRightsService integration; check permission separately for discovery, metadata retrieval, and full-text retrieval.
+16. Persist ContentAccessRecord and RightsAssessment provenance for each applicable acquisition operation; support a permitted metadata-only route when full-text rights are unavailable.
 
 ### Initial Source Strategy
 
@@ -713,6 +757,8 @@ Source ingestion must defend against:
 - Collection execution records.
 - Source health visibility.
 - Content-access policy enforcement.
+- Versioned source-rights profiles and operation-specific acquisition checks.
+- Content-access provenance and explicit metadata-only/restricted-source outcomes.
 
 ### Exit Criteria
 
@@ -723,6 +769,9 @@ Source ingestion must defend against:
 - Collection can resume after interruption.
 - Unsafe URLs and redirects are rejected.
 - Content is retained only according to the configured rights policy.
+- Unknown, denied, expired, revoked, or review-required permissions block the restricted acquisition/storage operation.
+- Metadata retrieval does not silently authorize full-text retrieval or persistent storage.
+- Source terms, rights-profile version, and access outcome are traceable for each collected content artifact.
 
 ---
 
@@ -745,10 +794,11 @@ Transform collected publications into normalized article records.
 9. Implement TopicClassifier.
 10. Implement EntityExtractor.
 11. Implement entity resolution foundations.
-12. Implement article revision handling.
+12. Implement ArticleRevisionService and ArticleRevisionRepository; create immutable revisions only for material content changes and atomically update the Article current projection.
 13. Implement processing status management.
-14. Implement translation support only where required by the approved language policy.
-15. Add processing evaluation cases.
+14. Implement translation support only where required by the approved language policy; retain the original ArticleRevision as authoritative and create a separately versioned translation artifact with provenance and quality state.
+15. Apply rights checks before temporary processing, persistent storage, derived-artifact creation, and external processing of article content.
+16. Add processing evaluation cases.
 
 ### Article Deduplication
 
@@ -769,7 +819,7 @@ A similarity score alone must not cause irreversible deletion or merging.
 ### Deliverables
 
 - Normalized article records.
-- Article revision support.
+- Article revision support, including ArticleRevisionService and repository contract tests.
 - Duplicate candidate records.
 - Topic classifications.
 - Extracted entities and mentions.
@@ -784,6 +834,10 @@ A similarity score alone must not cause irreversible deletion or merging.
 - Topic classifications include method and confidence metadata.
 - Entity mentions retain enough provenance to be reviewed.
 - Processing can be repeated safely.
+- Repeated collection of unchanged content does not create a new ArticleRevision.
+- A material content change creates a new immutable ArticleRevision and atomically updates the Article current projection.
+- Rights checks are performed before persistent content storage and derived-artifact creation; temporary processing does not leave unauthorized copies.
+- Translation is not enabled for an input unless its artifact lineage, supported language, quality state, and applicable external-processing/storage permissions are defined.
 
 ---
 
@@ -798,17 +852,17 @@ This is the core product capability.
 ### Tasks
 
 1. Implement EventDetector.
-2. Implement candidate event generation.
-3. Implement EventMatcher.
-4. Implement semantic and lexical matching signals.
-5. Implement entity and temporal matching signals.
-6. Implement EventService.
-7. Implement article-event association.
-8. Implement event lifecycle transitions.
-9. Implement EventHistory.
-10. Implement event relationship handling.
-11. Implement event merge and split operations.
-12. Implement ImportanceRanker.
+2. Identify distinct development scopes within each immutable ArticleRevision.
+3. Create or retrieve one EventMatchCase per ArticleRevision/development scope.
+4. Retrieve plausible existing Events for each case.
+5. Implement EventMatcher and lexical, entity, temporal, and geographic evaluation signals; semantic candidate retrieval, when enabled, must be provided through the optional SemanticRetrievalAdapter and compared with a lexical baseline under GENI-ADR-012. Do not assume a dedicated vector database or an uncalibrated numeric threshold.
+6. Persist immutable EventMatchCandidate evaluations with matching-policy versions and input fingerprints.
+7. Implement case-level EventMatchDecision creation and supersession.
+8. Implement the versioned EventCreationPolicy and authorized, idempotent creation for NEW_EVENT_CANDIDATE outcomes using the preassigned proposed_event_reference; after creation, record the new Event as a candidate and create a subsequent MATCH decision before creating an ArticleEventLink.
+9. Implement EventService application of MATCH decisions and case-scoped ArticleEventLink creation/deactivation.
+10. Implement ReviewService routing and successor-decision handling for ambiguous or corrected cases.
+11. Implement event lifecycle transitions, EventHistory, and event relationships.
+12. Implement explicit event merge and split operations.
 13. Implement event matching evaluation datasets.
 
 ### Event Identity Policy
@@ -826,26 +880,32 @@ For example:
 
 ### Event Resolution Outcomes
 
-Each candidate must result in an explicit resolution:
+The unit of final resolution is EventMatchCase, not an individual EventMatchCandidate. A case represents one development within one immutable ArticleRevision and may contain multiple candidate Events.
 
-- Associate with an existing event.
-- Create a new event.
-- Mark as ambiguous or requiring review.
-- Reject the candidate association.
+A resolved case must have one effective EventMatchDecision with one of these outcomes:
+
+- `MATCH`: exactly one eligible candidate in the same case is selected. Only this outcome may authorize an active ArticleEventLink.
+- `NEW_EVENT_CANDIDATE`: a proposal to create a new Event; it does not create the Event or an ArticleEventLink. After separate event-creation authorization and idempotent creation, the new Event must be recorded as a candidate and a subsequent MATCH decision must authorize the association.
+- `NO_MATCH`: none of the evaluated candidate Events matches the development represented by this case. Other cases from the same ArticleRevision may still resolve to other Events.
+- `AMBIGUOUS`: multiple plausible candidates or insufficient evidence prevent a reliable decision.
+- `REVIEW_REQUIRED`: policy requires an authorized human review before resolution.
+
+Candidate-level processing statuses such as INELIGIBLE or SUPERSEDED are not case-level decision outcomes. An unresolved case must remain explicit and must not create an active association.
 
 The system must preserve:
 
-- Candidate signals and scores.
-- Matching method and policy version.
-- Final decision.
-- Decision provenance.
-- Relevant event history.
+- Candidate signals, scores, policy versions, and candidate-input fingerprints.
+- Immutable candidate evaluations and their relationship to the case.
+- Final case-level decision and any superseded decision.
+- Decision actor, rationale, and provenance.
+- Review task and reviewer outcome where applicable.
+- Exact case and decision references on every applied ArticleEventLink.
 
 Semantic similarity is a required matching capability, but a dedicated vector database is not automatically required.
 
-The initial implementation may use an approved embedding service and a simple storage or retrieval strategy. The exact approach must follow the relevant ADR.
+The initial implementation may use an approved embedding service and a simple storage or retrieval strategy. The exact approach must follow the relevant ADR. Semantic retrieval may be deferred while lexical candidate retrieval and case-level decision invariants are implemented and evaluated.
 
-No universal similarity threshold should be assumed without evaluation and calibration.
+No universal similarity threshold should be assumed without evaluation and calibration. The candidate-retrieval adapter must not own final decisions or article-event associations.
 
 ### Event Identity Integrity
 
@@ -866,11 +926,12 @@ Historical event records must not be silently deleted or rewritten.
 ### Deliverables
 
 - Event detection.
-- Event matching and resolution.
+- Event matching cases, candidate evaluation, and immutable decisions.
+- Authorized event creation and decision-based article-event association.
+- Human review and association correction workflow.
 - Event creation and updates.
-- Event history.
-- Event relationships.
-- Importance ranking.
+- Event history and relationships.
+- Event merge and split operations.
 
 ### Exit Criteria
 
@@ -879,7 +940,9 @@ Historical event records must not be silently deleted or rewritten.
 - Ambiguous matches are explicitly represented.
 - Event identity operations are traceable.
 - Event lifecycle transitions are validated.
-- Importance assessments include explanations and policy provenance.
+- Every resolved development has one effective case-level decision; unresolved cases remain explicit.
+- Every active ArticleEventLink references its EventMatchCase and effective MATCH decision.
+- Human corrections create successor decisions and preserve prior link history.
 - False merges and event fragmentation are measured.
 
 ---
@@ -901,10 +964,12 @@ Produce evidence-based economic intelligence.
 7. Implement contradictory claim detection.
 8. Implement source independence assessment.
 9. Implement uncertainty representation.
-10. Implement economic impact analysis.
-11. Implement analysis versioning.
-12. Implement analysis input fingerprints.
-13. Add analysis evaluation datasets.
+10. Implement Event Importance assessment as an independent versioned Analysis type.
+11. Implement Economic Relevance assessment as an independent versioned Analysis type.
+12. Implement channel-based Economic Impact assessment as an independent versioned Analysis type.
+13. Implement optional market-reaction assessment only when suitable market observations are available.
+14. Implement analysis versioning and input fingerprints.
+15. Add separate assessment evaluation datasets.
 
 ### Economic Analysis Dimensions
 
@@ -944,6 +1009,8 @@ If market data is unavailable, the system may describe potential implications or
 
 Temporal proximity alone does not establish causation.
 
+Market-data acquisition is optional and is not a prerequisite for the initial economic-analysis workflow. Do not select or integrate a provider, instrument universe, collection frequency, or retention scheme until coverage and rights have been reviewed under GENI-ADR-015. If no authorized, suitable observations exist, market reaction remains unknown/unavailable and the analysis must not imply that a market-data feed was observed. When integration is approved, a MarketDataCollector/normalizer contract and its ownership must be added to Documents 02 and 03 before implementation.
+
 ### Provenance Requirements
 
 Material analytical assertions must retain references to their supporting or contradicting evidence.
@@ -958,8 +1025,9 @@ Source independence must account for syndication and shared origin. Multiple cop
 - Evidence records and precise source references.
 - Claim assessments.
 - Contradiction and uncertainty records.
-- Versioned economic analysis.
-- Analysis evaluation results.
+- Separate versioned Event Importance, Economic Relevance, and Economic Impact Analysis outputs.
+- Optional market-reaction assessments backed by actual market observations.
+- Separate evaluation datasets and reports for all three assessment types.
 
 ### Exit Criteria
 
@@ -968,7 +1036,11 @@ Source independence must account for syndication and shared origin. Multiple cop
 - Source attribution is retained.
 - Conflicting information is represented.
 - Facts, source claims, analysis, and forecasts are distinguishable.
-- Market impact categories are supported by the available data.
+- Event Importance is evaluated independently of Economic Relevance and Economic Impact.
+- Economic Relevance is evaluated independently of Event Importance and demonstrated impact.
+- Economic Impact supports channel, direction, magnitude/range, horizon, evidence status, and uncertainty where supported.
+- Missing information remains unknown rather than being encoded as zero.
+- Observed market reactions are not described as proof of event causality.
 - Completed analyses are versioned and reproducible.
 
 ---
@@ -989,10 +1061,13 @@ Convert event intelligence into structured, versioned reports.
 6. Implement evidence references.
 7. Implement source references.
 8. Implement report validation.
-9. Implement PublicationPolicy.
-10. Implement report correction and withdrawal records.
-11. Implement report storage.
-12. Add report evaluation datasets.
+9. Implement PublicationPolicy and immutable PublicationDecision records.
+10. Implement PublicationService and target-specific publication adapter contracts.
+11. Implement durable PublicationRecord and PublicationAttempt history for PUBLISH, REPLACE, and WITHDRAW.
+12. Implement report correction and replacement lineage without overwriting prior versions.
+13. Implement confirmed withdrawal and uncertain-outcome reconciliation.
+14. Implement report storage and add report evaluation datasets.
+15. Apply rights checks for source attribution, quotations, derived-output use, publication, and recipient distribution; preserve permitted source references independently of full-text retention.
 
 ### Initial Report Structure
 
@@ -1004,14 +1079,15 @@ The initial event dossier should support:
 4. Latest Developments.
 5. Timeline.
 6. Key Entities.
-7. Economic Significance.
-8. Observed Market Reaction, if supported by data.
-9. Potential Market and Sector Impact.
-10. Supporting Evidence.
-11. Conflicting or Unconfirmed Information.
-12. Risks and Uncertainties.
-13. Analytical Assessment.
-14. Sources.
+7. Event Importance — why the development deserves attention or follow-up.
+8. Economic Relevance — direct, indirect, or contextual transmission pathways.
+9. Observed Market Reaction, only when supported by actual market observations.
+10. Economic Impact — realized or potential consequences by channel, direction, magnitude, and horizon where supported.
+11. Supporting Evidence.
+12. Conflicting or Unconfirmed Information.
+13. Risks and Uncertainties.
+14. Analytical Assessment.
+15. Sources.
 
 Reports should be concise enough to be useful while preserving important evidence and context.
 
@@ -1019,7 +1095,7 @@ The data model should also support reports covering multiple events, such as per
 
 ### Publication Policy
 
-A report must receive a publication decision before delivery.
+A report must receive a publication decision before external publication. Recipient delivery is separate and must also satisfy the applicable distribution policy. A PublicationDecision records eligibility; it does not prove target-side publication success. PublicationService executes PUBLISH, REPLACE, and WITHDRAW, while ReportDelivery handles recipient/destination delivery independently.
 
 Initial outcomes:
 
@@ -1056,22 +1132,29 @@ The system must preserve a correction or withdrawal history and maintain links b
 
 - Structured event dossiers.
 - Versioned reports.
-- Publication decisions.
-- Review workflow.
-- Report validation.
-- Correction and withdrawal traceability.
+- Immutable publication decisions and persistent review workflow.
+- PublicationService with durable PUBLISH, REPLACE, and WITHDRAW operations and attempts.
+- Report validation and immutable report-version lineage.
+- Confirmed correction, replacement, and withdrawal traceability.
 
 ### Exit Criteria
 
-- Reports retain event, article, analysis, and evidence references.
+- Reports retain event, exact ArticleRevision, analysis-version, and evidence references; later Article revisions do not change the provenance of an existing report.
 - Multi-event report scope is supported where required.
 - Reports distinguish facts from analysis.
 - Uncertainty is disclosed.
 - Report versions are preserved.
 - Publication policy is enforced.
 - Held reports enter a real review workflow.
-- Corrections and withdrawals are auditable.
-- Invalid or unapproved reports cannot be delivered.
+- Corrections create a new immutable report version; they do not overwrite an earlier version.
+- External publication operations are persisted before execution and have attempt history.
+- A failed replacement leaves the previous confirmed publication effective.
+- A withdrawal is complete only after target confirmation; unknown outcomes require reconciliation.
+- External publication requires an effective publication decision for the exact report version and all applicable rights/target authorizations.
+- A report or notification must not be delivered merely because a publication decision exists or because public publication succeeded; each recipient-delivery operation requires its separate distribution authorization.
+- `PUBLICATION_LINK` delivery requires a confirmed successful and currently effective PublicationRecord.
+- `REPORT_CONTENT` delivery may occur without public publication only when a separate distribution policy and applicable content rights explicitly authorize it; delivery does not imply publication.
+- Invalid or unapproved reports cannot be externally published; report-content delivery is separately governed by distribution policy and content rights.
 
 ---
 
@@ -1083,7 +1166,7 @@ Enable controlled automated processing and text report delivery.
 
 ### Tasks
 
-1. Implement ReportDelivery.
+1. Implement ReportDelivery as a recipient/destination delivery capability, separate from public publication execution.
 2. Define delivery destination interfaces.
 3. Implement delivery intent records.
 4. Implement delivery attempt history.
@@ -1125,7 +1208,7 @@ An idempotency key should be scoped to the delivery operation, destination, repo
 
 Exactly-once external delivery must not be claimed unless the destination provider offers the required guarantees. Ambiguous external outcomes must be reconciled before blindly repeating non-idempotent actions.
 
-Delivery must occur only after an eligible publication decision.
+Publication-link delivery requires a confirmed successful and currently effective PublicationRecord. Direct report-content delivery may occur only when the applicable distribution policy authorizes it. Delivery status and attempts must not alter publication state.
 
 ### Deliverables
 
@@ -1139,7 +1222,9 @@ Delivery must occur only after an eligible publication decision.
 
 - Collection and processing can run automatically.
 - New information can update existing events.
-- Reports are delivered only under the publication policy.
+- Every recipient-delivery operation is authorized by its applicable distribution policy and content-rights constraints.
+- `PUBLICATION_LINK` delivery requires a confirmed successful and currently effective PublicationRecord.
+- `REPORT_CONTENT` delivery may occur without public publication only when separately authorized; it must not change or imply publication state.
 - Duplicate delivery is controlled within documented guarantees.
 - Failed operations are visible and recoverable.
 - Scheduled execution can resume after interruption.
@@ -1197,11 +1282,15 @@ Create datasets covering:
 **Event Intelligence**
 
 - Event detection precision and recall.
-- Event matching accuracy.
+- Candidate retrieval recall at the configured candidate depth.
+- Case-level EventMatchDecision precision, recall, and unresolved/ambiguous rate.
+- False active-association rate.
+- False event-creation rate.
 - False event merge rate.
 - Event fragmentation rate.
 - Event update correctness.
 - Merge and split correctness.
+- Human-review escalation and correction rates.
 
 **Evidence**
 
@@ -1213,11 +1302,15 @@ Create datasets covering:
 
 **Analysis**
 
-- Economic relevance.
-- Analytical consistency.
-- Unsupported assertion rate.
+- Event Importance ranking quality and calibration.
+- Economic Relevance classification and transmission-pathway validity.
+- Economic Impact channel-level direction, magnitude/range, horizon, and evidence-status quality.
+- Unknown and insufficient-evidence classification quality.
+- Separation of assessment confidence, forecast probability, and effect magnitude.
+- Consistency and divergence checks across the three independent assessments.
 - Forecast and uncertainty quality.
-- Market impact classification correctness.
+- Unsupported material assertion rate.
+- False causal-attribution rate for observed market reactions.
 
 **Reporting**
 
@@ -1234,7 +1327,9 @@ Create datasets covering:
 - Median and P95 latency.
 - LLM cost per successful report when measurable.
 - Failure recovery rate.
-- Delivery reconciliation success.
+- Publication operation success and reconciliation outcomes.
+- Failed replacement safety and confirmed withdrawal correctness.
+- Delivery reconciliation success and duplicate-delivery rate.
 - Resource utilization.
 
 ### Evaluation Method
@@ -1257,10 +1352,13 @@ Quality thresholds must be established using representative datasets and documen
 
 Critical metrics should include:
 
-- False event merge rate.
+- False event merge rate and false active-association rate.
+- Case-level matching precision/recall and false event-creation rate.
 - Unsupported material assertion rate.
 - Evidence provenance completeness.
-- Publication policy enforcement.
+- Independent quality thresholds for Event Importance, Economic Relevance, and Economic Impact.
+- Publication policy enforcement and failed-replacement safety.
+- Confirmed withdrawal and publication reconciliation correctness.
 - Duplicate delivery rate within the documented delivery guarantees.
 - Recovery correctness.
 
@@ -1308,8 +1406,9 @@ Prepare the initial product for controlled operation.
 12. Review observability and alerting.
 13. Document deployment.
 14. Document operational procedures.
-15. Review content rights and retention controls.
-16. Prepare release and rollback procedures.
+15. Review content rights and retention controls, including rights-profile expiry/revocation and derived-artifact restrictions.
+16. Test content deletion/restriction requests across storage, caches, indexes, queues, backups, and supported external processors, and verify completion evidence.
+17. Prepare release and rollback procedures.
 
 ### Deliverables
 
@@ -1322,7 +1421,7 @@ Prepare the initial product for controlled operation.
 
 ### Exit Criteria
 
-The application can operate within its documented deployment model and recover from expected failures without corrupting core data, losing audit history, or bypassing publication controls.
+The application can operate within its documented deployment model and recover from expected failures without corrupting core data, losing audit history, bypassing publication controls, or continuing restricted content operations after rights expiry/revocation. Required content deletion/restriction operations must have verifiable outcomes.
 
 ---
 
@@ -1636,5 +1735,5 @@ Audio, video, and advanced intelligence capabilities should build on the complet
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.1
+**Version:** 1.11
 **Status:** Draft — Under Architecture Review

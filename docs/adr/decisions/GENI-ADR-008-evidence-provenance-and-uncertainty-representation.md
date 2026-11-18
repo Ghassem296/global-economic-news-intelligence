@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-008  
 **Title:** Evidence Provenance and Uncertainty Representation  
 **Status:** Proposed  
-**Version:** 1.0  
-**Date:** 2026-11-16  
+**Version:** 1.1
+**Date:** 2026-11-18
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -1006,6 +1006,8 @@ These are logical operations, not finalized implementation signatures.
 | GENI-ADR-014 | Related to | Defines human review, corrections, and withdrawals. |
 | GENI-ADR-015 | Related to | Requires observed market information to be distinguished from reported and inferred economic impact. |
 | GENI-ADR-017 | Related to | Defines LLM usage tracking and evaluation requirements. |
+| GENI-ADR-018 | Related to | Requires translated evidence to retain original-language provenance and translation uncertainty. |
+| GENI-ADR-019 | Depends on / Related to | Applies separate evidence, confidence, and uncertainty semantics to importance, economic relevance, and economic impact. |
 
 ## 10. Implementation Implications
 

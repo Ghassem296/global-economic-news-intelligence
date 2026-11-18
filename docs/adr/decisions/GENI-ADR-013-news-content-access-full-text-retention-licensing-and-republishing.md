@@ -3,9 +3,9 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-013  
 **Title:** News Content Access, Full-Text Retention, Licensing, and Republishing  
-**Version:** 1.0  
+**Version:** 1.1
 **Status:** Proposed  
-**Date:** 2026-11-17  
+**Date:** 2026-11-18
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -945,6 +945,8 @@ These are conceptual names. Final interfaces and persistence requirements must b
 | GENI-ADR-014 | Related to | Human review and publication correction procedures may handle rights-related restrictions. |
 | GENI-ADR-016 | Related to | Retention, deletion, and recovery operations require reliable execution. |
 | GENI-ADR-018 | Related to | Translation and multilingual processing may introduce additional content-use considerations. |
+| GENI-ADR-009 | Related to | Acquisition modes and polling must observe source access restrictions and terms. |
+| GENI-ADR-012 | Related to | Embedding and semantic retrieval may create derived artifacts subject to source rights and retention policy. |
 
 These relationships do not imply that the related ADRs have been accepted.
 
