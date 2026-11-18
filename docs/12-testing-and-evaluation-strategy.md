@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-EVAL-012  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -87,6 +87,24 @@ Documents 04, 08, 10, and 11; GENI-ADR-008, 011, 017, and 019.
 ---
 
 **Document ID:** GENI-EVAL-012  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft — Under Architecture Review  
+## 11. Privacy Verification Matrix
+
+Use synthetic fixtures unless a separately approved test basis and safeguards permit real subject data.
+
+| Test area | Required cases | Release-blocking failure |
+|---|---|---|
+| Request lifecycle | intake, duplicate idempotency, verification failure, scoped access, correction, restriction, objection, deletion, export where applicable | unauthorized disclosure/action or duplicate side effect |
+| Discovery/lineage | source-to-derived traversal across embeddings, translations, analyses, reports, caches, evaluation artifacts and exports; incomplete lineage | false claim of complete discovery |
+| Authorization | independent content-rights/privacy decisions; unknown, expired, revoked, mismatched purpose/provider/region | unauthorized external processing |
+| LLM minimization | prompt redaction, metadata binding, retry reauthorization, canary leak in prompts/errors/logs/traces | personal-data leakage or stale authorization |
+| Processor/transfer | unknown processor, subprocessor, region, training-use, retention, deletion capability and transfer assessment | processing proceeds with unknown posture |
+| Deletion propagation | derived stores, provider acknowledgement, unavailable processor, partial failure, legal hold, idempotent retry | false global completion or lost evidence |
+| Backup restore | restore backup containing deleted record, replay deletion ledger, reconcile before serving/reprocessing | deleted/restricted data becomes available |
+| Security/audit | unauthorized subject-link resolution, audit tampering, telemetry access/redaction | unauthorized disclosure or missing audit |
+
+Track target-level completion and discovery coverage. Unit tests do not prove provider deletion or operational readiness; provider contract tests and controlled exercises are required. Legal applicability/deadlines come from approved jurisdictional policy, not invented test assumptions. See Documents 02, 03, 08, 09, 13 and 14; GENI-ADR-020.
+
+
 **End of Document**
