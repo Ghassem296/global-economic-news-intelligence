@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -909,13 +909,15 @@ A text event report should contain:
 4. Latest Developments.
 5. Timeline.
 6. Key Entities.
-7. Economic Significance.
-8. Potential Market and Sector Impact.
-9. Supporting Evidence.
-10. Conflicting or Unconfirmed Information.
-11. Risks and Uncertainties.
-12. Analytical Assessment.
-13. Sources.
+7. Event Importance — why the development deserves attention or follow-up.
+8. Economic Relevance — the direct, indirect, or contextual economic transmission pathways.
+9. Observed Market Reaction, when supported by actual market observations.
+10. Economic Impact — realized or potential consequences by channel, direction, magnitude, and time horizon where supported.
+11. Supporting Evidence.
+12. Conflicting or Unconfirmed Information.
+13. Risks and Uncertainties.
+14. Analytical Assessment.
+15. Sources.
 
 Each report must identify:
 
