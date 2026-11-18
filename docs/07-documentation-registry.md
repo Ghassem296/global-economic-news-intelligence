@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.49
+**Version:** 1.50
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -175,8 +175,8 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.49 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.14 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 1.50 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
+| GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.15 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.14 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-18 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
@@ -407,7 +407,7 @@ A periodic review should verify that the registry matches:
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
 **Baseline Commit Inspected:** `17814c3d281a35e599d96d6dd2632dc3a322709e`  
-**Registry Refresh:** The repository baseline was inspected at commit 17814c3d281a35e599d96d6dd2632dc3a322709e immediately before this registry-maintenance commit. This maintenance updates the roadmap inventory to include all published technical specifications (Documents 08–13), corrects the Stage 2 duplicate runtime concept, and strengthens automated checks for roadmap inventory parity and snapshot commit provenance. The inventory reflects the document versions and paths in the resulting maintenance commit. The snapshot is repository-only; it does not claim local Working Tree inspection. All affected documents and ADRs remain proposed; publication and validator presence do not constitute formal architecture approval, implementation, or operational verification.
+**Registry Refresh:** The repository baseline was inspected at commit 17814c3d281a35e599d96d6dd2632dc3a322709e immediately before this registry-maintenance commit. This maintenance removes the duplicated individual-ADR inventory from the Documentation Index, makes the ADR Registry its sole inventory authority, and strengthens automated checks for document metadata-to-registry parity and ADR title consistency. The inventory reflects the document versions and paths in the resulting maintenance commit. The snapshot is repository-only; it does not claim local Working Tree inspection. All affected documents and ADRs remain proposed; publication and validator presence do not constitute formal architecture approval, implementation, or operational verification.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
