@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-11-18  
 **Decision Owner:** Product Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -436,7 +436,7 @@ The matching process should produce one of the following structured outcomes:
 | `NO_MATCH` | The candidate does not match the evaluated event. |
 | `REVIEW_REQUIRED` | The case requires an explicit review decision under the applicable policy. |
 
-`NO_MATCH` applies to an evaluated candidate-event pair. It does not necessarily mean that the article cannot match another event.
+`NO_MATCH` is a case-level outcome recorded after evaluating the case's candidate set. It means that none of the evaluated candidate Events matches the single development represented by that EventMatchCase. It does not prevent another EventMatchCase for a different development in the same ArticleRevision from resolving to a different Event.
 
 `NEW_EVENT_CANDIDATE` is not equivalent to automatic permission to create a new event. Creation must follow the applicable event-creation policy and idempotency rules.
 
@@ -461,7 +461,7 @@ The proposed sequence is:
 9. Apply an eligible MATCH decision through EventService and create an ArticleEventLink that references that exact decision.
 10. Handle NEW_EVENT_CANDIDATE through a separate event-creation policy; the matching decision alone does not create an Event.
 
-EventMatchCandidate is a candidate/evaluation record, not a decision. Candidate status must describe processing and must not use ACCEPTED or REJECTED to represent the case outcome. Candidate similarity, decision confidence, and reviewer certainty are distinct values.
+EventMatchCandidate is a candidate/evaluation record, not a decision. Candidate status must describe processing and must not use ACCEPTED or REJECTED to represent the case outcome. Each evaluated candidate is an immutable, versioned evaluation identified by its case, candidate Event, matching-policy version, and input fingerprint; a changed policy or input creates a new candidate record. Candidate similarity, decision confidence, and reviewer certainty are distinct values.
 
 EventMatchDecision is the authoritative case-level outcome. MATCH must select exactly one eligible candidate from the same case. A non-MATCH outcome must not authorize an active ArticleEventLink.
 
@@ -968,6 +968,7 @@ Such measurements must be obtained through a representative evaluation dataset b
 |---|---|---|---|---|
 | 1.0 | 2026-11-16 | Proposed | Initial proposal covering event identity, matching, continuation, merging, splitting, and historical traceability. | AI Architecture Assistant | 
 | 1.1 | 2026-11-18 | Proposed | Defined per-revision matching cases, immutable case-level decisions, candidate boundaries, review supersession, and decision-authorized ArticleEventLink creation. | AI Architecture Assistant |
+| 1.2 | 2026-11-18 | Proposed | Clarified case-level NO_MATCH semantics and immutable, fingerprinted candidate-evaluation history. | AI Architecture Assistant |
 
 ---
 
