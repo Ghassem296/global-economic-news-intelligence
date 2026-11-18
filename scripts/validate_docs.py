@@ -138,7 +138,7 @@ def validate_adrs() -> None:
         or len(ids) != len(set(ids))
     ):
         fail(
-            "Expected exactly one ADR-001 through ADR-019; "
+            "Expected exactly one ADR-001 through ADR-020; "
             f"found {len(paths)} files: {sorted(ids)}"
         )
 
