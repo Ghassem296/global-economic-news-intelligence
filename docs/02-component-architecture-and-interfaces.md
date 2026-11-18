@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.24  
+**Version:** 1.25  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -549,7 +549,7 @@ A publication decision is an authorization outcome, not an instruction that an e
 
 Responsibilities:
 
-- Create typed review tasks for EventMatchCase records, held reports, and other policy-defined review subjects.
+- Create typed review tasks for DuplicateCandidate records requiring human judgment, EventMatchCase records, held reports, and other policy-defined review subjects.
 - Maintain review queue status, priority, assignment, due dates, and escalation metadata.
 - Record review reasons, reviewer identity, authorized role, timestamps, and immutable review outcomes.
 - Link each review to the exact subject and decision under review.
