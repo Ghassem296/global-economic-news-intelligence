@@ -1083,6 +1083,7 @@ Initial interfaces include:
 
 - `SourceRepository`
 - `SourceRightsProfileRepository` (when GENI-ADR-013 is accepted)
+- `SourceLicenseRepository` (when GENI-ADR-013 is accepted)
 - `ContentAccessRepository` (when GENI-ADR-013 is accepted)
 - `RightsAssessmentRepository` (when GENI-ADR-013 is accepted)
 - `ContentRetentionPolicyRepository` (when GENI-ADR-013 is accepted)
