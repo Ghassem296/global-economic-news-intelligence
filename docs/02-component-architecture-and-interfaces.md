@@ -831,19 +831,19 @@ Constraints:
 - A correction creates a new decision and a new association where appropriate; it must not rewrite the historical decision or silently repoint an existing link.
 - A single article may have multiple active links when separate EventMatchCase records justify them.
 
-### 5.6 Entity
+### 5.9 Entity
 
 Represents a real-world entity.
 
 The domain model must support canonical identity, entity type, geographic information, external identifiers, and metadata.
 
-### 5.7 EntityAlias
+### 5.10 EntityAlias
 
 Represents an alternative name or identifier associated with a canonical entity.
 
 Aliases must preserve language and alias type where relevant.
 
-### 5.8 Claim
+### 5.11 Claim
 
 Represents a source-attributed assertion or analytical assertion.
 
@@ -851,7 +851,7 @@ Claim provenance must be represented through explicit relationships to articles,
 
 A claim must not be considered verified solely because it has been extracted from an article.
 
-### 5.9 Evidence
+### 5.12 Evidence
 
 Represents information supporting, qualifying, or contradicting a claim.
 
@@ -859,13 +859,13 @@ The domain model must support evidence origin, source attribution, evidence type
 
 Claim-to-evidence relationships must support appropriate relationship types, including support and contradiction.
 
-### 5.10 Analysis
+### 5.13 Analysis
 
 Represents a versioned analytical result or assessment.
 
 Analysis records must preserve references to relevant claims, evidence, processing inputs, model configuration, prompt version, result-schema version, and methodology version where applicable. The initial assessment types must keep `IMPORTANCE_ASSESSMENT`, `ECONOMIC_RELEVANCE_ASSESSMENT`, and `ECONOMIC_IMPACT_ASSESSMENT` as separate results. A shared workflow or evidence set does not permit these assessment types to be merged into one score.
 
-### 5.11 Report
+### 5.14 Report
 
 Represents one generated report version.
 
@@ -873,7 +873,7 @@ Reports must be versioned and preserve their relationship to the event, analysis
 
 Publication decisions and delivery outcomes must be stored separately from report content.
 
-### 5.12 PublicationDecision
+### 5.15 PublicationDecision
 
 Represents a publication policy evaluation.
 
@@ -888,7 +888,7 @@ It must preserve:
 
 A publication decision records eligibility and authorization only. It does not prove that a report has been published at an external target.
 
-### 5.13 ReviewRecord
+### 5.16 ReviewRecord
 
 Represents a review request and its outcome.
 
@@ -901,7 +901,7 @@ It must preserve:
 - Creation and completion timestamps.
 - Review outcome.
 
-### 5.14 DeliveryRecord
+### 5.17 DeliveryRecord
 
 Represents a logical delivery operation.
 
@@ -918,7 +918,7 @@ It must preserve:
 
 Delivery status is independent of publication status. A delivery operation must not create, replace, withdraw, or otherwise mutate a publication.
 
-### 5.15 ProcessingRun
+### 5.18 ProcessingRun
 
 Represents one workflow or processing execution.
 
@@ -926,7 +926,7 @@ It must preserve execution identity, target, run type, status, timestamps, error
 
 ProcessingRun represents execution state, not domain state.
 
-### 5.16 EventHistory
+### 5.19 EventHistory
 
 Represents a historical occurrence or material change associated with an event.
 
@@ -934,7 +934,7 @@ Event history must be append-oriented and auditable.
 
 It must preserve relevant lifecycle transitions, material updates, corrections, merges, and splits.
 
-### 5.17 PublicationRecord
+### 5.20 PublicationRecord
 
 Represents one logical operation against a publication target.
 
@@ -955,7 +955,7 @@ It must preserve:
 
 A PublicationRecord represents an operation, not merely a policy decision or a delivery. Its successful operation history is the basis for determining whether a report version is currently available at a publication target.
 
-### 5.18 PublicationAttempt
+### 5.21 PublicationAttempt
 
 Represents one execution attempt for a PublicationRecord.
 
