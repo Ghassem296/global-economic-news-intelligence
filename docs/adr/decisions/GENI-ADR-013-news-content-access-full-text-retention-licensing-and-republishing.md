@@ -3,10 +3,10 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-013  
 **Title:** News Content Access, Full-Text Retention, Licensing, and Republishing  
-**Version:** 1.1
+**Version:** 1.2
 **Status:** Proposed  
 **Date:** 2026-11-18
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
@@ -1144,6 +1144,7 @@ Source-specific rights and legal requirements must be verified before production
 |---|---|---|---|---|
 | 1.0 | 2026-11-17 | Proposed | Initial proposal covering source access, full-text retention, licensing, processing, attribution, and republication. | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Synchronized version history and end-of-document metadata with the current Proposed ADR revision; no approval status changed. | AI Architecture Assistant |
+| 1.2 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 
 ---
 
@@ -1151,5 +1152,5 @@ Source-specific rights and legal requirements must be verified before production
 
 **ADR ID:** `GENI-ADR-013`  
 **File:** `GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md`  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Proposed
