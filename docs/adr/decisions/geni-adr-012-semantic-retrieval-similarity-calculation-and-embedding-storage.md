@@ -3,9 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-012  
 **Title:** Semantic Retrieval, Similarity Calculation, and Embedding Storage  
-**Version:** 0.2  
 **Status:** Proposed  
-**Priority:** P1  
+**Version:** 1.0  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -16,119 +15,139 @@
 
 ## 1. Context and Problem Statement
 
-Event matching and historical-context retrieval can benefit from semantic representations, especially across paraphrases and languages. However, embedding similarity is not event identity, and a dedicated vector database introduces operational and migration costs. The logical domain model must remain authoritative independently of search indexes.
+Event matching and historical retrieval may require semantic discovery beyond exact identifiers and lexical overlap. Embeddings, similarity functions, and vector indexes may help retrieve candidates, but similarity is not identity proof. Selecting a model or dedicated vector database before measuring corpus size, retrieval quality, latency, update frequency, rights, and operational needs risks unnecessary infrastructure and false confidence.
 
-This ADR is a proposal for formal review. It does not approve an implementation or override another decision. The existence of this document does not imply acceptance.
+This ADR is a proposal for formal review; it does not approve a production implementation.
 
 ## 2. Decision Question
 
-How should semantic retrieval be introduced, evaluated, and persisted without turning similarity into a final identity decision or making a vector provider a domain dependency?
+How should semantic retrieval and embedding persistence support candidate discovery while preserving provenance, reproducibility, uncertainty, and database independence?
 
 ## 3. Requirements and Constraints
 
 ### 3.1 Functional Requirements
-
-- Candidate recall must be sufficient to surface plausible matches.
-- Similarity semantics and calibration must be explicit and versioned.
-- Embeddings must be rebuildable from permitted source inputs.
-- The relational domain model remains authoritative.
-- Infrastructure should be introduced only when measurements justify it.
+- Keep candidate retrieval separate from final event-match decisions.
+- Combine lexical, deterministic, entity, temporal, geographic, and semantic signals where useful.
+- Version embedding model, preprocessing, dimensions, normalization, and index configuration.
+- Preserve provenance and rights eligibility of every embedding input.
+- Treat similarity as a ranking signal, not calibrated probability or association authorization.
+- Support re-embedding, index rebuild, deletion, and fallback when providers are unavailable.
 
 ### 3.2 Technical Constraints
-
-- Domain contracts must not depend on a specific external provider unless explicitly approved.
-- All relevant policies, schemas, and derived outputs must be versioned.
-- Critical state transitions must be auditable and testable.
-- Missing or unavailable information must remain explicit.
+- A dedicated vector database is not mandatory by default.
+- Relational domain records remain authoritative.
+- External embedding providers are subject to ADR-006 and rights checks in ADR-013.
+- Embedding model changes require evaluation and controlled reprocessing.
 
 ### 3.3 Business and Product Constraints
-
-- The initial product must remain operationally simple.
-- Implementation sequencing must follow documented dependencies.
-- Product claims must not exceed the capability or evidence actually available.
+- The initial product remains text-based economic intelligence.
+- The architecture must support incremental delivery and traceable evaluation.
+- Proposed decisions remain provisional until explicitly approved.
 
 ### 3.4 Security and Privacy Constraints
-
-- External source content and model output are untrusted input.
-- Credentials and sensitive operational data must not be exposed in ordinary logs.
-- Access to privileged actions must follow least-privilege authorization.
+- External source content and generated model output are untrusted until validated.
+- Least-privilege access, secret protection, and explicit external permissions are mandatory.
+- Operational logs must avoid unnecessary protected content.
 
 ### 3.5 Operational and Cost Constraints
-
-- Concurrency, retries, resource usage, and external service calls must be bounded.
-- Operational metrics must make failure and uncertainty visible.
-- Numeric thresholds must be based on measurements or explicit policy approval.
+- Avoid unnecessary distributed infrastructure in the initial release.
+- Measure operational complexity and cost against expected workload.
+- Timeouts, retries, recovery, and observability must be explicit.
 
 ### 3.6 Legal and Content-Rights Constraints
-
-- Technical access does not imply permission to store, process, transform, or republish content.
-- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed where applicable.
+- Technical access does not imply permission to store, process externally, transform, quote, or republish source content.
+- Source terms, licensing, privacy, and jurisdictional requirements must be reviewed before production use.
 
 ### 3.7 Explicit Non-Goals
-
-- This ADR does not set unmeasured numeric service levels or model-quality thresholds.
-- This ADR does not select a vendor or provider where comparative evidence is unavailable.
-- This ADR does not approve its recommendation; explicit Project Owner approval remains required.
+- No unmeasured numerical threshold or performance guarantee is established by this proposal.
+- No provider or infrastructure technology is mandatory solely because it appears as an alternative.
+- This ADR does not replace the formal approval process.
 
 ## 4. Alternatives Considered
 
-### 4.1 A — Lexical and deterministic retrieval only
+### 4.1 Alternative A — Lexical and rule-based retrieval only
 
-**Advantages:** Simple, explainable, low cost.
+**Description:** Use identifiers, keyword indexes, entity matching, and deterministic filters.
 
-**Disadvantages:** Misses paraphrases, multilingual equivalents, and semantically related descriptions.
+**Advantages:**
+- Simple and explainable
+- low infrastructure burden.
 
-**Risk:** Medium
+**Disadvantages:**
+- May miss paraphrases, translations, and semantically equivalent reporting.
 
-### 4.2 B — Dedicated vector database from the first release
+**Risks:**
+- Candidate recall may be inadequate for varied news.
 
-**Advantages:** Strong semantic retrieval capabilities and indexing options.
+**Estimated Complexity:** Low to Medium
 
-**Disadvantages:** Premature operational dependency; requires embedding lifecycle and vector service operations.
+### 4.2 Alternative B — Embeddings in relational persistence
 
-**Risk:** Medium to High
+**Description:** Store versioned embedding artifacts in the selected relational engine or a supported extension.
 
-### 4.3 C — Pluggable semantic retrieval with staged storage
+**Advantages:**
+- Fewer services
+- easier provenance and lifecycle integration.
 
-**Advantages:** Adds semantic recall while keeping providers replaceable and indexes rebuildable.
+**Disadvantages:**
+- Vector indexing and scale depend on engine features.
 
-**Disadvantages:** Requires explicit embedding metadata, evaluation, and adapter contracts.
+**Risks:**
+- Latency or corpus limits may be reached.
 
-**Risk:** Medium
+**Estimated Complexity:** Medium
 
+### 4.3 Alternative C — Dedicated vector retrieval service
+
+**Description:** Use a specialized vector database/service while keeping relational records authoritative.
+
+**Advantages:**
+- Specialized indexing and scaling options.
+
+**Disadvantages:**
+- Adds service, backup, security, deletion, and consistency burden.
+
+**Risks:**
+- Premature infrastructure and index drift.
+
+**Estimated Complexity:** High
 
 ## 5. Evaluation and Comparison
 
-The following qualitative comparison is an architectural assessment, not a measured benchmark.
+The comparison is qualitative and reflects architectural fit, not measured performance or cost.
 
-| Criterion | Alternative A | Alternative B | Alternative C |
+| Evaluation Criterion | Lexical and rule-based retrieval only | Embeddings in relational persistence | Dedicated vector retrieval service |
 |---|---|---|---|
-| Fit with product requirements | Limited / context-dependent | Partial | Strongest overall fit |
-| Operational complexity | Low | Medium | Medium |
-| Auditability and traceability | Limited | Partial | Strong |
-| Ability to evolve | Low to Medium | Medium | High |
-| Principal trade-off | Simplicity or incomplete capability | Partial separation | More explicit contracts and governance |
+| Initial simplicity | High | High to Medium | Low |
+| Semantic potential | Low | High | High |
+| Lifecycle integration | High | High | Requires integration |
+| Scale flexibility | Medium | Engine dependent | High |
+| Premature infrastructure risk | Low | Low to Medium | High |
 
-The recommendation favors Alternative C because it preserves the domain distinctions and operational controls required by the product. Any quantitative comparison must be performed against representative workload and evaluation data.
+The requirements in Section 3 are the evaluation criteria. Unmeasured latency, quality, throughput, and costs are intentionally left unspecified.
 
 ## 6. Recommended Decision
 
-Define a provider-independent EmbeddingProvider and SemanticRetriever interface. Use lexical, entity, temporal, geographic, and optional semantic signals to retrieve EventMatchCandidate records. Persist embedding provenance including source revision, model/provider, model version, dimensions, normalization, creation time, and input fingerprint. Keep Events, EventMatchCases, Decisions, and ArticleEventLinks in the authoritative relational model. Begin with the simplest storage that meets measured workload; introduce a dedicated vector service only after representative evaluation shows a material need.
+**Recommended Alternative:** Alternative B as a measured initial candidate, with an evidence-based escalation path to Alternative C.
 
-### 6.1 Decision Boundaries
+Keep relational Event, Article, and decision records authoritative. Embeddings are derived, versioned retrieval artifacts. Begin with lexical/deterministic retrieval and an embedding prototype stored using the simplest proven persistence option. Adopt dedicated vector infrastructure only when representative tests show that the selected relational approach cannot meet approved quality, latency, or scale objectives. Similarity may rank candidates; only a separate EventMatchDecision can authorize association.
 
-- Define a stable embedding record schema and index-version metadata.
-- Separate embedding generation from candidate evaluation and final EventMatchDecision.
-- Reject comparisons between incompatible dimensions or incompatible model spaces unless an explicit transformation is validated.
-- Support re-embedding and index rebuild without changing authoritative event identity.
-- Measure recall@k, precision@k, candidate coverage, latency, and cost on a versioned dataset.
-- Keep multilingual and cross-language performance separately measurable.
+**Rationale:**
+- Avoids converting similarity into a domain decision.
+- Enables staged infrastructure selection.
+- Preserves provenance and lifecycle control for derived embeddings.
 
-### 6.2 Assumptions and Open Questions
+**Deferred Questions:**
+- Embedding model/provider, dimensions, and preprocessing.
+- Distance metric, normalization, and candidate cutoff.
+- Index type and refresh/rebuild strategy.
+- Vector service selection and operational requirements.
+- Evaluation dataset and quality thresholds.
 
-- The recommendation is based on the current product and architecture documents.
-- Any numeric threshold, provider selection, or legal interpretation not supported by evidence remains open.
-- The Project Owner may accept, reject, or request revision of this recommendation.
+**Recommendation Prepared By:** AI Architecture Assistant  
+**Recommendation Date:** 2026-11-18
+
+A recommendation is not an approval. The Project Owner must explicitly accept or reject this proposal.
 
 ## 7. Final Decision
 
@@ -138,160 +157,156 @@ Define a provider-independent EmbeddingProvider and SemanticRetriever interface.
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded. The recommendation in Section 6 is awaiting review.
+**Decision Rationale:** Pending formal review; see Section 6 for the recommendation.
 
 **Conditions or Restrictions:**
-
-- Do not treat this proposal as an accepted architectural constraint.
-- Do not implement irreversible changes solely on the basis of this recommendation.
-- Record any interim implementation assumption and its review trigger.
+- Keep this ADR Proposed until explicit approval is recorded.
+- Do not treat deferred questions as settled implementation details.
+- Any interim implementation choice must be reversible, documented, and assigned a review trigger.
 
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-
-- Makes the relevant domain or operational boundary explicit.
-- Improves traceability and repeatability.
-- Provides a basis for measurable verification and future revision.
+- Adds semantic candidate discovery without changing domain authority.
+- Makes model and storage changes measurable.
+- Avoids premature vector service dependencies.
 
 ### 8.2 Negative Consequences
-
-- Adds implementation and documentation work.
-- Some policy details remain open pending data, legal review, or operational measurements.
-- Dependent components may need coordinated changes after approval.
+- Requires derived-artifact lifecycle and rebuild operations.
+- Initial prototype may have limited retrieval capacity.
 
 ### 8.3 Technical Trade-Offs
-
-Alternative C favors explicit contracts and traceability over the smallest possible implementation. Provider-specific behavior or domain-specific exceptions must remain visible rather than being hidden behind an abstraction that implies guarantees the system does not have.
+Use the simplest approach that meets measured retrieval requirements. Dedicated vector infrastructure is an optimization, not a domain requirement; candidate quality and identity-decision quality are evaluated separately.
 
 ### 8.4 Operational Consequences
-
-The implementation will require monitoring, recovery, and review procedures appropriate to the selected capability. Failure modes and unknown outcomes must be observable.
+Monitor embedding costs, index lag, retrieval latency/recall, failures, and rebuild status. Maintain fallback retrieval when embedding provider or index is unavailable.
 
 ### 8.5 Product and Business Consequences
-
-The recommendation is intended to support the product's evidence-based economic intelligence purpose. It must not create user-facing promises that exceed actual source coverage, data quality, or review capacity.
+Semantic retrieval may improve candidate discovery, but ambiguous cases remain unresolved rather than forced into a match.
 
 ### 8.6 Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Proposal mistaken for approval | Keep status Proposed until explicit approval is recorded. |
-| Over-specification without evidence | Leave thresholds and provider choices open until measured. |
-| Cross-document inconsistency | Synchronize affected documents and registry after approval. |
-| Implementation cannot satisfy a proposed guarantee | Report the conflict and revise the ADR rather than silently weakening the contract. |
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Similarity mistaken for identity | Medium | Critical | Require separate EventMatchDecision. |
+| Embedding model drift | Medium | High | Version model/preprocessing and maintain regression data. |
+| Unauthorized content embedding | Medium | High | Run rights checks before external processing and persistence. |
+| Unnecessary vector infrastructure | Medium | Medium | Use measured escalation criteria. |
+| Index/relational divergence | Medium | High | Treat relational records as authoritative and reconcile indexes. |
 
 ## 9. Impact on Architecture and Documentation
 
 ### 9.1 Affected Components
-
-- Define a stable embedding record schema and index-version metadata.
-- Separate embedding generation from candidate evaluation and final EventMatchDecision.
-- Reject comparisons between incompatible dimensions or incompatible model spaces unless an explicit transformation is validated.
-- Support re-embedding and index rebuild without changing authoritative event identity.
-- Measure recall@k, precision@k, candidate coverage, latency, and cost on a versioned dataset.
-- Keep multilingual and cross-language performance separately measurable.
+- EventMatcher
+- EmbeddingService
+- RetrievalAdapter
+- WorkflowOrchestrator
 
 ### 9.2 Affected Data Models and Interfaces
-
-The relevant interfaces, persistence fields, constraints, and version metadata must be updated only after the proposal is approved and the implementation design is reviewed.
+- EmbeddingRecord
+- EmbeddingModelVersion
+- EmbeddingInputFingerprint
+- EventMatchCandidate
+- RetrievalRun
 
 ### 9.3 Affected Documents
-
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/04-implementation-plan-and-roadmap.md`
-- `docs/adr/README.md`
+- docs/01-product-and-system-architecture.md
+- docs/02-component-architecture-and-interfaces.md
+- docs/03-data-model-and-storage-design.md
+- docs/04-implementation-plan-and-roadmap.md
 
 ### 9.4 Related ADRs
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-002 | Depends on / Related to | Defines article deduplication and event matching boundaries. |
+| GENI-ADR-011 | Depends on / Related to | Defines event identity and final decisions. |
+| GENI-ADR-006 | Related to | Controls provider-independent embedding execution if external. |
+| GENI-ADR-013 | Depends on | Controls which source content may be embedded externally or retained. |
+| GENI-ADR-016 | Related to | Provides reliable persistence and rebuild/recovery principles. |
 
-See the related ADR references in the registry. These dependencies do not imply that related Proposed ADRs have been accepted.
+These relationships do not imply that related Proposed ADRs have been accepted.
 
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-
-- Define a stable embedding record schema and index-version metadata.
-- Separate embedding generation from candidate evaluation and final EventMatchDecision.
-- Reject comparisons between incompatible dimensions or incompatible model spaces unless an explicit transformation is validated.
-- Support re-embedding and index rebuild without changing authoritative event identity.
-- Measure recall@k, precision@k, candidate coverage, latency, and cost on a versioned dataset.
-- Keep multilingual and cross-language performance separately measurable.
+- Define an embedding artifact schema and deterministic input fingerprint.
+- Record model, preprocessing, dimensions, timestamps, and rights eligibility.
+- Create labeled cases for paraphrases, multilingual rewrites, and related-but-distinct events.
+- Compare lexical baseline and embedding retrieval.
+- Measure recall, candidate count, latency, cost, and index rebuild time.
+- Keep candidate thresholding separate from final decision policy.
 
 ### 10.2 Migration or Compatibility Requirements
-
-No runtime or database migration is authorized by this proposal. If accepted, existing records and historical provenance must be inspected before a migration is designed. Migration must preserve audit history and must be tested from the current baseline.
+Inspect the current implementation and data before designing any migration. This ADR does not claim that a migration has been executed. Any transition must preserve provenance and historical state.
 
 ### 10.3 Dependencies
-
-Implementation sequencing must respect the dependencies recorded in the ADR Registry and the related decision documents.
+- GENI-ADR-002 — Defines article deduplication and event matching boundaries.
+- GENI-ADR-011 — Defines event identity and final decisions.
+- GENI-ADR-006 — Controls provider-independent embedding execution if external.
+- GENI-ADR-013 — Controls which source content may be embedded externally or retained.
+- GENI-ADR-016 — Provides reliable persistence and rebuild/recovery principles.
 
 ### 10.4 Implementation Sequence
-
-1. Obtain explicit Project Owner approval.
-2. Update affected architecture and data-model contracts.
-3. Define versioned interfaces and migration requirements.
-4. Implement the smallest end-to-end slice.
-5. Add focused automated and integration tests.
-6. Validate operational behavior and update implementation status separately from ADR status.
+1. Test that similar wording does not automatically merge distinct events.
+2. Measure recall and precision at candidate cutoffs on labeled cases.
+3. Verify similarity is not called probability without calibration.
+4. Verify embedding artifacts identify model and input version.
+5. Verify rights revocation/deletion propagates to dependent embeddings and indexes.
 
 ### 10.5 Verification Requirements
+- Test that similar wording does not automatically merge distinct events.
+- Measure recall and precision at candidate cutoffs on labeled cases.
+- Verify similarity is not called probability without calibration.
+- Verify embedding artifacts identify model and input version.
+- Verify rights revocation/deletion propagates to dependent embeddings and indexes.
 
-- Every embedding traces to an exact permitted input revision and model version.
-- Rebuild produces a consistent index from authoritative records.
-- Incompatible vector spaces are never compared silently.
-- Semantic similarity is not exposed as a calibrated probability without calibration evidence.
-- A high similarity score alone cannot create an ArticleEventLink or merge Events.
-- Evaluation reports retrieval quality and downstream matching quality separately.
+Implementation verification remains deferred until the ADR is accepted and the capability is implemented.
 
 ## 11. Acceptance Criteria
-
-| ID | Acceptance Criterion | Verification |
+| ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | Every embedding traces to an exact permitted input revision and model version. | Architecture review and automated tests where applicable |
-| AC-02 | Rebuild produces a consistent index from authoritative records. | Architecture review and automated tests where applicable |
-| AC-03 | Incompatible vector spaces are never compared silently. | Architecture review and automated tests where applicable |
-| AC-04 | Semantic similarity is not exposed as a calibrated probability without calibration evidence. | Architecture review and automated tests where applicable |
-| AC-05 | A high similarity score alone cannot create an ArticleEventLink or merge Events. | Architecture review and automated tests where applicable |
-| AC-06 | Evaluation reports retrieval quality and downstream matching quality separately. | Architecture review and automated tests where applicable |
+| AC-01 | Candidate retrieval never creates an event association. | Workflow tests |
+| AC-02 | Embeddings preserve model, input, and policy provenance. | Schema tests |
+| AC-03 | Similarity semantics are documented and not treated as probability by default. | Contract tests |
+| AC-04 | Retrieval is compared with a lexical baseline on labeled cases. | Evaluation report |
+| AC-05 | Vector infrastructure requires measured evidence. | Architecture gate |
+| AC-06 | Rebuild and deletion are traceable and rights-aware. | Lifecycle tests |
 
-Quantitative thresholds must be established using representative evaluation data or operational measurements. This ADR intentionally does not invent numerical targets.
+Quantitative thresholds require representative datasets, operational measurements, or formal policy review.
 
 ## 12. Review and Reconsideration
 
 ### 12.1 Review Triggers
-
-- Candidate recall is inadequate on representative evaluation data.
-- Index size or retrieval latency exceeds measured operational targets.
-- A new embedding model materially changes dimensions or multilingual performance.
-- A dedicated vector service provides demonstrated cost or reliability benefits.
+- Before implementing the dependent capability.
+- Material changes in product scope, legal constraints, provider capabilities, workload, or operational scale.
+- Evaluation evidence shows that the recommendation does not meet requirements.
 
 ### 12.2 Review Schedule
-
 **Review Date:** Not scheduled  
 **Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
-
-Reconsider this proposal if its assumptions become invalid, evaluation results contradict the recommendation, or product/legal/operational requirements materially change. A replacement of an accepted decision requires a new ADR or an explicitly approved superseding record.
+Reconsider this proposal when its assumptions are invalidated or measured evidence shows that it fails project requirements. Replacements must be recorded through the ADR lifecycle.
 
 ## 13. References and Supporting Evidence
 
-- `docs/01-product-and-system-architecture.md`
-- `docs/02-component-architecture-and-interfaces.md`
-- `docs/03-data-model-and-storage-design.md`
-- `docs/05-architecture-decision-records.md`
-- `docs/adr/README.md`
-- Related decision topics are listed in the ADR Registry.
+References are internal project documents used to establish documented context. They are not empirical benchmarks or legal opinions.
 
-The current internal documents establish architectural context. They do not substitute for external legal advice, provider capability verification, or empirical performance measurements.
+| Reference | Type | Relevance |
+|---|---|---|
+| `docs/02-component-architecture-and-interfaces.md` | Internal | Defines EventMatcher and workflow separation. |
+| `docs/03-data-model-and-storage-design.md` | Internal | Defines candidate and provenance structures. |
+| `docs/04-implementation-plan-and-roadmap.md` | Internal | Defines semantic retrieval evaluation. |
+| `GENI-ADR-002` | Internal | Defines matching boundary. |
+| `GENI-ADR-011` | Internal | Defines event identity. |
+| `GENI-ADR-013` | Internal | Defines content rights. |
+| `GENI-ADR-016` | Internal | Defines reliable execution. |
+
+External legal, provider, and measured performance evidence must be added where material during formal review.
 
 ## 14. Decision History
 
-| Version | Date | Status | Change Summary | Author or Reviewer |
-|---|---|---|---|---|
-| 0.1 | 2026-11-18 | Proposed | Initial proposal drafted | AI Architecture Assistant |
-| 0.2 | 2026-11-18 | Proposed | Expanded alternatives, evaluation, implementation, risks, and verification criteria | AI Architecture Assistant |
+| Date | Version | Status | Change |
+|---|---|---|---|
+| 2026-11-18 | 1.0 | Proposed | Expanded ADR proposal prepared for architecture review |
 
 **End of ADR**
