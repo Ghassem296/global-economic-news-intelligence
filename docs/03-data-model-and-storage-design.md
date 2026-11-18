@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.14
+**Version:** 1.15
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -1481,8 +1481,9 @@ Fields:
 - `report_id` nullable
 - `publication_decision_id` nullable
 - `review_status`
-- `reviewer_reference` nullable
-- `assigned_at` nullable
+- `assignee_reference` nullable
+- `reviewer_reference` nullable — reviewer who completed the task, when applicable
+- `assigned_at` nullable — current assignment projection
 - `due_at` nullable
 - `review_reason`
 - `review_notes`
@@ -1510,6 +1511,43 @@ Constraints and behavior:
 - A publication review outcome that changes publication eligibility creates a new PublicationDecision.
 - Review history must not be silently overwritten. Reassignment and status changes must be auditable.
 - Reviewer identity and authorization must be managed by the application's security layer.
+- ReviewRecord is the current task/projection; all lifecycle actions, assignment changes, reviewer notes, escalation, completion, and cancellation must be preserved in append-only ReviewAction records.
+- Current status and assignee fields on ReviewRecord must be rebuildable from its ReviewAction history. Final reviewer outcome and completion actor/time must be represented by an immutable completion action and must not be silently overwritten.
+
+### 11.7.1 ReviewAction
+
+Represents one immutable action in the lifecycle of a ReviewRecord.
+
+Fields:
+
+- `id`
+- `review_record_id`
+- `action_sequence`
+- `action_type`
+- `actor_type`
+- `actor_reference`
+- `actor_role` nullable
+- `previous_status` nullable
+- `new_status` nullable
+- `assignee_reference` nullable
+- `review_outcome` nullable
+- `reason_or_notes` nullable
+- `authorization_reference` nullable
+- `idempotency_key`
+- `created_at`
+- `metadata`
+
+Action types may include `CREATED`, `ASSIGNED`, `REASSIGNED`, `STARTED`, `NOTE_ADDED`, `ESCALATED`, `COMPLETED`, `CANCELLED`, and `REOPENED`.
+
+Constraints:
+
+- ReviewAction records are append-only and immutable.
+- `(review_record_id, action_sequence)` must be unique and assigned atomically.
+- A non-null idempotency_key must be unique within the ReviewRecord.
+- Actor identity and role must be validated by the authorization layer at action time.
+- `COMPLETED` must record the final reviewer outcome and actor; a material outcome must create the required successor EventMatchDecision or PublicationDecision through the appropriate domain workflow.
+- `REOPENED` creates a new task lifecycle segment; it must not delete or rewrite the previous completion action.
+- ReviewAction must reference exactly one existing ReviewRecord.
 
 ### 11.8 PublicationRecord
 
@@ -1992,6 +2030,7 @@ The logical table inventory is:
 | `report_analysis_links` | Report analysis references |
 | `publication_decisions` | Publication policy history |
 | `review_records` | Human review records |
+| `review_actions` | Append-only human-review lifecycle and audit actions |
 | `publication_records` | Publish, replace, and withdraw operations |
 | `publication_attempts` | External publication attempt and reconciliation history |
 | `delivery_records` | Logical delivery operations |
@@ -2061,6 +2100,8 @@ Where applicable, enforce:
 - One effective decision pointer per EventMatchCase.
 - At most one direct successor per superseded EventMatchDecision.
 - At most one active ArticleEventLink per EventMatchCase, with historical inactive links retained.
+- Review action sequence uniqueness within a review record.
+- Review action idempotency key uniqueness within a review record.
 - Canonical article pair uniqueness for duplicate candidates.
 - Event-specific report version uniqueness.
 - Event analysis type and version uniqueness.
