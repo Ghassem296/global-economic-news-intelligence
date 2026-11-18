@@ -310,10 +310,10 @@ External legal review, provider measurements, market-data coverage measurements,
 
 ## 14. Decision History
 
-| Date | Version | Status | Change |
+| Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|
-| 2026-11-18 | 1.0 | Proposed | Initial proposal prepared for architecture review |
-| 2026-11-18 | 1.1 | Proposed | Clarified editorial inclusion versus Event Importance and Economic Impact to align with GENI-ADR-019. |
-| 2026-11-18 | 1.2 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. |
+| 1.0 | 2026-11-18 | Proposed | Initial proposal prepared for architecture review | AI Architecture Assistant |
+| 1.1 | 2026-11-18 | Proposed | Clarified editorial inclusion versus Event Importance and Economic Impact to align with GENI-ADR-019. | AI Architecture Assistant |
+| 1.2 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 
 **End of ADR**
