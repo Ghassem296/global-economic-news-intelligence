@@ -306,30 +306,45 @@ It must not independently create persistent events without the Event Resolution 
 
 Responsibilities:
 
-- Compare candidate developments with existing events.
-- Evaluate semantic and contextual similarity.
-- Consider entities, geography, dates, topic, and event type.
-- Return candidate matches with confidence.
-- Identify ambiguous matches.
-- Provide matching method and algorithm version.
-- Explain relevant matching factors where available.
+- Generate and evaluate candidate events for one event-matching case.
+- Use the specific ArticleRevision and development scope recorded by that case.
+- Evaluate deterministic, lexical, entity, temporal, geographic, and optional semantic signals.
+- Persist candidate evidence, scores, method, and matching-policy version.
+- Explain why each candidate is eligible, ineligible, or inconclusive.
+- Return candidate evaluations to the Event Resolution workflow.
 
-The matcher must not independently modify persistent event associations.
+EventMatcher is an evaluation component. It must not issue the authoritative matching decision, create an ArticleEventLink, create or merge an Event, or modify an existing association.
 
-A low-confidence match must not silently merge unrelated events.
+A candidate score or candidate status is not a final matching decision. A candidate must never be marked ACCEPTED or REJECTED as a substitute for a case-level decision.
 
-Matching may combine:
+### 4.10.1 Event Resolution Workflow
 
-- Deterministic rules.
-- Entity comparisons.
-- Temporal and geographic context.
-- Textual similarity.
-- Semantic similarity.
-- Confidence evaluation.
+The Event Resolution workflow coordinates one EventMatchCase at a time.
 
-The matching strategy and thresholds must be documented, versioned, and evaluated.
+Responsibilities:
 
-The detailed event identity and matching decisions are governed by the relevant ADRs and supporting architecture specifications.
+- Create or retrieve a case scoped to one ArticleRevision and one independently identified development within that revision.
+- Request candidate generation and evaluation.
+- Ensure all candidates belong to the same case.
+- Evaluate whether the case has sufficient information for an automated decision.
+- Request a new immutable EventMatchDecision.
+- Route ambiguous or policy-defined cases to authorized human review.
+- Apply an eligible decision through EventService.
+- Preserve decision, review, and association history.
+
+A single article revision may create multiple independent EventMatchCase records. A decision for one case must not implicitly decide another development in the same article.
+
+### 4.10.2 EventMatchDecision
+
+EventMatchDecision is the authoritative, immutable record of the outcome for one EventMatchCase.
+
+The decision outcome must be explicit: MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, or REVIEW_REQUIRED. MATCH must identify exactly one selected candidate. Other outcomes must not create an active ArticleEventLink. A human correction or later reassessment creates a new decision that supersedes the previous effective decision; it does not mutate the historical decision.
+
+The decision must identify its method, policy version, rationale, decision actor, timestamp, confidence semantics where applicable, and any superseded decision. A review task or review comment is not itself an EventMatchDecision.
+
+### 4.10.3 EventService
+
+EventService applies an authorized EventMatchDecision. It creates or deactivates ArticleEventLink records, validates event identity and lifecycle rules, and preserves the decision reference that authorized each association change. It must reject attempts to create an active association from a non-MATCH decision.
 
 ### 4.11 EventService
 
@@ -703,22 +718,118 @@ The domain model must support:
 
 Importance and economic impact assessments should be stored with their methodology and version metadata rather than treated as unqualified permanent properties.
 
-### 5.5 ArticleEventLink
+### 5.5 EventMatchCase
 
-Represents an article-event relationship.
+Represents one independent attempt to resolve the event identity of one development identified within one immutable ArticleRevision.
 
-The relationship must support:
+Fields:
 
-- Article identity.
-- Event identity.
-- Relationship type.
-- Association confidence.
-- Matching method and version.
-- Association timestamp.
-- Relationship status.
-- Correction and supersession history.
+- `id`
+- `article_revision_id`
+- `development_key` — stable within the ArticleRevision and identifying the particular development or event mention being resolved
+- `scope_description`
+- `case_status`
+- `created_at`
+- `closed_at`
+- `metadata`
 
-The system must preserve the history of corrected or superseded associations.
+A separate case is required for each independently identifiable development in an article revision. The case is the unit of candidate evaluation, final decision, and human review. A case must not be silently reused for a materially different article revision or development scope.
+
+### 5.6 EventMatchCandidate
+
+Represents one existing Event considered as a possible match within an EventMatchCase. Candidate generation and evaluation do not establish an association.
+
+Fields:
+
+- `id`
+- `case_id`
+- `candidate_event_id`
+- `lexical_similarity`
+- `semantic_similarity`
+- `entity_overlap_score`
+- `temporal_compatibility_score`
+- `geographic_compatibility_score`
+- `overall_score`
+- `matching_method`
+- `matching_policy_version`
+- `candidate_status`
+- `evaluation_reason`
+- `created_at`
+- `evaluated_at`
+- `metadata`
+
+Candidate status describes processing only (for example GENERATED, EVALUATED, INELIGIBLE, or SUPERSEDED). ACCEPTED and REJECTED are prohibited candidate statuses because acceptance or rejection is a case-level decision, not a property of candidate retrieval.
+
+A candidate score is not a decision confidence and must not be interpreted as one.
+
+### 5.7 EventMatchDecision
+
+Represents an immutable, authoritative outcome for one EventMatchCase.
+
+Fields:
+
+- `id`
+- `case_id`
+- `outcome`
+- `selected_candidate_id` — required only for MATCH
+- `proposed_event_reference` — optional reference for NEW_EVENT_CANDIDATE
+- `decision_method`
+- `decision_confidence` — optional and distinct from candidate similarity
+- `decision_rationale`
+- `matching_policy_version`
+- `decided_by_type`
+- `decided_by_reference`
+- `supersedes_decision_id`
+- `created_at`
+- `metadata`
+
+Allowed outcomes:
+
+- `MATCH`
+- `NEW_EVENT_CANDIDATE`
+- `NO_MATCH`
+- `AMBIGUOUS`
+- `REVIEW_REQUIRED`
+
+Constraints:
+
+- MATCH must reference exactly one eligible candidate belonging to the same case.
+- Non-MATCH outcomes must not authorize an active ArticleEventLink.
+- NEW_EVENT_CANDIDATE proposes event creation but does not itself create an Event.
+- A later reassessment or human correction creates a new decision and references the decision it supersedes.
+- Historical decisions are immutable.
+- A review record is not a decision; an authorized review outcome must be materialized as a new EventMatchDecision.
+
+### 5.8 ArticleEventLink
+
+Represents an applied, decision-authorized association between an ArticleRevision and an Event.
+
+Fields:
+
+- `id`
+- `article_revision_id`
+- `event_id`
+- `relationship_type`
+- `association_confidence`
+- `association_method`
+- `matching_policy_version`
+- `event_match_decision_id`
+- `associated_at`
+- `is_active`
+- `deactivated_at`
+- `deactivated_by_decision_id`
+- `metadata`
+
+Relationship types may include INITIAL_REPORT, FOLLOW_UP, CONFIRMATION, CONTEXT, CONTRADICTION, and RELATED_DEVELOPMENT.
+
+Constraints:
+
+- Every association must reference the exact EventMatchDecision that authorized its creation.
+- The referenced decision must have outcome MATCH and must identify the linked event through its selected candidate.
+- An active association must not be duplicated for the same article revision, event, and relationship role.
+- Deactivation must preserve the original link and identify the decision or authorized correction that deactivated it.
+- A correction creates a new decision and a new association where appropriate; it must not rewrite the historical decision or silently repoint an existing link.
+- A single article may have multiple active links when separate EventMatchCase records justify them.
 
 ### 5.6 Entity
 
@@ -870,7 +981,7 @@ Initial interfaces include:
 - `ArticleRepository`
 - `ArticleProcessingRepository`
 - `EventRepository`
-- `ArticleEventLinkRepository`
+- `EventMatchCaseRepository`\n- `EventMatchCandidateRepository`\n- `EventMatchDecisionRepository`\n- `ArticleEventLinkRepository`
 - `EntityRepository`
 - `EntityAliasRepository`
 - `ClaimRepository`
@@ -1310,7 +1421,7 @@ Critical tests include:
 
 - Article deduplication without accidental event merging.
 - Near-duplicate and syndicated article detection.
-- Event matching with ambiguous candidates.
+- Event matching with ambiguous candidates.\n- Multiple independent matching cases within one article revision.\n- Candidate scores that must not be mistaken for final decisions.\n- Human review producing a new immutable EventMatchDecision.\n- Correcting and deactivating an ArticleEventLink without losing its history.
 - Event identity preservation.
 - Event merge and split history.
 - Importance assessment behavior independently of economic relevance and impact.
