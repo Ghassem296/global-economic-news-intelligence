@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.7
+**Version:** 1.8
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence
 **Last Updated:** 2026-11-18
@@ -783,6 +783,14 @@ Allowed outcomes:
 - `NO_MATCH`
 - `AMBIGUOUS`
 - `REVIEW_REQUIRED`
+
+Outcome semantics:
+
+- `MATCH` selects exactly one eligible EventMatchCandidate belonging to this case.
+- `NEW_EVENT_CANDIDATE` proposes event creation but does not itself create an Event or authorize an ArticleEventLink. After separate authorized and idempotent event creation, the new Event must be recorded as a candidate and a subsequent MATCH decision must authorize association.
+- `NO_MATCH` means none of the evaluated candidates matches the development represented by this case. It does not prevent another case from the same ArticleRevision from matching another Event.
+- `AMBIGUOUS` means the available candidates/evidence do not support a reliable selection.
+- `REVIEW_REQUIRED` means policy requires an authorized human review before the case can be resolved.
 
 Constraints:
 
@@ -2052,6 +2060,17 @@ All uniqueness rules involving nullable fields must be tested against the select
 ### 16.3 Referential Integrity
 
 Foreign keys should protect ordinary relational relationships.
+
+The following case-scoped composite relationships must be enforced by database constraints where supported, or by application validation inside the same UnitOfWork transaction when the selected database cannot express them directly:
+
+- `EventMatchCase(id, effective_decision_id)` must resolve to `EventMatchDecision(case_id, id)`; the referenced decision must belong to that case.
+- `EventMatchDecision(case_id, selected_candidate_id)` must resolve to `EventMatchCandidate(case_id, id)`; a decision cannot select a candidate from another case.
+- `ArticleEventLink(event_match_case_id, event_match_decision_id)` must resolve to the same case and decision.
+- `ArticleEventLink(event_match_case_id, article_revision_id)` must resolve to the case's exact ArticleRevision.
+- The linked `event_id` must equal the `candidate_event_id` selected by the referenced MATCH decision.
+- A link may be active only while its authorizing MATCH decision is the effective decision for that case.
+
+The corresponding database constraints and application checks must be covered by repository contract and transactional integration tests. If composite/deferred foreign keys are used, their migration and behavior must be verified against the selected engine.
 
 Polymorphic references must be explicitly documented and validated by the application layer. PublicationAttempt must reference an existing PublicationRecord. A replacement or withdrawal target_publication_id must reference an earlier successful PublicationRecord with the same publication target and publication key. A DeliveryRecord in PUBLICATION_LINK mode must reference a confirmed effective publication operation; this semantic constraint must be enforced by the application workflow even where it cannot be expressed as a simple foreign key.
 
