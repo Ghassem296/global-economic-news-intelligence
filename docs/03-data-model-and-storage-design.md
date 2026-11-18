@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.21
+**Version:** 1.22
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1347,7 +1347,7 @@ The model must distinguish at least:
 Where market data is integrated, a `MarketObservation` entity may record:
 
 - `id`
-- `event_id`
+- `event_id` nullable — optional contextual association; an observation may exist independently of any event.
 - `instrument_reference`
 - `market`
 - `observation_type`
@@ -1361,7 +1361,7 @@ Where market data is integrated, a `MarketObservation` entity may record:
 
 Market data integration and its source rights require a separate architecture decision.
 
-A market observation must preserve its measurement time, source, unit, and baseline context. It records a market measurement; it does not establish that an event caused the movement. Any causal interpretation must be a separate analysis with its own evidence, methodology, and uncertainty.
+A market observation must preserve its measurement time, source, unit, and baseline context. It records a market measurement; it does not establish that an event caused the movement. It may be ingested and retained independently of an event; any association with an event must be an explicit, provenance-bearing relationship or analysis input rather than a mandatory ownership field. Any causal interpretation must be a separate analysis with its own evidence, methodology, and uncertainty.
 
 ## 10. Event History
 
@@ -1584,6 +1584,7 @@ Fields:
 - `report_id` nullable
 - `publication_decision_id` nullable
 - `review_status`
+- `priority` — required; value must come from the versioned review-priority policy defined by GENI-ADR-014.
 - `assignee_reference` nullable
 - `reviewer_reference` nullable — reviewer who completed the task, when applicable
 - `assigned_at` nullable — current assignment projection
@@ -1602,7 +1603,7 @@ Review states may include:
 - `COMPLETED`
 - `CANCELLED`
 
-Review types identify the subject and required follow-up, including article-deduplication review, event-matching review, and publication review. The exact type vocabulary and authorization matrix must be finalized under ADR-014.
+Review types identify the subject and required follow-up. Supported subject families must include article-deduplication, event-matching, claim-assessment, report-version, publication-operation, and content-rights reviews. Each review type must map to exactly one typed subject family and the exact immutable assessment/decision/operation under review. The canonical type vocabulary, priority scale, triggers, and authorization matrix must be finalized under ADR-014.
 
 Constraints and behavior:
 
@@ -2562,7 +2563,7 @@ Initial repository contracts include:
 - `AnalysisRepository`
 - `AnalysisInputRepository`
 - `AnalysisEvidenceLinkRepository`
-- `MarketObservationRepository`
+- `MarketObservationRepository` (only when market-data integration is approved under GENI-ADR-015)
 - `ReportRepository`
 - `ReportEventLinkRepository`
 - `ReportEvidenceLinkRepository`
