@@ -879,7 +879,7 @@ def validate_adr_registry_title_alignment() -> None:
         title = re.search(r"^\*\*Title:\*\*\s*(.+?)\s*$", content, re.MULTILINE)
         if not title:
             fail(f"Missing ADR title metadata: {path.name}")
-        adr_id_match = re.match(r"^(GENI-ADR-\\d{3})-", path.name)
+        adr_id_match = re.match(r"^(GENI-ADR-\d{3})-", path.name)
         if not adr_id_match:
             fail(f"Invalid ADR filename: {path.name}")
         adr_id = adr_id_match.group(1)
