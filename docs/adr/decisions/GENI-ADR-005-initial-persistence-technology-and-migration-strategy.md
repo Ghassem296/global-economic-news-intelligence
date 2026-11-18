@@ -164,7 +164,7 @@ A recommendation is not an approval. The authorized decision owner must explicit
 
 **Selected Alternative:** Pending formal approval  
 **Decision Status:** Proposed  
-**Decision Owner:** Product Owner  
+**Decision Owner:** Project Owner  
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
@@ -288,7 +288,7 @@ Any quantitative threshold must be grounded in representative datasets, operatio
 
 ### 12.2 Review Schedule
 **Review Date:** Not scheduled  
-**Review Owner:** Product Owner
+**Review Owner:** Project Owner
 
 ### 12.3 Reconsideration Conditions
 Write concurrency exceeds measured initial capacity. Multi-process or multi-node deployment becomes necessary. Backup, recovery, or availability requirements change. The selected engine reaches end-of-life or loses required capabilities.
