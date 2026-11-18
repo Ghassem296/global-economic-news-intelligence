@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.36
+**Version:** 1.37
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -2944,7 +2944,7 @@ Transaction boundaries must be managed through a unit-of-work or equivalent appl
 
 Repositories responsible for one aggregate or workflow may expose multiple related operations through a single application-facing contract. The logical entities do not require a one-to-one repository-per-table implementation.
 
-Repository contracts must be consistent with the component interfaces defined in Document 02.
+Repository contracts must be consistent with the component interfaces defined in Document 02. The proposed method-level baseline for the first-slice repository set is GENI-IMPL-015; it supplements, but does not supersede, this logical model or the ownership/transaction requirements above. It remains Proposed pending Project Owner approval, and every repository used by a later stage still requires its own method-level contract before implementation.
 
 ## 24. Migration Strategy
 
