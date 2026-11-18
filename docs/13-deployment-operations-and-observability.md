@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-OPS-013  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -74,6 +74,29 @@ Documents 04, 08, 09, and 12; GENI-ADR-005, 013, 016, and 017.
 ---
 
 **Document ID:** GENI-OPS-013  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Draft — Under Architecture Review  
+## 13. Privacy Operations Runbooks
+
+These runbooks are required before enabling personal-data processing in production. Each identifies an authorized owner, trigger/severity, prerequisites, approval boundary, safe diagnostics, execution, target-level verification, escalation and retained evidence.
+
+### 13.1 Data-subject request
+
+Intake through the approved channel; verify identity/authority; determine scope under approved jurisdictional policy; run lineage-backed discovery; review holds/exceptions with authorized humans; execute actions idempotently; reconcile every target; prepare a safe response; record dispatch and closure. Never infer statutory deadlines or exemptions.
+
+### 13.2 Provider/model deletion and restriction
+
+Discover provider requests through PersonalDataLineage and LLM usage metadata; verify current provider deletion capability and contract posture; submit authorized action; capture external reference/acknowledgement; retry only under safe idempotency/reconciliation; mark unavailable or unverifiable outcomes explicitly. Local deletion does not prove provider deletion.
+
+### 13.3 Backup restore reconciliation
+
+Before restored data is exposed or reprocessed, replay deletion/restriction tombstones and action ledger against restored stores, caches and derived artifacts. Produce reconciliation evidence, quarantine unresolved targets and require authorized sign-off before traffic resumes. Exercise on a representative restore.
+
+### 13.4 Privacy incident and transfer control
+
+Contain suspected disclosure/unauthorized transfer; preserve minimized evidence; identify affected purposes, records, processors and regions through lineage; revoke credentials/authorization as appropriate; engage designated privacy/legal owner to assess notification obligations under applicable law; document decisions and corrective actions. Do not invent notification deadlines.
+
+Runbook publication is not evidence of successful exercise. See Documents 02, 03, 08, 09, 12 and 14; GENI-ADR-020.
+
+
 **End of Document**
