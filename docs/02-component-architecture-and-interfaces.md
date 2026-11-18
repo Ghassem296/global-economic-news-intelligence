@@ -342,27 +342,23 @@ The decision outcome must be explicit: MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMB
 
 The decision must identify its method, policy version, rationale, decision actor, timestamp, confidence semantics where applicable, and any superseded decision. A review task or review comment is not itself an EventMatchDecision.
 
-### 4.10.3 EventService
-
-EventService applies an authorized EventMatchDecision. It creates or deactivates ArticleEventLink records, validates event identity and lifecycle rules, and preserves the decision reference that authorized each association change. It must reject attempts to create an active association from a non-MATCH decision.
-
 ### 4.11 EventService
 
 Responsibilities:
 
-- Create events.
-- Associate articles with events.
+- Create events only through the authorized event-creation workflow.
+- Apply an authorized EventMatchDecision.
+- Create an ArticleEventLink only for a valid MATCH decision.
+- Deactivate an existing ArticleEventLink only through an authorized successor decision or identity-correction operation.
 - Validate event identity and lifecycle rules.
-- Update event metadata.
-- Maintain stable event identifiers.
-- Coordinate event updates.
-- Record event-history occurrences.
+- Update event metadata and maintain stable event identifiers.
+- Coordinate event updates and record event-history occurrences.
 - Coordinate approved merge and split operations.
 - Preserve historical relationships after corrections.
 
-EventService owns event-level business rules.
+EventService owns event-level business rules and the application of authorized event-association decisions. The Event Resolution workflow coordinates candidate evaluation, case-level decision creation, and review routing. EventService must reject attempts to create an active association from a non-MATCH decision.
 
-It must not implement low-level similarity calculations or database-specific query logic.
+EventService must not implement low-level similarity calculations or database-specific query logic.
 
 ### 4.12 EventHistoryService
 
@@ -723,9 +719,12 @@ Fields:
 - `development_key` — stable within the ArticleRevision and identifying the particular development or event mention being resolved
 - `scope_description`
 - `case_status`
+- `effective_decision_id` — nullable pointer to the current effective EventMatchDecision; a mutable projection updated transactionally when a new decision is recorded
 - `created_at`
 - `closed_at`
 - `metadata`
+
+The effective-decision pointer is a current-state projection; historical EventMatchDecision records remain immutable.
 
 A separate case is required for each independently identifiable development in an article revision. The case is the unit of candidate evaluation, final decision, and human review. A case must not be silently reused for a materially different article revision or development scope.
 
