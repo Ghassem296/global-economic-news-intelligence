@@ -663,6 +663,20 @@ Responsibilities:
 
 Sensitive article content, secrets, and credentials must not be logged by default.
 
+### 4.29 ContentRightsService
+
+Responsibilities:
+
+- Maintain and retrieve versioned source-rights profiles and policy references.
+- Record content-access provenance and the exact source/content revision where available.
+- Evaluate permissions separately for metadata access, full-text access, temporary processing, persistent storage, internal analysis, external LLM processing, embedding/translation, derived-output generation, quotation, customer distribution, and republication.
+- Return an operation-specific rights outcome, policy/profile version, reason codes, supporting basis, and applicable handling/retention constraints.
+- Enforce fail-closed behavior when permission is unknown, denied, expired, revoked, or requires review.
+- Coordinate content retention expiry, restriction, deletion requests, execution records, and verification.
+- Preserve an audit trail without copying sensitive source content or credentials into it.
+
+ContentRightsService must not infer legal permission from technical accessibility, decide source reliability, determine publication eligibility, or replace recipient-distribution authorization. The Project Owner must approve the rights policy and the evidence basis for initial source profiles. Detailed policy criteria and legal/contractual mappings remain provisional until GENI-ADR-013 is accepted.
+
 ## 5. Domain Model Contracts
 
 The following entities represent the initial domain model.
@@ -1043,6 +1057,13 @@ All persistence access must use repository interfaces.
 Initial interfaces include:
 
 - `SourceRepository`
+- `SourceRightsProfileRepository` (when GENI-ADR-013 is accepted)
+- `ContentAccessRepository` (when GENI-ADR-013 is accepted)
+- `RightsAssessmentRepository` (when GENI-ADR-013 is accepted)
+- `ContentRetentionPolicyRepository` (when GENI-ADR-013 is accepted)
+- `ContentDeletionRepository` (when GENI-ADR-013 is accepted)
+- `DerivedArtifactRepository` (when GENI-ADR-013 is accepted)
+- `ContentUsageAuditRepository` (when GENI-ADR-013 is accepted)
 - `ArticleRepository`
 - `ArticleRevisionRepository`
 - `ArticleProcessingRepository`
