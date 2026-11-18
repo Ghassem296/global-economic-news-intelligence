@@ -2,8 +2,9 @@
 ## Documentation Index
 
 **Project:** Global Economic News Intelligence  
+**Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-18
 
