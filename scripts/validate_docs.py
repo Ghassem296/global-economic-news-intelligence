@@ -822,8 +822,9 @@ def validate_document_registry_metadata_alignment() -> None:
     for relative in CONTROLLED_DOCUMENTS:
         path = ROOT / relative
         content = markdown_content_without_fences(read_text(path))
+        header = content.split("\n---", 1)[0]
         values = {
-            field: metadata_values(content, field)
+            field: metadata_values(header, field)
             for field in ("Document ID", "Version", "Status")
         }
         for field, found in values.items():
@@ -864,7 +865,7 @@ def validate_documentation_index_adr_authority() -> None:
     index = read_text(ROOT / "docs/README.md")
     if "## 4.3 Individual ADR Documents" not in index:
         fail("Documentation Index must retain its Individual ADR Documents guidance section")
-    if re.search(r"^\\|\\s*GENI-ADR-\\d{3}\\s*\\|", index, re.MULTILINE):
+    if re.search(r"^\|\s*GENI-ADR-\d{3}\s*\|", index, re.MULTILINE):
         fail("Documentation Index duplicates individual ADR inventory rows")
     if "[ADR Registry](adr/README.md)" not in index:
         fail("Documentation Index must link to the authoritative ADR Registry")
@@ -875,7 +876,7 @@ def validate_adr_registry_title_alignment() -> None:
     registry_text = read_text(ADR_REGISTRY)
     for path in sorted(ADR_DIR.glob("GENI-ADR-*.md")):
         content = markdown_content_without_fences(read_text(path))
-        title = re.search(r"^\\*\\*Title:\\*\\*\\s*(.+?)\\s*$", content, re.MULTILINE)
+        title = re.search(r"^\*\*Title:\*\*\s*(.+?)\s*$", content, re.MULTILINE)
         if not title:
             fail(f"Missing ADR title metadata: {path.name}")
         adr_id_match = re.match(r"^(GENI-ADR-\\d{3})-", path.name)
