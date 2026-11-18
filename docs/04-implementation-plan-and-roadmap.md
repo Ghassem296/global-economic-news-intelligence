@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.1
+**Version:** 1.2
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-16
 **Project:** Global Economic News Intelligence
@@ -359,6 +359,7 @@ The following topics must be resolved or explicitly bounded before dependent imp
 - News acquisition and full-text access rights.
 - Publication, review, correction, and withdrawal policy.
 - Market data availability and impact classification.
+- Separate Event Importance, Economic Relevance, and Economic Impact assessment methodology (GENI-ADR-019).
 - Processing recovery and idempotency.
 
 Not every future capability must be fully designed before the first implementation. However, unresolved decisions must not be disguised as accepted architecture.
@@ -439,14 +440,15 @@ The first implementation slice should introduce the minimum required concepts, i
 - Topic classification.
 - Entity and entity mention.
 - Event.
-- Article-event association.
+- ArticleRevision as an immutable content version.
+- EventMatchCase, EventMatchCandidate, and EventMatchDecision as separate matching records.
+- ArticleEventLink as a decision-authorized association.
 - ProcessingRun and ProcessingStep.
 - Evidence and evidence references.
-- Analysis.
-- Report.
-- PublicationDecision.
-- Review task or equivalent review queue record.
-- Delivery intent and delivery attempt.
+- Separate Analysis records for each assessment type.
+- Report and immutable ReportVersion.
+- PublicationDecision and typed ReviewRecord.
+- DeliveryRecord and DeliveryAttempt.
 
 Additional concepts from the approved data model should be introduced when required by a concrete workflow.
 
@@ -458,7 +460,10 @@ Implement and test:
 
 - Article identity and revision behavior.
 - Article deduplication boundaries.
-- Event association rules.
+- Per-ArticleRevision EventMatchCase creation and uniqueness.
+- Candidate evaluation separate from case-level EventMatchDecision.
+- MATCH-only ArticleEventLink creation with exact case and decision references.
+- Event association correction through immutable successor decisions.
 - Event lifecycle transitions.
 - Event history append-only behavior.
 - Claim and evidence relationships.
@@ -494,6 +499,9 @@ The dataset should evolve as the system develops.
 - Core domain rules are tested.
 - Domain code does not depend on database or LLM SDKs.
 - Event identity is not based solely on topic similarity.
+- Article revisions are immutable and material changes create a new revision.
+- Candidate scores and statuses cannot substitute for case-level decisions.
+- Every active article-event association is authorized by the effective MATCH decision for its case.
 - Evaluation cases are version-controlled and reproducible.
 - The first workflow can be implemented without inventing domain semantics.
 
@@ -598,7 +606,16 @@ Normalize and Persist
 Classify the Article
        |
        v
-Create or Match an Event
+Resolve an EventMatchCase
+       |
+       v
+Evaluate EventMatchCandidate records
+       |
+       v
+Record EventMatchDecision
+       |
+       v
+Apply ArticleEventLink only for MATCH
        |
        v
 Attach Initial Evidence
@@ -637,6 +654,7 @@ It does not need to support every event type or delivery channel.
 - Usage is recorded where provider data is available.
 - The workflow can be rerun without uncontrolled duplication.
 - The generated report retains source and evidence references.
+- Event association is applied only through a case-level MATCH decision; a test stub may simulate candidate retrieval but must not bypass the decision and link invariants.
 - Publication decisions cannot be bypassed.
 
 ---
@@ -808,8 +826,10 @@ This is the core product capability.
 9. Implement EventHistory.
 10. Implement event relationship handling.
 11. Implement event merge and split operations.
-12. Implement ImportanceRanker.
-13. Implement event matching evaluation datasets.
+12. Implement EventMatchCase, EventMatchCandidate, and EventMatchDecision lifecycle.
+13. Implement authorized review routing and successor-decision handling for ambiguous or corrected cases.
+14. Implement ArticleEventLink creation and deactivation through EventService with exact case and decision provenance.
+15. Implement event matching evaluation datasets.
 
 ### Event Identity Policy
 
@@ -866,11 +886,12 @@ Historical event records must not be silently deleted or rewritten.
 ### Deliverables
 
 - Event detection.
-- Event matching and resolution.
+- Event matching cases, candidate evaluation, and immutable decisions.
+- Authorized event creation and decision-based article-event association.
+- Human review and association correction workflow.
 - Event creation and updates.
-- Event history.
-- Event relationships.
-- Importance ranking.
+- Event history and relationships.
+- Event merge and split operations.
 
 ### Exit Criteria
 
@@ -879,7 +900,10 @@ Historical event records must not be silently deleted or rewritten.
 - Ambiguous matches are explicitly represented.
 - Event identity operations are traceable.
 - Event lifecycle transitions are validated.
-- Importance assessments include explanations and policy provenance.
+- Every resolved development has one effective case-level decision; unresolved cases remain explicit.
+- Every active ArticleEventLink references its EventMatchCase and effective MATCH decision.
+- Human corrections create successor decisions and preserve prior link history.
+- Event identity operations are traceable.
 - False merges and event fragmentation are measured.
 
 ---
@@ -901,10 +925,12 @@ Produce evidence-based economic intelligence.
 7. Implement contradictory claim detection.
 8. Implement source independence assessment.
 9. Implement uncertainty representation.
-10. Implement economic impact analysis.
-11. Implement analysis versioning.
-12. Implement analysis input fingerprints.
-13. Add analysis evaluation datasets.
+10. Implement Event Importance assessment as an independent versioned Analysis type.
+11. Implement Economic Relevance assessment as an independent versioned Analysis type.
+12. Implement channel-based Economic Impact assessment as an independent versioned Analysis type.
+13. Implement optional market-reaction assessment only when suitable market observations are available.
+14. Implement analysis versioning and input fingerprints.
+15. Add separate assessment evaluation datasets.
 
 ### Economic Analysis Dimensions
 
@@ -989,10 +1015,12 @@ Convert event intelligence into structured, versioned reports.
 6. Implement evidence references.
 7. Implement source references.
 8. Implement report validation.
-9. Implement PublicationPolicy.
-10. Implement report correction and withdrawal records.
-11. Implement report storage.
-12. Add report evaluation datasets.
+9. Implement PublicationPolicy and immutable PublicationDecision records.
+10. Implement PublicationService and target-specific publication adapter contracts.
+11. Implement durable PublicationRecord and PublicationAttempt history for PUBLISH, REPLACE, and WITHDRAW.
+12. Implement report correction and replacement lineage without overwriting prior versions.
+13. Implement confirmed withdrawal and uncertain-outcome reconciliation.
+14. Implement report storage and add report evaluation datasets.
 
 ### Initial Report Structure
 
@@ -1056,10 +1084,10 @@ The system must preserve a correction or withdrawal history and maintain links b
 
 - Structured event dossiers.
 - Versioned reports.
-- Publication decisions.
-- Review workflow.
-- Report validation.
-- Correction and withdrawal traceability.
+- Immutable publication decisions and persistent review workflow.
+- PublicationService with durable PUBLISH, REPLACE, and WITHDRAW operations and attempts.
+- Report validation and immutable report-version lineage.
+- Confirmed correction, replacement, and withdrawal traceability.
 
 ### Exit Criteria
 
@@ -1070,8 +1098,11 @@ The system must preserve a correction or withdrawal history and maintain links b
 - Report versions are preserved.
 - Publication policy is enforced.
 - Held reports enter a real review workflow.
-- Corrections and withdrawals are auditable.
-- Invalid or unapproved reports cannot be delivered.
+- Corrections create a new immutable report version; they do not overwrite an earlier version.
+- External publication operations are persisted before execution and have attempt history.
+- A failed replacement leaves the previous confirmed publication effective.
+- A withdrawal is complete only after target confirmation; unknown outcomes require reconciliation.
+- Invalid or unapproved reports cannot be published or delivered.
 
 ---
 
@@ -1083,7 +1114,7 @@ Enable controlled automated processing and text report delivery.
 
 ### Tasks
 
-1. Implement ReportDelivery.
+1. Implement ReportDelivery as a recipient/destination delivery capability, separate from public publication execution.
 2. Define delivery destination interfaces.
 3. Implement delivery intent records.
 4. Implement delivery attempt history.
@@ -1125,7 +1156,7 @@ An idempotency key should be scoped to the delivery operation, destination, repo
 
 Exactly-once external delivery must not be claimed unless the destination provider offers the required guarantees. Ambiguous external outcomes must be reconciled before blindly repeating non-idempotent actions.
 
-Delivery must occur only after an eligible publication decision.
+Publication-link delivery requires a confirmed successful and currently effective PublicationRecord. Direct report-content delivery may occur only when the applicable distribution policy authorizes it. Delivery status and attempts must not alter publication state.
 
 ### Deliverables
 
@@ -1213,11 +1244,16 @@ Create datasets covering:
 
 **Analysis**
 
-- Economic relevance.
+- Event Importance quality and calibration.
+- Economic Relevance classification quality.
+- Economic Impact channel/direction/horizon quality.
 - Analytical consistency.
 - Unsupported assertion rate.
 - Forecast and uncertainty quality.
-- Market impact classification correctness.
+- Event Importance assessment quality.
+- Economic Relevance classification correctness.
+- Economic Impact classification and channel-level assessment correctness.
+- Separation of market reaction from causal attribution.
 
 **Reporting**
 
