@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.27  
+**Version:** 1.28  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -970,7 +970,7 @@ Aliases must preserve language and alias type where relevant.
 
 Represents a source-attributed assertion or analytical assertion.
 
-Claim provenance must be represented through explicit relationships to articles, sources, and evidence.
+Claim provenance must be represented through explicit relationships to articles, sources, and evidence. Source-specific observations are represented by immutable `ClaimObservation` records; they must not overwrite the logical Claim identity or its assessment history.
 
 A claim must not be considered verified solely because it has been extracted from an article.
 
@@ -978,7 +978,7 @@ A claim must not be considered verified solely because it has been extracted fro
 
 Represents information supporting, qualifying, or contradicting a claim.
 
-The domain model must support evidence origin, source attribution, evidence type, relevance, verification status, and claim relationships.
+The domain model must support evidence origin, source attribution, evidence type, relevance, verification status, and claim relationships. `EvidenceLocation` records identify the exact source location or permitted reference supporting an Evidence item; location details must respect source-content rights and retention constraints.
 
 Claim-to-evidence relationships must support appropriate relationship types, including support and contradiction.
 
@@ -1245,7 +1245,7 @@ The following map identifies the proposed authoritative application component fo
 | EventMatchDecision | Event Resolution Workflow, including authorized review routing | Immutable case-level decision; no direct mutation by a review task. |
 | Event and ArticleEventLink | `EventService` | Applies authorized decisions and identity operations transactionally. |
 | EventHistory | `EventHistoryService`, invoked through `EventService` | Append-only history; not a second event-state owner. |
-| Claims, evidence, ClaimAssessment, ClaimAssessmentEvidenceLink, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
+| Claims, ClaimObservation, Evidence, EvidenceLocation, ClaimEvidenceLink, ClaimAssessment, ClaimAssessmentEvidenceLink, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
 | Analysis and analysis provenance links | Event Intelligence Workflow with the relevant assessor/analyzer | Assessors produce typed outputs; workflow persists versioned results and inputs. |
 | Report versions and lineage | `ReportVersionService` | `ReportGenerator` creates content but does not own immutable version persistence. |
 | PublicationDecision | `PublicationPolicy` through Publication Decision Workflow | Eligibility only; no external side effect. |
