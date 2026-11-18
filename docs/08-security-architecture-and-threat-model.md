@@ -100,7 +100,7 @@ Logs, traces, prompts, exception messages and evaluation artifacts are privacy-r
 ---
 
 **Document ID:** GENI-SEC-008  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Draft — Under Architecture Review  
 
 
