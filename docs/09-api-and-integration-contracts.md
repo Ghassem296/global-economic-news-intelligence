@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-API-009  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18
@@ -11,7 +11,7 @@
 
 ## 1. Purpose and Scope
 
-Defines minimum contracts required before workflows, repositories, provider adapters, or external APIs are implemented. It supplements Document 02, Section 6.1. It does not select a public HTTP API, transport framework, or complete set of method signatures. The first slice prioritizes internal application/repository contracts; external APIs require a concrete product need.
+Defines minimum contracts required before workflows, repositories, provider adapters, or external APIs are implemented. It supplements Document 02, Section 6.1. It does not select a public HTTP API, transport framework, or complete set of method signatures. The first slice prioritizes internal application/repository contracts; external APIs require a concrete product need. The proposed method-level baseline is GENI-IMPL-015; it remains subject to Project Owner approval and applicable ADR gates.
 
 ## 2. Contract Layers
 
@@ -61,9 +61,7 @@ Every collection query defines stable ordering/tie-breaker; page-size bounds/def
 
 ## 8. First-Slice Contract Readiness
 
-Before implementation, define method-level contracts for SourceRepository; ArticleRepository and ArticleRevisionRepository; EventRepository; EventMatchCaseRepository, EventMatchCandidateRepository, EventMatchDecisionRepository; ArticleEventLinkRepository; EvidenceRepository; AnalysisRepository; ReportRepository; PublicationDecisionRepository; and ProcessingRunRepository.
-
-For every method record purpose, typed input/output, required/null fields, validation, authorization, transaction, idempotency/uniqueness, concurrency/version, ordering/pagination, errors, retry classification, and audit effects. This does not require one repository per table; aggregate boundaries remain authoritative. Event resolution distinguishes candidate evaluation from the case-level decision. Publication distinguishes decision, operation, attempt, and reconciliation.
+GENI-IMPL-015 now provides the proposed method-level signatures, logical input/output types, operation semantics, failure behavior, idempotency scope, concurrency rules, and minimum transaction write sets for the first-slice repository inventory. It remains a review baseline, not an accepted implementation constraint. The implementation must reconcile it with Documents 02 and 03 and must not activate any capability whose governing ADR or authorization policy remains Proposed. Aggregate boundaries remain authoritative. Event resolution distinguishes candidate evaluation from the case-level decision. Publication distinguishes decision, operation, attempt, and reconciliation.
 
 ## 9. Provider Integration
 
@@ -77,11 +75,11 @@ Tests include schema/serialization, repository contracts, rollback, stale writes
 
 ## 11. Open Decisions
 
-Whether a public API is needed; transport/framework/authentication; exact first-slice signatures/DTOs; cursor encoding; webhook guarantees/signature; and provider-specific retry/rate-limit values. No transport, framework, or numeric limit is approved here.
+Whether a public API is needed; transport/framework/authentication; concrete language serialization and ID encodings; cursor encoding; webhook guarantees/signature; and provider-specific retry/rate-limit values. The logical first-slice signatures in GENI-IMPL-015 do not select concrete language or transport types. No transport, framework, database engine, or numeric limit is approved here.
 
 ## 12. Related Documents
 
-Documents 02, 03, 08, and 12; GENI-ADR-004, 013, 016, and 017.
+Documents 02, 03, 08, 12, and 15; GENI-ADR-004, 005, 006, 011, 013, 014, 016, 017, 019, and 020.
 
 ## 13. Internal Privacy Command and Query Contracts
 
@@ -117,7 +115,7 @@ See Documents 02, 03, 08, 12, 13 and 14; GENI-ADR-020.
 ---
 
 **Document ID:** GENI-API-009  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Draft — Under Architecture Review  
 
 
