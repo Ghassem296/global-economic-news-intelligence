@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.19
+**Version:** 1.20
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -510,7 +510,7 @@ Implement and test:
 - Analysis versioning.
 - Report versioning.
 - Publication decision rules.
-- Review task transitions, exact ReviewContextLink references, and append-only ReviewAction history for article-deduplication, event-matching, and publication review types only. Claim-assessment, report-version, and content-rights review remain disabled until their specified successor workflows and authorization tests are implemented.
+- Review task transitions, exact ReviewContextLink references, and append-only ReviewAction history for exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. Keep `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` disabled until their specified successor workflows, authorization rules, and integration tests are implemented.
 - Delivery idempotency boundaries.
 
 ### Initial Evaluation Work

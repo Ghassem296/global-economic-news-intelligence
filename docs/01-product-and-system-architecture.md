@@ -2,7 +2,7 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.20  
+**Version:** 1.21  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -75,7 +75,7 @@ The initial release includes:
 
 The initial release must remain operationally simple and must not require audio, video, advanced personalization, or mandatory cloud infrastructure.
 
-The initial review implementation is limited to article-deduplication, event-matching, and publication reviews. Claim-assessment, report-version, and content-rights reviews remain architecturally mapped but are disabled until their successor workflows and authorization tests are implemented.
+The first implementation slice enables exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. `REPORT_VERSION` is publication-eligibility review for an exact immutable Report version and its effective PublicationDecision; it is not review of an external publication operation. `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` remain architecturally mapped but disabled until their successor workflows, authorization rules, and integration tests are implemented.
 
 ### 3.2 Future Product Releases
 

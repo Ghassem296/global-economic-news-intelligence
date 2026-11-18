@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.32
+**Version:** 1.33
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-18  
@@ -156,10 +156,10 @@ The versions and lifecycle states below were read from the actual file headers i
 
 | Document ID | Title | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
-| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.20 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.21 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.38 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.28 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.19 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.20 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.7 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -396,8 +396,8 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-18  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `dd9fbcf39c5ff2920e6c9057d212265aae64eaed`  
-**Registry Refresh:** The inventory was verified against the exact published `main` tree identified by the baseline commit above. The related architecture, data-model, ADR, roadmap, index, registry, and validation changes in this revision are committed together as one atomic update based on that tree. The resulting commit is the new authoritative `main` snapshot.
+**Baseline Commit Inspected:** `527d46ad893338e48d3a9b4ad5457774640da9cc`  
+**Registry Refresh:** This revision was prepared from the exact published `main` tree identified by the baseline commit above. The earlier architecture, component, data-model, ADR, and validation corrections were committed as successive fast-forward updates before this baseline was inspected. This revision corrects the remaining first-slice Human Review wording in Documents 01 and 04 and updates their version entries together with this registry snapshot. The resulting commit becomes the new authoritative `main` snapshot.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
