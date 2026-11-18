@@ -1171,7 +1171,7 @@ Such measurements must be established through representative datasets and evalua
 | 1.2 | 2026-11-18 | Proposed | Aligned ClaimAssessment, ClaimAssessmentEvidenceLink, AssessmentHistory, and Claim current-assessment projection with Documents 02 and 03. | AI Architecture Assistant |
 | 1.3 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Aligned claim-assessment outcomes and evidence-link relationships with Documents 02 and 03; separated evidence class from representation type and lifecycle states. | AI Architecture Assistant |
-| 1.5 | 2026-11-18 | Proposed | Removed lifecycle states from the assessment outcome enum and clarified the canonical uncertainty semantics. | AI Architecture Assistant |
+| 1.5 | 2026-11-18 | Proposed | Removed lifecycle states from the assessment outcome enum, clarified canonical uncertainty semantics, and aligned all authority references with the Project Owner role. | AI Architecture Assistant |
 
 ---
 
