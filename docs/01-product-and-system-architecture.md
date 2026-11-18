@@ -311,7 +311,7 @@ Event matching determines whether different articles describe the same real-worl
 
 The processing system must support multilingual source content from the initial release. Language identification and preservation of original content are initial-release requirements.
 
-Translation may be used as an intermediate processing aid, but translated text must not silently replace original source content.
+Translation is optional and may be used only under an approved language policy and applicable content-rights authorization. When enabled, it must create a separately versioned derived artifact linked to the exact ArticleRevision, preserving source/output languages, translator/provider and model/configuration provenance, and quality status. Translated text must never replace the original source revision. Cross-language matching must not depend on an unsupported or unevaluated translation.
 
 ### 5.4 Event Intelligence
 
@@ -334,9 +334,11 @@ The proposed approach is a hybrid method combining:
 - Entity and attribute comparisons.
 - Temporal and geographic context.
 - Textual similarity.
-- Semantic similarity where appropriate.
+- Semantic similarity through a replaceable candidate-retrieval adapter where appropriate.
 - Confidence evaluation.
 - Explicit decision thresholds.
+
+Semantic retrieval is optional and must be evaluated against a lexical baseline. Its adapter may generate candidates but must never make the final event decision or create an article-event association. Embedding provider/storage and quantitative thresholds remain subject to GENI-ADR-012 and must not be assumed approved while that ADR is Proposed.
 
 A new article must not automatically create a new event merely because its wording differs from previously collected articles.
 
@@ -462,7 +464,7 @@ The system must distinguish at least the following evidence states for economic 
 3. **Inferred Potential Effect:** A possible consequence derived through explicit analytical reasoning and evidence.
 4. **Unknown:** Available information is insufficient to characterize the effect.
 
-Observed market reaction is a narrower concept than economic impact. A measured price or yield movement may be an observed market reaction, but the movement's causal relationship to an event remains a separate analytical question. Market observations must not be treated as proof that the event caused the observed movement.
+Observed market reaction is a narrower concept than economic impact. A measured price or yield movement may be an observed market reaction, but the movement's causal relationship to an event remains a separate analytical question. Market observations must not be treated as proof that the event caused the observed movement. Market-data acquisition is optional: provider, instrument universe, frequency, licensing, and retention remain subject to GENI-ADR-015. Without an authorized and suitable observation source, market reaction must remain unknown/unavailable rather than inferred as measured.
 
 Importance, economic relevance, and economic impact must be stored and evaluated as separate versioned assessment results. A single composite score must not silently combine them. Numeric scores are optional and may be used only when their scale, direction, methodology, version, calibration, and evaluation criteria are explicit. Qualitative levels and structured dimensions may be more appropriate than a single number.
 
