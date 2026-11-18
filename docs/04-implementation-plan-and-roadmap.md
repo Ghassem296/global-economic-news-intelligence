@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.26
+**Version:** 1.27
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-18
 **Project:** Global Economic News Intelligence  
@@ -228,6 +228,7 @@ global-economic-news-intelligence/
 │   ├── 12-testing-and-evaluation-strategy.md
 │   ├── 13-deployment-operations-and-observability.md
 │   ├── 14-data-protection-and-privacy-specification.md
+│   ├── 15-first-slice-implementation-contracts.md
 │   │
 │   ├── adr/
 │   │   ├── README.md
@@ -1821,5 +1822,5 @@ Exit criteria require executable tests and operational evidence, not document pr
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.26
+**Version:** 1.27
 **Status:** Draft — Under Architecture Review
