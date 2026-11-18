@@ -1115,6 +1115,8 @@ Suggested categories:
 - `EVENT_DETECTION_ERROR`
 - `EVENT_MATCHING_ERROR`
 - `EVIDENCE_ANALYSIS_ERROR`
+- `IMPORTANCE_ASSESSMENT_ERROR`
+- `ECONOMIC_RELEVANCE_ASSESSMENT_ERROR`
 - `IMPACT_ANALYSIS_ERROR`
 - `REPORT_GENERATION_ERROR`
 - `PUBLICATION_REJECTED`
@@ -1434,7 +1436,7 @@ The following items require formal review and corresponding ADRs or supporting s
 9. Report correction and withdrawal.
 10. Market data integration and observed market-reaction classification.
 11. Separate assessment semantics, methodology, calibration, and evaluation for importance, economic relevance, and economic impact (GENI-ADR-019).
-13. SQLite concurrency and asynchronous persistence strategy.
+12. SQLite concurrency and asynchronous persistence strategy.
 13. Workflow recovery, idempotency, and retry guarantees.
 14. LLM budget, cost tracking, and evaluation.
 15. Source acquisition security and content retention.
