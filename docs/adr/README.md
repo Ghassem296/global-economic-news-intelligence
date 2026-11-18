@@ -371,15 +371,14 @@ At the time of this revision:
 - The ADR governance document exists.
 - The ADR template exists.
 - The ADR registry exists.
-- Eighteen initial architectural decision topics have been identified.
-- Six individual ADR documents are published in the shared repository.
-- The six published ADRs are GENI-ADR-001, GENI-ADR-002, GENI-ADR-006, GENI-ADR-008, GENI-ADR-011, and GENI-ADR-013.
-- All six existing individual ADRs have Proposed status.
-- Twelve identified decision topics remain without individual ADR documents.
+- Nineteen architectural decision topics are registered.
+- All nineteen individual ADR documents are committed to the current pull-request branch.
+- All nineteen ADRs have Proposed status.
+- No registered decision topic remains without an individual ADR document in this branch.
 - No individual ADR is currently recorded as Accepted in this registry.
 - No claim of implementation completion is implied by the existence or publication of an ADR.
 
-The registry must be updated as additional ADR documents are created, published, reviewed, and approved.
+The registry must be updated as ADR documents are revised, reviewed, accepted, rejected, superseded, or withdrawn.
 
 The publication status must be verified against the shared repository. Decision status must be verified against the metadata of each individual ADR.
 
