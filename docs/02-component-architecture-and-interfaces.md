@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -674,7 +674,7 @@ The domain model must support:
 
 Full-text storage must comply with applicable source terms and content rights.
 
-Content availability must be represented explicitly.
+Content availability must be represented explicitly. Article is the current searchable projection of its latest accepted ArticleRevision; it is not a second independently editable copy of revision content. Updating the current projection and creating a material new revision must be atomic.
 
 ### 5.4 ArticleRevision
 
