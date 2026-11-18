@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.12  
+**Version:** 1.13  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Last Updated:** 2026-11-18
@@ -364,6 +364,8 @@ Responsibilities:
 - Apply an authorized EventMatchDecision.
 - Create an ArticleEventLink only for a valid MATCH decision.
 - Deactivate an existing ArticleEventLink only through an authorized successor decision or identity-correction operation.
+- When a case's effective decision changes, deactivate links authorized by the prior decision and, only when the new effective decision is MATCH, create a new link referencing that exact decision.
+- Apply the effective-decision pointer update and corresponding link deactivation/activation in one UnitOfWork transaction.
 - Validate event identity and lifecycle rules.
 - Update event metadata and maintain stable event identifiers.
 - Coordinate event updates and record event-history occurrences.
@@ -875,7 +877,7 @@ Constraints:
 - The link's event_id must equal the Event selected by the referenced MATCH decision.
 - A link is active only while its authorizing MATCH decision remains the effective decision for that case.
 - Deactivation must preserve the original link and identify the decision or authorized correction that deactivated it.
-- A correction creates a new decision and a new association where appropriate; it must not rewrite the historical decision or silently repoint an existing link.
+- A correction creates a new decision and, when the new decision is MATCH, a new association; it must not rewrite the historical decision or silently repoint an existing link. When the effective decision changes, the prior active link is deactivated and any new MATCH link is activated atomically with the case pointer update.
 - A single article may have multiple active links when separate EventMatchCase records justify them.
 
 ### 5.10 Entity
@@ -1190,7 +1192,7 @@ EventMatcher performs candidate evaluation. Event Resolution Workflow coordinate
 - A reviewer must be authorized for the requested action.
 - A review outcome that changes the result creates a new decision with a supersedes reference.
 - The previous decision and any prior ArticleEventLink remain historically traceable.
-- Any association correction is applied through EventService in the same controlled transaction as the effective decision update.
+- Any association correction is applied through EventService in the same controlled transaction as the effective decision update; the prior link is deactivated, and a successor link is created only for a new effective MATCH decision.
 - A review task cannot directly create an Event or call an external publication target.
 
 ### 7.5 Event Intelligence Workflow
