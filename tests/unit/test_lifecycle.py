@@ -342,3 +342,33 @@ def test_resolved_case_requires_successor_for_review_reopen() -> None:
 def test_delivery_outcome_is_not_a_processing_step_status() -> None:
     assert "DELIVERED" not in {status.value for status in ProcessingStepStatus}
     assert ExternalOperationStatus.DELIVERED.value == "DELIVERED"
+
+def test_active_run_cancellation_requires_reconciled_external_outcomes() -> None:
+    with pytest.raises(TransitionError):
+        transition_run(ProcessingRunStatus.RUNNING, ProcessingRunStatus.CANCELLED)
+    assert (
+        transition_run(
+            ProcessingRunStatus.RUNNING,
+            ProcessingRunStatus.CANCELLED,
+            external_outcomes_reconciled=True,
+        )
+        is ProcessingRunStatus.CANCELLED
+    )
+    with pytest.raises(TransitionError):
+        transition_run(
+            ProcessingRunStatus.PARTIALLY_COMPLETED,
+            ProcessingRunStatus.CANCELLED,
+        )
+
+
+def test_running_step_cancellation_requires_reconciled_external_outcome() -> None:
+    with pytest.raises(TransitionError):
+        transition_step(ProcessingStepStatus.RUNNING, ProcessingStepStatus.CANCELLED)
+    assert (
+        transition_step(
+            ProcessingStepStatus.RUNNING,
+            ProcessingStepStatus.CANCELLED,
+            external_outcome_reconciled=True,
+        )
+        is ProcessingStepStatus.CANCELLED
+    )
