@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -22,6 +22,7 @@ The initial development foundation uses:
 - Python 3.12 and 3.13; Python 3.14 is not included in the supported range.
 - A setuptools-based pyproject package.
 - No runtime third-party dependencies in the domain foundation.
+- Validated environment/log-level configuration, safe machine-classifiable errors, and allowlisted structured JSON logging.
 - pytest, Ruff, and mypy as development tools.
 - GitHub Actions for application CI.
 
@@ -37,7 +38,7 @@ The initial package root is src/global_economic_news_intelligence.
 - tests/unit verifies pure behavior without external services.
 - Integration and end-to-end tests must use controlled fixtures and must not access production sources by default.
 
-The initial code creates only the package, CLI, and pure workflow lifecycle policies. Directories for future capabilities are created when an implemented use case requires them.
+The initial code creates the package, CLI, validated configuration, safe error primitives, structured logging, and pure workflow lifecycle policies. Directories for future capabilities are created when an implemented use case requires them.
 
 ## 4. ProcessingRun lifecycle
 
@@ -218,7 +219,7 @@ The initial Python code implements pure transition and projection rules only. Pe
 
 ## 12. Implementation boundary
 
-The first executable baseline includes the Python package, pure lifecycle policy module, CLI, tests, Ruff, mypy, and application CI. It deliberately does not include a production persistence adapter, external source fetcher, LLM adapter, publication client, or delivery adapter. These remain gated by their corresponding ADRs and evidence in Document 16.
+The first executable baseline includes the Python package, validated configuration, safe error primitives, allowlisted structured logging, pure lifecycle policy module, CLI, tests, Ruff, mypy, and application CI. It deliberately does not include a production persistence adapter, external source fetcher, LLM adapter, publication client, or delivery adapter. These remain gated by their corresponding ADRs and evidence in Document 16.
 
 ---
 
