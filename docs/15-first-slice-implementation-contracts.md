@@ -643,8 +643,8 @@ The decision ID, trusted actor identity, decision timestamp, effective-decision 
 | `event_match_decision_id` | `ID<EventMatchDecision>` | Required | Must be the current effective MATCH decision for the same case. |
 | `expected_case_version` | `Version` | Required | Compare-and-swap guard for the case and decision/link write set. |
 | `relationship_type` | `string/enum` | Required | Must use an allowed ArticleEventLink relationship type; final enum governance remains open. |
-| `association_confidence` | `number/null` | Optional | May be supplied only when a documented method calibrates this measure; candidate similarity is not a substitute. |
-| `association_method` | `string/enum` | Conditional | Required when the selected association policy requires method provenance; allowed values remain policy-governed. |
+| `association_confidence` | `number/null` | Explicit null or calibrated value; persistence nullability must be reconciled with Document 03 | Never copy candidate similarity into this field; a non-null value requires documented calibration semantics. |
+| `association_method` | `string/enum` | Required | Derived from the effective decision and matching policy; callers must not override it. Allowed values remain policy-governed. |
 
 ArticleRevision ID, Event ID, matching-policy version, link ID, associated_at, and active state are derived from the exact case, selected candidate, and effective decision or assigned by the application. They must not be independently supplied in a way that can contradict those references.
 
@@ -676,7 +676,7 @@ The application assigns deactivated_at. The prior link is preserved; the command
 | `content_fingerprint` | `Fingerprint/null` | Optional | Fingerprint of the exact permitted representation; null when not available. |
 | `rights_assessment_references` | `List<ID<RightsAssessment>>` | Conditional | Required whenever source-derived evidence storage or use is governed by rights assessment; scope must cover the exact evidence operation. |
 
-Evidence ID and created_at are server-owned. An origin must be resolvable or explicitly recorded as unavailable under a separately approved representation. Evidence creation does not itself verify a claim or establish independent corroboration.
+Evidence ID and created_at are server-owned. An origin must be resolvable or explicitly recorded as unavailable under a separately approved representation. Because the current Evidence entity requires evidence_text, this command cannot be used for metadata-only evidence when text storage is not authorized; a separate metadata-only evidence representation remains unresolved. Evidence creation does not itself verify a claim or establish independent corroboration.
 
 #### 10.11.6 AppendAnalysis
 
