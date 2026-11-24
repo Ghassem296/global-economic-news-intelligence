@@ -782,9 +782,8 @@ The command is scoped to one existing Source and participates in optimistic conc
 | changes.syndication_group | string/null | Optional change | Null means unknown/unrecorded; do not infer a group from domain similarity alone. |
 | changes.collection_config | object | Optional change | Non-secret, source-type-specific configuration only; schema must be validated by the selected adapter. Credentials and secret values are prohibited. |
 | changes.is_active | boolean | Optional change | Enables/disables collection eligibility only; it does not grant content-access or retention rights. |
-| expected_version | Version | Required | Compare-and-swap guard; stale updates return CONFLICT. |
 
-The command must contain at least one actual change. Omitted fields mean unchanged; explicit null is accepted only for fields declared nullable. The exact serialized patch representation and distinction between omitted and explicit null must be fixed before implementation. The application/server owns Source ID, created_at, updated_at, resulting version, and audit provenance.
+The command must contain at least one actual change. Omitted fields mean unchanged; explicit null is accepted only for fields declared nullable. The exact serialized patch representation and distinction between omitted and explicit null must be fixed before implementation. The expected_version argument is supplied separately as required by the repository signature in §4.1; it is the compare-and-swap guard and is not duplicated inside the command payload. The application/server owns Source ID, created_at, updated_at, resulting version, and audit provenance.
 
 **Excluded from this generic command:** reliability_profile and reliability_profile_version. Source reliability is an assessed attribute with its own evidence and version semantics; it must not be silently overwritten as ordinary collection configuration. A dedicated reliability-profile update/evaluation contract remains to be specified.
 
