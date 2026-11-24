@@ -216,7 +216,8 @@ If new evidence changes readiness, update this document and the affected source-
 - Document 12 — Testing and Evaluation Strategy.
 - Document 13 — Deployment, Operations, and Observability.
 - Document 14 — Data Protection and Privacy Specification.
-- Document 15 — First-Slice Implementation Contracts.\n- Document 17 — Executable Foundation and Domain Lifecycle Contracts.
+- Document 15 — First-Slice Implementation Contracts.
+- Document 17 — Executable Foundation and Domain Lifecycle Contracts.
 - GENI-ADR-001 through GENI-ADR-020, as applicable to the enabled capability.
 
 ---
