@@ -90,13 +90,13 @@ def test_blocked_step_requires_satisfied_dependencies() -> None:
     [
         ((), ProcessingRunStatus.PENDING),
         ((ProcessingStepStatus.SUCCEEDED,), ProcessingRunStatus.COMPLETED),
-        ((ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.SKIPPED), ProcessingRunStatus.COMPLETED),
-        ((ProcessingStepStatus.RUNNING, ProcessingStepStatus.SUCCEEDED), ProcessingRunStatus.RUNNING),
+        (\n            (ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.SKIPPED),\n            ProcessingRunStatus.COMPLETED,\n        ),
+        (\n            (ProcessingStepStatus.RUNNING, ProcessingStepStatus.SUCCEEDED),\n            ProcessingRunStatus.RUNNING,\n        ),
         ((ProcessingStepStatus.FAILED,), ProcessingRunStatus.FAILED),
         ((ProcessingStepStatus.BLOCKED,), ProcessingRunStatus.FAILED),
-        ((ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.FAILED), ProcessingRunStatus.PARTIALLY_COMPLETED),
+        (\n            (ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.FAILED),\n            ProcessingRunStatus.PARTIALLY_COMPLETED,\n        ),
         ((ProcessingStepStatus.CANCELLED,), ProcessingRunStatus.CANCELLED),
-        ((ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.CANCELLED), ProcessingRunStatus.PARTIALLY_COMPLETED),
+        (\n            (ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.CANCELLED),\n            ProcessingRunStatus.PARTIALLY_COMPLETED,\n        ),
     ],
 )
 def test_run_status_aggregation(
@@ -108,9 +108,9 @@ def test_run_status_aggregation(
 def test_case_decision_mapping() -> None:
     assert case_status_for_decision(EventMatchOutcome.MATCH) is EventMatchCaseStatus.RESOLVED
     assert case_status_for_decision(EventMatchOutcome.NO_MATCH) is EventMatchCaseStatus.RESOLVED
-    assert case_status_for_decision(EventMatchOutcome.REVIEW_REQUIRED) is EventMatchCaseStatus.PENDING_REVIEW
+    assert (\n        case_status_for_decision(EventMatchOutcome.REVIEW_REQUIRED)\n        is EventMatchCaseStatus.PENDING_REVIEW\n    )
     assert case_status_for_decision(EventMatchOutcome.AMBIGUOUS) is EventMatchCaseStatus.OPEN
-    assert case_status_for_decision(EventMatchOutcome.NEW_EVENT_CANDIDATE) is EventMatchCaseStatus.OPEN
+    assert (\n        case_status_for_decision(EventMatchOutcome.NEW_EVENT_CANDIDATE)\n        is EventMatchCaseStatus.OPEN\n    )
 
 
 def test_resolved_case_reopen_requires_successor_decision() -> None:
@@ -164,7 +164,7 @@ def test_unknown_external_outcome_must_be_reconciled_before_retry() -> None:
     with pytest.raises(TransitionError):
         external_operation_status_after_attempt(
             ExternalOperationStatus.RECONCILIATION_REQUIRED,
-            ExternalAttemptResult(ExternalAttemptType.EXECUTE, ExternalAttemptOutcome.OUTCOME_UNKNOWN),
+            ExternalAttemptResult(\n                ExternalAttemptType.EXECUTE,\n                ExternalAttemptOutcome.OUTCOME_UNKNOWN,\n            ),
         )
 
 
