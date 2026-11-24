@@ -115,6 +115,9 @@ docs/
     def test_first_slice_provenance_ownership_is_atomic(self) -> None:
         validator.validate_first_slice_provenance_ownership()
 
+    def test_vertical_slice_roadmap_matches_readiness_scope(self) -> None:
+        validator.validate_vertical_slice_roadmap_alignment()
+
     def test_executable_foundation_document_is_registry_controlled(self) -> None:
         self.assertIn(
             "docs/17-executable-foundation-and-domain-lifecycle-contracts.md",
