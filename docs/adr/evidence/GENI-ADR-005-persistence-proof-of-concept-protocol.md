@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.1  
+**Version:** 1.2
 **Status:** Proposed test protocol — no engine selected  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -31,6 +31,20 @@ The PoC must not change GENI-ADR-005 from Proposed. Only the authorized Project 
 8. Does either option satisfy every mandatory workload and operational requirement without relying on unverified portability assumptions?
 
 ## 3. Preconditions: define the workload before measuring
+
+### 3.1 Previously stated initial planning baseline
+
+The project owner's earlier planning direction establishes the following provisional baseline for the first deployment:
+
+- Single application instance and local/early-validation deployment.
+- A limited set of reputable international news sources.
+- Simple scheduling; no distributed task queue in the initial stage.
+- SQLite is the preferred initial candidate for operational simplicity.
+- PostgreSQL is a later-scale alternative to reconsider if multiple application instances, higher write concurrency, larger datasets, or concurrent workers become necessary.
+
+These are planning assumptions and a preference, not an Accepted ADR, a measured workload, or production authorization. The PoC must test whether SQLite actually satisfies the workload and correctness requirements. PostgreSQL remains a comparative challenger; the project must not build unnecessary distributed infrastructure merely to benchmark it.
+
+No numeric article volume, concurrent-writer count, event/report volume, retention duration, availability target, RPO/RTO, hosting specification, or budget has been established in the available project decisions. These values remain unknown and must not be invented. The Project Owner must derive and approve any numeric workload and operational thresholds before the comparative results are examined. If those figures remain unavailable, the PoC may complete correctness and operational-feasibility tests, but it cannot claim workload capacity or final engine selection.
 
 The Project Owner must record a workload profile before running comparative benchmarks. Unknown values remain explicitly unknown; they must not be filled with convenient guesses.
 
@@ -178,5 +192,6 @@ After acceptance, record the exact engine/version, driver, migration tool, async
 |---|---|---|---|
 | 1.0 | 2026-11-24 | Proposed | Initial reproducible persistence PoC protocol; no engine selected |
 | 1.1 | 2026-11-24 | Proposed | Clarified the stale-worker fencing acceptance criterion for machine-checkable alignment. |
+| 1.2 | 2026-11-24 | Proposed | Recorded the previously stated single-instance/local SQLite-first planning baseline while preserving unknown workload figures and the unselected ADR status. |
 
 **End of Evidence Protocol**
