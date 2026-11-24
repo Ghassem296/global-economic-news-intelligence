@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.43
+**Version:** 1.44
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -851,6 +851,7 @@ Fields:
 - `matching_policy_version`
 - `decided_by_type`
 - `decided_by_reference`
+- `authorization_reference` — immutable reference to the exact security/audit authorization context for this decision
 - `supersedes_decision_id`
 - `created_at`
 - `metadata`
@@ -882,6 +883,7 @@ Constraints:
 - A later reassessment or human correction creates a new decision and references the decision it supersedes.
 - Historical decisions are immutable.
 - A review record is not a decision; an authorized review outcome must be materialized as a new EventMatchDecision.
+- Every decision must persist an immutable `authorization_reference` supplied by trusted application/security context. It must resolve to the actor/service, action, exact case/resource, authorization scope, policy/version, timestamp, and result. Caller-supplied role strings are not authorization evidence. Missing, stale, revoked, or unverifiable references block the append.
 - Decision confidence, candidate similarity, and reviewer certainty are separate measurements and must not be substituted for one another.
 
 ### 7.4 Event Matching Case and Decision Constraints
