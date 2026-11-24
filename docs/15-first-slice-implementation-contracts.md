@@ -57,6 +57,9 @@ Fixture-driven contract and integration tests may be developed without represent
 - `Version` is an opaque, monotonically comparable aggregate version used for optimistic concurrency.
 - `Instant` is a timezone-aware timestamp.
 - `Fingerprint` is a deterministic digest of the canonical logical inputs and relevant policy/version identifiers.
+- `ActorType` is a security-owned actor category; its allowed vocabulary is defined by the approved identity contract and is not selected by this document.
+- `ActorReference` is an opaque reference to an authenticated human or service identity resolvable by the security layer.
+- `AuthorizationReference` is an immutable opaque reference to the authorization/audit context for a state-changing action, resolvable by the security/audit layer.
 - `Optional<T>` means the value may be absent; it is not interchangeable with an unknown, denied, or empty value.
 - `Page<T>` contains an ordered item list and an optional continuation cursor.
 - `Result<T>` is either a successful value or a typed failure; a failure must never be represented as a successful empty result.
