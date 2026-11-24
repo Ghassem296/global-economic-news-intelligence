@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-020  
 **Title:** Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture  
 **Status:** Proposed  
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -171,5 +171,6 @@ Reconsider if legal review changes the applicable roles/rights, provider capabil
 |---|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Initial privacy execution architecture proposal | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Added immutable scoped privacy authorization decision and repository contract | AI Architecture Assistant |
+| 1.2 | 2026-11-24 | Proposed | Aligned section structure with the standard ADR template; added explicit alternative evaluation and a separate pending Final Decision gate without authorizing production processing. | AI Architecture Assistant |
 
 **End of ADR**
