@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 2.5  
+**Version:** 2.6  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -195,6 +195,8 @@ The slice should prove the core chain:
 8. Create an immutable Report version with provenance.
 9. Produce a PublicationDecision without performing an external publication.
 
+For `NEW_EVENT_CANDIDATE`, persist the proposal only; do not create an Event until the applicable policy and GENI-ADR-011 gate are approved. For `AMBIGUOUS` or `REVIEW_REQUIRED`, preserve the unresolved outcome and do not execute a material ReviewService action until GENI-ADR-014 and its contracts are approved. Analysis and Report in this slice use deterministic fixtures; no LLM or provider call is part of first-slice acceptance.
+
 The first slice must not silently expand to production crawling, full-text retention, semantic search, market data, translation, audio/video, user personalization, external publication, or delivery. Each is separately gated.
 
 ## 10. Correction policy and limitations
@@ -226,10 +228,10 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 2.5  
+**Version:** 2.6  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.5):** Synchronized the first-slice readiness baseline with Document 03 v1.45 and Document 15 v3.2, which now persist actor and exact authorization provenance for duplicate-candidate evaluation and duplicate-decision append. No approval or capability gate changed.
+**Revision Note (v2.6):** Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
 
 **End of Document**
