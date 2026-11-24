@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import datetime
 import json
 import logging
+from datetime import UTC, datetime
 
 
 _ALLOWED_FIELDS = (
@@ -24,9 +24,9 @@ class SafeJsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, object] = {
-            "timestamp": datetime.datetime.fromtimestamp(
+            "timestamp": datetime.fromtimestamp(
                 record.created,
-                tz=datetime.UTC,
+                tz=UTC,
             ).isoformat(),
             "level": record.levelname,
             "logger": record.name,
