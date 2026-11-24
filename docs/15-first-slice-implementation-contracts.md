@@ -442,11 +442,14 @@ Outcome-specific constraints:
 | `explanation` | `string` | Required | Rationale for the decision; exact constraints TBD. | Document 03 §11.6 |
 | `caveats` | `Optional<list/string>` | Nullable | Required in meaningful form for PUBLISH_WITH_CAVEATS; exact representation TBD. | Document 03 §11.6 |
 | `policy_version` | `Version` | Required | Exact publication policy version. | Document 03 §11.6 |
+| `actor_type` | `ActorType` | Required | Authenticated actor category from trusted command context; allowed values are governed by the security identity contract, not caller-supplied role text. | Documents 03 §11.6, 08 §5 |
+| `actor_reference` | `ActorReference` | Required | Authenticated human or service identity; must resolve through the security layer. | Documents 03 §11.6, 08 §5 |
+| `authorization_reference` | `AuthorizationReference` | Required | Immutable authorization/audit reference for the exact decision action; must be resolvable and valid at decision time. | Documents 03 §11.6, 08 §5 |
 | `decided_at` | `Instant` | Required | Immutable decision time. | Document 03 §11.6 |
 | `supersedes_decision_id` | `Optional<ID<PublicationDecision>>` | Nullable | If present, must belong to the same exact report version and be the effective predecessor. | Document 03 §11.6 |
 | `metadata` | `JSON/object` | Optional | Typed decision fields remain authoritative. | Document 03 §11.6 |
 
-**Contract mismatch requiring resolution:** GENI-IMPL-015 §4.12 requires actor/provenance on the command/result, while the PublicationDecision field list in Document 03 §11.6 does not define actor identity or authorization reference. Do not silently add a persistent field or drop the provenance requirement. Reconcile Document 03 and the publication/security ADRs before implementing this DTO. Likewise, the exact effective-decision/supersession query rule must be specified as a deterministic rule, not inferred from timestamps.
+**Resolved provenance contract:** Document 03 §11.6 and this DTO now use the same required `actor_type`, `actor_reference`, and `authorization_reference` fields. Values originate from authenticated command/security context; repositories persist validated references and must not infer authorization from caller-supplied role strings. The security/audit layer must be able to resolve the authorization reference to actor, action, resource, scope, policy/version, timestamp and result. A missing, invalid, stale or unverifiable reference blocks the append. **Remaining implementation blocker:** the exact effective-decision/supersession query rule and concurrent-successor algorithm must be specified deterministically; timestamps or storage order must not be used as an implicit tie-breaker.
 
 ### 10.6 CreateProcessingRun
 
