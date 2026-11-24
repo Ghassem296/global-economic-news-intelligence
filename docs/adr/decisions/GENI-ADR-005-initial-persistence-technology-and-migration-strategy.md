@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 1.2  
+**Version:** 1.3  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -232,14 +232,28 @@ Database choice should not change user-facing domain semantics or the traceabili
 
 These relationships do not imply that any related Proposed ADR has been accepted.
 
+## 9.1 Required persistence proof-of-concept protocol
+
+The comparative test method, workload-profile template, mandatory correctness/failure matrix, measurement controls, decision method, and evidence-artifact requirements are defined in `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`.
+
+That protocol is part of the evidence required to resolve this ADR. It is not itself evidence that either engine has passed. The workload profile and numeric pass thresholds must be approved before comparative results are examined. All tests must use synthetic data and reproducible configurations; no real source content, personal data, production secrets, or provider calls are permitted.
+
+The PoC must test the persistence semantics required by GENI-ADR-016, including atomic idempotency state, lease ownership, fencing, unknown-outcome recovery, and stale-worker rejection. GENI-ADR-016 remains a separate Proposed decision: the PoC may validate candidate-engine behavior against the proposed contract, but it does not accept ADR-016 or authorize production durable execution.
+
+The evidence package must include raw results and failed runs, exact versions/configuration, workload profile, commit SHA, migration and backup/restore logs, and a comparative analysis. A narrative statement that a test passed without reproducible artifacts is insufficient.
+
+---
+
 ## 10. Implementation Implications
 
 ### 10.1 Required Implementation Work
-- Create a workload profile and concurrency assumptions.
-- Implement repository contracts and transaction boundaries independent of SQLAlchemy-specific types.
-- Build comparable schema/migration prototypes for SQLite and PostgreSQL if both remain candidates.
-- Test uniqueness, foreign keys, concurrent writes, locks, backup/restore, and recovery.
+- Approve and complete the workload profile and predeclare mandatory thresholds using the GENI-ADR-005 PoC protocol.
+- Implement comparable, isolated schema/migration prototypes for SQLite and PostgreSQL if both remain candidates; use the same logical repository contracts and synthetic workload.
+- Execute every applicable correctness/failure case in PoC-001 before considering performance results.
+- Measure operation-class throughput/latency, lock contention, async behavior, resource use, migration, backup/restore, crash recovery, and operational effort under controlled and recorded configurations.
+- Retain raw outputs, failed runs, exact environment/configuration, commit SHA, and a reproducible analysis; do not report unrun tests as passing.
 - Document engine-specific constraints and migration implications before final selection.
+- Keep the production database dependency, ORM/driver, migration tool, and async strategy unselected until the ADR is formally Accepted.
 
 ### 10.2 Migration or Compatibility Requirements
 Existing data and implementation choices must be inspected before migration is designed. No production migration is claimed by this proposal. Any schema or interface migration must preserve historical traceability and must be tested from the current baseline.
@@ -275,6 +289,8 @@ Implementation verification remains deferred until this ADR is accepted and the 
 | AC-04 | Migrations are versioned and tested from empty and prior schemas. | CI migration tests |
 | AC-05 | Backup and restore procedures are tested. | Recovery exercise |
 | AC-06 | Portability claims are limited to behavior proven by repository contract tests. | Architecture review |
+| AC-07 | The comparative PoC protocol is executed with an approved workload profile, predeclared thresholds, raw reproducible evidence, and all mandatory correctness gates. | Review of GENI-ADR-005 PoC-001 artifacts |
+| AC-08 | The selected engine, exact versions, driver, migration/async strategy, transaction model, and operational procedures are explicitly recorded only after formal ADR acceptance. | Accepted ADR and synchronized implementation baseline |
 
 Any quantitative threshold must be grounded in representative datasets, operational measurements, contractual requirements, or formal policy review.
 
@@ -305,6 +321,7 @@ The references below are internal project documents used to establish the curren
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines relational entities, integrity constraints, and transactions. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Lists SQLite and other technologies as candidates pending ADR approval. |
 | `GENI-ADR-016` | Internal | Defines persistence and recovery behaviors that constrain engine selection. |
+| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol | Defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; it contains no test results. |
 
 External legal review, provider measurements, market-data coverage measurements, and model-quality benchmarks remain outstanding wherever relevant.
 
@@ -315,5 +332,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | 1.0 | 2026-11-18 | Proposed | Initial proposal prepared for architecture review | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Aligned decision and review authority terminology with the Project Owner role defined in GENI-GOV-005. | AI Architecture Assistant |
+| 1.3 | 2026-11-24 | Proposed | Added reproducible PoC protocol, predeclared workload/threshold requirements, correctness gates, and evidence-artifact criteria; database selection remains pending. | AI Architecture Assistant |
 
 **End of ADR**
