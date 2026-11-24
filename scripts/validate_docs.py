@@ -27,6 +27,7 @@ CONTROLLED_DOCUMENTS = [
     "docs/12-testing-and-evaluation-strategy.md",
     "docs/13-deployment-operations-and-observability.md",
     "docs/14-data-protection-and-privacy-specification.md",
+    "docs/15-first-slice-implementation-contracts.md",
     "docs/README.md",
     "docs/adr/README.md",
 ]
@@ -497,6 +498,50 @@ def validate_repository_inventory_alignment() -> None:
             f"unmapped={sorted(component_names - crosswalk_names)}; "
             f"unknown={sorted(crosswalk_names - component_names)}"
         )
+
+
+def validate_review_activation_gates() -> None:
+    """Require consistent target scope and prevent unapproved ReviewService activation."""
+    documents = (
+        "docs/01-product-and-system-architecture.md",
+        "docs/02-component-architecture-and-interfaces.md",
+        "docs/03-data-model-and-storage-design.md",
+        "docs/04-implementation-plan-and-roadmap.md",
+        "docs/adr/decisions/GENI-ADR-014-human-review-corrections-and-withdrawals.md",
+    )
+    target_families = ("ARTICLE_DEDUPLICATION", "EVENT_MATCHING", "REPORT_VERSION")
+    deferred_families = ("CLAIM_ASSESSMENT", "PUBLICATION_OPERATION", "CONTENT_RIGHTS")
+    gate_terms = (
+        "ReviewRepository",
+        "ReviewContextLinkRepository",
+        "ReviewRecord/ReviewAction transition",
+        "GENI-ADR-014",
+        "integration tests",
+    )
+    for relative in documents:
+        content = read_text(ROOT / relative)
+        missing = [term for term in (*target_families, *deferred_families, *gate_terms)
+                   if term not in content]
+        if missing:
+            fail(f"Review activation gate is incomplete in {relative}: {missing}")
+        if "target first-slice review scope" not in content.lower():
+            fail(f"Review target scope is not distinguished from enablement in {relative}")
+        if "not current enablement" not in content.lower():
+            fail(f"Review activation gate is not explicit in {relative}")
+
+    implementation = read_text(ROOT / "docs/15-first-slice-implementation-contracts.md")
+    required_contracts = (
+        "### 4.14 ReviewRepository",
+        "### 4.15 ReviewContextLinkRepository",
+        "### 10.10 Required transition tables before implementation",
+        "ReviewRecord/ReviewAction transition and projection matrix",
+        "Blocked for execution; ADR-014 and Gate A approval required",
+    )
+    missing = [term for term in required_contracts if term not in implementation]
+    if missing:
+        fail(f"First-slice review implementation gates are incomplete: {missing}")
+    if "no ReviewService material action may be enabled" not in implementation:
+        fail("First-slice implementation contracts do not explicitly block unapproved review actions")
 
 
 def validate_first_slice_review_set() -> None:
@@ -1049,13 +1094,14 @@ def main() -> None:
     validate_markdown_table_structure()
     validate_review_contract_alignment()
     validate_first_slice_review_set()
+    validate_review_activation_gates()
     validate_repository_inventory_alignment()
     validate_event_identity_operation_contract()
     validate_distribution_authorization_contract()
     print(
         "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled versions and document ID/version/status registry parity, ADR title alignment and single-source inventory, duplicate versions, "
         "all 20 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
-        "root and index README tree parity, local Markdown file paths and heading anchors, Markdown table structure, Review family activation, repository inventory/crosswalk parity, "
+        "root and index README tree parity, local Markdown file paths and heading anchors, Markdown table structure, Review family vocabulary and gated first-slice activation, repository inventory/crosswalk parity, "
         "event identity-operation history/recovery, multi-source distribution authorization, privacy specification coverage, validator source integrity, registry snapshot provenance, and exact roadmap/document inventory parity."
     )
 
