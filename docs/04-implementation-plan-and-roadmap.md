@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.30
+**Version:** 1.31
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-24
 **Project:** Global Economic News Intelligence  
@@ -627,110 +627,117 @@ The exact persistence design must follow the accepted data model and ADRs.
 
 ---
 
-## 10. Development Stage 4 — Shared LLM Execution and Vertical Slice
+## 10. Development Stage 4 — Fixture-Driven Vertical Slice and Gated LLM Execution
 
 ### Objectives
 
-Build the shared LLM capability and prove that the system can execute one complete economic news workflow.
+Prove the first-slice domain and persistence workflow end-to-end using synthetic, authorized fixtures and controlled local dependencies. Establish the provider-independent LLM boundary without enabling external provider egress.
 
-This stage intentionally occurs before the full implementation of all intelligence components.
+This stage has two distinct outcomes:
 
-### Shared LLM Execution Tasks
+1. **First executable slice:** a deterministic, fixture-driven ArticleRevision-to-PublicationDecision workflow. It must be runnable without network access, production source content, external LLM calls, publication, or delivery.
+2. **Provider-backed LLM capability:** a separately gated extension. Defining and testing provider-independent contracts or a fake adapter does not authorize a real provider integration or external data transfer.
+
+### First-slice workflow
+
+Implement the narrow workflow defined by Document 16 §9:
+
+- Load a synthetic authorized Source, Article and exact ArticleRevision fixture; do not collect an article from a live source.
+- Normalize and fingerprint the fixture revision using an explicitly test-scoped identity. Do not treat the fixture normalization as an approved production source-identity algorithm.
+- Evaluate pairwise DuplicateCandidate records and append an immutable DuplicateDecision under the approved policy. Do not infer transitive duplicate groups or merge/delete Articles.
+- Create/reuse an EventMatchCase for the exact revision/development scope and evaluate candidates against pre-seeded Event fixtures.
+- Append an immutable EventMatchDecision. Activate ArticleEventLink only for the effective MATCH decision.
+- For AMBIGUOUS or REVIEW_REQUIRED, preserve the unresolved outcome. Do not execute a material ReviewService action in this slice.
+- For NEW_EVENT_CANDIDATE, persist the proposal only. Do not create a new Event until the applicable event-creation policy and ADR-011 gate are approved.
+- Attach typed Evidence with exact fixture provenance and rights references.
+- Persist a versioned structured Analysis using a deterministic test fixture. Do not invoke an external or local LLM as part of this first-slice acceptance test.
+- Create an immutable Report version with its complete provenance links.
+- Create a PublicationDecision. Do not execute publication or delivery.
+
+The slice is intentionally a workflow and persistence proof, not a production news-acquisition or intelligence-quality claim.
+
+### Provider-independent LLM boundary tasks
+
+The following work may proceed as contract/interface work and isolated tests only:
 
 1. Define provider-independent request and response contracts.
-2. Implement the selected provider adapter.
-3. Implement structured output validation.
-4. Implement model and prompt version tracking.
-5. Apply token and execution budgets.
-6. Apply deadlines and cancellation.
-7. Implement bounded retry behavior.
-8. Track token usage and cost when available.
-9. Record model execution provenance.
-10. Treat source content as untrusted input.
-11. Check the applicable rights assessment before submitting source content to an external LLM provider; an internal processing permission does not imply external-processing permission.
-12. Prevent analysis stages from receiving unrestricted tool access.
+2. Define the adapter boundary and a deterministic fake adapter for tests.
+3. Validate structured-output envelopes and schema-version handling using approved test schemas.
+4. Define model/prompt version fields, deadlines, cancellation and bounded retry semantics.
+5. Define token/execution-budget interfaces and usage-record behavior for actual provider calls.
+6. Treat all source content as untrusted input and prevent unrestricted tool access from analysis stages.
 
-The LLM layer should remain an execution capability. It must not own product workflows or domain state transitions.
+A real provider adapter, provider credentials, external request, or source-content egress remains disabled until the applicable GENI-ADR-006, GENI-ADR-007, GENI-ADR-017 and GENI-ADR-020 decisions are accepted and the exact source-content rights, privacy-processing authorization, processor/transfer and regional requirements independently ALLOW the specific request. Internal-processing permission does not imply external-processing permission. A test fake must not be represented as a real provider integration or real LLM usage.
 
-### Vertical Slice
-
-Implement one limited workflow:
+### Vertical-slice flow
 
 ```text
-Configured Source
-       |
-       v
-Collect One Article
-       |
-       v
-Normalize and Persist
-       |
-       v
-Classify the Article
-       |
-       v
-Resolve an EventMatchCase
-       |
-       v
-Evaluate EventMatchCandidate records
-       |
-       v
-Record EventMatchDecision
-       |
-       +---- AMBIGUOUS / REVIEW_REQUIRED ---> Authorized Review
-       |
-       +---- NEW_EVENT_CANDIDATE ----------> Authorized Event Creation
-       |                                      |
-       |                                      v
-       |                               Persist New Candidate
-       |                                      |
-       |                                      v
-       |                               Record MATCH Decision
-       |
-       v
-Apply ArticleEventLink only for effective MATCH
-       |
-       v
-Attach Initial Evidence
-       |
-       v
-Generate a Structured Analysis
-       |
-       v
-Generate a Draft Report
-       |
-       v
-Apply Publication Policy
-       |
-       v
-Store the Result
+Synthetic authorized Source + Article + ArticleRevision
+                         |
+                         v
+            Normalize and fingerprint fixture
+                         |
+                         v
+              Evaluate DuplicateCandidate
+                         |
+                         v
+               Append DuplicateDecision
+                         |
+                         v
+              Create/reuse EventMatchCase
+                         |
+                         v
+              Evaluate EventMatchCandidate
+                         |
+                         v
+                Append EventMatchDecision
+                         |
+       +-----------------+----------------------+
+       |                 |                      |
+       v                 v                      v
+  MATCH outcome     AMBIGUOUS /             NEW_EVENT_CANDIDATE
+       |            REVIEW_REQUIRED               |
+       v                 |                        v
+Activate exact       Preserve unresolved     Preserve proposal;
+ArticleEventLink     state; no review action  no Event creation
+       |                 |                      |
+       +-----------------+----------------------+
+                         |
+                         v
+           Attach typed Evidence + provenance
+                         |
+                         v
+          Persist structured Analysis fixture
+                         |
+                         v
+       Append Report version + provenance links
+                         |
+                         v
+             Append PublicationDecision
+                         |
+                         v
+             Stop: no external side effect
 ```
-
-The first slice may use a deliberately small set of sources and a limited taxonomy.
-
-It does not need to support every event type or delivery channel.
 
 ### Deliverables
 
-- Shared LLM Execution Layer.
-- Initial provider integration.
-- Structured output contracts.
-- LLM usage records.
-- A working vertical slice.
-- End-to-end test and trace.
+- Fixture-driven first vertical slice with deterministic test data.
+- Repository contract, transaction, idempotency and failure-injection tests for the enabled slice.
+- Exact provenance trace from ArticleRevision through duplicate/event decisions, Evidence, Analysis, Report and PublicationDecision.
+- Tests proving that ambiguous/new-event outcomes cannot bypass decision or event-creation gates.
+- Provider-independent LLM contracts and a deterministic fake adapter, if required by the approved test scope.
+- Explicit tests proving no live-source network access, external provider egress, publication, or delivery occurs.
 
 ### Exit Criteria
 
-- The workflow completes using controlled dependencies.
-- LLM outputs are schema-validated.
-- LLM calls respect budgets and deadlines.
-- Usage is recorded where provider data is available.
-- The workflow can be rerun without uncontrolled duplication.
-- The generated report retains source and evidence references.
-- Event association is applied only through a case-level MATCH decision; a test stub may simulate candidate retrieval but must not bypass the decision and link invariants.
-- Publication decisions cannot be bypassed.
-- External LLM calls use only content whose operation-specific rights assessment permits that provider and processing purpose.
-- The vertical slice uses explicit source fixtures or approved test sources; it must not assume a production source license or content-retention permission.
+- The slice completes with controlled local dependencies and no network access.
+- Duplicate decisions are pairwise, immutable and non-transitive.
+- Event association is applied only through the effective case-level MATCH decision.
+- NEW_EVENT_CANDIDATE does not create an Event; AMBIGUOUS/REVIEW_REQUIRED does not trigger a material review action.
+- Evidence, Analysis, Report and all provenance links persist atomically with exact fixture references.
+- The workflow is idempotent and preserves prior candidate/decision history.
+- PublicationDecision cannot be bypassed, and no publication or delivery side effect is attempted.
+- No live-source content, real provider call, or production permission is inferred from synthetic fixtures.
 
 ---
 
