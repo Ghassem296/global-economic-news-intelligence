@@ -778,7 +778,7 @@ No unresolved item above may be filled with an arbitrary default. A capability r
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.2  
+**Version:** 2.3  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
