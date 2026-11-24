@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SEC-008  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -91,7 +91,11 @@ The following permission identifiers are a proposed logical vocabulary for imple
 | Append evidence | `evidence.append` | Exact claim/analysis context and evidence origin | Exact rights/retention permission for any stored quotation or extract |
 | Append analysis | `analysis.append` | Exact input revision/evidence set and analysis purpose | If a provider is used: current privacy authorization, provider/model/region/purpose and content-rights decisions |
 | Generate a report version | `report.generate` | Exact report aggregate, version and input snapshot | Provenance completeness; generation does not authorize publication |
+| Create a review task | `review.task.create` | Exact review family, typed subject and assignment scope | Approved trigger/priority policy and authorization to expose the subject to the assigned reviewer |
+| Read/attach review context | `review.context.attach` | Exact ReviewRecord and typed context references | Independently authorize access to every referenced object; no source content is copied |
 | Perform review actions | `review.action` | Exact assigned ReviewRecord, action and subject | Assignment, separation-of-duties and approved review policy; outcome does not bypass the authoritative decision command |
+| Start or transition a processing run | `processing.run.start` / `processing.run.transition` | Exact run, workflow, step and aggregate version | Approved workflow state machine, idempotency and expected-version checks |
+| Recover or resume a processing run | `processing.run.recover` | Exact run/step, lease/fencing generation and recovery reason | Explicit operational grant, current lease ownership/fencing and append-only recovery audit; cannot rewrite completed business history |
 | Append publication decision | `publication.decide` | Exact immutable report version and publication scope | Approved publication policy and authorized decision actor |
 | Authorize distribution | `distribution.authorize` | Exact report version, recipient, destination, channel and content-scope fingerprint | Complete current source-rights assessment set and approved DistributionAuthorizationPolicy |
 | Dispatch delivery | `delivery.dispatch` | Exact effective distribution decision and authorized content manifest | Revalidate decision, rights dependencies, expiry, payload fingerprint and idempotency immediately before side effect |
@@ -151,7 +155,7 @@ Logs, traces, prompts, exception messages and evaluation artifacts are privacy-r
 ---
 
 **Document ID:** GENI-SEC-008  
-**Version:** 1.4  
+**Version:** 1.6  
 **Status:** Draft — Under Architecture Review  
 
 
