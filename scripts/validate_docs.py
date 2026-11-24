@@ -99,7 +99,7 @@ def validate_readiness_document_version_references() -> None:
         "Document 15": document_version(ROOT / "docs/15-first-slice-implementation-contracts.md"),
     }
     for label, expected in expected_versions.items():
-        found = re.findall(rf"{re.escape(label)} v([0-9]+\\.[0-9]+)", readiness)
+        found = re.findall(rf"{re.escape(label)} v([0-9]+\.[0-9]+)", readiness)
         if not found:
             fail(f"{label} version reference is missing from Document 16")
         mismatches = sorted(set(version for version in found if version != expected))
