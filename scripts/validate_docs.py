@@ -127,7 +127,7 @@ def validate_first_slice_duplicate_contract_alignment() -> None:
             "### 5.9 DuplicateDecision",
             "`duplicate_candidates`",
             "`duplicate_decisions`",
-            "Canonical ArticleRevision-pair uniqueness for duplicate candidates.",
+            "Canonical ArticleRevision-pair uniqueness for duplicate candidates",
             "DuplicateDecision supersession-chain consistency and at most one effective decision per candidate.",
         ),
         "security": ("`article.duplicate.evaluate`", "`article.duplicate.decide`"),
