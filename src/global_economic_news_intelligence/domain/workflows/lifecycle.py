@@ -69,6 +69,7 @@ class ExternalOperationStatus(StrEnum):
     PENDING = "PENDING"
     IN_PROGRESS = "IN_PROGRESS"
     SUCCEEDED = "SUCCEEDED"
+    DELIVERED = "DELIVERED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
     RECONCILIATION_REQUIRED = "RECONCILIATION_REQUIRED"
@@ -220,6 +221,7 @@ EXTERNAL_OPERATION_TRANSITIONS: Final[
     ),
     ExternalOperationStatus.FAILED: frozenset(),
     ExternalOperationStatus.SUCCEEDED: frozenset(),
+    ExternalOperationStatus.DELIVERED: frozenset(),
     ExternalOperationStatus.CANCELLED: frozenset(),
 }
 
