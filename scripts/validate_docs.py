@@ -110,6 +110,57 @@ def validate_readiness_document_version_references() -> None:
             )
 
 
+def validate_first_slice_duplicate_contract_alignment() -> None:
+    """Keep the duplicate workflow, repositories, DTOs, permissions and readiness scope aligned."""
+    documents = {
+        "component": read_text(ROOT / "docs/02-component-architecture-and-interfaces.md"),
+        "data": read_text(ROOT / "docs/03-data-model-and-storage-design.md"),
+        "security": read_text(ROOT / "docs/08-security-architecture-and-threat-model.md"),
+        "implementation": read_text(ROOT / "docs/15-first-slice-implementation-contracts.md"),
+        "readiness": read_text(ROOT / "docs/16-implementation-readiness-and-release-gates.md"),
+        "adr": read_text(ROOT / "docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md"),
+    }
+    required = {
+        "component": ("### 4.4 ArticleDeduplicator", "### 4.4.1 Article Deduplication Workflow"),
+        "data": (
+            "### 5.8 DuplicateCandidate",
+            "### 5.9 DuplicateDecision",
+            "`duplicate_candidates`",
+            "`duplicate_decisions`",
+            "Canonical ArticleRevision-pair uniqueness for duplicate candidates.",
+            "DuplicateDecision supersession-chain consistency and at most one effective decision per candidate.",
+        ),
+        "security": ("`article.duplicate.evaluate`", "`article.duplicate.decide`"),
+        "implementation": (
+            "- DuplicateCandidateRepository",
+            "- DuplicateDecisionRepository",
+            "### 4.16 DuplicateCandidateRepository",
+            "### 4.17 DuplicateDecisionRepository",
+            "### 10.16.1 AppendDuplicateCandidate",
+            "### 10.16.2 AppendDuplicateDecision",
+            "`article.duplicate.evaluate`",
+            "`article.duplicate.decide`",
+            "Pairwise duplicate decisions are not transitive",
+            "complete-link",
+        ),
+        "readiness": (
+            "Evaluate duplicate candidates and record an explicit immutable decision.",
+            "through deduplication, event matching",
+            "Document 15 v3.0",
+            "Document 08 v1.9",
+        ),
+        "adr": (
+            "The Article Deduplication Workflow must create an immutable DuplicateDecision",
+            "Pairwise decisions are not assumed to be transitive.",
+            "complete-link condition",
+        ),
+    }
+    for name, fragments in required.items():
+        missing = [fragment for fragment in fragments if fragment not in documents[name]]
+        if missing:
+            fail(f"Article-deduplication contract alignment failed in {name}: {missing}")
+
+
 def validate_adrs() -> None:
     paths = sorted(ADR_DIR.glob("GENI-ADR-*.md"))
     ids: list[str] = []
@@ -1154,6 +1205,7 @@ def main() -> None:
     validate_cross_document_contracts()
     validate_document_versions()
     validate_readiness_document_version_references()
+    validate_first_slice_duplicate_contract_alignment()
     validate_document_registry_metadata_alignment()
     validate_documentation_index_adr_authority()
     validate_adr_registry_title_alignment()
