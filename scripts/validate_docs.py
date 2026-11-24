@@ -190,6 +190,44 @@ def validate_first_slice_provenance_ownership() -> None:
         fail(f"First-slice provenance transaction gates are incomplete in Document 16: {missing}")
 
 
+def validate_vertical_slice_roadmap_alignment() -> None:
+    """Ensure the roadmap does not enable capabilities forbidden by the readiness scope guard."""
+    roadmap = read_text(ROOT / "docs/04-implementation-plan-and-roadmap.md")
+    readiness = read_text(ROOT / "docs/16-implementation-readiness-and-release-gates.md")
+    stage_start = roadmap.index("## 10. Development Stage 4 — Fixture-Driven Vertical Slice and Gated LLM Execution")
+    stage_end = roadmap.index("## 11. Development Stage 5 — News Source Management and Acquisition", stage_start)
+    stage = roadmap[stage_start:stage_end]
+    required_stage = (
+        "synthetic authorized Source",
+        "Do not collect an article from a live source",
+        "Evaluate pairwise DuplicateCandidate records",
+        "do not create a new Event",
+        "do not execute a material ReviewService action",
+        "deterministic test fixture",
+        "real provider adapter",
+        "no network access",
+        "no publication or delivery side effect is attempted",
+    )
+    missing = [item for item in required_stage if item not in stage]
+    forbidden_stage = [
+        item for item in ("Collect One Article", "Authorized Review", "Authorized Event Creation")
+        if item in stage
+    ]
+    if missing or forbidden_stage:
+        fail(
+            "Stage 4 roadmap/readiness mismatch: "
+            f"missing={missing}, forbidden={forbidden_stage}"
+        )
+    required_readiness = (
+        "persist the proposal only; do not create an Event",
+        "do not execute a material ReviewService action",
+        "deterministic fixtures; no LLM",
+    )
+    missing = [item for item in required_readiness if item not in readiness]
+    if missing:
+        fail(f"Document 16 first-slice scope guard is incomplete: {missing}")
+
+
 def validate_adrs() -> None:
     paths = sorted(ADR_DIR.glob("GENI-ADR-*.md"))
     ids: list[str] = []
@@ -1236,6 +1274,7 @@ def main() -> None:
     validate_readiness_document_version_references()
     validate_first_slice_duplicate_contract_alignment()
     validate_first_slice_provenance_ownership()
+    validate_vertical_slice_roadmap_alignment()
     validate_document_registry_metadata_alignment()
     validate_documentation_index_adr_authority()
     validate_adr_registry_title_alignment()
