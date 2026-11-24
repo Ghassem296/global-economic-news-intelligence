@@ -302,3 +302,39 @@ def test_review_metadata_actions_preserve_active_status() -> None:
         ReviewAction.ESCALATED,
     ):
         assert project_review_action(ReviewStatus.PENDING, action).status is ReviewStatus.PENDING
+
+
+def test_delivery_success_uses_delivered_terminal_state() -> None:
+    result = ExternalAttemptResult(
+        ExternalAttemptType.EXECUTE, ExternalAttemptOutcome.CONFIRMED_SUCCESS
+    )
+    assert (
+        external_operation_status_after_attempt(
+            ExternalOperationStatus.IN_PROGRESS,
+            result,
+            success_status=ExternalOperationStatus.DELIVERED,
+        )
+        is ExternalOperationStatus.DELIVERED
+    )
+
+
+def test_reconciled_delivery_success_uses_delivered_terminal_state() -> None:
+    result = ExternalAttemptResult(
+        ExternalAttemptType.RECONCILE, ExternalAttemptOutcome.RECONCILED_SUCCESS
+    )
+    assert (
+        external_operation_status_after_attempt(
+            ExternalOperationStatus.RECONCILIATION_REQUIRED,
+            result,
+            success_status=ExternalOperationStatus.DELIVERED,
+        )
+        is ExternalOperationStatus.DELIVERED
+    )
+
+
+def test_resolved_case_requires_successor_for_review_reopen() -> None:
+    with pytest.raises(TransitionError):
+        transition_case(
+            EventMatchCaseStatus.RESOLVED,
+            EventMatchCaseStatus.PENDING_REVIEW,
+        )
