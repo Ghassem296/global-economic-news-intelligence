@@ -33,7 +33,7 @@ class SafeJsonFormatter(logging.Formatter):
         }
         for field in _ALLOWED_FIELDS:
             value = getattr(record, field, None)
-            if value is not None:
+            if isinstance(value, (str, int, float, bool)):
                 payload[field] = value
         return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
