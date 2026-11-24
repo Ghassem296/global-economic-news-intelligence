@@ -106,6 +106,9 @@ docs/
         validator.validate_document_versions()
         validator.validate_document_registry_metadata_alignment()
 
+    def test_readiness_referenced_contract_versions_match_headers(self) -> None:
+        validator.validate_readiness_document_version_references()
+
     def test_executable_foundation_document_is_registry_controlled(self) -> None:
         self.assertIn(
             "docs/17-executable-foundation-and-domain-lifecycle-contracts.md",
