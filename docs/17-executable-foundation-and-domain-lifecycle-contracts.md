@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -20,13 +20,14 @@ The code is the executable expression of the lifecycle rules below. A change to 
 The initial development foundation uses:
 
 - Python 3.15 only, enforced by `pyproject.toml` (`requires-python = ">=3.15,<3.16"`), `.python-version`, and the Application CI matrix.
-- A setuptools-based pyproject package.
+- A setuptools-based pyproject package with the build backend pinned to `setuptools==84.2.1`.
+- uv 0.13.9 as the pinned project package manager, with the complete Python 3.15 dependency resolution committed in `uv.lock`.
 - No runtime third-party dependencies in the domain foundation.
 - Validated environment/log-level configuration, safe machine-classifiable errors, and allowlisted structured JSON logging.
 - pytest, Ruff, and mypy as development tools.
 - GitHub Actions for application CI.
 
-The Python 3.15-only runtime range and tools are implementation baseline choices for this foundation and are verified by the main-branch Application CI workflow. Python 3.12 and 3.13 are not supported project runtimes. These choices do not settle database, LLM provider, source acquisition, or deployment architecture. The runtime baseline should be revisited when security support windows or dependency requirements change.
+The Python 3.15-only runtime range, uv 0.13.9 package manager, and setuptools 84.2.1 build backend are implementation baseline choices for this foundation. The committed lockfile is checked and installed in Application CI using locked mode; the main-branch workflow also runs Ruff, mypy, and pytest. Python 3.12 and 3.13 are not supported project runtimes. These choices do not settle database, LLM provider, source acquisition, or deployment architecture. The runtime baseline should be revisited when security support windows or dependency requirements change.
 
 ## 3. Dependency boundaries
 
@@ -224,5 +225,7 @@ The first executable baseline includes the Python package, validated configurati
 ---
 
 **Revision Note (v1.3):** Aligns the executable foundation's runtime statement with the current Python 3.15-only policy enforced by package metadata, `.python-version`, and Application CI. No other architecture or capability approval is implied.
+
+**Revision Note (v1.4):** Adds the selected, pinned uv package manager, committed dependency lockfile, and exact setuptools build-backend version to the executable foundation baseline. No database, LLM, acquisition, publication, or deployment decision is implied.
 
 **End of Document**
