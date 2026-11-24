@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 2.3  
+**Version:** 2.4  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -46,7 +46,7 @@ The following remain absent or incomplete:
 
 - No selected physical database, driver, ORM, or migration mechanism; GENI-ADR-005 remains Proposed.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
-- Document 15 v3.0 now defines the first source and article-to-report command/query DTO tranches and a proposed command-to-permission crosswalk; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
+- Document 15 v3.1 now defines the first source and article-to-report command/query DTO tranches and a proposed command-to-permission crosswalk; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
 - No source acquisition, rights adapter, LLM execution adapter, economic analysis workflow, report generator, publication client, or delivery client.
 - No application integration, concurrency, crash-recovery, or end-to-end vertical-slice tests.
@@ -109,7 +109,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 ### 5.1 Field-level DTO and command schemas
 
 Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only.
-For every actual provider request, Document 15 v3.0 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
+For every actual provider request, Document 15 v3.1 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
 Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5, 10.15.4 and 10.16.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, duplicate-pair canonicalization and score/decision calibration, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
@@ -119,6 +119,7 @@ Complete the GENI-ADR-005 proof-of-concept and decision before selecting the pro
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
 - Atomic write sets for decision pointer and ArticleEventLink reconciliation.
+- Atomic EvidenceLocation, AnalysisInput/AnalysisEvidenceLink, and ReportEventLink/ReportEvidenceLink/ReportArticleLink/ReportAnalysisLink writes through the parent aggregate repositories; child link persistence must not commit independently.
 - Atomic review action sequencing and projection updates.
 - Durable leases, fencing, idempotency records, and recovery.
 - Backup/restore and crash-recovery tests.
@@ -225,10 +226,10 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 2.3  
+**Version:** 2.4  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.3):** Synchronized readiness references with Document 15 v3.0 and Document 08 v1.9. The implementation contract now includes pairwise article-deduplication repositories, DTOs and permissions; canonicalization, scoring/calibration and group semantics remain explicit blockers. No ADR is accepted and no production capability is enabled.
+**Revision Note (v2.4):** Updated the readiness baseline to Document 15 v3.1, which explicitly assigns evidence-location, analysis-input/evidence-link, and report-provenance-link persistence to their parent aggregate repositories and UnitOfWork boundaries. No capability or approval gate changed.
 
 **End of Document**
