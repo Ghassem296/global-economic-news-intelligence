@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -108,7 +108,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 
 ### 5.1 Field-level DTO and command schemas
 
-Document 15 §10.11–10.13 now provides field-level DTO tranches for the core article-to-report flow, source configuration/identity, and command-to-permission authorization crosswalk. Document 08 §5 provides the proposed deny-by-default role and operation matrices. Remaining work is to close the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5 and 10.13.2: exact serialization/bounds/canonicalization, remaining query schemas, analysis/report-family schemas, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
+Document 15 §10.11–10.13 now provides field-level DTO tranches for the core article-to-report flow, source configuration/identity, and command-to-permission authorization crosswalk. Section 10.14 adds separate structured-output baselines for Importance, Economic Relevance and Economic Impact assessments. Document 08 §5 provides the proposed deny-by-default role and operation matrices. Remaining work is to close the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2 and 10.14.5: exact serialization/bounds/canonicalization, remaining query and report schemas, assessment vocabularies/scales/uncertainty calibration, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
 
@@ -223,10 +223,10 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v1.6):** Updated readiness evidence to reflect the proposed deny-by-default authorization matrices in Document 08 v1.7 and the first-slice command/permission crosswalk in Document 15 v2.5. Clarified that these logical contracts do not grant runtime permissions or close approval, schema, policy-administration, or implementation gates.
+**Revision Note (v1.7):** Updated readiness evidence to include the separate core economic-assessment output baselines in Document 15 v2.6. Clarified that importance, relevance and impact schemas remain proposed and that scales, taxonomies, uncertainty calibration, grant assignments and policy administration are still gated.
 
 **End of Document**
