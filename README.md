@@ -21,7 +21,7 @@ The authoritative readiness assessment is [Document 16](docs/16-implementation-r
 
 Requirements: Python 3.12 or 3.13.
 
-~~~powershell
+```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
@@ -30,19 +30,19 @@ python -m pip install -e ".[dev]"
 
 ## Commands
 
-~~~powershell
+```powershell
 geni version
 geni readiness
 ruff check .
 mypy
 pytest
-~~~
+```
 
 Or run the CLI without installing the console script:
 
-~~~powershell
+```powershell
 python -m global_economic_news_intelligence version
-~~~
+```
 
 ## Architecture boundaries
 
@@ -115,4 +115,4 @@ global-economic-news-intelligence/
 │           ├── agent-template-implementation-specification.md
 │           └── README.md
 └── README.md
-~~~
+```
