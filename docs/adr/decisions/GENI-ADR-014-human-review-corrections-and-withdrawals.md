@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-014  
 **Title:** Human Review, Corrections, and Withdrawals  
 **Status:** Proposed  
-**Version:** 1.5  
-**Date:** 2026-11-18  
+**Version:** 1.6  
+**Date:** 2026-11-24  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved  
@@ -343,5 +343,6 @@ External legal, provider, and empirical evidence must be added during formal rev
 | 1.3 | 2026-11-18 | Proposed | Completed typed subject families, mandatory priority provenance, and evidence/context link requirements. | AI Architecture Assistant |
 | 1.4 | 2026-11-18 | Proposed | Aligned review-family scope with the six canonical typed subjects and publication correction workflows; retained Proposed status. | AI Architecture Assistant |
 | 1.5 | 2026-11-18 | Proposed | Defined REPORT_VERSION as the first-slice publication-review family and PUBLICATION_OPERATION as a separately deferred external-operation review type; aligned implementation gates and verification. | AI Architecture Assistant |
+| 1.6 | 2026-11-24 | Proposed | Clarified target first-slice review scope versus current enablement and aligned the activation gate with the ReviewRepository, ReviewContextLinkRepository, lifecycle, authorization, and integration-test blockers. | AI Architecture Assistant |
 
 **End of ADR**
