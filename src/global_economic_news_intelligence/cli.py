@@ -6,6 +6,8 @@ import argparse
 import sys
 
 from global_economic_news_intelligence import __version__
+from global_economic_news_intelligence.config import ConfigurationError, Settings
+from global_economic_news_intelligence.observability.logging import configure_logging
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -23,6 +25,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = build_parser().parse_args()
+    try:
+        settings = Settings.from_env()
+    except ConfigurationError as exc:
+        print(f"Configuration error: {exc}", file=sys.stderr)
+        return 2
+    configure_logging(settings.log_level.value)
+
     if args.command == "version":
         print(__version__)
         return 0
