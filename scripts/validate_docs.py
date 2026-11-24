@@ -129,6 +129,9 @@ def validate_first_slice_duplicate_contract_alignment() -> None:
             "`duplicate_decisions`",
             "Canonical ArticleRevision-pair uniqueness for duplicate candidates",
             "DuplicateDecision supersession-chain consistency and at most one effective decision per candidate.",
+            "`actor_reference` — authenticated service/human identity that initiated the evaluation",
+            "`authorization_reference` — immutable authorization/audit reference bound to the exact `article.duplicate.evaluate` action",
+            "immutable authorization/audit reference bound to the exact `article.duplicate.decide` action",
         ),
         "security": ("`article.duplicate.evaluate`", "`article.duplicate.decide`"),
         "implementation": (
@@ -140,13 +143,15 @@ def validate_first_slice_duplicate_contract_alignment() -> None:
             "#### 10.16.2 AppendDuplicateDecision",
             "`article.duplicate.evaluate`",
             "`article.duplicate.decide`",
+            "Immutable ALLOW reference for the exact `article.duplicate.evaluate` action",
+            "Immutable ALLOW reference for the exact `article.duplicate.decide` action",
             "Pairwise duplicate decisions are not transitive",
             "complete-link",
         ),
         "readiness": (
             "Evaluate duplicate candidates and record an explicit immutable decision.",
             "through deduplication, event matching",
-            "Document 15 v3.1",
+            "Document 15 v3.2",
             "Document 08 v1.9",
         ),
         "adr": (
