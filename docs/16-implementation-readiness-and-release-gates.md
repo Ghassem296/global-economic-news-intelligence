@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -31,7 +31,7 @@ A published file, passing documentation check, or merged change is not by itself
 
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The following evidence is present on the implementation branch and is intended to merge only after CI succeeds:
+The following executable foundation is merged into main. Its pull-request checks passed on Python 3.12 and 3.13, and the documentation-validation workflow passed. Main-branch CI is also triggered after merge:
 
 - Python package metadata and supported runtime range (Python 3.12–3.13).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
@@ -223,7 +223,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
