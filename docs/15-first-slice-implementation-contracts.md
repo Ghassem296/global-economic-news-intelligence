@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.0  
+**Version:** 2.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -452,7 +452,7 @@ Outcome-specific constraints:
 | `supersedes_decision_id` | `Optional<ID<PublicationDecision>>` | Nullable | If present, must belong to the same exact report version and be the effective predecessor. | Document 03 §11.6 |
 | `metadata` | `JSON/object` | Optional | Typed decision fields remain authoritative. | Document 03 §11.6 |
 
-**Resolved provenance contract:** Document 03 §11.6 and this DTO now use the same required `actor_type`, `actor_reference`, and `authorization_reference` fields. Values originate from authenticated command/security context; repositories persist validated references and must not infer authorization from caller-supplied role strings. The security/audit layer must be able to resolve the authorization reference to actor, action, resource, scope, policy/version, timestamp and result. A missing, invalid, stale or unverifiable reference blocks the append. **Remaining implementation blocker:** the exact effective-decision/supersession query rule and concurrent-successor algorithm must be specified deterministically; timestamps or storage order must not be used as an implicit tie-breaker.
+**Resolved provenance contract:** Document 03 §11.6 and this DTO now use the same required `actor_type`, `actor_reference`, and `authorization_reference` fields. Values originate from authenticated command/security context; repositories persist validated references and must not infer authorization from caller-supplied role strings. The security/audit layer must be able to resolve the authorization reference to actor, action, resource, scope, policy/version, timestamp and result. A missing, invalid, stale or unverifiable reference blocks the append. **Effective-successor contract:** the first decision has no predecessor; each successor names the current effective decision for the exact report version. Only one direct successor may reference a predecessor. Append validates expected aggregate version and predecessor, then persists the decision and effective pointer atomically. A stale/concurrent append returns CONFLICT. See GENI-FOUNDATION-017 §8.
 
 ### 10.6 CreateProcessingRun
 
@@ -465,7 +465,7 @@ Outcome-specific constraints:
 | `idempotency_key` | `string` | Required | Unique within canonical operation/target scope; exact format/length TBD. | Documents 03 §13.1, §13.2.2 |
 | `input_fingerprint` | `Fingerprint` | Required | Same key + same fingerprint reuses logical operation; changed fingerprint conflicts. | Documents 03 §§13.1, 13.2.2 |
 
-The initial status, started_at behavior, heartbeat/lease initialization, retry schedule, and whether the run ID is caller- or server-assigned are not fully specified. These must be decided before implementation; do not accept caller-supplied RUNNING/COMPLETED states without an explicit lifecycle contract.
+Server assigns the run ID and initial PENDING status. started_at remains null until the first valid transition to RUNNING; lease and heartbeat fields are initialized only when a worker lease is acquired. Retry scheduling is represented separately from lifecycle status. Terminal-run retry creates a successor run with parent_run_id; PARTIALLY_COMPLETED recovery resumes the same run under explicit recovery authorization. See GENI-FOUNDATION-017 §4.
 
 ### 10.7 TransitionProcessingRun
 
@@ -473,13 +473,13 @@ The initial status, started_at behavior, heartbeat/lease initialization, retry s
 |---|---|---|---|---|
 | `run_id` | `ID<ProcessingRun>` | Required | Exact durable run. | Document 03 §13.1 |
 | `expected_version` | `Version` | Required | Compare-and-swap against current aggregate version. | Document 15 §§4.13, 7 |
-| `new_status` | `ProcessingRunStatus` | Required | Must be one of the declared statuses; transition graph is not yet defined. | Document 03 §13.1 |
+| `new_status` | `ProcessingRunStatus` | Required | Must be one of the declared statuses and an allowed transition under GENI-FOUNDATION-017 §4; arbitrary status assignment is rejected. | Document 03 §13.1 |
 | `actor/worker_reference` | `ActorReference` | Required | Authenticated service/worker identity; concrete representation TBD. | Documents 15 §3.2, 03 §13.2.1 |
 | `fencing_token` | `integer` | Conditional | Required for every worker state-changing write when durable leases are enabled; must equal current token. | Document 03 §13.2.1 |
 | `occurred_at` | `Instant` | Required | Server-trusted transition time; clock authority/precision TBD. | Document 15 §4.13 |
 | `reason/error_category` | `Optional<string/enum>` | Conditional | Required when transition represents failure/cancellation or other reasoned outcome; exact categories TBD. | Document 15 §4.13 |
 
-ProcessingRun statuses declared by Document 03 are PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED. No permitted transition table, terminal-state rules, retry/reopen rules, or exact relationship between ProcessingRun and ProcessingStep statuses is defined. Therefore the DTO is not implementation-ready: the transition graph is an explicit blocker, not a license to permit every pair of statuses.
+ProcessingRun transitions, terminal states, recovery identity, and step aggregation are defined in GENI-FOUNDATION-017 §4. This DTO must invoke that policy; it must not accept a caller-supplied arbitrary target status.
 
 ### 10.8 RecoverableRunQuery and shared query DTOs
 
@@ -587,10 +587,10 @@ These records must not be collapsed into generic status fields or hidden inside 
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.0  
+**Version:** 2.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.0):** Replaced the unresolved lifecycle-question inventory with the normative lifecycle contracts in GENI-FOUNDATION-017. Added explicit remaining gates for field-level DTO schemas, persistence proofs, authorization, and supporting attempt/history records. The state-machine rules are executable and unit-tested; no ADR approval or external processing authorization is implied.
+**Revision Note (v2.1):** Replaced the unresolved lifecycle-question inventory with the normative lifecycle contracts in GENI-FOUNDATION-017. Added explicit remaining gates for field-level DTO schemas, persistence proofs, authorization, and supporting attempt/history records. The state-machine rules are executable and unit-tested; no ADR approval or external processing authorization is implied.
 
 **End of Document**
