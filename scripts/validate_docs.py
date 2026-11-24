@@ -581,7 +581,7 @@ def validate_publication_decision_provenance_contract() -> None:
 
     foundation = read_text(ROOT / "docs/17-executable-foundation-and-domain-lifecycle-contracts.md")
     required_successor_rules = (
-        "The first decision has no predecessor",
+        "The first decision has supersedes_decision_id = null",
         "Only one direct successor may reference a given predecessor",
         "validates the expected version and predecessor",
         "stale or concurrent successor receives CONFLICT",
