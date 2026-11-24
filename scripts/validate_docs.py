@@ -28,6 +28,7 @@ CONTROLLED_DOCUMENTS = [
     "docs/13-deployment-operations-and-observability.md",
     "docs/14-data-protection-and-privacy-specification.md",
     "docs/15-first-slice-implementation-contracts.md",
+    "docs/16-implementation-readiness-and-release-gates.md",
     "docs/README.md",
     "docs/adr/README.md",
 ]

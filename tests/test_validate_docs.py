@@ -93,11 +93,16 @@ docs/
     def test_publication_decision_provenance_is_aligned_and_gated(self) -> None:
         validator.validate_publication_decision_provenance_contract()
 
-    def test_publication_decision_provenance_is_aligned_and_gated(self) -> None:
-        validator.validate_publication_decision_provenance_contract()
-
     def test_first_slice_contract_document_is_registry_controlled(self) -> None:
         self.assertIn("docs/15-first-slice-implementation-contracts.md", validator.CONTROLLED_DOCUMENTS)
+        validator.validate_document_versions()
+        validator.validate_document_registry_metadata_alignment()
+
+    def test_implementation_readiness_document_is_registry_controlled(self) -> None:
+        self.assertIn(
+            "docs/16-implementation-readiness-and-release-gates.md",
+            validator.CONTROLLED_DOCUMENTS,
+        )
         validator.validate_document_versions()
         validator.validate_document_registry_metadata_alignment()
 
