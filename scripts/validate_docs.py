@@ -245,6 +245,55 @@ def validate_vertical_slice_roadmap_alignment() -> None:
     if missing:
         fail(f"Stage 8 provider-backed analysis gates are incomplete: {missing}")
 
+def validate_persistence_poc_alignment() -> None:
+    """Keep the ADR-005 PoC protocol and all persistence selection gates synchronized."""
+    adr = read_text(ADR_DIR / "GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md")
+    protocol = read_text(ROOT / "docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md")
+    contracts = read_text(ROOT / "docs/15-first-slice-implementation-contracts.md")
+    readiness = read_text(ROOT / "docs/16-implementation-readiness-and-release-gates.md")
+    data_model = read_text(ROOT / "docs/03-data-model-and-storage-design.md")
+    roadmap = read_text(ROOT / "docs/04-implementation-plan-and-roadmap.md")
+    adr_registry = read_text(ROOT / "docs/adr/README.md")
+
+    if "**Status:** Proposed" not in adr or "**Decision Status:** Proposed" not in adr:
+        fail("GENI-ADR-005 must remain Proposed until explicit Project Owner acceptance")
+    if "**Status:** Proposed" not in read_text(ADR_DIR / "GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md"):
+        fail("The persistence PoC must not implicitly accept GENI-ADR-016")
+
+    required_protocol = (
+        "GENI-ADR-005-POC-001",
+        "predeclared thresholds",
+        "same logical repository contracts",
+        "POC-01",
+        "POC-18",
+        "stale fencing token cannot commit",
+        "backup",
+        "restore",
+        "raw benchmark output",
+        "Not run",
+        "no engine selected",
+    )
+    missing = [item for item in required_protocol if item.casefold() not in protocol.casefold()]
+    if missing:
+        fail(f"Persistence PoC protocol is incomplete: {missing}")
+
+    for name, document in (
+        ("GENI-ADR-005", adr),
+        ("Document 15", contracts),
+        ("Document 16", readiness),
+        ("Document 03", data_model),
+        ("Document 04", roadmap),
+        ("ADR registry", adr_registry),
+    ):
+        if "GENI-ADR-005-POC-001" not in document and name != "ADR registry":
+            fail(f"{name} does not reference the persistence PoC protocol")
+
+    if "formally Accepted" not in contracts or "formally Accepted" not in readiness:
+        fail("Persistence implementation gates must require formal ADR-005 acceptance")
+    if "No engine is selected" not in protocol and "no engine selected" not in protocol.casefold():
+        fail("The PoC protocol must explicitly state that it selects no database")
+
+
 
 def validate_adrs() -> None:
     paths = sorted(ADR_DIR.glob("GENI-ADR-*.md"))
@@ -1293,6 +1342,7 @@ def main() -> None:
     validate_first_slice_duplicate_contract_alignment()
     validate_first_slice_provenance_ownership()
     validate_vertical_slice_roadmap_alignment()
+    validate_persistence_poc_alignment()
     validate_document_registry_metadata_alignment()
     validate_documentation_index_adr_authority()
     validate_adr_registry_title_alignment()
