@@ -1,11 +1,11 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.41
+**Version:** 1.42
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
-**Last Updated:** 2026-11-19
+**Last Updated:** 2026-11-24
 
 ---
 
@@ -1646,6 +1646,9 @@ Fields:
 - `explanation`
 - `caveats` nullable
 - `policy_version`
+- `actor_type`
+- `actor_reference`
+- `authorization_reference`
 - `decided_at`
 - `supersedes_decision_id` nullable
 - `metadata`
@@ -1663,7 +1666,7 @@ The system must preserve which policy version produced the decision. The current
 
 The effective-decision rule must yield at most one effective PublicationDecision for the exact immutable report version. The predecessor-selection and concurrent-append guard are not yet specified as a complete algorithm; timestamps or storage order must not be used as an implicit tie-breaker. A successor decision must preserve the exact predecessor and be committed under a concurrency check that prevents two competing effective successors.
 
-The current field catalogue does not include decision-actor identity or an authorization/provenance reference, although GENI-IMPL-015 §4.12 requires actor/provenance on the append command/result. This is a documented cross-document contract mismatch. The required provenance fields and their authoritative source must be reconciled before implementation; neither requirement may be silently dropped or represented by unvalidated free text.
+Every decision must preserve `actor_type` and `actor_reference` from the authenticated command context, plus an immutable `authorization_reference` resolvable by the security/audit layer. These are typed provenance references, not caller-supplied role strings or free text. The actor may be a human reviewer or an authorized application/policy service. A missing or unverifiable authorization reference must fail closed; the security layer records actor/service, action, resource, authorization context, timestamp and result. This follows the common command metadata contract in GENI-IMPL-015 §3.2 and the audit requirements in Document 08 §5.
 
 A `PUBLISH` or `PUBLISH_WITH_CAVEATS` decision authorizes a publication operation only while it remains effective and all other authorization, rights, and target requirements are satisfied. It does not prove that publication occurred.
 

@@ -544,6 +544,48 @@ def validate_review_activation_gates() -> None:
         fail("First-slice implementation contracts do not explicitly block unapproved review actions")
 
 
+def validate_publication_decision_provenance_contract() -> None:
+    """Keep PublicationDecision actor/authorization provenance aligned across the model and DTO."""
+    data_model = read_text(ROOT / "docs/03-data-model-and-storage-design.md")
+    implementation = read_text(ROOT / "docs/15-first-slice-implementation-contracts.md")
+    security = read_text(ROOT / "docs/08-security-architecture-and-threat-model.md")
+
+    publication = data_model.split("### 11.6 PublicationDecision", 1)[1].split("### 11.7", 1)[0]
+    for field in ("actor_type", "actor_reference", "authorization_reference"):
+        if f"- `{field}`" not in publication:
+            fail(f"PublicationDecision data model is missing required provenance field: {field}")
+        if f"| `{field}` |" not in implementation:
+            fail(f"AppendPublicationDecision DTO is missing required provenance field: {field}")
+
+    type_definitions = (
+        "`ActorType` is a security-owned actor category",
+        "`ActorReference` is an opaque reference to an authenticated human or service identity",
+        "`AuthorizationReference` is an immutable opaque reference to the authorization/audit context",
+    )
+    if any(definition not in implementation for definition in type_definitions):
+        fail("Actor and authorization reference types must be defined in the shared contract notation")
+    dto = implementation.split("### 10.5 AppendPublicationDecision", 1)[1].split("### 10.6", 1)[0]
+    for field in ("actor_type", "actor_reference", "authorization_reference"):
+        row = next((line for line in dto.splitlines() if f"| `{field}` |" in line), "")
+        if not row or "| Required |" not in row:
+            fail(f"AppendPublicationDecision.{field} must be explicitly required")
+
+    if "missing or unverifiable authorization reference must fail closed" not in data_model:
+        fail("PublicationDecision must fail closed when authorization provenance is missing or unverifiable")
+    if "missing, invalid, stale or unverifiable reference blocks the append" not in implementation:
+        fail("AppendPublicationDecision must reject missing or unverifiable authorization references")
+    if "Security audit records are append-only or tamper-evident and identify actor/service, action, resource, authorization context, timestamp, and result." not in security:
+        fail("PublicationDecision provenance is not aligned with the security audit contract")
+
+    unresolved = (
+        "predecessor-selection and concurrent-append guard are not yet specified",
+        "Remaining implementation blocker:",
+        "effective-successor algorithm",
+    )
+    if any(term not in data_model + implementation for term in unresolved):
+        fail("PublicationDecision effective-successor algorithm must remain an explicit implementation blocker")
+
+
 def validate_first_slice_review_set() -> None:
     """Keep all six review families and first-slice activation explicit across key documents."""
     documents = [
@@ -1097,13 +1139,14 @@ def main() -> None:
     validate_review_contract_alignment()
     validate_first_slice_review_set()
     validate_review_activation_gates()
+    validate_publication_decision_provenance_contract()
     validate_repository_inventory_alignment()
     validate_event_identity_operation_contract()
     validate_distribution_authorization_contract()
     print(
         "Documentation validation passed: cross-document taxonomy/source-origin/workflow contracts, controlled versions and document ID/version/status registry parity, ADR title alignment and single-source inventory, duplicate versions, "
         "all 20 ADR files/statuses/paths/history/footer metadata, ADR registry versions and priorities, "
-        "root and index README tree parity, local Markdown file paths and heading anchors, Markdown table structure, Review family vocabulary and gated first-slice activation, repository inventory/crosswalk parity, "
+        "root and index README tree parity, local Markdown file paths and heading anchors, Markdown table structure, Review family vocabulary and gated first-slice activation, PublicationDecision actor/authorization provenance parity, repository inventory/crosswalk parity, "
         "event identity-operation history/recovery, multi-source distribution authorization, privacy specification coverage, validator source integrity, registry snapshot provenance, and exact roadmap/document inventory parity."
     )
 

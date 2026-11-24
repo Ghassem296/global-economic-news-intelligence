@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -57,6 +57,9 @@ Fixture-driven contract and integration tests may be developed without represent
 - `Version` is an opaque, monotonically comparable aggregate version used for optimistic concurrency.
 - `Instant` is a timezone-aware timestamp.
 - `Fingerprint` is a deterministic digest of the canonical logical inputs and relevant policy/version identifiers.
+- `ActorType` is a security-owned actor category; its allowed vocabulary is defined by the approved identity contract and is not selected by this document.
+- `ActorReference` is an opaque reference to an authenticated human or service identity resolvable by the security layer.
+- `AuthorizationReference` is an immutable opaque reference to the authorization/audit context for a state-changing action, resolvable by the security/audit layer.
 - `Optional<T>` means the value may be absent; it is not interchangeable with an unknown, denied, or empty value.
 - `Page<T>` contains an ordered item list and an optional continuation cursor.
 - `Result<T>` is either a successful value or a typed failure; a failure must never be represented as a successful empty result.
@@ -442,11 +445,14 @@ Outcome-specific constraints:
 | `explanation` | `string` | Required | Rationale for the decision; exact constraints TBD. | Document 03 §11.6 |
 | `caveats` | `Optional<list/string>` | Nullable | Required in meaningful form for PUBLISH_WITH_CAVEATS; exact representation TBD. | Document 03 §11.6 |
 | `policy_version` | `Version` | Required | Exact publication policy version. | Document 03 §11.6 |
+| `actor_type` | `ActorType` | Required | Authenticated actor category from trusted command context; allowed values are governed by the security identity contract, not caller-supplied role text. | Documents 03 §11.6, 08 §5 |
+| `actor_reference` | `ActorReference` | Required | Authenticated human or service identity; must resolve through the security layer. | Documents 03 §11.6, 08 §5 |
+| `authorization_reference` | `AuthorizationReference` | Required | Immutable authorization/audit reference for the exact decision action; must be resolvable and valid at decision time. | Documents 03 §11.6, 08 §5 |
 | `decided_at` | `Instant` | Required | Immutable decision time. | Document 03 §11.6 |
 | `supersedes_decision_id` | `Optional<ID<PublicationDecision>>` | Nullable | If present, must belong to the same exact report version and be the effective predecessor. | Document 03 §11.6 |
 | `metadata` | `JSON/object` | Optional | Typed decision fields remain authoritative. | Document 03 §11.6 |
 
-**Contract mismatch requiring resolution:** GENI-IMPL-015 §4.12 requires actor/provenance on the command/result, while the PublicationDecision field list in Document 03 §11.6 does not define actor identity or authorization reference. Do not silently add a persistent field or drop the provenance requirement. Reconcile Document 03 and the publication/security ADRs before implementing this DTO. Likewise, the exact effective-decision/supersession query rule must be specified as a deterministic rule, not inferred from timestamps.
+**Resolved provenance contract:** Document 03 §11.6 and this DTO now use the same required `actor_type`, `actor_reference`, and `authorization_reference` fields. Values originate from authenticated command/security context; repositories persist validated references and must not infer authorization from caller-supplied role strings. The security/audit layer must be able to resolve the authorization reference to actor, action, resource, scope, policy/version, timestamp and result. A missing, invalid, stale or unverifiable reference blocks the append. **Remaining implementation blocker:** the exact effective-decision/supersession query rule and concurrent-successor algorithm must be specified deterministically; timestamps or storage order must not be used as an implicit tie-breaker.
 
 ### 10.6 CreateProcessingRun
 
@@ -497,7 +503,7 @@ This inventory distinguishes defined state vocabulary from defined transition be
 | EventMatchCandidate | Illustrative GENERATED, EVALUATED, INELIGIBLE | Candidate evaluation is immutable after EVALUATED/INELIGIBLE and re-evaluation creates a successor record; complete enum, creation/evaluation boundary, and interrupted-generation semantics remain open. | **Partially specified** |
 | EventMatchDecision | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED | Immutable append/supersession; one effective decision pointer; outcome-specific invariants specified. These are outcomes, not mutable lifecycle states. | **Outcome contract specified; authorization/policy remains gated** |
 | ArticleEventLink | is_active true/false | Active only while authorizing MATCH decision is effective; successor decision deactivates/activates atomically. | **Derived transition contract specified** |
-| PublicationDecision | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT | Immutable decisions and successor lineage are defined; unique effective-decision algorithm, concurrent-successor guard, and actor/authorization provenance schema remain unresolved. | **Partially specified; provenance mismatch open** |
+| PublicationDecision | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT | Immutable decisions, actor/authorization provenance fields, and successor lineage are defined; unique effective-decision algorithm and concurrent-successor guard remain unresolved. | **Partially specified; effective-successor algorithm blocks implementation** |
 | ProcessingRun | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED | Vocabulary only. Initial-state, allowed transitions, terminal/reopen rules, PARTIALLY_COMPLETED semantics, step aggregation, recovery identity, and transition-history requirements are not defined. | **Blocked** |
 | ProcessingStep | A status field exists; no closed vocabulary, initial state, transition graph, terminal rules, or run-aggregation semantics are defined. | Lease/fencing rules exist; they govern ownership and stale-writer rejection, not the missing status lifecycle. | **Blocked** |
 | PublicationRecord | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED | Expected operation lifecycle and reconciliation semantics defined in Document 03 §11.8. | **Specified at logical level; target adapter contract remains gated** |
@@ -518,7 +524,7 @@ The following must be completed from approved policy and reconciled across Docum
 3. ProcessingRun/ProcessingStep aggregation and recovery contract: how step outcomes determine run status; whether recovery resumes the same run or creates a successor; how completed outputs are reused; how cancellation/deadline races are resolved; and whether a separate append-only transition history is required.
 4. EventMatchCase lifecycle contract, including initial state, allowed transitions, decision/review-to-status mapping, close/cancel guards, terminal states, reopening by successor decision, and atomic coordination with effective-decision and ArticleEventLink changes.
 5. EventMatchCandidate complete status vocabulary and creation/evaluation contract, including eligibility guards, interrupted generation, idempotent evaluation, and immutable successor-record behavior for changed inputs/policy.
-6. PublicationDecision effective-successor algorithm, concurrent-append guard, and actor/authorization provenance reconciliation.
+6. PublicationDecision effective-successor algorithm and concurrent-append guard.
 7. PublicationAttempt outcome-to-PublicationRecord transition matrix, including confirmed failure, unknown outcome, reconciliation-not-applied, retry eligibility, and terminal/cancelled behavior.
 8. ReviewRecord/ReviewAction transition and projection matrix aligned with ADR-014, including action validity, action-to-status projection, terminal/cancellation behavior, concurrency, and reopened task-segment identity.
 9. ReviewContextLink uniqueness, deterministic ordering, reviewer-access checks, and completion-race behavior.
@@ -616,7 +622,7 @@ No implementation may invent missing transitions or treat timestamps as substitu
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 

@@ -90,6 +90,12 @@ docs/
     def test_first_slice_review_activation_is_gated_consistently(self) -> None:
         validator.validate_review_activation_gates()
 
+    def test_publication_decision_provenance_is_aligned_and_gated(self) -> None:
+        validator.validate_publication_decision_provenance_contract()
+
+    def test_publication_decision_provenance_is_aligned_and_gated(self) -> None:
+        validator.validate_publication_decision_provenance_contract()
+
     def test_first_slice_contract_document_is_registry_controlled(self) -> None:
         self.assertIn("docs/15-first-slice-implementation-contracts.md", validator.CONTROLLED_DOCUMENTS)
         validator.validate_document_versions()
