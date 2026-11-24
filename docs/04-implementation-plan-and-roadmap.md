@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.32
+**Version:** 1.33
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-24
 **Project:** Global Economic News Intelligence  
@@ -157,6 +157,8 @@ The selected Python version, database access library, migration mechanism, async
 
 ### 4.2 Database Considerations
 
+The comparative selection protocol is GENI-ADR-005-POC-001 (`docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`). It requires an approved workload profile, thresholds declared before results are examined, mandatory correctness/failure tests, reproducible raw evidence, and a formal ADR-005 decision. The protocol is a test plan, not a test result; neither SQLite nor PostgreSQL is selected by this roadmap.
+
 If SQLite is selected for the initial deployment, its implementation must explicitly address:
 
 - Foreign key enforcement.
@@ -170,7 +172,7 @@ If SQLite is selected for the initial deployment, its implementation must explic
 
 The system must not assume that SQLite provides the same concurrency characteristics as a client-server database.
 
-PostgreSQL may be selected for the initial deployment if the GENI-ADR-005 proof-of-concept demonstrates that SQLite does not meet the workload or operational constraints; it may also be considered for a later deployment. Migration must not be assumed to be automatic merely because repositories are used.
+PostgreSQL may be selected for the initial deployment if the comparative GENI-ADR-005 proof-of-concept demonstrates that it meets the approved workload and operational constraints better than SQLite, or that SQLite fails a mandatory gate; either candidate may be selected only through formal ADR-005 acceptance. Migration must not be assumed to be automatic merely because repositories are used.
 
 ### 4.3 Development Tools
 
@@ -1848,5 +1850,5 @@ Exit criteria require executable tests and operational evidence, not document pr
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.32
+**Version:** 1.33
 **Status:** Draft — Under Architecture Review
