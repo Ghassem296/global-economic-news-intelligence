@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Final, TypeVar
+from typing import Final
 
 
 class TransitionError(ValueError):
@@ -220,10 +220,7 @@ EXTERNAL_OPERATION_TRANSITIONS: Final[
     ExternalOperationStatus.CANCELLED: frozenset(),
 }
 
-TStatus = TypeVar("TStatus", bound=StrEnum)
-
-
-def _transition(
+def _transition[TStatus: StrEnum](
     current: TStatus,
     target: TStatus,
     transitions: dict[TStatus, frozenset[TStatus]],
@@ -251,12 +248,18 @@ def transition_step(
     dependencies_satisfied: bool = False,
 ) -> ProcessingStepStatus:
     _transition(current, target, STEP_TRANSITIONS, context="ProcessingStep")
-    if current is ProcessingStepStatus.FAILED and target is ProcessingStepStatus.READY:
-        if not retry_authorized:
-            raise TransitionError("A failed step requires an explicit retry authorization.")
-    if current is ProcessingStepStatus.BLOCKED and target is ProcessingStepStatus.READY:
-        if not dependencies_satisfied:
-            raise TransitionError("A blocked step requires all dependencies to be satisfied.")
+    if (
+        current is ProcessingStepStatus.FAILED
+        and target is ProcessingStepStatus.READY
+        and not retry_authorized
+    ):
+        raise TransitionError("A failed step requires an explicit retry authorization.")
+    if (
+        current is ProcessingStepStatus.BLOCKED
+        and target is ProcessingStepStatus.READY
+        and not dependencies_satisfied
+    ):
+        raise TransitionError("A blocked step requires all dependencies to be satisfied.")
     return target
 
 
@@ -303,11 +306,14 @@ def transition_case(
     successor_decision_authorized: bool = False,
 ) -> EventMatchCaseStatus:
     _transition(current, target, CASE_TRANSITIONS, context="EventMatchCase")
-    if current is EventMatchCaseStatus.RESOLVED and target is EventMatchCaseStatus.OPEN:
-        if not successor_decision_authorized:
-            raise TransitionError(
-                "Reopening a resolved case requires an authorized successor decision."
-            )
+    if (
+        current is EventMatchCaseStatus.RESOLVED
+        and target is EventMatchCaseStatus.OPEN
+        and not successor_decision_authorized
+    ):
+        raise TransitionError(
+            "Reopening a resolved case requires an authorized successor decision."
+        )
     return target
 
 
