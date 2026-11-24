@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -60,10 +60,10 @@ The following work can proceed without pretending that unresolved architecture h
 
 1. Documentation maintenance, cross-document reconciliation, and automated documentation checks.
 2. Review of ADR alternatives and recording of explicit decisions by the Project Owner.
-3. Drafting and review of missing transition tables, DTO schemas, authorization matrices, and transaction proofs.
+3. Completion and review of remaining field-level DTO schemas, authorization matrices, persistence/transaction proofs, attempt/history records, and integration contracts. The logical lifecycle tables for the implemented pure policies are already specified in GENI-FOUNDATION-017; their durable persistence and transactional enforcement remain outstanding.
 4. Technology proof-of-concepts that are isolated, disposable, and clearly labelled as experiments; they must not become hidden production commitments.
 5. Fixture design and human-reviewed evaluation-dataset preparation, provided fixtures are synthetic or their use is authorized.
-6. Application project scaffolding only after the language/runtime/package decisions and the minimum architecture boundary are explicitly approved.
+6. The existing Python 3.12–3.13 package and CLI are a bounded development foundation recorded in GENI-FOUNDATION-017, not an approval of the production application stack. Additional application capabilities that depend on unresolved technology or architecture decisions may proceed only after the relevant ADR and specification gates are satisfied.
 
 The following must remain disabled until their gates pass: production source collection, full-text retention, external LLM transmission of source content, automatic event creation/matching, material review actions, publication execution, delivery dispatch, and processing of personal data beyond an approved test context.
 
@@ -223,7 +223,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
