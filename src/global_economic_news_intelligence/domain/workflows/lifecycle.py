@@ -240,7 +240,17 @@ def _transition[TStatus: StrEnum](
 def transition_run(
     current: ProcessingRunStatus,
     target: ProcessingRunStatus,
+    *,
+    external_outcomes_reconciled: bool | None = None,
 ) -> ProcessingRunStatus:
+    if (
+        target is ProcessingRunStatus.CANCELLED
+        and current in {ProcessingRunStatus.RUNNING, ProcessingRunStatus.PARTIALLY_COMPLETED}
+        and external_outcomes_reconciled is not True
+    ):
+        raise TransitionError(
+            "Cancelling an active run requires proof that external outcomes are reconciled."
+        )
     return _transition(current, target, RUN_TRANSITIONS, context="ProcessingRun")
 
 
@@ -250,7 +260,16 @@ def transition_step(
     *,
     retry_authorized: bool = False,
     dependencies_satisfied: bool = False,
+    external_outcome_reconciled: bool | None = None,
 ) -> ProcessingStepStatus:
+    if (
+        current is ProcessingStepStatus.RUNNING
+        and target is ProcessingStepStatus.CANCELLED
+        and external_outcome_reconciled is not True
+    ):
+        raise TransitionError(
+            "Cancelling a running step requires proof that its external outcome is reconciled."
+        )
     _transition(current, target, STEP_TRANSITIONS, context="ProcessingStep")
     if (
         current is ProcessingStepStatus.FAILED
