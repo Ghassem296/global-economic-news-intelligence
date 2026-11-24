@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.2  
+**Version:** 3.3  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -351,8 +351,8 @@ Before implementation of these contracts:
 ### Gate B — Technology proof and implementation selection
 
 Before persistence adapters are selected:
-- GENI-ADR-005 is accepted after the documented workload/backup/concurrency proof-of-concept.
-- Database engine, driver, migration tool, async strategy, transaction isolation/locking and supported runtime versions are recorded.
+- GENI-ADR-005 is formally Accepted only after the GENI-ADR-005-POC-001 protocol is executed with an approved workload profile, predeclared thresholds, all mandatory correctness/failure gates, reproducible raw evidence, and a reviewed engine recommendation. The protocol itself is not evidence of a passing PoC.
+- Database engine, exact version, driver, migration tool, async strategy, transaction isolation/locking, connection lifecycle, deployment topology, and backup/restore procedure are recorded in the Accepted ADR and synchronized implementation baseline.
 - GENI-ADR-016 is accepted before durable lease, fencing, idempotency and recovery behavior is treated as approved implementation policy.
 
 ### Gate C — Executable verification
@@ -1131,6 +1131,6 @@ The following remain open and block production implementation of the correspondi
 
 **Revision Note (v2.8):** Tightened provider-backed analysis provenance by requiring each provider request to create an LLMUsageRecord linked to the exact Analysis/ProcessingRun and to preserve privacy, purpose, data-category, region, transfer and content-rights decision references. Added the explicit privacy-processing authorization permission to the PersistAnalysis crosswalk. No provider egress is authorized by this contract.
 
-**Revision Note (v3.2):** Added explicit actor and immutable authorization-reference fields to DuplicateCandidate and DuplicateDecision persistence contracts, and bound each reference to the exact deduplication permission and operation scope. This aligns the data model, security catalogue and first-slice DTOs; no decision policy or ADR status changed.
+**Revision Note (v3.3):** Gate B now requires the reproducible GENI-ADR-005-POC-001 evidence protocol, predeclared workload thresholds, complete correctness gates, and an accepted engine decision before persistence adapter selection. Added explicit actor and immutable authorization-reference fields to DuplicateCandidate and DuplicateDecision persistence contracts, and bound each reference to the exact deduplication permission and operation scope. This aligns the data model, security catalogue and first-slice DTOs; no decision policy or ADR status changed.
 
 **End of Document**
