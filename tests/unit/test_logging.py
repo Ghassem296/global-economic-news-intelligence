@@ -20,12 +20,14 @@ def test_json_formatter_uses_allowlisted_fields_only() -> None:
     record.event_name = "workflow_step_completed"
     record.correlation_id = "corr-1"
     record.secret = "must-not-appear"
+    record.component = {"payload": "must-not-be-serialized"}
     rendered = SafeJsonFormatter().format(record)
     payload = json.loads(rendered)
     assert payload["event_name"] == "workflow_step_completed"
     assert payload["correlation_id"] == "corr-1"
     assert "secret" not in rendered
     assert "free-form message" not in rendered
+    assert "must-not-be-serialized" not in rendered
 
 
 def test_configure_logging_rejects_unknown_level() -> None:
