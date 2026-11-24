@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.5  
+**Version:** 2.6  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -887,6 +887,78 @@ The following remain deliberately outside this first-slice command crosswalk and
 
 The crosswalk does not complete Gate A. The final role-to-permission assignments, grant administration, identity/session lifecycle, policy decision point, break-glass rules, separation-of-duties exceptions, and exact permission schema remain open in Document 08 §9. Review workflow remains blocked by GENI-ADR-014 and its unresolved state/assignment contracts. Source collection and content operations remain blocked by applicable rights/retention approvals and GENI-ADR-013. Provider-backed analysis remains blocked by GENI-ADR-006/017/020 and the exact rights/privacy decisions. No ADR is accepted by this revision.
 
+
+### 10.14 Structured output contracts for the three core economic assessments (tranche v1.6)
+
+This section defines a language-neutral logical field baseline for the three separate event assessments already required by Documents 02 and 03. It does not approve assessment methodology, scoring scales, calibration, or production execution. GENI-ADR-019 and the Project Owner approval gates remain applicable.
+
+All three outputs are stored as distinct immutable `Analysis` records with separate `analysis_type`, `schema_version`, `analysis_policy_version`, input fingerprint, exact evidence/input references, and uncertainty representation. They must never be collapsed into one composite score or stored as interchangeable Event fields.
+
+#### 10.14.1 ImportanceAssessmentOutput
+
+Applies only to `IMPORTANCE_ASSESSMENT`.
+
+| Field | Logical type | Requiredness | Contract |
+|---|---|---|---|
+| `dimensions_considered` | `List<ImportanceDimensionResult>` | Required; may be explicitly empty only when no dimension could be assessed | Records the dimensions actually considered. Dimension vocabulary and per-dimension scales remain methodology-governed. |
+| `qualitative_rank` | `string/null` | Conditional | Required when the approved methodology produces a qualitative rank; value must belong to that versioned scale. |
+| `numeric_score` | `number/null` | Conditional | Null unless the approved methodology defines a numeric scale, range, direction and interpretation. Never invent a default score. |
+| `rationale` | `string` | Required | Explains the importance result and material factors; cannot merely repeat a rank. |
+| `evidence_references` | `List<ID<Evidence>>` | Required | Exact supporting and, where applicable, contradicting evidence; empty means no evidence was available, not successful support. |
+| `uncertainty` | `UncertaintyRepresentation` | Required | Must identify material uncertainty and limitations; exact schema and calibration remain governed by Document 03 §9.4 and GENI-ADR-008. |
+
+Importance measures significance/attention priority. It must not encode economic relevance, effect magnitude, market direction, or forecast probability. The numeric score and qualitative rank are not both mandatory; the selected representation must be consistent with the exact methodology version.
+
+#### 10.14.2 EconomicRelevanceAssessmentOutput
+
+Applies only to `ECONOMIC_RELEVANCE_ASSESSMENT`.
+
+| Field | Logical type | Requiredness | Contract |
+|---|---|---|---|
+| `relevance_classification` | `enum` | Required | Proposed values: `DIRECT`, `INDIRECT`, `CONTEXTUAL`, `NO_MATERIAL_LINK_ESTABLISHED`, `UNKNOWN`. Unknown must not be converted to no relevance. |
+| `transmission_pathways` | `List<TransmissionPathway>` | Required; empty is valid only with an explicit no-pathway/unknown rationale | Identifies direct, indirect or contextual pathways and explains the economic connection. |
+| `affected_entities` | `List<TypedEntityReference>` | Required; may be empty when unknown | Identifies supported countries, institutions, sectors, industries, commodities, markets or other affected entities. |
+| `affected_geographies` | `List<GeographicReference>` | Required; may be empty when unknown | Records supported geographic scope; do not infer a geography from an unrelated entity label. |
+| `rationale` | `string` | Required | Explains why the classification and pathways are supported or remain unknown. |
+| `supporting_evidence_references` | `List<ID<Evidence>>` | Required | Exact evidence supporting the relevance assessment. |
+| `uncertainty` | `UncertaintyRepresentation` | Required | Preserves missing information, competing interpretations and limitations. |
+
+The classification is descriptive, not a numeric magnitude. The result must not estimate the size, direction or certainty of economic consequences and must not reuse an ImportanceAssessment result as a substitute.
+
+#### 10.14.3 EconomicImpactAssessmentOutput
+
+Applies only to `ECONOMIC_IMPACT_ASSESSMENT`.
+
+| Field | Logical type | Requiredness | Contract |
+|---|---|---|---|
+| `channel_impacts` | `List<ChannelImpact>` | Required; empty only when no impact channel is established or assessable | One record per distinct transmission channel; never merge unlike channels into a single aggregate. |
+| `channel` | `string/typed channel reference` | Required within each ChannelImpact | Uses a versioned channel vocabulary; final vocabulary remains methodology-governed. |
+| `affected_entities_or_geographies` | `List<TypedEntityOrGeographyReference>` | Required within each ChannelImpact; may be empty only when unknown | Identifies the supported affected entity/geography for this channel. |
+| `transmission_mechanism` | `string` | Required within each ChannelImpact | Describes how the event may or did produce the effect; causal attribution must not be implied without evidence. |
+| `direction` | `enum` | Required within each ChannelImpact | `POSITIVE`, `NEGATIVE`, `MIXED`, `NEUTRAL`, or `UNCLEAR`; direction is not magnitude. |
+| `magnitude_or_range` | `number/range/null` | Conditional | Only when defensible and supported; preserve units, basis and range semantics. Unsupported magnitude is null, never zero or fabricated precision. |
+| `time_horizon` | `typed period/null` | Conditional | Required when the assessment can defensibly identify a horizon; exact period encoding remains open. |
+| `duration` | `typed period/null` | Conditional | Distinct from time_horizon; null when unknown or not established. |
+| `evidence_status` | `enum` | Required within each ChannelImpact | `OBSERVED_ECONOMIC_EFFECT`, `SOURCE_REPORTED_EFFECT`, `INFERRED_POTENTIAL_EFFECT`, or `UNKNOWN`. |
+| `evidence_references` | `List<ID<Evidence>>` | Required within each ChannelImpact | Exact evidence supporting or qualifying this channel-level effect. |
+| `uncertainty` | `UncertaintyRepresentation` | Required within each ChannelImpact | Captures uncertainty, limitations, counterevidence and missing data for this channel. |
+
+A channel-level impact may describe realized or potential consequences. `OBSERVED_ECONOMIC_EFFECT` requires an identified economic/market observation; `SOURCE_REPORTED_EFFECT` is not independently verified merely because it is reported; `INFERRED_POTENTIAL_EFFECT` is an analytical inference; `UNKNOWN` means insufficient information. Market reaction is a separate assessment/evidence category and does not prove economic causality.
+
+#### 10.14.4 Shared assessment invariants
+
+- `IMPORTANCE_ASSESSMENT`, `ECONOMIC_RELEVANCE_ASSESSMENT`, and `ECONOMIC_IMPACT_ASSESSMENT` are separate immutable Analysis records and separate structured-output schemas.
+- Each output is validated against its exact `schema_version`; methodology changes increment `analysis_policy_version` independently of schema, model and prompt versions.
+- Every material conclusion must be traceable to exact evidence/input references and an explicit uncertainty representation. Missing evidence is not represented as a successful supported conclusion.
+- The Analysis `confidence` field remains distinct from qualitative rank, numeric importance score, relevance classification, impact direction/magnitude and forecast probability.
+- Forecast probability is not part of these baseline schemas. It may be added only through a separately defined and calibrated forecasting contract.
+- A correction or re-analysis creates a successor immutable Analysis version; it never overwrites a completed result.
+- An LLM may propose structured fields only. Application validation, rights/privacy authorization and the approved methodology govern acceptance and persistence.
+
+#### 10.14.5 Explicitly unresolved schema details
+
+The following details remain open and block a production schema or methodology release: complete importance-dimension vocabulary and scales; transmission-pathway and channel taxonomies; canonical typed entity/geography reference forms; numeric precision, units and range representation; period/time-horizon encoding; uncertainty object structure and calibration; treatment of conflicting evidence; minimum evidence sufficiency rules; and version migration/compatibility rules. These must be closed through the relevant controlled specification and GENI-ADR-008/019 approval process. No arbitrary defaults are introduced by this tranche.
+
 ## 11. Related documents
 
 - Document 02 — Component Architecture and Interface Contracts.
@@ -904,10 +976,10 @@ The crosswalk does not complete Gate A. The final role-to-permission assignments
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.5  
+**Version:** 2.6  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.5):** Made immutable authorization provenance mandatory for every state-changing command and added a command/query-to-permission crosswalk for the first slice. Mapped source, article, event, evidence, analysis, report, review and processing-run operations to deny-by-default permission identifiers while preserving separate rights/privacy gates and explicit ADR/implementation blockers. This does not grant roles, authorize source collection, approve any ADR, or complete Gate A.
+**Revision Note (v2.6):** Added separate language-neutral structured-output baselines for Event Importance, Economic Relevance and Economic Impact assessments, grounded in Documents 02 and 03. Preserved distinct semantics, evidence/uncertainty provenance and methodology/schema versioning; left scales, vocabularies, calibration and ADR-008/019 approvals explicitly unresolved. No assessment workflow or production processing is enabled.
 
 **End of Document**
