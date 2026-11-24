@@ -1,0 +1,237 @@
+from __future__ import annotations
+
+import pytest
+
+from global_economic_news_intelligence.domain.workflows.lifecycle import (
+    EventMatchCandidateStatus,
+    EventMatchCaseStatus,
+    EventMatchOutcome,
+    ExternalAttemptOutcome,
+    ExternalAttemptResult,
+    ExternalAttemptType,
+    ExternalOperationStatus,
+    ProcessingRunStatus,
+    ProcessingStepStatus,
+    PublicationDecisionOutcome,
+    ReviewAction,
+    ReviewStatus,
+    TransitionError,
+    aggregate_run_status,
+    case_status_for_decision,
+    external_operation_status_after_attempt,
+    project_review_action,
+    transition_candidate,
+    transition_case,
+    transition_run,
+    transition_step,
+    validate_decision_successor,
+)
+
+
+@pytest.mark.parametrize(
+    ("current", "target"),
+    [
+        (ProcessingRunStatus.PENDING, ProcessingRunStatus.RUNNING),
+        (ProcessingRunStatus.PENDING, ProcessingRunStatus.CANCELLED),
+        (ProcessingRunStatus.RUNNING, ProcessingRunStatus.COMPLETED),
+        (ProcessingRunStatus.RUNNING, ProcessingRunStatus.FAILED),
+        (ProcessingRunStatus.RUNNING, ProcessingRunStatus.PARTIALLY_COMPLETED),
+        (ProcessingRunStatus.PARTIALLY_COMPLETED, ProcessingRunStatus.RUNNING),
+    ],
+)
+def test_valid_run_transitions(current: ProcessingRunStatus, target: ProcessingRunStatus) -> None:
+    assert transition_run(current, target) is target
+
+
+@pytest.mark.parametrize(
+    ("current", "target"),
+    [
+        (ProcessingRunStatus.COMPLETED, ProcessingRunStatus.RUNNING),
+        (ProcessingRunStatus.FAILED, ProcessingRunStatus.RUNNING),
+        (ProcessingRunStatus.CANCELLED, ProcessingRunStatus.RUNNING),
+        (ProcessingRunStatus.PENDING, ProcessingRunStatus.COMPLETED),
+    ],
+)
+def test_invalid_run_transitions_are_rejected(
+    current: ProcessingRunStatus, target: ProcessingRunStatus
+) -> None:
+    with pytest.raises(TransitionError):
+        transition_run(current, target)
+
+
+def test_failed_step_retry_requires_explicit_authorization() -> None:
+    with pytest.raises(TransitionError):
+        transition_step(ProcessingStepStatus.FAILED, ProcessingStepStatus.READY)
+    assert (
+        transition_step(
+            ProcessingStepStatus.FAILED,
+            ProcessingStepStatus.READY,
+            retry_authorized=True,
+        )
+        is ProcessingStepStatus.READY
+    )
+
+
+def test_blocked_step_requires_satisfied_dependencies() -> None:
+    with pytest.raises(TransitionError):
+        transition_step(ProcessingStepStatus.BLOCKED, ProcessingStepStatus.READY)
+    assert (
+        transition_step(
+            ProcessingStepStatus.BLOCKED,
+            ProcessingStepStatus.READY,
+            dependencies_satisfied=True,
+        )
+        is ProcessingStepStatus.READY
+    )
+
+
+@pytest.mark.parametrize(
+    ("statuses", "expected"),
+    [
+        ((), ProcessingRunStatus.PENDING),
+        ((ProcessingStepStatus.SUCCEEDED,), ProcessingRunStatus.COMPLETED),
+        ((ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.SKIPPED), ProcessingRunStatus.COMPLETED),
+        ((ProcessingStepStatus.RUNNING, ProcessingStepStatus.SUCCEEDED), ProcessingRunStatus.RUNNING),
+        ((ProcessingStepStatus.FAILED,), ProcessingRunStatus.FAILED),
+        ((ProcessingStepStatus.BLOCKED,), ProcessingRunStatus.FAILED),
+        ((ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.FAILED), ProcessingRunStatus.PARTIALLY_COMPLETED),
+        ((ProcessingStepStatus.CANCELLED,), ProcessingRunStatus.CANCELLED),
+        ((ProcessingStepStatus.SUCCEEDED, ProcessingStepStatus.CANCELLED), ProcessingRunStatus.PARTIALLY_COMPLETED),
+    ],
+)
+def test_run_status_aggregation(
+    statuses: tuple[ProcessingStepStatus, ...], expected: ProcessingRunStatus
+) -> None:
+    assert aggregate_run_status(statuses) is expected
+
+
+def test_case_decision_mapping() -> None:
+    assert case_status_for_decision(EventMatchOutcome.MATCH) is EventMatchCaseStatus.RESOLVED
+    assert case_status_for_decision(EventMatchOutcome.NO_MATCH) is EventMatchCaseStatus.RESOLVED
+    assert case_status_for_decision(EventMatchOutcome.REVIEW_REQUIRED) is EventMatchCaseStatus.PENDING_REVIEW
+    assert case_status_for_decision(EventMatchOutcome.AMBIGUOUS) is EventMatchCaseStatus.OPEN
+    assert case_status_for_decision(EventMatchOutcome.NEW_EVENT_CANDIDATE) is EventMatchCaseStatus.OPEN
+
+
+def test_resolved_case_reopen_requires_successor_decision() -> None:
+    with pytest.raises(TransitionError):
+        transition_case(EventMatchCaseStatus.RESOLVED, EventMatchCaseStatus.OPEN)
+    assert (
+        transition_case(
+            EventMatchCaseStatus.RESOLVED,
+            EventMatchCaseStatus.OPEN,
+            successor_decision_authorized=True,
+        )
+        is EventMatchCaseStatus.OPEN
+    )
+
+
+def test_candidate_evaluation_is_immutable_after_terminal_evaluation() -> None:
+    assert (
+        transition_candidate(
+            EventMatchCandidateStatus.GENERATED, EventMatchCandidateStatus.EVALUATED
+        )
+        is EventMatchCandidateStatus.EVALUATED
+    )
+    with pytest.raises(TransitionError):
+        transition_candidate(
+            EventMatchCandidateStatus.EVALUATED, EventMatchCandidateStatus.GENERATED
+        )
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expected"),
+    [
+        (ExternalAttemptOutcome.CONFIRMED_SUCCESS, ExternalOperationStatus.SUCCEEDED),
+        (ExternalAttemptOutcome.CONFIRMED_FAILURE, ExternalOperationStatus.FAILED),
+        (
+            ExternalAttemptOutcome.OUTCOME_UNKNOWN,
+            ExternalOperationStatus.RECONCILIATION_REQUIRED,
+        ),
+    ],
+)
+def test_execute_attempt_mapping(
+    outcome: ExternalAttemptOutcome, expected: ExternalOperationStatus
+) -> None:
+    result = ExternalAttemptResult(ExternalAttemptType.EXECUTE, outcome)
+    assert (
+        external_operation_status_after_attempt(ExternalOperationStatus.IN_PROGRESS, result)
+        is expected
+    )
+
+
+def test_unknown_external_outcome_must_be_reconciled_before_retry() -> None:
+    with pytest.raises(TransitionError):
+        external_operation_status_after_attempt(
+            ExternalOperationStatus.RECONCILIATION_REQUIRED,
+            ExternalAttemptResult(ExternalAttemptType.EXECUTE, ExternalAttemptOutcome.OUTCOME_UNKNOWN),
+        )
+
+
+def test_reconciled_not_applied_requires_retry_authorization() -> None:
+    result = ExternalAttemptResult(
+        ExternalAttemptType.RECONCILE, ExternalAttemptOutcome.RECONCILED_NOT_APPLIED
+    )
+    assert (
+        external_operation_status_after_attempt(
+            ExternalOperationStatus.RECONCILIATION_REQUIRED, result
+        )
+        is ExternalOperationStatus.FAILED
+    )
+    authorized = ExternalAttemptResult(
+        ExternalAttemptType.RECONCILE,
+        ExternalAttemptOutcome.RECONCILED_NOT_APPLIED,
+        retry_authorized=True,
+    )
+    assert (
+        external_operation_status_after_attempt(
+            ExternalOperationStatus.RECONCILIATION_REQUIRED, authorized
+        )
+        is ExternalOperationStatus.PENDING
+    )
+
+
+def test_reconciliation_success_completes_operation() -> None:
+    result = ExternalAttemptResult(
+        ExternalAttemptType.RECONCILE, ExternalAttemptOutcome.RECONCILED_SUCCESS
+    )
+    assert (
+        external_operation_status_after_attempt(
+            ExternalOperationStatus.RECONCILIATION_REQUIRED, result
+        )
+        is ExternalOperationStatus.SUCCEEDED
+    )
+
+
+def test_effective_decision_history_is_linear() -> None:
+    validate_decision_successor(None, None)
+    validate_decision_successor("decision-1", "decision-1")
+    with pytest.raises(TransitionError):
+        validate_decision_successor("decision-2", "decision-1")
+
+
+def test_review_creation_and_lifecycle() -> None:
+    created = project_review_action(None, ReviewAction.CREATED)
+    assert created.status is ReviewStatus.PENDING
+    started = project_review_action(created.status, ReviewAction.STARTED)
+    assert started.status is ReviewStatus.IN_PROGRESS
+    completed = project_review_action(started.status, ReviewAction.COMPLETED)
+    assert completed.status is ReviewStatus.COMPLETED
+
+
+def test_review_reopen_creates_successor_segment() -> None:
+    reopened = project_review_action(ReviewStatus.COMPLETED, ReviewAction.REOPENED)
+    assert reopened.status is ReviewStatus.PENDING
+    assert reopened.successor_required
+
+
+def test_review_actions_cannot_reopen_nonterminal_tasks() -> None:
+    with pytest.raises(TransitionError):
+        project_review_action(ReviewStatus.IN_PROGRESS, ReviewAction.REOPENED)
+    with pytest.raises(TransitionError):
+        project_review_action(ReviewStatus.COMPLETED, ReviewAction.STARTED)
+
+
+def test_publication_outcome_enum_remains_distinct_from_external_execution() -> None:
+    assert PublicationDecisionOutcome.PUBLISH.value == "PUBLISH"
+    assert PublicationDecisionOutcome.PUBLISH_WITH_CAVEATS.value == "PUBLISH_WITH_CAVEATS"
