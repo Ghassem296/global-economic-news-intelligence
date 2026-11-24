@@ -272,6 +272,9 @@ def validate_persistence_poc_alignment() -> None:
         "raw benchmark output",
         "Not run",
         "no engine selected",
+        "Single application instance and local/early-validation deployment",
+        "SQLite is the preferred initial candidate",
+        "No numeric article volume",
     )
     missing = [item for item in required_protocol if item.casefold() not in protocol.casefold()]
     if missing:
