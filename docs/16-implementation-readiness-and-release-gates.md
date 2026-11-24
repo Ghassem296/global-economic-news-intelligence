@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 2.6  
+**Version:** 2.7  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -114,7 +114,7 @@ Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.
 
 ### 5.2 Persistence and transaction implementation
 
-Complete the GENI-ADR-005 proof-of-concept and decision before selecting the production database. Then implement:
+Complete GENI-ADR-005-POC-001 using an approved workload profile and predeclared thresholds; retain raw results, failed runs, environment/configuration, commit SHA, migration and backup/restore evidence. The protocol is a test plan, not a test result. Obtain formal ADR-005 acceptance before selecting the production database. Then implement:
 - Database adapter, migrations, repository implementations, and UnitOfWork.
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
@@ -160,7 +160,7 @@ A first-slice implementation may start only when all applicable gates below have
 | Gate | Required evidence | Pass condition |
 |---|---|---|
 | R0 — Product and architecture baseline | Scope statement, accepted foundational ADRs, reconciled architecture/data/component documents | No unresolved contradiction affecting the selected slice; deferred capabilities are explicitly disabled |
-| R1 — Technology baseline | Accepted ADR-005 and recorded language/runtime, package manager, database/driver, migration, async, transaction, and LLM adapter choices | Reproducible environment and documented rationale; database proof-of-concept passes |
+| R1 — Technology baseline | Accepted ADR-005 backed by completed GENI-ADR-005-POC-001; approved workload profile and predeclared thresholds; raw correctness, concurrency, migration, backup/restore and recovery evidence; exact language/runtime, package manager, database/version/driver, migration, async, transaction and connection-lifecycle choices | Every mandatory correctness and workload gate passes; reproducible evidence and operational feasibility are reviewed; selected engine and exact implementation choices are recorded in the Accepted ADR |
 | R2 — Contract baseline | Approved Document 15; complete DTO schemas and transition matrices for every enabled workflow | No enabled workflow depends on an unresolved state, field, authorization, or concurrency rule |
 | R3 — Security, rights, and privacy | Threat-model controls, operation-specific rights decisions, privacy authorization boundaries, secret handling | Deny/unknown/expired/revoked/scope-mismatch cases fail closed; test-source permissions are documented |
 | R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, safe errors, structured logging, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
@@ -232,6 +232,6 @@ If new evidence changes readiness, update this document and the affected source-
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.6):** Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
+**Revision Note (v2.7):** Tightened R1 and persistence blockers to require completed GENI-ADR-005-POC-001 evidence and formal ADR-005 acceptance before selecting a production database. Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
 
 **End of Document**
