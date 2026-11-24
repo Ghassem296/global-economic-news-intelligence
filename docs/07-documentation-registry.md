@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 2.4
+**Version:** 2.5
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 2.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-24 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 2.5 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-24 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.18 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -197,7 +197,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 1.4 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -412,8 +412,8 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-24  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `f70594e8d448cc54a1df85faabeab7d5016e8c37`  
-**Registry Refresh:** This audit inspected the published `main` branch at the baseline commit above. This registry revision follows that inspected commit and records the resulting document versions and paths. The refreshed snapshot includes the executable Python foundation and lifecycle contracts; first-slice source, pairwise article-deduplication, event-matching, evidence, analysis, report and publication-decision contracts; explicit aggregate ownership for evidence locations, analysis inputs/evidence links and report provenance links; deny-by-default authorization boundaries; and privacy/rights provenance gates before provider egress. Document 02 v1.54 includes duplicate repositories in the first-slice test baseline. Document 03 v1.46 and Document 15 v3.3 require exact actor/authorization provenance for duplicate evaluation and decision records. Document 04 v1.33 and Document 16 v2.8 agree that the first executable slice is fixture-driven, while provider-backed analysis is deferred to Stage 8 and remains gated by accepted ADRs and exact rights/privacy/transfer authorization. GENI-ADR-005 v1.4 is accompanied by proposed GENI-ADR-005-POC-001 v1.1, a reproducible test protocol covering workload definition, correctness/failure, concurrency, migrations, backup/restore and recovery. It is not test evidence and does not select a database; ADR-005 and ADR-016 remain Proposed. The snapshot is repository-only; it does not claim local Working Tree inspection. Publication and validator presence do not constitute formal architecture approval, implementation, legal compliance, CI success, or operational verification.
+**Baseline Commit Inspected:** `be3571f7a379cda8f26fb6e082e60489b41eaa1b`  
+**Registry Refresh:** This audit inspected the published `main` branch at the baseline commit above. This registry revision follows that inspected commit and records the resulting document versions and paths. The refreshed snapshot includes the executable Python foundation and lifecycle contracts; first-slice source, pairwise article-deduplication, event-matching, evidence, analysis, report and publication-decision contracts; explicit aggregate ownership for evidence locations, analysis inputs/evidence links and report provenance links; deny-by-default authorization boundaries; and privacy/rights provenance gates before provider egress. Document 02 v1.54 includes duplicate repositories in the first-slice test baseline. Document 03 v1.46 and Document 15 v3.3 require exact actor/authorization provenance for duplicate evaluation and decision records. Document 04 v1.34 and Document 16 v2.8 agree that the first executable slice is fixture-driven, while provider-backed analysis is deferred to Stage 8 and remains gated by accepted ADRs and exact rights/privacy/transfer authorization. GENI-ADR-005 v1.4 is accompanied by proposed GENI-ADR-005-POC-001 v1.1, a reproducible test protocol covering workload definition, correctness/failure, concurrency, migrations, backup/restore and recovery. It is not test evidence and does not select a database; ADR-005 and ADR-016 remain Proposed. The snapshot is repository-only; it does not claim local Working Tree inspection. Publication and validator presence do not constitute formal architecture approval, implementation, legal compliance, CI success, or operational verification.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
