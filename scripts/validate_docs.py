@@ -553,8 +553,21 @@ def validate_publication_decision_provenance_contract() -> None:
     for field in ("actor_type", "actor_reference", "authorization_reference"):
         if f"- `{field}`" not in data_model:
             fail(f"PublicationDecision data model is missing required provenance field: {field}")
-        if f"`{field}`" not in implementation:
+        if f"| `{field}` |" not in implementation:
             fail(f"AppendPublicationDecision DTO is missing required provenance field: {field}")
+
+    type_definitions = (
+        "`ActorType` is a security-owned actor category",
+        "`ActorReference` is an opaque reference to an authenticated human or service identity",
+        "`AuthorizationReference` is an immutable opaque reference to the authorization/audit context",
+    )
+    if any(definition not in implementation for definition in type_definitions):
+        fail("Actor and authorization reference types must be defined in the shared contract notation")
+    dto = implementation.split("### 10.5 AppendPublicationDecision", 1)[1].split("### 10.6", 1)[0]
+    for field in ("actor_type", "actor_reference", "authorization_reference"):
+        row = next((line for line in dto.splitlines() if f"| `{field}` |" in line), "")
+        if not row or "| Required |" not in row:
+            fail(f"AppendPublicationDecision.{field} must be explicitly required")
 
     if "missing or unverifiable authorization reference must fail closed" not in data_model:
         fail("PublicationDecision must fail closed when authorization provenance is missing or unverifiable")
