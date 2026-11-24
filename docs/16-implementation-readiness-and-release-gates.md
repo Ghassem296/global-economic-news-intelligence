@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.0  
+**Version:** 1.2  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -27,20 +27,32 @@ A published file, passing documentation check, or merged change is not by itself
 
 ## 2. Assessment result
 
-**Overall status: NOT READY for implementation of the complete first vertical slice.**
+**Overall status: FOUNDATION IMPLEMENTED; NOT READY for the complete first vertical slice or production operation.**
 
-The repository is a documentation-led architecture baseline. It is not yet an executable GENI application.
+The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The following distinctions are important:
+The following evidence is present on the implementation branch and is intended to merge only after CI succeeds:
 
-- Documentation validation infrastructure exists: `.github/workflows/docs-validation.yml`, `scripts/validate_docs.py`, and `tests/test_validate_docs.py` are present.
-- The existing CI validates documentation inventory/metadata and ADR inventory. It is not application CI and does not prove application behavior.
-- No application package, runtime dependency manifest, persistence adapter, executable product workflow, or application test suite is present in the repository snapshot reviewed.
-- The technology table in Document 04 is explicitly a candidate list. It does not constitute a selected stack.
-- The 20 ADRs are published as proposals; none is Accepted in the registry snapshot.
-- Document 15 deliberately leaves several lifecycle and DTO contracts open. Its explicit blockers must not be silently completed by implementers.
+- Python package metadata and supported runtime range (Python 3.12–3.13).
+- Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
+- A CLI that reports package version and disabled capability boundaries.
+- Unit tests for transition guards, aggregation, successor-decision linearity, review projection, and external-outcome reconciliation.
+- Application CI for Python 3.12 and 3.13, running Ruff, mypy, and pytest.
+- Existing documentation CI and registry validation remain separate and are preserved.
 
-Therefore, the project is ready for controlled architecture/contract closure and documentation-only validation work. It is not ready for the first-slice application implementation or production processing.
+The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
+
+The following remain absent or incomplete:
+
+- No selected physical database, driver, ORM, or migration mechanism; GENI-ADR-005 remains Proposed.
+- No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
+- Field-level DTO schemas and authorization matrices remain incomplete.
+- Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
+- No source acquisition, rights adapter, LLM execution adapter, economic analysis workflow, report generator, publication client, or delivery client.
+- No application integration, concurrency, crash-recovery, or end-to-end vertical-slice tests.
+- All 20 ADRs remain Proposed in the current registry snapshot.
+
+Therefore, the repository is ready for continued foundation and domain implementation. It is not yet ready to claim a complete first-slice implementation or to process production content.
 
 ## 3. What may proceed now
 
@@ -90,71 +102,44 @@ These decisions are required before enabling the corresponding capability:
 
 An ADR may be deferred only when its capability is excluded and the implementation boundary enforces that exclusion. A deferred ADR must not be treated as implicitly accepted.
 
-## 5. Blocking contract closure
+## 5. Remaining implementation blockers
 
-Document 15 §10.9–10.10 is the authoritative inventory of unresolved first-slice lifecycle contracts. The following are implementation blockers, not optional polish:
+The logical lifecycle contracts for the first-slice state machines are now specified and implemented as pure policies in GENI-FOUNDATION-017. The blockers below concern the persistence, authorization, integration, and operational enforcement of those rules.
 
-### 5.1 Processing execution
+### 5.1 Field-level DTO and command schemas
 
-Before ProcessingRun or ProcessingStep lifecycle code is implemented, approve:
+Complete versioned schemas for the first-slice commands and queries, including exact types, nullability, bounds, canonicalization, server-owned fields, actor/authorization references, idempotency scope, expected aggregate version, and typed errors. Document 15 §10.10.1 identifies the initial DTO inventory.
 
-- Initial states and complete allowed-transition matrices.
-- Terminal, cancellation, retry, and partial-completion semantics.
-- Closed ProcessingStep status vocabulary.
-- Deterministic step-to-run aggregation rules.
-- Recovery identity: resume the same run or create a linked successor.
-- Completed-step output reuse and non-repeatable-step behavior.
-- Cancellation/deadline races and external-side-effect reconciliation.
-- Recoverable-run eligibility and deterministic query ordering.
-- Append-only transition history and projection-rebuild requirements, if required by the chosen model.
+### 5.2 Persistence and transaction implementation
 
-Lease ownership and fencing do not substitute for processing state transitions.
+Complete the GENI-ADR-005 proof-of-concept and decision before selecting the production database. Then implement:
+- Database adapter, migrations, repository implementations, and UnitOfWork.
+- Optimistic concurrency and unique constraints for idempotency and linear decision successors.
+- ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
+- Atomic write sets for decision pointer and ArticleEventLink reconciliation.
+- Atomic review action sequencing and projection updates.
+- Durable leases, fencing, idempotency records, and recovery.
+- Backup/restore and crash-recovery tests.
 
-### 5.2 Event matching
+### 5.3 Security, source rights, and privacy
 
-Before EventMatchCase or candidate lifecycle code is implemented, approve:
+Implement and test fail-closed authorization at each operation boundary. GENI-ADR-013 must govern real source-content access/retention/transmission; GENI-ADR-020 and Document 14 govern personal-data processing and provider/region authorization. Unknown, expired, revoked, or mismatched authorization must deny the operation.
 
-- Server-controlled initial case state and idempotent creation behavior.
-- Complete case transition matrix and guards.
-- Mapping from each EventMatchDecision outcome to case state.
-- Review interaction, close/cancel behavior, and reopening semantics.
-- Atomic write set for case status, effective decision, supersession, and ArticleEventLink changes.
-- Closed candidate status vocabulary and interrupted-generation behavior.
-- Candidate evaluation idempotency, fingerprint handling, and supersession-chain rules.
+### 5.4 LLM and analysis execution
 
-Candidate status or similarity scores must never substitute for the authoritative case-level decision.
+Complete the bounded provider-independent execution contract, structured output validation, budgets, usage tracking, model/prompt/schema provenance, timeout classification, and retry behavior under ADRs 006, 007, and 017. Model output remains a proposal and cannot directly mutate authoritative state.
 
-### 5.3 Publication
+### 5.5 Review, publication, and delivery
 
-Before publication decision or operation workflows are implemented, approve:
+Lifecycle mechanics are specified, but material review actions, publication policy, and external operations remain disabled until ADR-004/014, reviewer authorization, publication target contracts, distribution authorization, and rights/privacy gates are satisfied. External unknown outcomes must be reconciled before retry.
 
-- Deterministic effective-decision selection for an exact immutable Report version.
-- Concurrent successor prevention and predecessor validation.
-- Complete actor/authorization provenance and field ownership.
-- Decision-to-review/workflow mapping and caveat representation/enforcement.
-- PublicationAttempt outcome-to-PublicationRecord transition matrix.
-- Confirmed-failure retry policy, reconciliation-not-applied behavior, late results, and cancellation guards.
-- Reconciliation requirements before another side-effecting attempt after an unknown outcome.
+### 5.6 End-to-end verification
 
-A PublicationDecision is not evidence that an external publication succeeded.
-
-### 5.4 Review and delivery
-
-Before ReviewService material actions or delivery dispatch are enabled, approve:
-
-- ReviewRecord initial state and initial action.
-- Complete ReviewAction validity and action-to-projection mapping.
-- Terminal/cancellation rules, reopen-segment identity, ordering, concurrency, and authorization matrix.
-- ReviewContextLink uniqueness, ordering, access control, and completion-race behavior.
-- DeliveryRecord initial state and transition matrix.
-- DeliveryAttempt outcome vocabulary and mapping.
-- Dispatch-time authorization revalidation, retry, cancellation, and unknown-outcome reconciliation.
-
-Document 02 explicitly limits the initial review target to ARTICLE_DEDUPLICATION, EVENT_MATCHING, and REPORT_VERSION; that target scope does not enable any material ReviewService action until the above requirements and GENI-ADR-014 are approved and tested.
+Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevision through deduplication, event matching, evidence, analysis, Report version, and PublicationDecision. Verify exact provenance, idempotency, concurrency, rollback, recovery, and absence of unauthorized external effects.
 
 ## 6. Cross-document consistency rules
 
-The following rules apply across Documents 01–15 and all ADRs:
+The following rules apply across Documents 01–17 and all ADRs:
 
 1. **Technology candidates are not selections.** Document 04 §4.1 lists candidates. Python, uv, Pydantic, LiteLLM, SQLite/PostgreSQL, SQLAlchemy, Alembic, pytest, Ruff, and GitHub Actions must not be described as an approved application stack until the relevant decision is recorded.
 2. **Language-neutral contracts remain language-neutral until approval.** Document 15's `ID<T>`, `Version`, `Instant`, `Fingerprint`, and DTO notation must not be silently translated into a concrete representation before the runtime/serialization decision.
@@ -175,22 +160,21 @@ A first-slice implementation may start only when all applicable gates below have
 | R1 — Technology baseline | Accepted ADR-005 and recorded language/runtime, package manager, database/driver, migration, async, transaction, and LLM adapter choices | Reproducible environment and documented rationale; database proof-of-concept passes |
 | R2 — Contract baseline | Approved Document 15; complete DTO schemas and transition matrices for every enabled workflow | No enabled workflow depends on an unresolved state, field, authorization, or concurrency rule |
 | R3 — Security, rights, and privacy | Threat-model controls, operation-specific rights decisions, privacy authorization boundaries, secret handling | Deny/unknown/expired/revoked/scope-mismatch cases fail closed; test-source permissions are documented |
-| R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, logging, errors, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
+| R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, safe errors, structured logging, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
 | R5 — Domain and persistence verification | Contract tests, schema constraints, transaction tests, concurrency/idempotency/failure-injection tests | Required invariants are demonstrated, not merely documented |
 | R6 — Vertical-slice verification | End-to-end fixture run and trace preserving provenance from ArticleRevision to Report and PublicationDecision | Reproducible run; no unauthorized side effect; all quality gates and budgets enforced |
 | R7 — Operational release | Backup/restore, recovery, observability, incident and rollback procedures, deployment security | Operational acceptance criteria in Documents 13 and 04 are demonstrated |
 
 Passing an earlier gate does not imply that a later gate has passed. A gate may be passed for a limited capability while other capabilities remain disabled.
 
-## 8. CI and repository baseline clarification
+## 8. CI and repository automation
 
-The current repository has a documentation-only automation baseline:
+The repository now has two independent CI workflows:
 
-- `.github/workflows/docs-validation.yml` runs on pushes to `main`, pull requests targeting `main`, and manual dispatch.
-- It uses Python 3.12 to run `python -m unittest discover -s tests -v`.
-- It runs `python scripts/validate_docs.py` to validate controlled document versions and the ADR inventory.
+- Documentation validation: .github/workflows/docs-validation.yml runs documentation validator unit tests and checks controlled document versions and ADR inventory.
+- Application CI: .github/workflows/ci.yml installs the package and development tools on Python 3.12 and 3.13, then runs Ruff, mypy, and pytest.
 
-This is useful and must be preserved. It does **not** currently establish application CI, package installation, static typing, linting, migration validation, database integration tests, or end-to-end product behavior. Those checks belong in the application CI baseline after the application foundation is created.
+Passing application CI proves package quality checks and unit tests for the implemented foundation only. It does not prove database transactions, migrations, concurrency, provider contracts, source rights, LLM quality, or end-to-end product behavior. Those require separate integration and release evidence.
 
 ## 9. First-slice scope guard
 
@@ -233,12 +217,13 @@ If new evidence changes readiness, update this document and the affected source-
 - Document 13 — Deployment, Operations, and Observability.
 - Document 14 — Data Protection and Privacy Specification.
 - Document 15 — First-Slice Implementation Contracts.
+- Document 17 — Executable Foundation and Domain Lifecycle Contracts.
 - GENI-ADR-001 through GENI-ADR-020, as applicable to the enabled capability.
 
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 1.0  
+**Version:** 1.2  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 

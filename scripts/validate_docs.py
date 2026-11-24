@@ -29,6 +29,7 @@ CONTROLLED_DOCUMENTS = [
     "docs/14-data-protection-and-privacy-specification.md",
     "docs/15-first-slice-implementation-contracts.md",
     "docs/16-implementation-readiness-and-release-gates.md",
+    "docs/17-executable-foundation-and-domain-lifecycle-contracts.md",
     "docs/README.md",
     "docs/adr/README.md",
 ]
@@ -534,9 +535,9 @@ def validate_review_activation_gates() -> None:
     required_contracts = (
         "### 4.14 ReviewRepository",
         "### 4.15 ReviewContextLinkRepository",
-        "### 10.10 Required transition tables before implementation",
-        "ReviewRecord/ReviewAction transition and projection matrix",
-        "Blocked for execution; ADR-014 and Gate A approval required",
+        "### 10.10 Remaining contract blockers",
+        "GENI-FOUNDATION-017",
+        "reviewer identity, authority",
     )
     missing = [term for term in required_contracts if term not in implementation]
     if missing:
@@ -578,13 +579,18 @@ def validate_publication_decision_provenance_contract() -> None:
     if "Security audit records are append-only or tamper-evident and identify actor/service, action, resource, authorization context, timestamp, and result." not in security:
         fail("PublicationDecision provenance is not aligned with the security audit contract")
 
-    unresolved = (
-        "predecessor-selection and concurrent-append guard are not yet specified",
-        "Remaining implementation blocker:",
-        "effective-successor algorithm",
+    foundation = read_text(ROOT / "docs/17-executable-foundation-and-domain-lifecycle-contracts.md")
+    required_successor_rules = (
+        "The first decision has supersedes_decision_id = null",
+        "Only one direct successor may reference a given predecessor",
+        "validates the expected version and predecessor",
+        "stale or concurrent successor receives CONFLICT",
     )
-    if any(term not in data_model + implementation for term in unresolved):
-        fail("PublicationDecision effective-successor algorithm must remain an explicit implementation blocker")
+    missing_rules = [term for term in required_successor_rules if term not in foundation]
+    if missing_rules:
+        fail(f"PublicationDecision successor contract is incomplete: {missing_rules}")
+    if "predecessor-selection and concurrent-append guard are not yet specified" in data_model:
+        fail("Data model still describes the PublicationDecision successor rule as unresolved")
 
 
 def validate_first_slice_review_set() -> None:

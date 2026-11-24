@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.9  
+**Version:** 2.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -452,7 +452,7 @@ Outcome-specific constraints:
 | `supersedes_decision_id` | `Optional<ID<PublicationDecision>>` | Nullable | If present, must belong to the same exact report version and be the effective predecessor. | Document 03 §11.6 |
 | `metadata` | `JSON/object` | Optional | Typed decision fields remain authoritative. | Document 03 §11.6 |
 
-**Resolved provenance contract:** Document 03 §11.6 and this DTO now use the same required `actor_type`, `actor_reference`, and `authorization_reference` fields. Values originate from authenticated command/security context; repositories persist validated references and must not infer authorization from caller-supplied role strings. The security/audit layer must be able to resolve the authorization reference to actor, action, resource, scope, policy/version, timestamp and result. A missing, invalid, stale or unverifiable reference blocks the append. **Remaining implementation blocker:** the exact effective-decision/supersession query rule and concurrent-successor algorithm must be specified deterministically; timestamps or storage order must not be used as an implicit tie-breaker.
+**Resolved provenance contract:** Document 03 §11.6 and this DTO now use the same required `actor_type`, `actor_reference`, and `authorization_reference` fields. Values originate from authenticated command/security context; repositories persist validated references and must not infer authorization from caller-supplied role strings. The security/audit layer must be able to resolve the authorization reference to actor, action, resource, scope, policy/version, timestamp and result. A missing, invalid, stale or unverifiable reference blocks the append. **Effective-successor contract:** the first decision has no predecessor; each successor names the current effective decision for the exact report version. Only one direct successor may reference a predecessor. Append validates expected aggregate version and predecessor, then persists the decision and effective pointer atomically. A stale/concurrent append returns CONFLICT. See GENI-FOUNDATION-017 §8.
 
 ### 10.6 CreateProcessingRun
 
@@ -465,7 +465,7 @@ Outcome-specific constraints:
 | `idempotency_key` | `string` | Required | Unique within canonical operation/target scope; exact format/length TBD. | Documents 03 §13.1, §13.2.2 |
 | `input_fingerprint` | `Fingerprint` | Required | Same key + same fingerprint reuses logical operation; changed fingerprint conflicts. | Documents 03 §§13.1, 13.2.2 |
 
-The initial status, started_at behavior, heartbeat/lease initialization, retry schedule, and whether the run ID is caller- or server-assigned are not fully specified. These must be decided before implementation; do not accept caller-supplied RUNNING/COMPLETED states without an explicit lifecycle contract.
+Server assigns the run ID and initial PENDING status. started_at remains null until the first valid transition to RUNNING; lease and heartbeat fields are initialized only when a worker lease is acquired. Retry scheduling is represented separately from lifecycle status. Terminal-run retry creates a successor run with parent_run_id; PARTIALLY_COMPLETED recovery resumes the same run under explicit recovery authorization. See GENI-FOUNDATION-017 §4.
 
 ### 10.7 TransitionProcessingRun
 
@@ -473,13 +473,13 @@ The initial status, started_at behavior, heartbeat/lease initialization, retry s
 |---|---|---|---|---|
 | `run_id` | `ID<ProcessingRun>` | Required | Exact durable run. | Document 03 §13.1 |
 | `expected_version` | `Version` | Required | Compare-and-swap against current aggregate version. | Document 15 §§4.13, 7 |
-| `new_status` | `ProcessingRunStatus` | Required | Must be one of the declared statuses; transition graph is not yet defined. | Document 03 §13.1 |
+| `new_status` | `ProcessingRunStatus` | Required | Must be one of the declared statuses and an allowed transition under GENI-FOUNDATION-017 §4; arbitrary status assignment is rejected. | Document 03 §13.1 |
 | `actor/worker_reference` | `ActorReference` | Required | Authenticated service/worker identity; concrete representation TBD. | Documents 15 §3.2, 03 §13.2.1 |
 | `fencing_token` | `integer` | Conditional | Required for every worker state-changing write when durable leases are enabled; must equal current token. | Document 03 §13.2.1 |
 | `occurred_at` | `Instant` | Required | Server-trusted transition time; clock authority/precision TBD. | Document 15 §4.13 |
 | `reason/error_category` | `Optional<string/enum>` | Conditional | Required when transition represents failure/cancellation or other reasoned outcome; exact categories TBD. | Document 15 §4.13 |
 
-ProcessingRun statuses declared by Document 03 are PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED. No permitted transition table, terminal-state rules, retry/reopen rules, or exact relationship between ProcessingRun and ProcessingStep statuses is defined. Therefore the DTO is not implementation-ready: the transition graph is an explicit blocker, not a license to permit every pair of statuses.
+ProcessingRun transitions, terminal states, recovery identity, and step aggregation are defined in GENI-FOUNDATION-017 §4. This DTO must invoke that policy; it must not accept a caller-supplied arbitrary target status.
 
 ### 10.8 RecoverableRunQuery and shared query DTOs
 
@@ -493,118 +493,82 @@ ProcessingRun statuses declared by Document 03 are PENDING, RUNNING, COMPLETED, 
 
 ### 10.9 Explicit state-machine inventory
 
-This inventory distinguishes defined state vocabulary from defined transition behavior. A list of statuses is not a state machine.
+The state-machine gaps identified in version 1.9 have been closed at the logical policy level by GENI-FOUNDATION-017. That document is the normative, executable lifecycle contract for the initial implementation foundation. The Python policies and unit tests implement its transition guards and projection rules.
 
-| Aggregate / concept | Defined states or outcomes | Defined transition semantics | Readiness |
-|---|---|---|---|
-| Event lifecycle | DETECTED, ENRICHING, ACTIVE, MONITORING, RESOLVED, ARCHIVED | Complete guarded transition table exists in Document 03 §10.2. | Specified at logical level; policy/version/guard DTO details still required. |
-| EventIdentityOperation | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED; identity effect: NOT_APPLIED, APPLIED, UNKNOWN | Status and effect-state transitions, terminal rules, append-only history, and reconciliation semantics are defined in Document 03 §7.5–7.5.1. | Specified at logical level; policy-specific authorization and downstream reconciliation contracts remain gated. |
-| EventMatchCase | OPEN, PENDING_REVIEW, RESOLVED, CLOSED, CANCELLED | Vocabulary only; initial status, allowed transitions, decision/review-to-status derivation, terminal states, reopening/cancellation authority, and atomic coordination with effective-decision/link updates are not specified. | **Blocked** |
-| EventMatchCandidate | Illustrative GENERATED, EVALUATED, INELIGIBLE | Candidate evaluation is immutable after EVALUATED/INELIGIBLE and re-evaluation creates a successor record; complete enum, creation/evaluation boundary, and interrupted-generation semantics remain open. | **Partially specified** |
-| EventMatchDecision | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, REVIEW_REQUIRED | Immutable append/supersession; one effective decision pointer; outcome-specific invariants specified. These are outcomes, not mutable lifecycle states. | **Outcome contract specified; authorization/policy remains gated** |
-| ArticleEventLink | is_active true/false | Active only while authorizing MATCH decision is effective; successor decision deactivates/activates atomically. | **Derived transition contract specified** |
-| PublicationDecision | PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, REJECT | Immutable decisions, actor/authorization provenance fields, and successor lineage are defined; unique effective-decision algorithm and concurrent-successor guard remain unresolved. | **Partially specified; effective-successor algorithm blocks implementation** |
-| ProcessingRun | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED, PARTIALLY_COMPLETED | Vocabulary only. Initial-state, allowed transitions, terminal/reopen rules, PARTIALLY_COMPLETED semantics, step aggregation, recovery identity, and transition-history requirements are not defined. | **Blocked** |
-| ProcessingStep | A status field exists; no closed vocabulary, initial state, transition graph, terminal rules, or run-aggregation semantics are defined. | Lease/fencing rules exist; they govern ownership and stale-writer rejection, not the missing status lifecycle. | **Blocked** |
-| PublicationRecord | PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED | Expected operation lifecycle and reconciliation semantics defined in Document 03 §11.8. | **Specified at logical level; target adapter contract remains gated** |
-| PublicationAttempt | EXECUTE/RECONCILE; CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, RECONCILED_NOT_APPLIED | Attempt outcomes are enumerated; outcome-to-PublicationRecord transition mapping, retryable/terminal behavior, and post-reconciliation state require a formal table. | **Partially specified** |
-| DeliveryRecord | PENDING, IN_PROGRESS, DELIVERED, FAILED, CANCELLED | Vocabulary and same-operation idempotency requirement exist; initial state, allowed transitions, terminal/cancellation/retry semantics, and DeliveryAttempt outcome mapping are not defined. | **Partially specified; transition contract required before delivery implementation** |
-| ExecutionLease | ACTIVE, RELEASED, EXPIRED | Exclusive acquisition, monotonic fencing, owner/token-bound renewal/release and stale-worker rejection specified in Document 03 §13.2.1. | **Specified at logical level; numeric lease policy is operational TBD** |
-| IdempotencyRecord | IN_PROGRESS, COMPLETED, FAILED, RECONCILIATION_REQUIRED | Same-fingerprint replay, different-fingerprint conflict, external reconciliation semantics specified in Document 03 §13.2.2. | **Specified at logical level; exact retry/expiry policy TBD** |
-| ReviewRecord | PENDING, IN_PROGRESS, COMPLETED, CANCELLED | Append-only ReviewAction vocabulary/history and successor workflows are defined; allowed status transitions, action-to-status projection, terminal rules, and reopened-segment identity remain unresolved. | **Blocked for execution; ADR-014 and Gate A approval required** |
-| ReviewAction | CREATED, ASSIGNED, REASSIGNED, PRIORITY_CHANGED, STARTED, NOTE_ADDED, ESCALATED, COMPLETED, CANCELLED, REOPENED | Immutable action vocabulary and per-task sequence/idempotency constraints exist; complete action validity, projection mapping, reopen-segment identity, and concurrency behavior remain unresolved. | **Blocked for lifecycle execution** |
-| ReviewContextLink | Typed immutable context reference | Subject/reference validation and no-content-copy rule exist; uniqueness, ordering, completion-race, and access-policy DTO rules remain unresolved. | **Persistence contract specified; workflow activation gated** |
-
-### 10.10 Required transition tables before implementation
-
-The following must be completed from approved policy and reconciled across Documents 01–04, 08, 09, 12, 13 and the applicable ADRs:
-
-1. ProcessingRun transition matrix, including initial state, allowed transitions, terminal states, retry/recovery path, cancellation behavior, partial-completion semantics, and ProcessingStep interaction.
-2. ProcessingStep status vocabulary and transition matrix, including initial state, retry/skip/cancel semantics, terminal states, and the distinction between step execution state and lease ownership.
-3. ProcessingRun/ProcessingStep aggregation and recovery contract: how step outcomes determine run status; whether recovery resumes the same run or creates a successor; how completed outputs are reused; how cancellation/deadline races are resolved; and whether a separate append-only transition history is required.
-4. EventMatchCase lifecycle contract, including initial state, allowed transitions, decision/review-to-status mapping, close/cancel guards, terminal states, reopening by successor decision, and atomic coordination with effective-decision and ArticleEventLink changes.
-5. EventMatchCandidate complete status vocabulary and creation/evaluation contract, including eligibility guards, interrupted generation, idempotent evaluation, and immutable successor-record behavior for changed inputs/policy.
-6. PublicationDecision effective-successor algorithm and concurrent-append guard.
-7. PublicationAttempt outcome-to-PublicationRecord transition matrix, including confirmed failure, unknown outcome, reconciliation-not-applied, retry eligibility, and terminal/cancelled behavior.
-8. ReviewRecord/ReviewAction transition and projection matrix aligned with ADR-014, including action validity, action-to-status projection, terminal/cancellation behavior, concurrency, and reopened task-segment identity.
-9. ReviewContextLink uniqueness, deterministic ordering, reviewer-access checks, and completion-race behavior.
-10. DeliveryRecord transition matrix, including retry/cancellation/unknown-outcome semantics, and DeliveryAttempt outcome vocabulary and mapping.
-11. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
-
-
-### 10.10.1 Processing execution lifecycle closure questions
-
-The following questions must be answered as one coherent contract before ProcessingRun or ProcessingStep lifecycle code is implemented. The source documents currently establish status vocabulary for ProcessingRun, but do not establish the answers below.
-
-| Decision | Required contract | Why it cannot be inferred |
+| Aggregate / concept | Closed lifecycle contract | Remaining implementation boundary |
 |---|---|---|
-| Run creation | Server-controlled initial status; caller authority over run identity; creation/idempotency behavior. | Document 03 lists statuses but does not define the initial transition or assignment owner. |
-| Run transitions | Allowed source/target pairs, guards, actor, reason requirements, terminal states, and whether a terminal run can be superseded or reopened. | Status names do not establish legal transitions or retry semantics. |
-| Partial completion | Exact meaning and entry conditions for PARTIALLY_COMPLETED; whether it is terminal or recoverable. | No step aggregation rule or partial-result policy is defined. |
-| Step lifecycle | Complete status enum, initial state, transition guards, retry/skip/cancel behavior, and terminal states. | Document 03 defines the status field but no vocabulary. |
-| Run/step aggregation | Deterministic mapping from all relevant step outcomes to the parent run status, including skipped, blocked, cancelled, retry-pending, and non-repeatable steps. | No aggregation rule exists in Documents 02/03/15. |
-| Recovery identity | Resume the existing run versus create a successor run; linkage between attempts/runs; reuse of completed step outputs. | Recovery and idempotency requirements exist, but the run identity strategy is unspecified. |
-| Cancellation and deadlines | Race behavior when cancellation/deadline occurs during a step or after an external side effect begins. | Cancellation propagation is required, but durable state precedence and reconciliation are not defined here. |
-| Transition audit | Whether a dedicated append-only run/step history is required, its atomicity, sequence, and projection-rebuild rules. | Other aggregates use explicit histories, but no ProcessingRun/ProcessingStep history contract is established. |
-| Recoverable query | Eligible statuses, lease-expiry cutoff, deterministic ordering, and consistency requirements for find_recoverable. | The query is intentionally bounded, but eligibility and ordering are TBD. |
+| ProcessingRun | States, transitions, terminal states, recovery identity, and run aggregation are defined in GENI-FOUNDATION-017 §§4.1–4.3. | Durable history, fencing, attempts, and transactional persistence. |
+| ProcessingStep | Closed status vocabulary, transitions, retry/block guards, and terminal semantics are defined in GENI-FOUNDATION-017 §5. | ProcessingStepAttempt persistence and run/step transaction implementation. |
+| EventMatchCase | Initial state, decision-to-case projection, transitions, reopening, and terminal states are defined in GENI-FOUNDATION-017 §6. | Atomic persistence with effective decision and ArticleEventLink reconciliation. |
+| EventMatchCandidate | GENERATED → EVALUATED/INELIGIBLE and immutable successor behavior are defined in GENI-FOUNDATION-017 §7. | Candidate persistence, uniqueness, and concurrent idempotency. |
+| EventMatchDecision | Immutable outcome and linear successor semantics are defined in Documents 03/15 and GENI-FOUNDATION-017 §8. | Database uniqueness, authorization, and transaction proof. |
+| PublicationDecision | Exact-report-version scope, linear effective successor, and outcome effects are defined in GENI-FOUNDATION-017 §8. | Caveat DTO, authorization, uniqueness, and persistence concurrency. |
+| PublicationRecord / PublicationAttempt | EXECUTE/RECONCILE outcome mapping and unknown-outcome behavior are defined in GENI-FOUNDATION-017 §9. | Provider-specific reconciliation and durable attempt persistence. |
+| DeliveryRecord / DeliveryAttempt | Same external-operation state model as publication, with recipient authorization revalidation, is defined in GENI-FOUNDATION-017 §9. | Destination-specific idempotency and reconciliation contract. |
+| ReviewRecord / ReviewAction | Initial action, status projection, action guards, and successor-segment reopening are defined in GENI-FOUNDATION-017 §10. | Reviewer identity/authorization and persistence sequencing. |
+| ExecutionLease / IdempotencyRecord | Ownership, fencing, and scoped replay semantics remain defined in Document 03 §13.2. | Concrete database atomicity, expiry policy, and operational tuning. |
 
-Lease state and processing state must remain separate. An expired ExecutionLease permits recovery to be considered but does not itself transition a run or step, prove that a worker stopped, or authorize a retry. Every state-changing worker write remains subject to current fencing-token validation. IdempotencyRecord protects the logical operation from duplicate effects; it does not replace the missing run/step lifecycle contract.
+A lifecycle being specified and unit-tested does not imply that its persistence adapter, authorization policy, or external capability is enabled.
 
-### 10.10.2 Event matching lifecycle closure questions
+### 10.10 Remaining contract blockers
 
-EventMatchCase and EventMatchCandidate must be specified together with EventMatchDecision and ReviewRecord. The existing documents define the decision outcomes and important immutability/association invariants, but do not close the case or candidate lifecycle.
+The lifecycle transition tables previously listed as open questions are no longer open at the logical policy level. The following work remains mandatory before dependent persistence or external workflows are enabled.
 
-| Decision | Required contract | Why it cannot be inferred |
-|---|---|---|
-| Case creation | Server-controlled initial status; authorized creator; idempotent reuse for the same ArticleRevision and development_key. | Document 03 requires stable case reuse but does not define the initial status or actor authority. |
-| Case transitions | Allowed source/target pairs, guards, terminal states, close/cancel behavior, and whether CLOSED/CANCELLED may ever be reopened. | The five listed case states are a vocabulary only. |
-| Decision-to-case mapping | Exact case-status effect of MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, and REVIEW_REQUIRED, including whether the mapping depends on event creation or review completion. | Decision outcomes are explicitly separate from case lifecycle states. |
-| Review integration | When PENDING_REVIEW begins/ends; how assignment, cancellation, completion, and a material review outcome affect case status; how a successor decision updates the case. | ADR-014 defines review as a task and successor-decision workflow, not the case-status mapping. |
-| Reopening | Whether a RESOLVED or CLOSED case can be reopened, which successor decision/action permits it, and how the previous effective decision/link remains historical. | The current case model does not define a reopening rule. |
-| Atomicity | Exact write set for case status, effective_decision_id, decision supersession, and ArticleEventLink activation/deactivation. | Atomic decision/link reconciliation is defined, but case-status participation is not fully specified. |
-| Candidate enum | Complete candidate_status values and the meaning of each value. | GENERATED/EVALUATED/INELIGIBLE are examples, not a closed enum. |
-| Candidate evaluation | Creation/evaluation boundary, eligibility guards, behavior after interrupted generation, and idempotent handling of identical fingerprints. | Candidate records are immutable after evaluation, but the pre-evaluation lifecycle is not defined. |
-| Candidate supersession | Whether every re-evaluation must reference the previous record, how a chain is selected, and how duplicate concurrent evaluations converge. | The model supports a nullable supersedes_candidate_id but does not define a complete chain/concurrency contract. |
+#### 10.10.1 Field-level command and query schemas
 
-Candidate evaluation status must never encode case-level acceptance/rejection or a final event identity decision. Candidate scores remain distinct from decision confidence. A review task remains distinct from the authoritative EventMatchDecision. The case's effective-decision pointer remains a projection, and a new decision plus its association reconciliation must preserve the immutable history.
+For each first-slice DTO, define a versioned schema with:
+- Exact field name, type, requiredness, and null semantics.
+- String length, numeric range, enum vocabulary, canonicalization, and timezone rules.
+- Server-owned versus caller-owned fields.
+- Actor and authorization context requirements.
+- Idempotency scope and request fingerprint inputs.
+- Expected aggregate version and conflict behavior.
+- Validation and typed failure outcomes.
+- Data classification and permitted logging behavior.
 
-### 10.10.3 Publication decision and attempt closure questions
+The DTOs required for the first persistence slice include SourceCollectionQuery, UpdateSourceConfiguration, SourceArticleIdentity, article/revision append commands, EventCandidateQuery, CreateEventMatchCase, candidate evaluation, EventMatchDecision append, ArticleEventLink activation/deactivation, Evidence append, Analysis append, Report version append, and PublicationDecision append. Query DTOs must also define stable ordering, maximum page size, and cursor consistency.
 
-PublicationDecision, ReviewRecord, PublicationRecord, and PublicationAttempt are separate records with different authority. The publication policy decision authorizes an eligible operation; it does not prove external success. The remaining blockers are:
+#### 10.10.2 Persistence and transaction proof
 
-| Decision | Required contract | Why it cannot be inferred |
-|---|---|---|
-| Effective decision | Deterministic selection of the one effective decision for an exact immutable Report version; predecessor validation; behavior for first decision; concurrent append/branch prevention. | Document 03 requires an explicit supersession rule but does not define the full algorithm or concurrency guard. |
-| Decision provenance | Exact actor identity, actor type, authorization reference, and authoritative validation/source; field ownership between command, result, and persisted record. | Document 15 §4.12 requires provenance, while Document 03 §11.6 omits corresponding fields. |
-| Decision-to-workflow mapping | Exact operational handling for each outcome, including review task creation/closure and the permitted next action after PUBLISH, PUBLISH_WITH_CAVEATS, HOLD_FOR_REVIEW, or REJECT. | Outcomes are defined, but a complete transition/workflow mapping and all review triggers are not closed. |
-| Caveat enforcement | Required structure and validation for PUBLISH_WITH_CAVEATS, and proof that the exact caveats are included in the publication representation. | The requirement is stated, but DTO representation and validation are TBD. |
-| Attempt outcome mapping | Exact PublicationRecord status and permitted next action for each EXECUTE/RECONCILE outcome. | Attempt outcomes are enumerated, but the full mapping is not specified. |
-| Confirmed failure | Whether CONFIRMED_FAILURE is terminal, retryable under the same logical operation, or requires an explicitly authorized successor operation; classification/guard requirements. | No complete failure/retry policy is defined. |
-| Reconciled not applied | Exact PublicationRecord state after RECONCILED_NOT_APPLIED and the guard for another EXECUTE attempt using the original operation/idempotency key. | Same-operation retry is described, but the status transition and eligibility guard are not tabulated. |
-| Reconciled success | Required evidence and atomic state update when reconciliation confirms the external effect; treatment of late/duplicate attempt results. | Reconciliation is required, but all persistence and concurrency outcomes are not mapped. |
-| Cancellation | Whether and when an in-flight operation may become CANCELLED; handling when the external side effect may already have occurred. | Cancellation is a listed operation status but its transition guards and unknown-outcome interaction are not defined. |
+Before selecting or enabling the physical database, complete GENI-ADR-005 proof-of-concept and record:
+- Engine and supported version.
+- Driver and synchronous/asynchronous access strategy.
+- Migration tool and clean-install/upgrade behavior.
+- Transaction isolation/locking and optimistic concurrency behavior.
+- Unique constraints for idempotency and linear decision successors.
+- Concurrent writer measurements under the expected deployment topology.
+- Backup/restore and crash-recovery evidence.
 
-The effective PublicationDecision must be scoped to the exact report version. A new decision must not create competing effective successors. PublicationAttempt records are immutable attempt evidence; changing the logical PublicationRecord state must not rewrite an attempt. Unknown external outcomes require reconciliation before any further side-effecting attempt. These constraints do not authorize implementation until the missing mappings and provenance contract are resolved.
+For each multi-aggregate transition, identify the exact write set and prove atomicity. External effects must use durable intent and attempt records; they must never be included in a long-running database transaction.
 
-### 10.10.4 Review and delivery lifecycle closure questions
+#### 10.10.3 Authorization, policy, and capability gates
 
-ReviewRecord and DeliveryRecord must not be conflated with the domain decision or publication operation they support.
+The following are separate from lifecycle mechanics and remain governed by their ADRs:
+- GENI-ADR-004 publication eligibility and publication policy.
+- GENI-ADR-005 persistence selection.
+- GENI-ADR-006 provider-independent LLM execution.
+- GENI-ADR-011 event identity and matching policy.
+- GENI-ADR-013 source-specific rights and content use.
+- GENI-ADR-014 reviewer identity, authority, and material review actions.
+- GENI-ADR-016 durable async execution, leases, idempotency, and recovery.
+- GENI-ADR-017 LLM budget and evaluation policy.
+- GENI-ADR-019 economic assessment methodology.
+- GENI-ADR-020 privacy processing authorization.
 
-| Decision | Required contract | Why it cannot be inferred |
-|---|---|---|
-| Review creation | Server-controlled initial status, required initial ReviewAction, and exact task-segment identity. | The status vocabulary and CREATED action exist, but the initial projection rule is not tabulated. |
-| Review transitions | Allowed status transitions, guards, actor/authorization requirements, and terminal states for COMPLETED/CANCELLED. | The action list is append-only but does not define every legal status transition. |
-| Action projection | Deterministic mapping from CREATED, ASSIGNED, REASSIGNED, PRIORITY_CHANGED, STARTED, NOTE_ADDED, ESCALATED, COMPLETED, CANCELLED, and REOPENED to current ReviewRecord fields. | Current status/priority/assignee are rebuildable projections, but action-to-projection semantics are not fully defined. |
-| Reopening | Whether REOPENED changes the same ReviewRecord projection or starts a distinct lifecycle segment; segment identity, assignment reset, due-date/priority behavior, and completion history. | ADR-014 requires a new task lifecycle segment but does not define its storage/projection representation. |
-| Review concurrency | Ordering, sequence allocation, expected-version checks, duplicate action handling, and atomicity between ReviewAction append and ReviewRecord projection. | Append-only actions and unique sequence are required, but the complete concurrency contract is not specified. |
-| Delivery creation | Server-controlled initial status, scheduling semantics, dispatch eligibility, and authorization revalidation immediately before dispatch. | Delivery statuses and authorization constraints exist, but initial/dispatch transition rules are not tabulated. |
-| Delivery transitions | Allowed transitions, terminal states, cancellation guards, retry eligibility, and behavior when authorization expires or is revoked during execution. | Status names and dispatch authorization rules do not define lifecycle precedence. |
-| DeliveryAttempt outcomes | Closed outcome vocabulary and mapping of confirmed success, confirmed failure, timeout/unknown, and reconciliation to DeliveryRecord status. | DeliveryAttempt has no defined outcome enum or outcome-to-operation transition table. |
-| Delivery retry/reconciliation | Same logical DeliveryRecord/idempotency key behavior, late-result handling, destination idempotency capability, and reconciliation before another side effect when outcome is unknown. | Retry must reuse the operation key, but failure classification and unknown-outcome handling are not fully defined. |
+No transition table grants authority. Every material command still requires server-side authorization and immutable provenance.
 
-A ReviewAction is immutable evidence of a task action; it does not replace the authoritative successor decision created by the designated domain workflow. A DeliveryAttempt is immutable evidence of one external attempt; it does not itself authorize dispatch or change PublicationRecord state. Authorization must be checked for the exact delivery scope at dispatch, and a delivery failure must not reverse a confirmed publication.
+#### 10.10.4 Persistence-specific records still required
 
-No implementation may invent missing transitions or treat timestamps as substitutes for state.
+Before implementing the corresponding capability, add explicit contracts for:
+- ProcessingStepAttempt and append-only run/step transition history.
+- PublicationRecord and PublicationAttempt.
+- DeliveryRecord and DeliveryAttempt.
+- ExecutionLease and IdempotencyRecord adapters.
+- Report provenance links and content-rights references.
+- Review lifecycle segment identity and immutable action sequencing.
+- Event identity operation reconciliation and affected-record lineage.
+
+These records must not be collapsed into generic status fields or hidden inside an unrelated aggregate.
 
 ## 11. Related documents
 
@@ -618,14 +582,15 @@ No implementation may invent missing transitions or treat timestamps as substitu
 - Document 13 — Deployment, Operations, and Observability.
 - Document 14 — Data Protection and Privacy Specification.
 - GENI-ADR-004, 005, 006, 011, 013, 014, 016, 017, 019 and 020.
+- GENI-FOUNDATION-017 — Executable Foundation and Domain Lifecycle Contracts.
 
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.9  
+**Version:** 2.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v1.8):** Added ReviewRepository and ReviewContextLinkRepository to the first-slice contract baseline, defined their method-level persistence boundaries and transaction expectations, and explicitly gated all ReviewService material actions on field-level DTO schemas, approved ReviewRecord/ReviewAction transition and projection rules, reviewer authorization, GENI-ADR-014 acceptance, and passing integration tests. No provisional review transitions were invented.
+**Revision Note (v2.1):** Replaced the unresolved lifecycle-question inventory with the normative lifecycle contracts in GENI-FOUNDATION-017. Added explicit remaining gates for field-level DTO schemas, persistence proofs, authorization, and supporting attempt/history records. The state-machine rules are executable and unit-tested; no ADR approval or external processing authorization is implied.
 
 **End of Document**

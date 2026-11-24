@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.27
+**Version:** 1.28
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-24
 
@@ -60,6 +60,7 @@ docs/
 |-- 14-data-protection-and-privacy-specification.md
 |-- 15-first-slice-implementation-contracts.md
 |-- 16-implementation-readiness-and-release-gates.md
+|-- 17-executable-foundation-and-domain-lifecycle-contracts.md
 |
 |-- adr/
 |   |-- README.md
@@ -349,6 +350,24 @@ Records the implementation-readiness assessment, distinguishes the existing docu
 ## 3.17 Related Privacy Architecture Decision
 
 [GENI-ADR-020 — Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture](adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md) defines the proposed privacy execution model across application workflows, data lineage, provider boundaries, and deletion propagation. It is related to Documents 02, 03, 08, 09, 12, 13, and 14. The ADR remains Proposed pending explicit approval.
+
+## 3.18 Executable Foundation and Domain Lifecycle Contracts
+
+**File:** `17-executable-foundation-and-domain-lifecycle-contracts.md`  
+**Document ID:** `GENI-FOUNDATION-017`
+
+**Purpose:**
+
+Records the first executable Python package baseline and the normative, tested lifecycle contracts for processing runs/steps, event matching cases/candidates, publication and delivery operations, and review tasks.
+
+**Consult this document when:**
+
+- Implementing or changing domain lifecycle transitions.
+- Reviewing run/step aggregation and recovery semantics.
+- Implementing event matching, review, publication, or delivery state projections.
+- Checking which capabilities remain disabled pending persistence, authorization, or ADR gates.
+
+**Authority:** Normative lifecycle contract for the initial executable foundation. It does not accept Proposed ADRs or authorize external operations.
 
 # 4. Architectural Decision Records
 
@@ -671,6 +690,6 @@ A documentation baseline should be approved only after these checks have been co
 
 **Document ID:** `GENI-DOC-INDEX-001`  
 **Document:** `docs/README.md`  
-**Version:** 1.27  
+**Version:** 1.28  
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-24

@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.29
+**Version:** 1.30
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-24
 **Project:** Global Economic News Intelligence  
@@ -230,6 +230,7 @@ global-economic-news-intelligence/
 │   ├── 14-data-protection-and-privacy-specification.md
 │   ├── 15-first-slice-implementation-contracts.md
 │   ├── 16-implementation-readiness-and-release-gates.md
+│   ├── 17-executable-foundation-and-domain-lifecycle-contracts.md
 │   │
 │   ├── adr/
 │   │   ├── README.md
@@ -427,6 +428,8 @@ Not every future capability must be fully designed before the first implementati
 ---
 
 ## 7. Development Stage 1 — Project Foundation
+
+**Foundation baseline note:** The initial package metadata, Python 3.12–3.13 runtime declaration, CLI, pure lifecycle policy module, unit tests, Ruff/mypy configuration, and application CI are implemented as the first executable baseline described in GENI-FOUNDATION-017. Validated runtime configuration, structured logging, centralized error handling, persistence, and migration tooling remain outstanding.
 
 ### Objectives
 
@@ -1823,5 +1826,5 @@ Exit criteria require executable tests and operational evidence, not document pr
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.29
+**Version:** 1.30
 **Status:** Draft — Under Architecture Review
