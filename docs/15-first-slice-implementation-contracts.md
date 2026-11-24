@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.8  
+**Version:** 2.9  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -82,8 +82,10 @@ No state-changing command is exempt merely because it is internal, automated, in
 
 ### 3.3 Common failures
 
-Repository/application contracts use the error vocabulary in GENI-API-009:
+The first-slice repository and domain contracts use the applicable subset of the error vocabulary in GENI-API-009:
 `VALIDATION_ERROR`, `AUTHENTICATION_REQUIRED`, `AUTHORIZATION_DENIED`, `NOT_FOUND`, `CONFLICT`, `DEPENDENCY_UNAVAILABLE`, `TIMEOUT_OUTCOME_UNKNOWN`, `RIGHTS_NOT_ALLOWED`, and `INTERNAL_ERROR`.
+
+Provider/transport boundaries may additionally return `RATE_LIMITED` and `BUDGET_EXCEEDED` as defined by GENI-API-009. These are valid boundary-level outcomes, but they are not repository-specific persistence failures and must retain their API-level retry/budget semantics.
 
 Repository-specific failures additionally distinguish:
 - `DUPLICATE_IDENTITY`: a uniqueness key already identifies another logical record;
@@ -1034,10 +1036,12 @@ The following remain open and must be resolved before production report generati
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.8  
+**Version:** 2.9  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
 **Revision Note (v2.8):** Tightened provider-backed analysis provenance by requiring each provider request to create an LLMUsageRecord linked to the exact Analysis/ProcessingRun and to preserve privacy, purpose, data-category, region, transfer and content-rights decision references. Added the explicit privacy-processing authorization permission to the PersistAnalysis crosswalk. No provider egress is authorized by this contract.
+
+**Revision Note (v2.9):** Clarified that `RATE_LIMITED` and `BUDGET_EXCEEDED` remain valid API/provider-boundary outcomes under GENI-API-009 but are not repository-specific persistence failures. No capability or approval gate changed.
 
 **End of Document**
