@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.1  
+**Version:** 2.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -570,6 +570,196 @@ Before implementing the corresponding capability, add explicit contracts for:
 
 These records must not be collapsed into generic status fields or hidden inside an unrelated aggregate.
 
+
+### 10.11 Core article-to-report command and query schemas (tranche v1.3)
+
+This tranche makes the operation payloads explicit for the core article-to-report path. It supplements, and does not replace, the entity field catalogues in §§10.2–10.7. It is still a logical schema: concrete serialization, identifier encoding, string bounds, numeric precision, enum closure, and transport representation remain unselected.
+
+#### 10.11.1 PersistArticleRevision
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `source_id` | `ID<Source>` | Required | Must resolve to the configured Source. |
+| `source_article_identity.canonical_source_identifier` | `string` | Required | Stable canonical identity scoped to this Source; normalization is deterministic and versioned. |
+| `source_article_identity.canonical_url` | `string/null` | Optional | Secondary lookup signal only; it does not replace source-scoped identity. |
+| `original_url` | `string` | Required | Must pass URL validation; preserve separately from canonical_url. |
+| `external_id` | `string/null` | Optional | Source-provided identifier; uniqueness is source-scoped and applies only when meaningful. |
+| `normalized_title` | `string` | Required | The title stored on the immutable revision and current Article projection. |
+| `content_reference` | `reference/null` | Conditional | Required when content is retained or referenced; absent only with an explicit metadata-only/unavailable content state. Must point only to content permitted for this operation. |
+| `content_hash` | `Fingerprint` | Required | Computed from the declared normalized representation; a hash does not grant content-retention rights. |
+| `content_normalization_version` | `Version` | Required | Identifies the exact normalization rules used for the hash and any offsets. |
+| `summary` | `string/null` | Optional | May contain only source material or derived text permitted by the applicable rights decision. |
+| `language` | `string/null` | Optional | Declared or detected language; exact language-tag format remains a serialization decision. |
+| `published_at` | `Instant/null` | Optional | Source publication time; unknown remains null. |
+| `observed_at` | `Instant` | Required | Trusted observation time for this revision. |
+| `change_reason` | `string/enum` | Required | Explains why this revision is appended; controlled vocabulary and free-text bounds remain open. |
+| `rights_assessment_references` | `List<ID<RightsAssessment>>` | Conditional | Required for every source-derived content operation that is governed by a rights assessment; each reference must cover the exact operation and content scope. |
+| `metadata` | `object` | Optional | Versioned, non-secret extension; must not duplicate authoritative typed fields. |
+
+Server-owned values include Article ID when first created, ArticleRevision ID, revision number, current_revision_id, rights_status projection, created/updated timestamps, and resulting aggregate version. The application must atomically append/reuse the immutable ArticleRevision and update the Article current projection. Same Article + same content hash + same normalization version reuses the existing logical revision; a different normalization version is not presumed equivalent.
+
+#### 10.11.2 EvaluateEventMatchCandidate
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `case_id` | `ID<EventMatchCase>` | Required | Case must belong to the exact ArticleRevision/development scope being evaluated. |
+| `candidate_event_id` | `ID<Event>` | Required | Candidate Event must be eligible under the applicable matching policy. |
+| `matching_method` | `string/enum` | Required | Method vocabulary is policy-governed and is not closed by this document. |
+| `matching_policy_version` | `Version` | Required | Exact matching policy/configuration version. |
+| `candidate_input_fingerprint` | `Fingerprint` | Required | Covers ArticleRevision, development scope, candidate Event version, and evaluation inputs/configuration. |
+| `lexical_similarity` | `number/null` | Nullable | Null when not evaluated; scale and precision require policy definition. |
+| `semantic_similarity` | `number/null` | Nullable | Must remain null when semantic retrieval is disabled or not evaluated. |
+| `entity_overlap_score` | `number/null` | Nullable | Null when not evaluated; never default to zero. |
+| `temporal_compatibility_score` | `number/null` | Nullable | Null when not evaluated; never default to zero. |
+| `geographic_compatibility_score` | `number/null` | Nullable | Null when not evaluated; never default to zero. |
+| `overall_score` | `number/null` | Nullable | Null when not evaluated; not a decision confidence. |
+| `evaluation_reason` | `string` | Required | Safe explanation of eligibility/evaluation; exact length bound remains open. |
+
+The candidate record ID, candidate processing status, evaluated_at, and created_at are server-owned. The idempotency scope is the exact case, candidate Event, matching-policy version, and candidate-input fingerprint. A repeated identical evaluation resolves to the same logical evaluation; changed inputs or policy create a successor immutable evaluation. Candidate evaluation never creates an EventMatchDecision or ArticleEventLink.
+
+#### 10.11.3 AppendEventMatchDecision
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `case_id` | `ID<EventMatchCase>` | Required | Exact case being resolved. |
+| `outcome` | `string/enum` | Required | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, or REVIEW_REQUIRED. |
+| `selected_candidate_id` | `ID<EventMatchCandidate>/null` | Conditional | Required exactly for MATCH; candidate must belong to this case and be eligible. |
+| `proposed_event_reference` | `ID<Event>/null` | Conditional | Required exactly for NEW_EVENT_CANDIDATE; stable preassigned ID, not an instruction to create an Event. |
+| `decision_method` | `string/enum` | Required | Method vocabulary and permitted actor/policy combinations remain governed by the matching policy. |
+| `decision_confidence` | `number/null` | Optional | Null unless the method defines semantics; never copy candidate similarity into this field. |
+| `decision_rationale` | `string` | Required | Explains the outcome and material evidence/limitations; exact length/format remain open. |
+| `matching_policy_version` | `Version` | Required | Exact policy version used. |
+| `supersedes_decision_id` | `ID<EventMatchDecision>/null` | Conditional | Absent for the first decision; otherwise must identify the current effective predecessor in the same case. |
+
+The decision ID, trusted actor identity, decision timestamp, effective-decision pointer, and aggregate version are server/application-owned. Actor identity and authorization are taken from authenticated command context, never caller-supplied role text. The current data model names the decision actor but does not yet consistently define a persisted authorization-reference field for EventMatchDecision; the audit/security mapping for that reference must be reconciled before material decision writes are enabled. The append, effective-pointer update, case projection, and any ArticleEventLink reconciliation form one atomic local write set. A stale predecessor/version or competing successor returns CONFLICT.
+
+#### 10.11.4 ActivateArticleEventLink and DeactivateArticleEventLink
+
+**ActivateArticleEventLink**
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `case_id` | `ID<EventMatchCase>` | Required | Exact case whose effective decision is being applied. |
+| `event_match_decision_id` | `ID<EventMatchDecision>` | Required | Must be the current effective MATCH decision for the same case. |
+| `expected_case_version` | `Version` | Required | Compare-and-swap guard for the case and decision/link write set. |
+| `relationship_type` | `string/enum` | Required | Must use an allowed ArticleEventLink relationship type; final enum governance remains open. |
+| `association_confidence` | `number/null` | Explicit null or calibrated value; persistence nullability must be reconciled with Document 03 | Never copy candidate similarity into this field; a non-null value requires documented calibration semantics. |
+| `association_method` | `string/enum` | Required | Derived from the effective decision and matching policy; callers must not override it. Allowed values remain policy-governed. |
+
+ArticleRevision ID, Event ID, matching-policy version, link ID, associated_at, and active state are derived from the exact case, selected candidate, and effective decision or assigned by the application. They must not be independently supplied in a way that can contradict those references.
+
+**DeactivateArticleEventLink**
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `case_id` | `ID<EventMatchCase>` | Required | Exact case owning the active link. |
+| `link_id` | `ID<ArticleEventLink>` | Required | Must identify the active link for this case. |
+| `successor_decision_id` | `ID<EventMatchDecision>` | Required | Must be the authorized successor decision in the same case and supersede the link's authorizing decision. |
+| `expected_case_version` | `Version` | Required | Compare-and-swap guard for the atomic decision/link update. |
+
+The application assigns deactivated_at. The prior link is preserved; the command cannot delete or repoint it. Both operations require the application authorization boundary and must commit with the effective-decision pointer update in one UnitOfWork.
+
+#### 10.11.5 AppendEvidence
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `origin_type` | `string/enum` | Required | Determines which origin reference is required; the complete vocabulary remains open. |
+| `source_id` | `ID<Source>/null` | Conditional | Required when origin_type identifies a configured Source. |
+| `article_id` | `ID<Article>/null` | Conditional | Optional current-article navigation reference; must agree with article_revision_id when both are present. |
+| `article_revision_id` | `ID<ArticleRevision>/null` | Conditional | Required for article-revision-origin evidence. |
+| `source_document_reference` | `reference/null` | Conditional | Required for a non-article source document when no ArticleRevision identifies the origin. |
+| `evidence_text` | `string` | Required by the current entity model | Must contain only the exact quotation/extract/derived text permitted for this operation; metadata-only rights do not authorize text storage. |
+| `evidence_type` | `string/enum` | Required | Uses the documented illustrative types; final exhaustive enum remains open. |
+| `observed_at` | `Instant` | Required | Time the evidence was observed or obtained; source-event time must not be substituted without provenance. |
+| `content_location` | `EvidenceLocation/null` | Optional | Exact page/section/paragraph/offset/locator when available; never fabricate a location. |
+| `language` | `string/null` | Optional | Language of the evidence text, if known. |
+| `content_fingerprint` | `Fingerprint/null` | Optional | Fingerprint of the exact permitted representation; null when not available. |
+| `rights_assessment_references` | `List<ID<RightsAssessment>>` | Conditional | Required whenever source-derived evidence storage or use is governed by rights assessment; scope must cover the exact evidence operation. |
+
+Evidence ID and created_at are server-owned. An origin must be resolvable or explicitly recorded as unavailable under a separately approved representation. Because the current Evidence entity requires evidence_text, this command cannot be used for metadata-only evidence when text storage is not authorized; a separate metadata-only evidence representation remains unresolved. Evidence creation does not itself verify a claim or establish independent corroboration.
+
+#### 10.11.6 AppendAnalysis
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `event_id` | `ID<Event>` | Required for event-scoped analysis | Must resolve to the exact Event version used by the analysis input manifest. |
+| `analysis_type` | `AnalysisType` | Required | Importance, economic relevance, and economic impact are separate types and schemas. |
+| `version` | `Version` | Server-assigned | Allocated under the event/type uniqueness rule; callers cannot overwrite an existing result. |
+| `content` | `string/object` | Required | Human-readable or structured analysis representation; representation must be identified by schema/version. |
+| `structured_output` | `object` | Required | Must validate against the exact result-schema version for analysis_type. |
+| `confidence` | `number/null` | Nullable | Semantics must be defined by the analysis methodology; not forecast probability unless separately calibrated. |
+| `status` | `string/enum` | Server/workflow-owned | Must follow the applicable processing policy; caller cannot mark an unvalidated result completed. |
+| `model_provider` | `string/null` | Conditional | Required when a model provider was used; otherwise null. |
+| `model_id` | `string/null` | Conditional | Required when a model was used; provider/model must be permitted by the applicable authorization decision. |
+| `prompt_version` | `Version/null` | Conditional | Required when a prompt was used; otherwise null. |
+| `schema_version` | `Version` | Required | Exact structured-output schema version. |
+| `analysis_policy_version` | `Version` | Required | Exact methodology/policy version, distinct from model and prompt versions. |
+| `input_fingerprint` | `Fingerprint` | Required | Covers exact immutable inputs, evidence set, and relevant processing versions. |
+| `evidence_references` | `List<ID<Evidence>>` | Required | Exact evidence set considered; an empty set must be explicit and cannot be represented as successful evidential support. |
+| `input_references` | `List<typed AnalysisInput references>` | Required | Typed references and versions for every non-evidence input consumed. |
+
+Analysis ID, created_at, completed_at, and the next version are server-owned. Provider/model/prompt fields are provenance, not authorization; model-assisted processing remains disabled unless the exact provider, purpose, data category, region, privacy decision, and source-rights scope are authorized. A successful result is immutable; corrections or re-analysis create a successor record.
+
+#### 10.11.7 AppendReportVersion
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `event_id` | `ID<Event>/null` | Conditional | Required for an event-specific report; null only when report_scope explicitly describes a non-event report. |
+| `report_type` | `string/enum` | Required | Uses the documented report types; final exhaustive vocabulary remains open. |
+| `report_scope` | `string/typed scope` | Required | Must identify the exact subject/scope; polymorphic scope representation remains to be standardized. |
+| `title` | `string` | Required | Report title for this immutable version. |
+| `content` | `string/object` | Required | Explicit content representation; source-derived content must comply with rights and distribution constraints. |
+| `content_format` | `string/enum` | Required | Declares the representation; allowed formats and limits remain open. |
+| `language` | `string` | Required | Language of this report version. |
+| `template_version` | `Version` | Required | Exact template or generation-layout version. |
+| `input_fingerprint` | `Fingerprint` | Required | Deterministic fingerprint of the exact generation inputs and versions. |
+| `generation_provenance` | `object` | Required | Must identify the generation workflow/version and applicable model/prompt/schema provenance; schema remains to be closed. |
+| `article_revision_references` | `List<ID<ArticleRevision>>` | Required | Exact article revisions used; never resolve through a mutable current Article pointer at read time. |
+| `event_references` | `List<ID<Event>>` | Required | Exact Event references used, consistent with report_scope. |
+| `analysis_references` | `List<ID<Analysis>>` | Required | Exact immutable analyses used. |
+| `evidence_references` | `List<ID<Evidence>>` | Required | Exact evidence references supporting the report. |
+| `rights_assessment_references` | `List<ID<RightsAssessment>>` | Conditional | Complete applicable set for source-derived content and any operation-specific use. |
+
+Report ID, version, generation_status, generated_at, created_at, and supersedes_report_id are server-owned. Report content and all provenance links must commit atomically. Report generation does not create a PublicationDecision, authorize recipient distribution, or execute publication/delivery.
+
+#### 10.11.8 Shared query and pagination contract
+
+Every collection query returns a bounded page with stable ordering and a deterministic tie-breaker. The logical page request contains:
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| `limit` | `integer` | Required or defaulted by service | Positive and bounded; default and maximum values are operational configuration, not invented here. |
+| `cursor` | `opaque string/null` | Optional | Must be bound to the query/filter/sort context; exact encoding and consistency semantics remain open. |
+| `sort` | `typed sort specification` | Service-defined | Only explicitly supported sort keys; stable tie-breaker is mandatory. |
+| `filters` | `typed query-specific fields` | Optional | Unknown filters are rejected rather than ignored. |
+
+Query-specific fields established by the current contracts:
+
+- `SourceCollectionQuery`: optional source type, language, geographic scope, and status filters; bounded limit; optional cursor.
+- `EventCandidateQuery`: candidate retrieval must be deterministic, bounded, and stably ordered. Filter fields, eligibility criteria, and tie-breakers remain unresolved.
+- `CandidateListQuery`: case-scoped results, stable ordering, bounded limit, optional cursor. Sort keys and filters remain unresolved.
+- `AnalysisListQuery`: exact event and analysis_type scope from the repository signature; any additional filters and sort keys remain unresolved.
+- `EvidenceListQuery`: exact subject scope and access-controlled evidence references; filter and sort vocabulary remains unresolved.
+
+A cursor from one query/filter/sort context must not be reusable against another. Revoked access must be re-evaluated on each page; a previously issued cursor does not preserve authorization.
+
+#### 10.11.9 Remaining field-level blockers after this tranche
+
+This tranche does not claim that Gate A is complete. The following remain unresolved and must be closed before their corresponding operations are implemented or enabled:
+
+- `UpdateSourceConfiguration`: writable configuration fields, source-type enum, URL-change validation, configuration versioning, and audit payload.
+- `SourceArticleIdentity`: exact canonical identifier grammar and collision/redirect rules.
+- Article projection creation/update DTO: explicit ownership and field mapping between Article and ArticleRevision, including metadata-only content availability.
+- `EventCandidateQuery`, `CandidateListQuery`, `AnalysisListQuery`, and `EvidenceListQuery`: complete filters, sort vocabulary, cursor consistency, and default/maximum page size.
+- EventMatchDecision authorization provenance: align the decision entity's persisted actor fields with the required immutable authorization/audit reference.
+- Evidence origin-type mapping and the complete EvidenceType vocabulary.
+- Analysis structured-output schemas for each enabled analysis_type; the generic Analysis record is not a substitute for those schemas.
+- Report scope/type/content-format vocabularies, generation_provenance schema, and exact report-family/version allocation rules.
+- Exact string lengths, numeric precision/ranges, timestamp precision, canonical serialization, and identifier encodings across all DTOs.
+- Persistence-specific attempt/history/lease/idempotency records listed in §10.10.4.
+
+No unresolved item above may be filled with an arbitrary default. A capability remains blocked until its own contract and governing ADR/authorization gates are satisfied.
+
 ## 11. Related documents
 
 - Document 02 — Component Architecture and Interface Contracts.
@@ -587,10 +777,10 @@ These records must not be collapsed into generic status fields or hidden inside 
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.1  
+**Version:** 2.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.1):** Replaced the unresolved lifecycle-question inventory with the normative lifecycle contracts in GENI-FOUNDATION-017. Added explicit remaining gates for field-level DTO schemas, persistence proofs, authorization, and supporting attempt/history records. The state-machine rules are executable and unit-tested; no ADR approval or external processing authorization is implied.
+**Revision Note (v2.2):** Added tranche v1.3 of field-level command/query payload contracts for article revision persistence, event candidate evaluation and decisions, ArticleEventLink application, evidence, analysis, report versioning, and shared pagination. Explicitly separated server-owned values and preserved unresolved schema, authorization-provenance, rights, and persistence gates. This does not complete Gate A or approve any ADR.
 
 **End of Document**
