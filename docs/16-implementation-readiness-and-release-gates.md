@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 2.9  
+**Version:** 3.0  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -31,16 +31,18 @@ A published file, passing documentation check, or merged change is not by itself
 
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. The updated main-branch CI must pass on Python 3.15 before 3.15 compatibility is considered verified.
+The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is now verified by the successful main-branch Application CI run 45465238823 (commit 80ad85993bbfaa5073df4123d7dcc1bf5d42a0fd), which completed Ruff, mypy, and pytest successfully.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
 - A CLI that reports package version and disabled capability boundaries, using validated settings and safe logging initialization.
 - Unit tests for transition guards, aggregation, successor-decision linearity, review projection, external-outcome reconciliation, validated configuration, safe errors/logging, and domain dependency boundaries.
-- Application CI for Python 3.15 only, running Ruff, mypy, and pytest.
+- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the current main-branch run passed (45465238823).
 - Existing documentation CI and registry validation remain separate and are preserved.
 
 The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
+
+The dependency-management baseline is not yet finalized. `pyproject.toml` declares bounded development dependency ranges, but the repository has no lockfile; Application CI currently installs with pip from those ranges. Document 04 lists uv as a candidate, not an approved selection. Therefore dependency resolution is not yet reproducible, and neither uv nor pip is recorded as the final package-management decision. A lockfile and locked CI installation must follow an explicit toolchain decision and be generated and verified on a compatible Python 3.15 environment.
 
 The following remain absent or incomplete:
 
@@ -233,5 +235,7 @@ If new evidence changes readiness, update this document and the affected source-
 **Last Updated:** 2026-11-24
 
 **Revision Note (v2.8):** Tightened R1 and persistence blockers to require completed GENI-ADR-005-POC-001 evidence and formal ADR-005 acceptance before selecting a production database. Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
+
+**Revision Note (v3.0):** Records successful Python 3.15 main-branch Application CI verification and explicitly identifies the remaining dependency reproducibility gap: no lockfile, pip-based CI installation from version ranges, and package-manager selection still pending. No technology or ADR approval is implied.
 
 **End of Document**
