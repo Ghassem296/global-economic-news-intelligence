@@ -91,6 +91,25 @@ def validate_document_versions() -> None:
             )
 
 
+def validate_readiness_document_version_references() -> None:
+    """Keep Document 16's explicit version references aligned with source documents."""
+    readiness = read_text(ROOT / "docs/16-implementation-readiness-and-release-gates.md")
+    expected_versions = {
+        "Document 08": document_version(ROOT / "docs/08-security-architecture-and-threat-model.md"),
+        "Document 15": document_version(ROOT / "docs/15-first-slice-implementation-contracts.md"),
+    }
+    for label, expected in expected_versions.items():
+        found = re.findall(rf"{re.escape(label)} v([0-9]+\\.[0-9]+)", readiness)
+        if not found:
+            fail(f"{label} version reference is missing from Document 16")
+        mismatches = sorted(set(version for version in found if version != expected))
+        if mismatches:
+            fail(
+                f"Stale {label} version reference(s) in Document 16: "
+                f"found={mismatches}, actual={expected}"
+            )
+
+
 def validate_adrs() -> None:
     paths = sorted(ADR_DIR.glob("GENI-ADR-*.md"))
     ids: list[str] = []
@@ -1134,6 +1153,7 @@ def main() -> None:
     validate_roadmap_document_inventory()
     validate_cross_document_contracts()
     validate_document_versions()
+    validate_readiness_document_version_references()
     validate_document_registry_metadata_alignment()
     validate_documentation_index_adr_authority()
     validate_adr_registry_title_alignment()
