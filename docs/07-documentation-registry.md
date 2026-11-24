@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 1.89
+**Version:** 1.90
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 2.8 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-24 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 2.0 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-24 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 2.1 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-24 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 1.2 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-24 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -411,8 +411,8 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-24  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `ae1bdd562a8a569108a3ed10172d962bd670f08d`  
-**Registry Refresh:** This audit inspected the published `main` branch at the baseline commit above. This registry revision follows that inspected commit and records the resulting document versions and paths. The refreshed snapshot includes the executable Python foundation and lifecycle contracts; first-slice DTO, source-collection, economic-assessment and report-provenance tranches; deny-by-default authorization boundaries; and the explicit privacy, transfer-assessment and source-content-rights provenance required before provider egress. Document 16 records the corresponding readiness gates. The snapshot is repository-only; it does not claim local Working Tree inspection. Publication and validator presence do not constitute formal architecture approval, implementation, legal compliance, CI success, or operational verification.
+**Baseline Commit Inspected:** `1649b4fe32b004c16d174976fa9c4c7bc5bf4b1a`  
+**Registry Refresh:** This audit inspected the published `main` branch at the baseline commit above. This registry revision follows that inspected commit and records the resulting document versions and paths. The refreshed snapshot includes the executable Python foundation and lifecycle contracts; first-slice DTO, source-collection, economic-assessment and report-provenance tranches; deny-by-default authorization boundaries; and the explicit privacy, transfer-assessment and source-content-rights provenance required before provider egress. Document 16 v2.1 records the corresponding readiness gates and its references to Documents 08 and 15 have been synchronized with their current published versions. The snapshot is repository-only; it does not claim local Working Tree inspection. Publication and validator presence do not constitute formal architecture approval, implementation, legal compliance, CI success, or operational verification.
 
 This refresh was performed directly against the published GitHub `main` branch. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
