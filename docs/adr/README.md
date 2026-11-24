@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.17
+**Version:** 1.18
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-24
 
@@ -38,6 +38,8 @@ docs/
 └── adr/
     ├── README.md
     ├── adr-template.md
+    ├── evidence/
+    │   └── GENI-ADR-005-persistence-proof-of-concept-protocol.md
     └── decisions/
         ├── GENI-ADR-001-event-centric-intelligence-architecture.md
         ├── GENI-ADR-002-article-deduplication-and-event-matching.md
@@ -200,6 +202,8 @@ In particular:
 - **ADR-015** addresses market data integration and observed impact classification; it must not replace the broader assessment semantics defined by ADR-019.
 - **ADR-013** addresses content access, retention, licensing, and republication constraints.
 - **ADR-010** addresses the phased delivery of text, audio, and video.
+
+The GENI-ADR-005 evidence directory contains the persistence proof-of-concept protocol. It is a test protocol, not an ADR, test result, benchmark, or approval; its status and evidence artifacts must remain distinct from the decision status of ADR-005.
 
 Related ADRs should cross-reference one another where their decisions have dependencies or affect shared architectural boundaries.
 
