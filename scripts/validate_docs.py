@@ -540,7 +540,7 @@ def validate_review_activation_gates() -> None:
     missing = [term for term in required_contracts if term not in implementation]
     if missing:
         fail(f"First-slice review implementation gates are incomplete: {missing}")
-    if "no ReviewService material action may be enabled" not in implementation:
+    if "ReviewService material actions remain disabled" not in implementation:
         fail("First-slice implementation contracts do not explicitly block unapproved review actions")
 
 
