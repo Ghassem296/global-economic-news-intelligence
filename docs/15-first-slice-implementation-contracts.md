@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.4  
+**Version:** 2.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -68,17 +68,17 @@ The concrete serialization and identifier encodings remain implementation choice
 
 ### 3.2 Common command metadata
 
-Every state-changing application command carries:
+Every state-changing application command is protected by default and carries:
 - `command_id`;
 - `schema_version`;
 - authenticated `actor` or service identity;
-- immutable `authorization_reference` for operations that require an authorization decision;
+- required immutable `authorization_reference` from trusted security/application context;
 - `correlation_id` and optional `causation_id`;
 - `idempotency_key` with a documented operation scope;
 - `expected_aggregate_version` when updating an existing aggregate;
 - deadline/cancellation context where execution can outlive the caller.
 
-A repository method receives only the metadata needed for its persistence responsibility. Authorization decisions are made by the application/domain boundary and their immutable references are persisted with the resulting state change; a repository must not infer authorization from caller-supplied role strings.
+No state-changing command is exempt merely because it is internal, automated, invoked by an administrator, or initiated by an LLM/tool. The authorization reference binds the exact actor/service, action, resource, scope, applicable policy/version, evaluation time and outcome; it is not a role string or caller assertion. Rights assessments and privacy-processing decisions are separate domain gates and their references must also be carried where applicable; a general execution authorization cannot substitute for them. A repository method receives only the metadata needed for its persistence responsibility. Authorization decisions are made by the application/domain boundary and their immutable references are persisted with the resulting state change; a repository must not infer authorization from caller-supplied role strings.
 
 ### 3.3 Common failures
 
@@ -845,6 +845,48 @@ The following remain open and block the corresponding implementation detail:
 
 These gaps must remain explicit. They must not be filled by silently choosing a provider, URL policy, identity algorithm, page-size limit, or credential mechanism.
 
+
+### 10.13 Authorization crosswalk for first-slice operations (tranche v1.5)
+
+This section maps the first-slice application commands and queries to the proposed permission identifiers in Document 08 §5.2. It is a contract crosswalk, not a grant of permissions, a completed role assignment, or acceptance of the governing ADRs. All state-changing commands require the common `authorization_reference` in §3.2. The operation-specific permissions below must be evaluated against the exact resource and scope. Rights and privacy decisions remain separate, additional gates.
+
+| Application command/query | Minimum permission identifier(s) | Exact authorization binding | Additional independent gate / restriction |
+|---|---|---|---|
+| Read Source configuration / `SourceCollectionQuery` | `source.config.read` | Exact Source or bounded result set and requested fields | Never expose secrets; collection eligibility is not content-access authorization |
+| `UpdateSourceConfiguration` | `source.config.update` | Exact Source, changed field set and expected version | Re-evaluate rights after source type or endpoint change; secret values prohibited |
+| Source discovery / collection execution | `source.collect` | Exact Source, adapter, endpoint and collection purpose | Current source-specific access/collection rights; SSRF/egress controls; no blanket permission from `is_active` |
+| `PersistArticleRevision` | `article.revision.append` and the applicable `source.collect` grant | Exact Source, source-scoped Article identity, revision fingerprint and content-availability state | Every retained/processed content field must be covered by the exact current rights/retention assessment; metadata-only permission cannot authorize content storage |
+| `ResolveEventDevelopment` | `event.match.case.create` and `event.match.evaluate` | Exact ArticleRevision, development scope, matching-policy version and candidate set | Candidate evaluation is not an authoritative decision and cannot create an Event or ArticleEventLink |
+| `ApplyEventMatchDecision` | `event.match.decide` | Exact case, decision, predecessor, selected candidate and expected case version | Approved matching policy and immutable authorization reference; Event creation separately requires `event.create` and EventCreationPolicy |
+| `RecordEvidence` | `evidence.append` | Exact evidence origin, subject, stored representation and content location | Rights/retention decision must cover the exact quotation, extract or derived text being stored |
+| `PersistAnalysis` | `analysis.append` | Exact immutable input manifest, evidence set, analysis type and methodology version | Provider execution additionally requires current privacy authorization and source-content rights for exact purpose, payload, provider/model and region |
+| `CreateReportVersion` | `report.generate` | Exact report aggregate, input revisions, evidence/analysis references, template and fingerprint | Provenance and content-rights checks; report generation does not authorize publication or delivery |
+| `DecidePublicationEligibility` | `publication.decide` | Exact immutable report version and publication scope | Approved publication policy, required review references and current rights/security context; decision is not a dispatch command |
+| `CreateReviewTask` | `review.task.create` | Exact review family, typed subject, assignment and reviewer-visible context | Approved trigger/priority policy; authorize access to every linked context item |
+| `AppendReviewAction` | `review.action` | Exact assigned ReviewRecord, action, actor and expected version | Approved transition graph, assignment and separation-of-duties rules; review action cannot bypass the authoritative domain command |
+| `AttachReviewContext` | `review.context.attach` | Exact ReviewRecord and every typed context reference | Independently authorize access to each referenced object; no content copy or scope expansion |
+| Start/transition a `ProcessingRun` | `processing.run.start` / `processing.run.transition` | Exact run, workflow, step, transition and aggregate version | Approved state machine, idempotency and transaction contract |
+| Recover/resume a `ProcessingRun` | `processing.run.recover` | Exact run/step, lease owner, fencing generation and recovery reason | Explicit operational grant and append-only recovery audit; recovery cannot rewrite completed domain history |
+
+The permission reference above is a minimum requirement, not an exhaustive authorization context. If a command performs multiple protected actions, each action must be authorized independently; authorization for the outer workflow does not implicitly authorize a nested Event creation, content read, provider request, publication, or delivery.
+
+For read queries not listed individually, the application must authorize the requested resource and fields before returning data. A query cursor never carries or preserves authorization: every page re-evaluates the caller's current access. Sensitive read decisions are audited according to Document 08 §5.3 without logging restricted payloads.
+
+The following remain deliberately outside this first-slice command crosswalk and must not be inferred from `publication.decide`: `distribution.authorize` and `delivery.dispatch`. They require the separate immutable DistributionAuthorizationDecision, complete RightsAssessment link set, exact content-scope manifest/fingerprint and immediate pre-dispatch revalidation specified in Document 02. A PublicationDecision, subscription, report-generation permission or general service identity is insufficient.
+
+#### 10.13.1 Authorization denial and audit behavior
+
+- Missing authentication returns `AUTHENTICATION_REQUIRED`; authenticated but ungranted, out-of-scope or policy-denied operations return `AUTHORIZATION_DENIED`.
+- Missing, expired, revoked, stale, mismatched or unverifiable rights decisions return the rights-specific denial defined by GENI-API-009; they must not be converted into a generic successful metadata-only operation.
+- A privacy authorization failure blocks provider egress even if execution permission and content rights are otherwise allowed.
+- Denial and REQUIRES_REVIEW outcomes are auditable, but denied commands do not append domain records, advance aggregate versions, create links, or trigger external side effects.
+- Re-evaluate authorization on retries, changed payloads, changed resource versions, changed provider/region, and immediately before irreversible external side effects.
+- Authorization failures are not retried unchanged. A new grant or policy decision requires a new authorized command attempt and idempotency handling consistent with the original operation.
+
+#### 10.13.2 Approval and implementation blockers
+
+The crosswalk does not complete Gate A. The final role-to-permission assignments, grant administration, identity/session lifecycle, policy decision point, break-glass rules, separation-of-duties exceptions, and exact permission schema remain open in Document 08 §9. Review workflow remains blocked by GENI-ADR-014 and its unresolved state/assignment contracts. Source collection and content operations remain blocked by applicable rights/retention approvals and GENI-ADR-013. Provider-backed analysis remains blocked by GENI-ADR-006/017/020 and the exact rights/privacy decisions. No ADR is accepted by this revision.
+
 ## 11. Related documents
 
 - Document 02 — Component Architecture and Interface Contracts.
@@ -862,10 +904,10 @@ These gaps must remain explicit. They must not be filled by silently choosing a 
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.4  
+**Version:** 2.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.4):** Added source configuration, source collection query, source-scoped article identity, and Article projection ownership contracts. Distinguished assessed reliability metadata from routine source configuration and recorded unresolved identity, pagination, secret-reference, and ArticleRevision snapshot boundaries. This does not authorize source collection or complete Gate A.
+**Revision Note (v2.5):** Made immutable authorization provenance mandatory for every state-changing command and added a command/query-to-permission crosswalk for the first slice. Mapped source, article, event, evidence, analysis, report, review and processing-run operations to deny-by-default permission identifiers while preserving separate rights/privacy gates and explicit ADR/implementation blockers. This does not grant roles, authorize source collection, approve any ADR, or complete Gate A.
 
 **End of Document**
