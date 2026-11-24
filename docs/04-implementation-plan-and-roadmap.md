@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.31
+**Version:** 1.32
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-24
 **Project:** Global Economic News Intelligence  
@@ -1037,6 +1037,21 @@ Produce evidence-based economic intelligence.
 14. Implement analysis versioning and input fingerprints.
 15. Add separate assessment evaluation datasets.
 
+### Provider-backed analysis extension (conditional)
+
+A real LLM/provider integration belongs to this stage, not to the fixture-driven Stage 4 acceptance slice. It remains disabled until GENI-ADR-006, GENI-ADR-007, GENI-ADR-017 and GENI-ADR-020 are accepted and the exact source-content rights, privacy-processing authorization, processor/transfer and regional requirements independently ALLOW the specific request.
+
+When those gates pass:
+
+1. Use only the approved provider/model/region and the exact authorized purpose/data category.
+2. Validate every structured response against the approved, versioned assessment schema; invalid or incomplete output is not accepted as an Analysis.
+3. Apply token/usage budgets, deadlines, cancellation and bounded retry rules.
+4. Persist an LLMUsageRecord for each actual provider request, linked to the exact Analysis and ProcessingRun/ProcessingStep, including provider/model, prompt/schema versions, input fingerprint, outcome, retry and available usage/cost data.
+5. Treat source content as untrusted data, prevent unrestricted tool access, and never infer external-processing permission from internal-processing permission.
+6. If any authorization, rights, transfer, provider or regional check is unknown, stale, revoked or mismatched, fail closed and preserve the analysis as unavailable rather than sending the payload.
+
+Until these gates pass, use deterministic local logic or approved fixtures only. A fake adapter is a test dependency, not a provider integration and not evidence of actual LLM usage.
+
 ### Economic Analysis Dimensions
 
 The initial analysis may consider:
@@ -1833,5 +1848,5 @@ Exit criteria require executable tests and operational evidence, not document pr
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.31
+**Version:** 1.32
 **Status:** Draft — Under Architecture Review
