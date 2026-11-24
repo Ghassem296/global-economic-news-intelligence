@@ -109,6 +109,9 @@ docs/
     def test_readiness_referenced_contract_versions_match_headers(self) -> None:
         validator.validate_readiness_document_version_references()
 
+    def test_first_slice_duplicate_contracts_are_aligned(self) -> None:
+        validator.validate_first_slice_duplicate_contract_alignment()
+
     def test_executable_foundation_document_is_registry_controlled(self) -> None:
         self.assertIn(
             "docs/17-executable-foundation-and-domain-lifecycle-contracts.md",
