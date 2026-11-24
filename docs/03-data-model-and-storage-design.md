@@ -1708,7 +1708,9 @@ Review states may include:
 - `COMPLETED`
 - `CANCELLED`
 
-The initial state, allowed transitions, terminal-state semantics, action-to-status projection, and REOPENED successor-segment behavior are defined normatively in GENI-FOUNDATION-017 §10. ReviewAction remains append-only audit evidence. Reopening creates a new ReviewRecord ID with predecessor_review_id and a new CREATED action; the completed/cancelled predecessor remains immutable. Material review actions remain disabled until GENI-ADR-014, reviewer identity/authorization, DTO schemas, and integration tests are approved.\n\nReview types identify the subject and required follow-up. The canonical six subject families and successor routes are:
+The initial state, allowed transitions, terminal-state semantics, action-to-status projection, and REOPENED successor-segment behavior are defined normatively in GENI-FOUNDATION-017 §10. ReviewAction remains append-only audit evidence. Reopening creates a new ReviewRecord ID with predecessor_review_id and a new CREATED action; the completed/cancelled predecessor remains immutable. Material review actions remain disabled until GENI-ADR-014, reviewer identity/authorization, DTO schemas, and integration tests are approved.
+
+Review types identify the subject and required follow-up. The canonical six subject families and successor routes are:
 
 | Review Type | Exact Subject | Material Successor |
 |---|---|---|
@@ -1891,7 +1893,9 @@ Attempt outcomes:
 
 Each attempt must be separately traceable. An `OUTCOME_UNKNOWN` result must place the PublicationRecord in `RECONCILIATION_REQUIRED`. Reconciliation must determine whether the external effect occurred before the operation is retried or finalized.
 
-The outcome-to-operation mapping is defined normatively in GENI-FOUNDATION-017 §9 and applies to PublicationRecord and DeliveryRecord. EXECUTE is allowed only while IN_PROGRESS; CONFIRMED_SUCCESS produces SUCCEEDED, CONFIRMED_FAILURE produces FAILED, and OUTCOME_UNKNOWN produces RECONCILIATION_REQUIRED. RECONCILE is allowed only while RECONCILIATION_REQUIRED; RECONCILED_SUCCESS produces SUCCEEDED, while RECONCILED_NOT_APPLIED returns to PENDING only when the same operation remains authorized and retry policy explicitly permits it, otherwise FAILED. Attempt records are immutable. Unknown outcomes prohibit another side-effecting attempt until reconciliation.\n\n## 12. Delivery Records
+The outcome-to-operation mapping is defined normatively in GENI-FOUNDATION-017 §9 and applies to PublicationRecord and DeliveryRecord. EXECUTE is allowed only while IN_PROGRESS; CONFIRMED_SUCCESS produces SUCCEEDED, CONFIRMED_FAILURE produces FAILED, and OUTCOME_UNKNOWN produces RECONCILIATION_REQUIRED. RECONCILE is allowed only while RECONCILIATION_REQUIRED; RECONCILED_SUCCESS produces SUCCEEDED, while RECONCILED_NOT_APPLIED returns to PENDING only when the same operation remains authorized and retry policy explicitly permits it, otherwise FAILED. Attempt records are immutable. Unknown outcomes prohibit another side-effecting attempt until reconciliation.
+
+## 12. Delivery Records
 
 ### 12.1 DeliveryRecord
 
@@ -1935,6 +1939,7 @@ Possible statuses:
 - `DELIVERED`
 - `FAILED`
 - `CANCELLED`
+- `RECONCILIATION_REQUIRED`
 
 Constraints:
 
@@ -1974,7 +1979,9 @@ Each attempt must be separately traceable.
 
 A retry must reuse the logical delivery operation and its idempotency key unless the operation itself has been explicitly superseded.
 
-DeliveryRecord uses the common external-operation transition and attempt-outcome mapping defined in GENI-FOUNDATION-017 §9. Its successful terminal status is DELIVERED rather than SUCCEEDED. DeliveryAttempt uses the same closed attempt vocabulary as PublicationAttempt: CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, and RECONCILED_NOT_APPLIED, with EXECUTE and RECONCILE attempt types. Unknown outcomes require reconciliation before retry. Delivery state remains independent of publication state and authorization decisions.\n\n### 12.3 DistributionAuthorizationDecision
+DeliveryRecord uses the common external-operation transition and attempt-outcome mapping defined in GENI-FOUNDATION-017 §9. Its successful terminal status is DELIVERED rather than SUCCEEDED. DeliveryAttempt uses the same closed attempt vocabulary as PublicationAttempt: CONFIRMED_SUCCESS, CONFIRMED_FAILURE, OUTCOME_UNKNOWN, RECONCILED_SUCCESS, and RECONCILED_NOT_APPLIED, with EXECUTE and RECONCILE attempt types. Unknown outcomes require reconciliation before retry. Delivery state remains independent of publication state and authorization decisions.
+
+### 12.3 DistributionAuthorizationDecision
 
 Represents an immutable policy outcome authorizing or blocking one precisely scoped recipient-delivery operation. It is independent from PublicationDecision and source-content RightsAssessment.
 
@@ -2082,7 +2089,9 @@ Possible statuses:
 - `CANCELLED`
 - `PARTIALLY_COMPLETED`
 
-The ProcessingRun lifecycle is defined normatively in GENI-FOUNDATION-017 §4. A new run starts PENDING. COMPLETED, FAILED, and CANCELLED are terminal; retrying a terminal run creates a successor run with parent_run_id. PARTIALLY_COMPLETED is recoverable and may resume the same run only under explicit recovery authorization, current fencing, and idempotency checks. Run status is a deterministic projection of the versioned required step set. An empty step set remains PENDING. Run/step state transitions and their append-only history must commit atomically.\n\n`target_type` and `target_id` form a polymorphic reference and cannot be protected by an ordinary foreign key to multiple target tables.
+The ProcessingRun lifecycle is defined normatively in GENI-FOUNDATION-017 §4. A new run starts PENDING. COMPLETED, FAILED, and CANCELLED are terminal; retrying a terminal run creates a successor run with parent_run_id. PARTIALLY_COMPLETED is recoverable and may resume the same run only under explicit recovery authorization, current fencing, and idempotency checks. Run status is a deterministic projection of the versioned required step set. An empty step set remains PENDING. Run/step state transitions and their append-only history must commit atomically.
+
+`target_type` and `target_id` form a polymorphic reference and cannot be protected by an ordinary foreign key to multiple target tables.
 
 The application layer must validate the target reference. Where stronger relational integrity is required, target-specific link tables should be introduced.
 
@@ -2115,7 +2124,9 @@ Fields:
 - `error_summary`
 - `metadata`
 
-The ProcessingStep status vocabulary and transitions are defined normatively in GENI-FOUNDATION-017 §5. A new step starts PENDING. FAILED may return to READY only under explicit retry authorization and a new immutable attempt; BLOCKED may return to READY only after dependencies/preconditions are revalidated. SUCCEEDED, SKIPPED, and CANCELLED are terminal for the logical step. A blocked step is not a failed attempt.\n\nA step must be safely repeatable or explicitly marked as non-repeatable.
+The ProcessingStep status vocabulary and transitions are defined normatively in GENI-FOUNDATION-017 §5. A new step starts PENDING. FAILED may return to READY only under explicit retry authorization and a new immutable attempt; BLOCKED may return to READY only after dependencies/preconditions are revalidated. SUCCEEDED, SKIPPED, and CANCELLED are terminal for the logical step. A blocked step is not a failed attempt.
+
+A step must be safely repeatable or explicitly marked as non-repeatable.
 
 Completed step outputs should be reusable when the input fingerprint and relevant processing versions have not changed.
 
