@@ -223,10 +223,10 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 2.0  
+**Version:** 2.1  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.0):** Made the provider-egress release gate explicit and reconciled the readiness blockers with Document 15 v2.8 and Document 08 v1.8: every provider request requires exact privacy authorization, source-content rights, transfer-assessment provenance and a linked LLMUsageRecord; changed requests and retries require re-evaluation. No provider egress or production processing is authorized.
+**Revision Note (v2.1):** Corrected the readiness assessment's referenced versions to match the published Document 15 v2.8 and Document 08 v1.8 baselines. No substantive architecture, approval, or capability gate changed. Made the provider-egress release gate explicit and reconciled the readiness blockers with Document 15 v2.8 and Document 08 v1.8: every provider request requires exact privacy authorization, source-content rights, transfer-assessment provenance and a linked LLMUsageRecord; changed requests and retries require re-evaluation. No provider egress or production processing is authorized.
 
 **End of Document**
