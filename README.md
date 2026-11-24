@@ -22,7 +22,7 @@ The authoritative readiness assessment is [Document 16](docs/16-implementation-r
 Requirement: Python 3.15 only.
 
 ```powershell
-py -3.15 -m pip install --user uv==0.13.9
+powershell -ExecutionPolicy ByPass -c "irm https://releases.astral.sh/github/uv/releases/download/0.13.9/uv-installer.ps1 | iex"
 uv --version
 uv sync --locked --extra dev
 ```
