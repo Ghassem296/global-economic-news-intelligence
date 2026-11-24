@@ -4,9 +4,9 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.26
+**Version:** 1.27
 **Status:** Draft — Under Documentation Review  
-**Last Updated:** 2026-11-19
+**Last Updated:** 2026-11-24
 
 ---
 
@@ -59,6 +59,7 @@ docs/
 |-- 13-deployment-operations-and-observability.md
 |-- 14-data-protection-and-privacy-specification.md
 |-- 15-first-slice-implementation-contracts.md
+|-- 16-implementation-readiness-and-release-gates.md
 |
 |-- adr/
 |   |-- README.md
@@ -329,7 +330,23 @@ Defines the proposed method-level repository contracts, field-level DTO schema t
 
 **Authority:** Proposed implementation-contract baseline subordinate to approved ADRs and the architecture/data-model documents. It must not be treated as accepted until explicitly approved.
 
-## 3.16 Related Privacy Architecture Decision
+## 3.16 Implementation Readiness and Release Gates
+
+**File:** `16-implementation-readiness-and-release-gates.md`  
+**Document ID:** `GENI-READY-016`
+
+Records the implementation-readiness assessment, distinguishes the existing documentation-validation automation from application CI, identifies which decisions are foundational versus capability-dependent, and defines evidence-based gates for enabling first-slice workflows. It preserves unresolved contracts in Document 15 rather than inventing transitions or approving technologies.
+
+**Consult this document when:**
+
+- Determining whether a proposed implementation task is unblocked.
+- Checking which ADRs must be accepted for a selected capability.
+- Reviewing first-slice scope and disabled capabilities.
+- Recording evidence that a readiness gate has passed.
+
+**Authority:** Readiness and coordination record. It does not supersede approved ADRs or approve any Proposed decision.
+
+## 3.17 Related Privacy Architecture Decision
 
 [GENI-ADR-020 — Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture](adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md) defines the proposed privacy execution model across application workflows, data lineage, provider boundaries, and deletion propagation. It is related to Documents 02, 03, 08, 09, 12, 13, and 14. The ADR remains Proposed pending explicit approval.
 
