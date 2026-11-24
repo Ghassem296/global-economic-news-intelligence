@@ -106,6 +106,25 @@ docs/
         validator.validate_document_versions()
         validator.validate_document_registry_metadata_alignment()
 
+    def test_executable_foundation_document_is_registry_controlled(self) -> None:
+        self.assertIn(
+            "docs/17-executable-foundation-and-domain-lifecycle-contracts.md",
+            validator.CONTROLLED_DOCUMENTS,
+        )
+        validator.validate_document_versions()
+        validator.validate_document_registry_metadata_alignment()
+
+    def test_first_slice_lifecycle_contract_is_executable(self) -> None:
+        implementation = (ROOT / "docs/15-first-slice-implementation-contracts.md").read_text(
+            encoding="utf-8"
+        )
+        foundation = (
+            ROOT / "docs/17-executable-foundation-and-domain-lifecycle-contracts.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("GENI-FOUNDATION-017", implementation)
+        self.assertIn("ProcessingRun lifecycle", foundation)
+        self.assertIn("PublicationRecord and PublicationAttempt", foundation)
+
     def test_expected_adr_inventory_includes_adr_020(self) -> None:
         self.assertIn("GENI-ADR-020", validator.EXPECTED_ADR_IDS)
         self.assertEqual(len(validator.EXPECTED_ADR_IDS), 20)
