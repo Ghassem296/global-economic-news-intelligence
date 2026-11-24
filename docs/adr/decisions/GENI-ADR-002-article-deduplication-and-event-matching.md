@@ -101,7 +101,7 @@ The design should support:
 - The physical data model remains subject to Document 03 and the relevant persistence ADRs.
 - Proposed ADRs must not be treated as accepted implementation requirements.
 
-### 3.8 Terminology
+### 3.4 Terminology
 
 The following terms have specific meanings in this ADR.
 
@@ -285,9 +285,9 @@ Similarly, an event match must not automatically establish that two articles are
 
 Both operations must retain independently traceable decisions.
 
-### 6.1 Article Deduplication Design
+### 6.4 Article Deduplication Design
 
-### 7.1 Candidate Generation
+#### 6.4.1 Candidate Generation
 
 Candidate generation should identify article pairs that may represent duplicate or near-duplicate content. Multi-article duplicate groups must be derived from pairwise candidate evaluations and their effective decisions; a group must not replace the immutable pairwise evidence.
 
@@ -307,7 +307,7 @@ Candidate generation is a retrieval step, not a final duplicate decision.
 
 The system should avoid comparing every article with every other article when more efficient source-scoped or indexed retrieval methods are available.
 
-### 7.2 Exact Duplicate Detection
+#### 6.4.2 Exact Duplicate Detection
 
 Exact duplicate detection should prioritize deterministic signals.
 
@@ -331,7 +331,7 @@ Normalization must not remove meaningful differences such as:
 
 A matching hash alone must not be treated as conclusive when the hash was generated from an incomplete or overly aggressive normalization process.
 
-### 7.3 Near-Duplicate Detection
+#### 6.4.3 Near-Duplicate Detection
 
 Near-duplicate detection identifies content that substantially overlaps without being exactly identical.
 
@@ -351,7 +351,7 @@ The selected method must be evaluated against representative article pairs, incl
 
 Near-duplicate detection must distinguish copied or lightly edited content from independent reporting about the same underlying development.
 
-### 7.4 Syndicated and Republished Content
+#### 6.4.4 Syndicated and Republished Content
 
 Syndication requires special treatment.
 
@@ -370,7 +370,7 @@ A publication that substantially changes the content, introduces independent rep
 
 The system must not assume that every similar article is syndicated.
 
-### 7.5 Article Revisions
+#### 6.4.5 Article Revisions
 
 Updates to an article must be distinguished from separate publications.
 
@@ -384,7 +384,7 @@ When the same publisher updates an existing article:
 
 The exact article revision persistence model is defined in Document 03 and remains subject to its relevant architecture decisions.
 
-### 7.6 Duplicate Decision and History
+#### 6.4.6 Duplicate Decision and History
 
 Each immutable DuplicateCandidate evaluates one canonical pair of exact ArticleRevision records. Candidate generation and similarity scoring are evidence-producing operations only; neither creates an authoritative duplicate relationship.
 
@@ -406,9 +406,9 @@ A confirmed duplicate relationship is derived only from the effective `CONFIRMED
 
 The detailed fields, uniqueness rules, referential constraints, and repository contracts are defined in Document 03 and Document 02. Human correction and review are governed by ADR-014.
 
-### 6.2 Event Matching Design
+### 6.5 Event Matching Design
 
-### 8.1 Candidate Generation
+#### 6.5.1 Candidate Generation
 
 Event matching should retrieve plausible existing events for an article.
 
@@ -429,7 +429,7 @@ Candidate generation should prioritize recall sufficiently to avoid missing plau
 
 Candidate retrieval must not automatically create or merge events.
 
-### 8.2 Event Evaluation
+#### 6.5.2 Event Evaluation
 
 Each candidate event must be evaluated against the article's actual content and the available event context.
 
@@ -447,7 +447,7 @@ For example, a central bank interest-rate decision and a subsequent currency mar
 
 Their association must follow the event identity and lifecycle policy defined in ADR-011.
 
-### 8.3 Event Association Outcomes
+#### 6.5.3 Event Association Outcomes
 
 The event matching operation should support explicit outcomes such as:
 
@@ -463,7 +463,7 @@ These outcomes are the case-level decision vocabulary used by the current propos
 
 A `NEW_EVENT_CANDIDATE` outcome is a proposal only; it does not create an Event or an ArticleEventLink.
 
-### 8.4 Event-Matching Case and Decision Boundaries
+#### 6.5.4 Event-Matching Case and Decision Boundaries
 
 Each matching operation must be scoped to one independently identified development within one immutable ArticleRevision. The persistent unit is EventMatchCase. A single article revision may therefore have multiple cases, each with its own candidate set, review history, and final decision.
 
@@ -473,7 +473,7 @@ EventMatchDecision is the immutable, authoritative outcome for one case. A MATCH
 
 ArticleEventLink must reference the exact EventMatchDecision that authorized its creation. A review task or comment is not a decision. Human review must result in a new EventMatchDecision under the authorization process defined by ADR-014. The complete persistence contract and referential constraints are specified in Document 03.
 
-### 8.5 Multiple Event Associations
+#### 6.5.5 Multiple Event Associations
 
 An article may describe multiple distinct events.
 
@@ -489,13 +489,13 @@ The system must not force every article into exactly one event.
 
 Association granularity and event boundaries must follow ADR-011.
 
-### 6.3 Confidence and Score Semantics
+### 6.6 Confidence and Score Semantics
 
 Article duplicate similarity and event matching confidence must be represented as separate concepts.
 
 A score from one operation must never be reused as if it were a score from the other.
 
-### 9.1 Duplicate Similarity
+#### 6.6.1 Duplicate Similarity
 
 Duplicate similarity measures the degree of content overlap or identity evidence between article records.
 
@@ -511,7 +511,7 @@ The system must document the meaning and limitations of each score.
 
 A high semantic similarity score alone does not establish duplicate identity.
 
-### 9.2 Event Matching Confidence
+#### 6.6.2 Event Matching Confidence
 
 Event matching confidence represents the strength of evidence supporting the association between an article and a candidate event.
 
@@ -528,7 +528,7 @@ It may consider:
 
 It must not be derived solely from article duplicate similarity.
 
-### 9.3 Calibration and Versioning
+#### 6.6.3 Calibration and Versioning
 
 For both operations, record the relevant:
 
@@ -547,7 +547,7 @@ Thresholds must be evaluated against representative data and documented error co
 
 False duplicate decisions and false event associations have different consequences and must be evaluated separately.
 
-### 9.4 Unknown and Insufficient Information
+#### 6.6.4 Unknown and Insufficient Information
 
 Missing scores must remain null.
 
@@ -557,7 +557,7 @@ An unavailable or failed evaluation must not be treated as a negative match.
 
 Insufficient evidence must result in an explicit unresolved or review outcome rather than a forced decision.
 
-### 6.4 Processing Order and Interaction
+### 6.7 Processing Order and Interaction
 
 The proposed high-level workflow is:
 
@@ -584,13 +584,13 @@ A duplicate decision must not silently delete the article or prevent its source 
 
 An article already identified as a duplicate may still contain additional information or material changes that need to be evaluated for event intelligence.
 
-### 6.5 Data and Persistence Implications
+### 6.8 Data and Persistence Implications
 
 The logical data model must support separate records for article duplicate evaluation and article-event matching.
 
 The following concepts are required at the logical level:
 
-### 11.1 Duplicate Evaluation Concepts
+#### 6.8.1 Duplicate Evaluation Concepts
 
 - Article identity and source-scoped identifiers.
 - Article revision or content observation.
@@ -601,7 +601,7 @@ The following concepts are required at the logical level:
 - Syndication or republication relationships where known.
 - Candidate input fingerprints, decision history, and processing/policy versions.
 
-### 11.2 Event Matching Concepts
+#### 6.8.2 Event Matching Concepts
 
 - Article-event candidate relationships.
 - Event matching outcomes.
@@ -611,7 +611,7 @@ The following concepts are required at the logical level:
 - Ambiguity and review information.
 - Links to the relevant article revision and event context.
 
-### 11.3 Persistence Rules
+#### 6.8.3 Persistence Rules
 
 - Duplicate candidate identity must be stable and canonicalized so that the same pair is not repeatedly created in reverse order.
 - Article-event associations must be independently identifiable.
@@ -624,11 +624,11 @@ The following concepts are required at the logical level:
 
 This ADR does not mandate a particular database engine or physical table layout.
 
-### 6.6 Failure Handling, Reprocessing, and Idempotency
+### 6.9 Failure Handling, Reprocessing, and Idempotency
 
 Both processing responsibilities must support safe retries and independent recovery.
 
-### 12.1 Article Deduplication Failures
+#### 6.9.1 Article Deduplication Failures
 
 Examples include:
 
@@ -643,7 +643,7 @@ A failure must not be recorded as a negative duplicate decision.
 
 The operation should remain retryable where appropriate.
 
-### 12.2 Event Matching Failures
+#### 6.9.2 Event Matching Failures
 
 Examples include:
 
@@ -658,7 +658,7 @@ A failure must not automatically create a new event or force an association.
 
 The operation should retain its incomplete or retryable status.
 
-### 12.3 Idempotency
+#### 6.9.3 Idempotency
 
 Repeated execution with the same logical inputs and processing versions must not create duplicate candidate records, duplicate associations, or conflicting decision history.
 
@@ -670,7 +670,7 @@ Processing identity should account for relevant inputs, including:
 - Algorithm or model version.
 - Relevant feature configuration.
 
-### 12.4 Reprocessing
+#### 6.9.4 Reprocessing
 
 Changes to normalization rules, similarity methods, matching thresholds, models, or event context may justify reprocessing.
 
@@ -678,11 +678,11 @@ Reprocessing must be traceable and must not silently overwrite historical decisi
 
 The recovery and execution guarantees are governed by ADR-016.
 
-### 6.7 Evaluation and Quality Requirements
+### 6.10 Evaluation and Quality Requirements
 
 Article deduplication and event matching must have separate evaluation datasets and metrics.
 
-### 13.1 Article Deduplication Evaluation
+#### 6.10.1 Article Deduplication Evaluation
 
 Evaluation should include:
 
@@ -709,7 +709,7 @@ Relevant metrics include:
 
 False duplicate decisions deserve particular attention because they may suppress independent reporting or distort source provenance.
 
-### 13.2 Event Matching Evaluation
+#### 6.10.2 Event Matching Evaluation
 
 Evaluation should include:
 
@@ -736,7 +736,7 @@ Relevant metrics include:
 - Human review rate.
 - Event fragmentation and incorrect merge rates.
 
-### 13.3 Independent Corroboration Evaluation
+#### 6.10.3 Independent Corroboration Evaluation
 
 The system must be evaluated for its ability to avoid counting syndicated or copied content as independent corroboration.
 
@@ -750,7 +750,7 @@ Evaluation should examine:
 
 The number of articles associated with an event must not be used as a direct substitute for the number of independent sources.
 
-### 13.4 Acceptance Expectations
+#### 6.10.4 Acceptance Expectations
 
 Before production use, the implementation must demonstrate that:
 
@@ -769,7 +769,7 @@ Before production use, the implementation must demonstrate that:
 
 Exact numerical thresholds must be established through representative evaluation data and product risk requirements rather than invented in this ADR.
 
-### 6.8 Security and Responsible Processing
+### 6.11 Security and Responsible Processing
 
 Article content is untrusted external input.
 
@@ -808,7 +808,7 @@ Upon acceptance:
 
 ## 8. Consequences and Trade-Offs
 
-### 15.1 Positive Consequences
+### 8.1 Positive Consequences
 
 - Article identity and event identity remain separate.
 - Independent reporting is less likely to be incorrectly collapsed.
@@ -820,7 +820,7 @@ Upon acceptance:
 - Semantic retrieval can be introduced incrementally.
 - The system can reprocess articles and event relationships independently.
 
-### 15.2 Negative Consequences
+### 8.2 Negative Consequences
 
 - More logical processing stages are required.
 - Separate candidate and decision records increase data-model complexity.
@@ -829,7 +829,7 @@ Upon acceptance:
 - Some articles may remain unresolved until additional evidence becomes available.
 - Candidate retrieval and decision processing require observability and operational monitoring.
 
-### 15.3 Trade-Offs
+### 8.3 Trade-Offs
 
 The proposed design deliberately favors traceability and correct domain semantics over minimizing the number of processing components.
 
@@ -853,7 +853,7 @@ This is preferable to silently deleting source records, merging unrelated events
 | Document 03 | Defines the logical data model and persistence implications. |
 | Document 04 | Defines implementation sequencing and delivery priorities. |
 
-### 16.1 Scope Boundaries
+### 9.1 Scope Boundaries
 
 This ADR does not decide:
 
@@ -951,7 +951,6 @@ These questions must be resolved through implementation specifications, evaluati
 - GENI-ADR-011 — Event Identity, Matching, Continuation, Merging, and Splitting.
 - GENI-ADR-012 — Semantic Retrieval, Similarity Calculation, and Embedding Storage.
 - GENI-ADR-016 — Persistence, Async Execution, Idempotency, and Recovery.
-- GENI-EVAL-012 — Testing and Evaluation Strategy.
 
 The proposal is based on the internal architecture and domain requirements listed above. No benchmark result or external empirical claim is asserted in this ADR.
 
@@ -967,6 +966,6 @@ The proposal is based on the internal architecture and domain requirements liste
 | 1.5 | 2026-11-18 | Proposed | Defined pairwise duplicate decision outcomes, immutable supersession, and group derivation from effective pairwise decisions. | AI Architecture Assistant |
 | 1.6 | 2026-11-18 | Proposed | Defined non-transitive near-duplicate grouping and conservative complete-link semantics. | AI Architecture Assistant |
 
-| 1.7 | 2026-11-24 | Proposed | Reorganized the ADR to the standard 14-section template while preserving detailed deduplication/event-matching design as subsections; added explicit qualitative option evaluation and acceptance criteria. | AI Architecture Assistant |
+| 1.7 | 2026-11-24 | Proposed | Reorganized the ADR to the standard 14-section template while preserving detailed design as subsections; added qualitative option evaluation and explicit acceptance criteria. | AI Architecture Assistant |
 
 **End of ADR-002**
