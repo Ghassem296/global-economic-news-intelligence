@@ -262,10 +262,6 @@ This technique can reduce token consumption, lower processing costs, and help th
 
 `https://github.com/Ghassem296/build-an-ai-agent-from-scratch`
 
-**Local project directory:**
-
-`C:\Users\Ghassem BAKHTIARI\Desktop\build-an-ai-agent-from-scratch`
-
 ### Current Project Structure
 
 Important files include:
@@ -278,7 +274,7 @@ Important files include:
 - `app/main.py` — Application entry point.
 - `tools/mcp_server.py` — MCP tools.
 
-The project uses a local Ollama server at `http://127.0.0.1:11434` and the `qwen2.5:3b` model.
+The project used a local Ollama server during the earlier learning exercises. Runtime endpoints, model identifiers, and configuration values are intentionally omitted here because they are environment-specific and must be verified against the separate project's current configuration before reuse.
 
 The MCP server already includes a `search_web` tool using `DDGS().text(...)`.
 
