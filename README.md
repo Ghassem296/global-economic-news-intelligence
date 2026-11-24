@@ -22,26 +22,27 @@ The authoritative readiness assessment is [Document 16](docs/16-implementation-r
 Requirement: Python 3.15 only.
 
 ```powershell
-py -3.15 -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+py -3.15 -m pip install --user uv==0.13.9
+uv --version
+uv sync --locked --extra dev
 ```
+
+The repository pins uv 0.13.9 in `pyproject.toml` and commits `uv.lock`. Use `uv sync --locked` so local environments do not silently resolve a different dependency set.
 
 ## Commands
 
 ```powershell
-geni version
-geni readiness
-ruff check .
-mypy
-pytest
+uv run --locked geni version
+uv run --locked geni readiness
+uv run --locked --no-sync ruff check .
+uv run --locked --no-sync mypy
+uv run --locked --no-sync pytest
 ```
 
 Or run the CLI without installing the console script:
 
 ```powershell
-python -m global_economic_news_intelligence version
+uv run --locked python -m global_economic_news_intelligence version
 ```
 
 ## Architecture boundaries
