@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.51  
+**Version:** 1.52  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -363,7 +363,7 @@ EventMatchDecision is the authoritative, immutable record of the outcome for one
 
 The decision outcome must be explicit: MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, or REVIEW_REQUIRED. MATCH must identify exactly one eligible candidate in the same case. NEW_EVENT_CANDIDATE is only a proposal; following separately authorized event creation, the new Event must be recorded as a candidate and a subsequent MATCH decision must authorize the link. NO_MATCH means none of the evaluated candidates matches this case's development and does not preclude a different case in the same ArticleRevision from matching another Event. AMBIGUOUS and REVIEW_REQUIRED remain unresolved outcomes. Non-MATCH outcomes must not create an active ArticleEventLink. A human correction or later reassessment creates a new decision that supersedes the previous effective decision; it does not mutate the historical decision.
 
-The decision must identify its method, policy version, rationale, decision actor, timestamp, confidence semantics where applicable, and any superseded decision. A review task or review comment is not itself an EventMatchDecision.
+The decision must identify its method, policy version, rationale, authenticated decision actor, immutable authorization reference, timestamp, confidence semantics where applicable, and any superseded decision. The authorization reference must resolve through the security/audit layer to the actor or service, action, exact case/resource, authorization scope, applicable policy/version, timestamp, and result; it must not be accepted as caller-supplied role text. Missing, stale, revoked, or unverifiable authorization blocks the append. A review task or review comment is not itself an EventMatchDecision.
 
 ### 4.11 EventService
 
