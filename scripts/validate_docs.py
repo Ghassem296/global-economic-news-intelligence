@@ -161,6 +161,30 @@ def validate_first_slice_duplicate_contract_alignment() -> None:
             fail(f"Article-deduplication contract alignment failed in {name}: {missing}")
 
 
+def validate_first_slice_provenance_ownership() -> None:
+    """Require first-slice provenance child records to share their parent aggregate transaction."""
+    implementation = read_text(ROOT / "docs/15-first-slice-implementation-contracts.md")
+    readiness = read_text(ROOT / "docs/16-implementation-readiness-and-release-gates.md")
+    required_implementation = (
+        "EvidenceRepository owns EvidenceLocation writes",
+        "AnalysisRepository owns AnalysisInput and AnalysisEvidenceLink writes",
+        "ReportRepository owns ReportEventLink, ReportEvidenceLink, ReportArticleLink and ReportAnalysisLink writes",
+        "all permitted EvidenceLocation records atomically in the same UnitOfWork",
+        "exact AnalysisInput and AnalysisEvidenceLink records in the same UnitOfWork",
+        "all ReportEventLink, ReportEvidenceLink, ReportArticleLink and ReportAnalysisLink records commit atomically through ReportRepository",
+    )
+    missing = [item for item in required_implementation if item not in implementation]
+    if missing:
+        fail(f"First-slice provenance ownership is incomplete in Document 15: {missing}")
+    required_readiness = (
+        "Atomic EvidenceLocation, AnalysisInput/AnalysisEvidenceLink",
+        "ReportEventLink/ReportEvidenceLink/ReportArticleLink/ReportAnalysisLink writes through the parent aggregate repositories",
+    )
+    missing = [item for item in required_readiness if item not in readiness]
+    if missing:
+        fail(f"First-slice provenance transaction gates are incomplete in Document 16: {missing}")
+
+
 def validate_adrs() -> None:
     paths = sorted(ADR_DIR.glob("GENI-ADR-*.md"))
     ids: list[str] = []
@@ -1206,6 +1230,7 @@ def main() -> None:
     validate_document_versions()
     validate_readiness_document_version_references()
     validate_first_slice_duplicate_contract_alignment()
+    validate_first_slice_provenance_ownership()
     validate_document_registry_metadata_alignment()
     validate_documentation_index_adr_authority()
     validate_adr_registry_title_alignment()
