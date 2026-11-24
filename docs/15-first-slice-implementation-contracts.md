@@ -581,7 +581,8 @@ These records must not be collapsed into generic status fields or hidden inside 
 - Document 12 — Testing and Evaluation Strategy.
 - Document 13 — Deployment, Operations, and Observability.
 - Document 14 — Data Protection and Privacy Specification.
-- GENI-ADR-004, 005, 006, 011, 013, 014, 016, 017, 019 and 020.\n- GENI-FOUNDATION-017 — Executable Foundation and Domain Lifecycle Contracts.
+- GENI-ADR-004, 005, 006, 011, 013, 014, 016, 017, 019 and 020.
+- GENI-FOUNDATION-017 — Executable Foundation and Domain Lifecycle Contracts.
 
 ---
 
