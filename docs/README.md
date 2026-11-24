@@ -4,7 +4,7 @@
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
 **Document ID:** GENI-DOC-INDEX-001  
-**Version:** 1.28
+**Version:** 1.29
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-24
 
@@ -65,6 +65,8 @@ docs/
 |-- adr/
 |   |-- README.md
 |   |-- adr-template.md
+|   |-- evidence/
+|   |   +-- GENI-ADR-005-persistence-proof-of-concept-protocol.md
 |   |
 |   +-- decisions/
 |       |-- GENI-ADR-001-event-centric-intelligence-architecture.md
