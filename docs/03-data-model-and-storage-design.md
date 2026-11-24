@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.44
+**Version:** 1.45
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -595,6 +595,8 @@ Fields:
 - `matching_policy_version`
 - `input_fingerprint`
 - `evaluated_at`
+- `actor_reference` — authenticated service/human identity that initiated the evaluation
+- `authorization_reference` — immutable authorization/audit reference bound to the exact `article.duplicate.evaluate` action, revision pair, scope, policy/version and input fingerprint
 - `metadata`
 
 Constraints:
@@ -620,6 +622,7 @@ Fields:
 - `decision_policy_version`
 - `decision_confidence` nullable, with documented semantics
 - `actor_reference`
+- `authorization_reference` — immutable authorization/audit reference bound to the exact `article.duplicate.decide` action, candidate, outcome, predecessor and policy/version
 - `decided_at`
 - `supersedes_decision_id` nullable
 - `metadata`
@@ -2622,6 +2625,8 @@ The following composite relationships must be enforced by database constraints w
 - `Article(current_revision_id, id)` must resolve to an ArticleRevision whose `article_id` is that same Article.
 - `DuplicateCandidate` must reference the exact Article and ArticleRevision pair being compared; both revisions must belong to the referenced Articles.
 - `DuplicateDecision` and its superseded decision must reference the same DuplicateCandidate; one candidate cannot have multiple effective decisions.
+- `DuplicateCandidate.authorization_reference` must resolve to an ALLOW decision for the exact `article.duplicate.evaluate` action, canonical revision pair, comparison scope, policy/version and input fingerprint.
+- `DuplicateDecision.authorization_reference` must resolve to an ALLOW decision for the exact `article.duplicate.decide` action, candidate, outcome, effective predecessor and policy/version.
 - `Claim.current_assessment_id` must reference a ClaimAssessment whose claim_id equals that Claim's id.
 - `ClaimAssessment.supersedes_assessment_id` must reference an assessment for the same Claim; a new assessment and current pointer update must be atomic.
 - `ClaimAssessmentEvidenceLink` must connect an assessment to evidence included in that assessment's immutable evidence set.
