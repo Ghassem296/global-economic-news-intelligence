@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 2.7  
+**Version:** 2.8  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -114,7 +114,7 @@ Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.
 
 ### 5.2 Persistence and transaction implementation
 
-Complete GENI-ADR-005-POC-001 using an approved workload profile and predeclared thresholds; retain raw results, failed runs, environment/configuration, commit SHA, migration and backup/restore evidence. The protocol is a test plan, not a test result. Obtain formal ADR-005 acceptance before selecting the production database. Then implement:
+Complete GENI-ADR-005-POC-001 using an approved workload profile and predeclared thresholds; retain raw results, failed runs, environment/configuration, commit SHA, migration and backup/restore evidence. The protocol is a test plan, not a test result. GENI-ADR-005 must be formally Accepted before selecting the production database. Then implement:
 - Database adapter, migrations, repository implementations, and UnitOfWork.
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
@@ -228,10 +228,10 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 2.6  
+**Version:** 2.8  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.7):** Tightened R1 and persistence blockers to require completed GENI-ADR-005-POC-001 evidence and formal ADR-005 acceptance before selecting a production database. Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
+**Revision Note (v2.8):** Tightened R1 and persistence blockers to require completed GENI-ADR-005-POC-001 evidence and formal ADR-005 acceptance before selecting a production database. Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
 
 **End of Document**
