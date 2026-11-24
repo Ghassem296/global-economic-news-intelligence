@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 3.0  
+**Version:** 3.1  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -42,7 +42,7 @@ The initial executable foundation was originally checked on Python 3.12 and 3.13
 
 The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
 
-The dependency-management baseline is not yet finalized. `pyproject.toml` declares bounded development dependency ranges, but the repository has no lockfile; Application CI currently installs with pip from those ranges. Document 04 lists uv as a candidate, not an approved selection. Therefore dependency resolution is not yet reproducible, and neither uv nor pip is recorded as the final package-management decision. A lockfile and locked CI installation must follow an explicit toolchain decision and be generated and verified on a compatible Python 3.15 environment.
+The project package-management choice is now uv 0.13.9, pinned by `[tool.uv].required-version` in `pyproject.toml`; the setuptools build backend is pinned to 84.2.1. A committed `uv.lock` records the complete resolved development dependency graph with artifact hashes for the Python 3.15 target. Application CI verifies lock freshness with `uv lock --check`, installs with `uv sync --locked --extra dev`, and runs Ruff, mypy, and pytest without re-resolving dependencies. The lock was generated and its locked installation and quality checks were verified on CPython 3.15.2 using uv 0.13.9. This closes the current dependency-resolution reproducibility gap for the declared Python project environment. It does not establish artifact provenance for every upstream package, guarantee offline builds, or approve any database, LLM provider, source, or deployment architecture.
 
 The following remain absent or incomplete:
 
@@ -236,6 +236,8 @@ If new evidence changes readiness, update this document and the affected source-
 
 **Revision Note (v2.8):** Tightened R1 and persistence blockers to require completed GENI-ADR-005-POC-001 evidence and formal ADR-005 acceptance before selecting a production database. Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
 
-**Revision Note (v3.0):** Records successful Python 3.15 main-branch Application CI verification and explicitly identifies the remaining dependency reproducibility gap: no lockfile, pip-based CI installation from version ranges, and package-manager selection still pending. No technology or ADR approval is implied.
+**Revision Note (v3.0):** Recorded successful Python 3.15 main-branch Application CI verification and the then-open dependency reproducibility gap.
+
+**Revision Note (v3.1):** Records uv 0.13.9 as the selected package manager, setuptools 84.2.1 as the pinned build backend, the committed Python 3.15 `uv.lock`, and successful locked dependency installation and quality checks. This resolves the package-resolution gap only; database selection, persistence proofs, contracts, security, rights, and vertical-slice gates remain open.
 
 **End of Document**
