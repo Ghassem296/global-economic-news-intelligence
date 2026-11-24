@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.45
+**Version:** 1.46
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -133,7 +133,7 @@ The Event record is not the authoritative storage location for these assessment 
 
 ### 3.1 Initial Relational Storage
 
-SQLite is a candidate for the initial relational persistence proof-of-concept, not a selected production engine. The initial engine must be chosen under GENI-ADR-005 after measuring the expected workload, concurrent writers, locking and transaction behavior, backup/restore needs, deployment model, and operational capacity. PostgreSQL remains an alternative for the initial selection if those measurements require it.
+SQLite is a candidate for the initial relational persistence proof-of-concept, not a selected production engine. The comparative workload, correctness/failure matrix, measurement controls, and required evidence artifacts are defined in GENI-ADR-005-POC-001 (`docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`); that protocol contains no benchmark results and selects no engine. The initial engine must be chosen under GENI-ADR-005 after measuring the expected workload, concurrent writers, locking and transaction behavior, backup/restore needs, deployment model, and operational capacity. PostgreSQL remains an alternative for the initial selection if those measurements require it.
 
 The selected initial implementation should support:
 
