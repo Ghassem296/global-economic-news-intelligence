@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.6  
+**Version:** 2.7  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -959,6 +959,64 @@ A channel-level impact may describe realized or potential consequences. `OBSERVE
 
 The following details remain open and block a production schema or methodology release: complete importance-dimension vocabulary and scales; transmission-pathway and channel taxonomies; canonical typed entity/geography reference forms; numeric precision, units and range representation; period/time-horizon encoding; uncertainty object structure and calibration; treatment of conflicting evidence; minimum evidence sufficiency rules; and version migration/compatibility rules. These must be closed through the relevant controlled specification and GENI-ADR-008/019 approval process. No arbitrary defaults are introduced by this tranche.
 
+
+### 10.15 Report content and generation-provenance contracts (tranche v1.7)
+
+This section makes the semantic structure of a report version and its generation provenance explicit, using the responsibilities in Document 02 §§4.20 and 7.6 and the Report/ReportLink entities in Document 03 §11. It does not select a serialization format, template engine, or publication target.
+
+#### 10.15.1 ReportContent
+
+A report version must distinguish the kinds of statements it contains. A single untyped text blob is insufficient as the only representation of material conclusions.
+
+| Field | Logical type | Requiredness | Contract |
+|---|---|---|---|
+| `sections` | `List<ReportSection>` | Required | Ordered sections for this immutable report version; an empty list is not a successfully generated substantive report. |
+| `section_reference` | `string` | Required within each section | Stable unique reference within this report version; used by ReportEvidenceLink and ReportAnalysisLink. |
+| `heading` | `string` | Required within each section | Human-readable section heading; exact length/format bounds remain open. |
+| `blocks` | `List<ReportContentBlock>` | Required within each section | Ordered content units; each block has an explicit semantic type. |
+| `block_type` | `enum` | Required within each block | Proposed values: `OBSERVED_FACT`, `SOURCE_ATTRIBUTED_CLAIM`, `ANALYTICAL_INTERPRETATION`, `FORECAST_OR_SCENARIO`, `LIMITATION_OR_UNCERTAINTY`. |
+| `content` | `string/object` | Required within each block | Content in the declared versioned format; source-derived text remains subject to exact rights and retention scope. |
+| `article_revision_references` | `List<ID<ArticleRevision>>` | Conditional | Exact source revisions supporting or supplying the block; never resolve a mutable current Article projection. |
+| `evidence_references` | `List<ID<Evidence>>` | Conditional | Exact evidence supporting or qualifying the block. |
+| `analysis_references` | `List<ID<Analysis>>` | Conditional | Exact immutable analytical results used by the block. |
+| `uncertainty_or_limitation_reference` | `typed reference/null` | Conditional | Required where a material conclusion is qualified by a separately represented uncertainty/limitation; exact reference schema remains open. |
+
+A source-attributed claim must retain enough attribution and evidence provenance to distinguish what a source reported from what GENI independently observed or inferred. An analytical interpretation must not be presented as an observed fact. A forecast/scenario block is permitted only when its separate methodology and calibration requirements are satisfied; this section does not authorize forecast probabilities. Unsupported precision, invented citations, and source quotations outside the exact allowed rights scope are prohibited.
+
+The outer AppendReportVersion DTO's article, event, analysis, evidence and rights references must be the complete version-level provenance set. Section-level references must be subsets of those exact version-level references; they cannot silently add new inputs. The ReportEventLink, ReportArticleLink, ReportAnalysisLink and ReportEvidenceLink records must agree with the immutable content manifest and section references.
+
+#### 10.15.2 ReportGenerationProvenance
+
+The `generation_provenance` object in AppendReportVersion must identify how this exact report version was produced. Its minimum logical fields are:
+
+| Field | Logical type | Requiredness | Contract |
+|---|---|---|---|
+| `generator_component` | `string/enum` | Required | Identifies the generating component; the current logical owner is `ReportGenerator`. |
+| `generator_version` | `Version` | Required | Exact generator implementation/version identifier. |
+| `workflow_version` | `Version` | Required | Exact reporting workflow contract/version used. |
+| `template_reference` | `string/reference` | Required | Stable identity of the template used; display name alone is insufficient. |
+| `template_version` | `Version` | Required | Must equal the outer AppendReportVersion template_version. |
+| `content_schema_version` | `Version` | Required | Exact schema for ReportContent and its block types. |
+| `input_fingerprint` | `Fingerprint` | Required | Must equal the outer input_fingerprint and cover the exact immutable input manifest and all generation-relevant versions. |
+| `generation_run_reference` | `ID<ProcessingRun>/null` | Conditional | Required when generation is executed under a persisted ProcessingRun; otherwise null with an explicit execution mode. |
+| `model_usage_references` | `List<ID<LLMUsageRecord>>` | Conditional | Exact usage records when a model was used to generate or transform report content; empty when no model was used. |
+
+The generation-provenance object is evidence of how the report was produced, not authorization. It cannot replace the common command authorization reference, content-rights assessments, privacy-processing decisions, or publication/distribution decisions. Provider/model/prompt/region details must resolve through the referenced LLMUsageRecord when applicable; secrets and raw credentials are never included.
+
+#### 10.15.3 Report identity, lineage and state invariants
+
+- `report_type` is limited to the documented proposed families: `INITIAL_EVENT_REPORT`, `EVENT_UPDATE`, `EVENT_CLOSURE_REPORT`, and `PERIODIC_SUMMARY`; adding a type requires a controlled schema/version change.
+- `report_scope` is mandatory and authoritative. `event_id` is nullable and may identify a primary event only where the report type/scope supports it. For multi-event reports, ReportEventLink is authoritative.
+- `version` is server-assigned and unique under the Report aggregate's versioning rule. A material correction creates a successor version; no generated or published version is overwritten.
+- `generation_status` is server/workflow-owned and limited to the documented states `DRAFT`, `GENERATED`, `FAILED`, and `SUPERSEDED`, subject to the approved transition contract.
+- Publication state is not stored on Report. PublicationDecision is an immutable eligibility decision; PublicationRecord is the history of external publication operations. Neither is inferred from generation_status.
+- Report generation does not authorize external publication, recipient distribution, or delivery dispatch. Those require the separate publication/distribution/delivery authorization contracts and immediate pre-side-effect validation.
+- All version-level links, the immutable content manifest, input fingerprint and Report version must commit atomically. A failed write must not leave orphaned report links or a partially updated effective-version projection.
+
+#### 10.15.4 Remaining report-contract blockers
+
+The following remain open and must be resolved before production report generation: exact ReportContent serialization and content_format vocabulary; section/block schema and stable section-reference grammar; source-attribution representation; template identity and immutable template storage; canonical input-manifest serialization and fingerprint algorithm; version-allocation and supersession concurrency contract; generation-run and LLMUsageRecord reference lifecycle; and report-family-specific content/required-section rules. No HTML/Markdown/JSON format, template engine, or provider is selected by this tranche.
+
 ## 11. Related documents
 
 - Document 02 — Component Architecture and Interface Contracts.
@@ -976,10 +1034,10 @@ The following details remain open and block a production schema or methodology r
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.6  
+**Version:** 2.7  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.6):** Added separate language-neutral structured-output baselines for Event Importance, Economic Relevance and Economic Impact assessments, grounded in Documents 02 and 03. Preserved distinct semantics, evidence/uncertainty provenance and methodology/schema versioning; left scales, vocabularies, calibration and ADR-008/019 approvals explicitly unresolved. No assessment workflow or production processing is enabled.
+**Revision Note (v2.7):** Added language-neutral ReportContent and ReportGenerationProvenance contracts, including semantic content blocks, exact section-level provenance, report-version lineage and separation from publication/delivery. Serialization, template identity, input-manifest canonicalization and report-family rules remain open; no publication or production generation capability is enabled.
 
 **End of Document**
