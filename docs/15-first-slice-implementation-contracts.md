@@ -622,7 +622,7 @@ The candidate record ID, candidate processing status, evaluated_at, and created_
 | Field | Type | Requiredness | Validation / ownership |
 |---|---|---|---|
 | `case_id` | `ID<EventMatchCase>` | Required | Exact case being resolved. |
-| `outcome` | `EventMatchOutcome` | Required | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, or REVIEW_REQUIRED. |
+| `outcome` | `string/enum` | Required | MATCH, NEW_EVENT_CANDIDATE, NO_MATCH, AMBIGUOUS, or REVIEW_REQUIRED. |
 | `selected_candidate_id` | `ID<EventMatchCandidate>/null` | Conditional | Required exactly for MATCH; candidate must belong to this case and be eligible. |
 | `proposed_event_reference` | `ID<Event>/null` | Conditional | Required exactly for NEW_EVENT_CANDIDATE; stable preassigned ID, not an instruction to create an Event. |
 | `decision_method` | `string/enum` | Required | Method vocabulary and permitted actor/policy combinations remain governed by the matching policy. |
@@ -663,13 +663,13 @@ The application assigns deactivated_at. The prior link is preserved; the command
 
 | Field | Type | Requiredness | Validation / ownership |
 |---|---|---|---|
-| `origin_type` | `EvidenceOriginType` | Required | Determines which origin reference is required; the complete vocabulary remains open. |
+| `origin_type` | `string/enum` | Required | Determines which origin reference is required; the complete vocabulary remains open. |
 | `source_id` | `ID<Source>/null` | Conditional | Required when origin_type identifies a configured Source. |
 | `article_id` | `ID<Article>/null` | Conditional | Optional current-article navigation reference; must agree with article_revision_id when both are present. |
 | `article_revision_id` | `ID<ArticleRevision>/null` | Conditional | Required for article-revision-origin evidence. |
 | `source_document_reference` | `reference/null` | Conditional | Required for a non-article source document when no ArticleRevision identifies the origin. |
 | `evidence_text` | `string` | Required by the current entity model | Must contain only the exact quotation/extract/derived text permitted for this operation; metadata-only rights do not authorize text storage. |
-| `evidence_type` | `EvidenceType` | Required | Uses the documented illustrative types; final exhaustive enum remains open. |
+| `evidence_type` | `string/enum` | Required | Uses the documented illustrative types; final exhaustive enum remains open. |
 | `observed_at` | `Instant` | Required | Time the evidence was observed or obtained; source-event time must not be substituted without provenance. |
 | `content_location` | `EvidenceLocation/null` | Optional | Exact page/section/paragraph/offset/locator when available; never fabricate a location. |
 | `language` | `string/null` | Optional | Language of the evidence text, if known. |
@@ -688,7 +688,7 @@ Evidence ID and created_at are server-owned. An origin must be resolvable or exp
 | `content` | `string/object` | Required | Human-readable or structured analysis representation; representation must be identified by schema/version. |
 | `structured_output` | `object` | Required | Must validate against the exact result-schema version for analysis_type. |
 | `confidence` | `number/null` | Nullable | Semantics must be defined by the analysis methodology; not forecast probability unless separately calibrated. |
-| `status` | `AnalysisStatus` | Server/workflow-owned | Must follow the applicable processing policy; caller cannot mark an unvalidated result completed. |
+| `status` | `string/enum` | Server/workflow-owned | Must follow the applicable processing policy; caller cannot mark an unvalidated result completed. |
 | `model_provider` | `string/null` | Conditional | Required when a model provider was used; otherwise null. |
 | `model_id` | `string/null` | Conditional | Required when a model was used; provider/model must be permitted by the applicable authorization decision. |
 | `prompt_version` | `Version/null` | Conditional | Required when a prompt was used; otherwise null. |
@@ -696,7 +696,7 @@ Evidence ID and created_at are server-owned. An origin must be resolvable or exp
 | `analysis_policy_version` | `Version` | Required | Exact methodology/policy version, distinct from model and prompt versions. |
 | `input_fingerprint` | `Fingerprint` | Required | Covers exact immutable inputs, evidence set, and relevant processing versions. |
 | `evidence_references` | `List<ID<Evidence>>` | Required | Exact evidence set considered; an empty set must be explicit and cannot be represented as successful evidential support. |
-| `input_references` | `List<AnalysisInputReference>` | Required | Typed references and versions for every non-evidence input consumed. |
+| `input_references` | `List<typed AnalysisInput references>` | Required | Typed references and versions for every non-evidence input consumed. |
 
 Analysis ID, created_at, completed_at, and the next version are server-owned. Provider/model/prompt fields are provenance, not authorization; model-assisted processing remains disabled unless the exact provider, purpose, data category, region, privacy decision, and source-rights scope are authorized. A successful result is immutable; corrections or re-analysis create a successor record.
 
@@ -705,7 +705,7 @@ Analysis ID, created_at, completed_at, and the next version are server-owned. Pr
 | Field | Type | Requiredness | Validation / ownership |
 |---|---|---|---|
 | `event_id` | `ID<Event>/null` | Conditional | Required for an event-specific report; null only when report_scope explicitly describes a non-event report. |
-| `report_type` | `ReportType` | Required | Uses the documented report types; final exhaustive vocabulary remains open. |
+| `report_type` | `string/enum` | Required | Uses the documented report types; final exhaustive vocabulary remains open. |
 | `report_scope` | `string/typed scope` | Required | Must identify the exact subject/scope; polymorphic scope representation remains to be standardized. |
 | `title` | `string` | Required | Report title for this immutable version. |
 | `content` | `string/object` | Required | Explicit content representation; source-derived content must comply with rights and distribution constraints. |
