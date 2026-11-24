@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.9  
+**Version:** 2.0  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -108,7 +108,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 
 ### 5.1 Field-level DTO and command schemas
 
-Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance and requires LLMUsageRecord linkage for provider-backed analysis. Document 08 §5 provides the proposed deny-by-default role and operation matrices. Remaining work is to close the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5 and 10.15.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
+Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance. For every actual provider request, Document 15 v2.8 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.8 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress. Document 08 §5 provides the proposed deny-by-default role and operation matrices. Remaining work is to close the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5 and 10.15.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
 
@@ -127,7 +127,7 @@ Implement and test fail-closed authorization at each operation boundary using th
 
 ### 5.4 LLM and analysis execution
 
-Complete the bounded provider-independent execution contract, structured output validation, budgets, usage tracking, model/prompt/schema provenance, timeout classification, and retry behavior under ADRs 006, 007, and 017. Model output remains a proposal and cannot directly mutate authoritative state.
+Complete the bounded provider-independent execution contract, structured output validation, budgets, usage tracking, model/prompt/schema provenance, timeout classification, and retry behavior under ADRs 006, 007, and 017. Before any provider network egress, enforce the independent privacy-processing authorization and exact source-content-rights decision for the immutable payload/input fingerprint, purpose, operation, data category, provider/model and region; require an applicable transfer assessment and persist the resulting references in the LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep. Re-evaluate authorization for retries or any changed request context. Missing, unknown, expired, revoked, or mismatched authorization/rights references fail closed. Provider egress remains disabled until the applicable ADRs and approval gates pass. Model output remains a proposal and cannot directly mutate authoritative state.
 
 ### 5.5 Review, publication, and delivery
 
@@ -223,10 +223,10 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 1.9  
+**Version:** 2.0  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v1.9):** Updated readiness evidence to reflect the explicit LLMUsageRecord, privacy authorization, transfer-assessment and source-content-rights provenance required for provider-backed analysis in Document 15 v2.8. Provider egress remains disabled pending the applicable ADRs and approved decisions.
+**Revision Note (v2.0):** Made the provider-egress release gate explicit and reconciled the readiness blockers with Document 15 v2.8 and Document 08 v1.8: every provider request requires exact privacy authorization, source-content rights, transfer-assessment provenance and a linked LLMUsageRecord; changed requests and retries require re-evaluation. No provider egress or production processing is authorized.
 
 **End of Document**
