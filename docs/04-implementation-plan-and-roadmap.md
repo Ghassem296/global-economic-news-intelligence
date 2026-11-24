@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.33
+**Version:** 1.34
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-24
 **Project:** Global Economic News Intelligence  
@@ -237,6 +237,8 @@ global-economic-news-intelligence/
 │   ├── adr/
 │   │   ├── README.md
 │   │   ├── adr-template.md
+│   │   ├── evidence/
+│   │   │   └── GENI-ADR-005-persistence-proof-of-concept-protocol.md
 │   │   └── decisions/
 │   │       ├── GENI-ADR-001-event-centric-intelligence-architecture.md
 │   │       ├── GENI-ADR-002-article-deduplication-and-event-matching.md
@@ -1850,5 +1852,5 @@ Exit criteria require executable tests and operational evidence, not document pr
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.33
+**Version:** 1.34
 **Status:** Draft — Under Architecture Review
