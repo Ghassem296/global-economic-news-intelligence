@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -108,7 +108,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 
 ### 5.1 Field-level DTO and command schemas
 
-Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance. Document 08 §5 provides the proposed deny-by-default role and operation matrices. Remaining work is to close the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5 and 10.15.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
+Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance and requires LLMUsageRecord linkage for provider-backed analysis. Document 08 §5 provides the proposed deny-by-default role and operation matrices. Remaining work is to close the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5 and 10.15.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
 
@@ -223,10 +223,10 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v1.8):** Updated readiness evidence to include the ReportContent and ReportGenerationProvenance baseline in Document 15 v2.7. Recorded the remaining serialization, template, input-manifest, report-family and authorization-policy blockers; no report-generation or publication gate is approved by this revision.
+**Revision Note (v1.9):** Updated readiness evidence to reflect the explicit LLMUsageRecord, privacy authorization, transfer-assessment and source-content-rights provenance required for provider-backed analysis in Document 15 v2.8. Provider egress remains disabled pending the applicable ADRs and approved decisions.
 
 **End of Document**
