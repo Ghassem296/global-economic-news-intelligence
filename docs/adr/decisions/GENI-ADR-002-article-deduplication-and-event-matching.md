@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.6
+**Version:** 1.7
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -101,7 +101,7 @@ The design should support:
 - The physical data model remains subject to Document 03 and the relevant persistence ADRs.
 - Proposed ADRs must not be treated as accepted implementation requirements.
 
-## 4. Terminology
+### 3.8 Terminology
 
 The following terms have specific meanings in this ADR.
 
@@ -125,7 +125,7 @@ An article duplicate relationship does not establish that two articles concern t
 
 An event match does not establish that two articles are duplicates.
 
-## 5. Options Considered
+## 4. Alternatives Considered
 
 ### Option A — Unified Similarity and Matching Pipeline
 
@@ -212,7 +212,21 @@ However, each responsibility must retain its own:
 
 **Assessment:** Recommended.
 
-## 6. Proposed Decision
+## 5. Evaluation and Comparison
+
+The alternatives are assessed against decision independence, provenance preservation, calibration, operational complexity, and the risk of conflating article identity with real-world event identity.
+
+| Evaluation criterion | Unified pipeline | Fully independent systems | Separate logical responsibilities with shared infrastructure |
+|---|---|---|---|
+| Separation of decision semantics | Weak | Strong | Strong |
+| Reuse of normalization/retrieval infrastructure | Strong | Weak | Strong |
+| Independent calibration and evaluation | Weak | Strong | Strong |
+| Risk of confusing duplication with event identity | High | Low | Low when contracts are enforced |
+| Operational complexity | Initially low, high correction risk | High | Moderate and bounded |
+
+Option C provides the best balance: it preserves independent domain decisions while reusing technical capabilities that do not carry decision authority. This comparison is qualitative; no measured cost or accuracy result is claimed.
+
+## 6. Recommended Decision
 
 Adopt **Option C: Separate Logical Responsibilities with Shared Infrastructure**.
 
@@ -271,7 +285,7 @@ Similarly, an event match must not automatically establish that two articles are
 
 Both operations must retain independently traceable decisions.
 
-## 7. Article Deduplication Design
+### 6.1 Article Deduplication Design
 
 ### 7.1 Candidate Generation
 
@@ -370,7 +384,6 @@ When the same publisher updates an existing article:
 
 The exact article revision persistence model is defined in Document 03 and remains subject to its relevant architecture decisions.
 
-
 ### 7.6 Duplicate Decision and History
 
 Each immutable DuplicateCandidate evaluates one canonical pair of exact ArticleRevision records. Candidate generation and similarity scoring are evidence-producing operations only; neither creates an authoritative duplicate relationship.
@@ -393,7 +406,7 @@ A confirmed duplicate relationship is derived only from the effective `CONFIRMED
 
 The detailed fields, uniqueness rules, referential constraints, and repository contracts are defined in Document 03 and Document 02. Human correction and review are governed by ADR-014.
 
-## 8. Event Matching Design
+### 6.2 Event Matching Design
 
 ### 8.1 Candidate Generation
 
@@ -476,7 +489,7 @@ The system must not force every article into exactly one event.
 
 Association granularity and event boundaries must follow ADR-011.
 
-## 9. Confidence and Score Semantics
+### 6.3 Confidence and Score Semantics
 
 Article duplicate similarity and event matching confidence must be represented as separate concepts.
 
@@ -544,7 +557,7 @@ An unavailable or failed evaluation must not be treated as a negative match.
 
 Insufficient evidence must result in an explicit unresolved or review outcome rather than a forced decision.
 
-## 10. Processing Order and Interaction
+### 6.4 Processing Order and Interaction
 
 The proposed high-level workflow is:
 
@@ -571,7 +584,7 @@ A duplicate decision must not silently delete the article or prevent its source 
 
 An article already identified as a duplicate may still contain additional information or material changes that need to be evaluated for event intelligence.
 
-## 11. Data and Persistence Implications
+### 6.5 Data and Persistence Implications
 
 The logical data model must support separate records for article duplicate evaluation and article-event matching.
 
@@ -611,7 +624,7 @@ The following concepts are required at the logical level:
 
 This ADR does not mandate a particular database engine or physical table layout.
 
-## 12. Failure Handling, Reprocessing, and Idempotency
+### 6.6 Failure Handling, Reprocessing, and Idempotency
 
 Both processing responsibilities must support safe retries and independent recovery.
 
@@ -665,7 +678,7 @@ Reprocessing must be traceable and must not silently overwrite historical decisi
 
 The recovery and execution guarantees are governed by ADR-016.
 
-## 13. Evaluation and Quality Requirements
+### 6.7 Evaluation and Quality Requirements
 
 Article deduplication and event matching must have separate evaluation datasets and metrics.
 
@@ -756,7 +769,7 @@ Before production use, the implementation must demonstrate that:
 
 Exact numerical thresholds must be established through representative evaluation data and product risk requirements rather than invented in this ADR.
 
-## 14. Security and Responsible Processing
+### 6.8 Security and Responsible Processing
 
 Article content is untrusted external input.
 
@@ -776,7 +789,24 @@ Candidate generation and similarity services must also be protected against reso
 
 Source URL acquisition and external content retrieval must follow the security requirements established by the acquisition architecture.
 
-## 15. Consequences
+## 7. Final Decision
+
+This ADR is currently **Proposed**.
+
+The recommendation is to adopt separate logical responsibilities for article deduplication and event matching, supported by reusable technical infrastructure.
+
+No implementation should treat this proposal as a formally accepted architectural constraint until the designated decision owner approves it.
+
+Upon acceptance:
+
+- Document 02 must reflect the separate component responsibilities and contracts.
+- Document 03 must reflect the required logical data relationships.
+- Document 04 must align the implementation sequence with the decision.
+- ADR-011 must define event identity and lifecycle behavior consistently.
+- ADR-012 must define semantic retrieval decisions without conflating article duplication with event matching.
+- Relevant evaluation and operational specifications must define independent quality criteria.
+
+## 8. Consequences and Trade-Offs
 
 ### 15.1 Positive Consequences
 
@@ -807,7 +837,7 @@ The system may temporarily retain unresolved duplicate candidates or event match
 
 This is preferable to silently deleting source records, merging unrelated events, or overstating independent corroboration.
 
-## 16. Dependencies and Related ADRs
+## 9. Impact on Architecture and Documentation
 
 | Reference | Relationship |
 |---|---|
@@ -839,7 +869,7 @@ This ADR does not decide:
 
 These matters belong to the related ADRs and implementation specifications.
 
-## 17. Implementation and Migration Implications
+## 10. Implementation Implications
 
 Implementation should introduce the two responsibilities as distinct application-level capabilities.
 
@@ -879,7 +909,20 @@ Existing records, if any, must not be automatically merged or deleted merely bec
 
 Any migration that changes existing article or event associations must preserve historical traceability and provide a reviewable reconciliation process.
 
-## 18. Open Questions
+## 11. Acceptance Criteria
+
+The proposal is ready for acceptance only when all of the following are satisfied:
+
+- Article deduplication and event matching have separate domain contracts, candidate types, decision outcomes, confidence semantics, policy versions, and audit histories.
+- Shared normalization, entity extraction, retrieval, embeddings, or LLM infrastructure cannot issue or substitute for either authoritative decision.
+- Duplicate and event-matching decisions are independently versioned, traceable, idempotent, and correctable through immutable successors.
+- Syndication/origin relationships do not count as independent corroboration.
+- EventMatchCase scope, EventMatchDecision authority, and ArticleEventLink invariants are consistent with Documents 02 and 03.
+- Evaluation datasets and metrics separately measure duplicate detection and event matching, including false merges, missed matches, ambiguous cases, and correction rates.
+- Security, rights, privacy, and human-review gates are enforced by the relevant approved workflows.
+- The Project Owner explicitly accepts this ADR; Proposed status alone does not authorize implementation.
+
+## 12. Review and Reconsideration
 
 The following questions remain unresolved and require further design or implementation evidence:
 
@@ -898,24 +941,21 @@ The following questions remain unresolved and require further design or implemen
 
 These questions must be resolved through implementation specifications, evaluation, or related ADRs as appropriate.
 
-## 19. Decision Status and Approval
+## 13. References and Supporting Evidence
 
-This ADR is currently **Proposed**.
+- GENI-ARCH-001 — Product and System Architecture.
+- GENI-ARCH-002 — Component Architecture and Interface Contracts.
+- GENI-DATA-003 — Data Model and Storage Design.
+- GENI-PLAN-004 — Implementation Plan and Development Roadmap.
+- GENI-ADR-008 — Evidence Provenance and Uncertainty Representation.
+- GENI-ADR-011 — Event Identity, Matching, Continuation, Merging, and Splitting.
+- GENI-ADR-012 — Semantic Retrieval, Similarity Calculation, and Embedding Storage.
+- GENI-ADR-016 — Persistence, Async Execution, Idempotency, and Recovery.
+- GENI-EVAL-012 — Testing and Evaluation Strategy.
 
-The recommendation is to adopt separate logical responsibilities for article deduplication and event matching, supported by reusable technical infrastructure.
+The proposal is based on the internal architecture and domain requirements listed above. No benchmark result or external empirical claim is asserted in this ADR.
 
-No implementation should treat this proposal as a formally accepted architectural constraint until the designated decision owner approves it.
-
-Upon acceptance:
-
-- Document 02 must reflect the separate component responsibilities and contracts.
-- Document 03 must reflect the required logical data relationships.
-- Document 04 must align the implementation sequence with the decision.
-- ADR-011 must define event identity and lifecycle behavior consistently.
-- ADR-012 must define semantic retrieval decisions without conflating article duplication with event matching.
-- Relevant evaluation and operational specifications must define independent quality criteria.
-
-## 20. Decision History
+## 14. Decision History
 
 | Version | Date | Status | Change Summary | Author or Reviewer |
 |---|---|---|---|---|
@@ -926,5 +966,7 @@ Upon acceptance:
 | 1.4 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.5 | 2026-11-18 | Proposed | Defined pairwise duplicate decision outcomes, immutable supersession, and group derivation from effective pairwise decisions. | AI Architecture Assistant |
 | 1.6 | 2026-11-18 | Proposed | Defined non-transitive near-duplicate grouping and conservative complete-link semantics. | AI Architecture Assistant |
+
+| 1.7 | 2026-11-24 | Proposed | Reorganized the ADR to the standard 14-section template while preserving detailed deduplication/event-matching design as subsections; added explicit qualitative option evaluation and acceptance criteria. | AI Architecture Assistant |
 
 **End of ADR-002**
