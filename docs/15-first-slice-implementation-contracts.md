@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.1  
+**Version:** 3.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -268,7 +268,7 @@ Context links are immutable once the review is completed. Corrections require a 
 |---|---|---|
 | `get_by_id` | `get_by_id(candidate_id: ID<DuplicateCandidate>) -> Optional<DuplicateCandidate>` | Returns one immutable pairwise candidate evaluation and its exact ArticleRevision references. |
 | `find_by_identity` | `find_by_identity(article_revision_id_a: ID<ArticleRevision>, article_revision_id_b: ID<ArticleRevision>, matching_method: DuplicateMatchingMethod, matching_policy_version: Version, input_fingerprint: Fingerprint) -> Optional<DuplicateCandidate>` | Resolves the candidate using the approved canonical revision-pair ordering. Reverse-order input must resolve to the same logical pair. |
-| `append_candidate` | `append_candidate(command: AppendDuplicateCandidate, uow: UnitOfWork) -> DuplicateCandidate` | Appends immutable candidate evidence. Enforces distinct revisions, Article/revision ownership, canonical pair ordering and idempotency for the same pair/method/policy/input fingerprint. A changed input or policy creates a new candidate evaluation. |
+| `append_candidate` | `append_candidate(command: AppendDuplicateCandidate, uow: UnitOfWork) -> DuplicateCandidate` | Appends immutable candidate evidence with actor and authorization provenance. Enforces distinct revisions, Article/revision ownership, canonical pair ordering and idempotency for the same pair/method/policy/input fingerprint. A changed input or policy creates a new candidate evaluation. |
 
 The repository does not decide whether the pair is duplicate, merge or delete Articles, or create an event association. Similarity scores remain nullable and are not probabilities unless separately calibrated.
 
@@ -278,7 +278,7 @@ The repository does not decide whether the pair is duplicate, merge or delete Ar
 |---|---|---|
 | `get_by_id` | `get_by_id(decision_id: ID<DuplicateDecision>) -> Optional<DuplicateDecision>` | Returns one immutable decision and its supersession reference. |
 | `get_effective_for_candidate` | `get_effective_for_candidate(candidate_id: ID<DuplicateCandidate>) -> Optional<DuplicateDecision>` | Resolves the unique terminal decision in the candidate's linear supersession chain. No decision means no effective outcome. |
-| `append_decision` | `append_decision(command: AppendDuplicateDecision, expected_effective_decision_id: Optional<ID<DuplicateDecision>>, uow: UnitOfWork) -> DuplicateDecision` | Appends an immutable decision only when the expected predecessor equals the current effective decision. The first decision requires no predecessor; a successor must reference the current effective decision for the same candidate. Enforces one initial decision and at most one direct successor per decision. Stale or competing writes return CONFLICT. |
+| `append_decision` | `append_decision(command: AppendDuplicateDecision, expected_effective_decision_id: Optional<ID<DuplicateDecision>>, uow: UnitOfWork) -> DuplicateDecision` | Appends an immutable decision with authorization provenance only when the expected predecessor equals the current effective decision. The first decision requires no predecessor; a successor must reference the current effective decision for the same candidate. Enforces one initial decision and at most one direct successor per decision. Stale or competing writes return CONFLICT. |
 
 The effective decision is the unique terminal node of the immutable supersession chain; it is not a mutable flag on a DuplicateDecision. An optional materialized lookup value is only a rebuildable projection and cannot replace the authoritative chain. A duplicate decision never deletes, merges, or rewrites either Article or ArticleRevision and never creates an ArticleEventLink.
 
@@ -1065,6 +1065,8 @@ This tranche closes the missing first-slice repository and logical DTO boundary 
 | `matching_policy_version` | `Version` | Required | Exact policy/configuration version used. |
 | `input_fingerprint` | `Fingerprint` | Required | Deterministic fingerprint of the canonical exact revision pair and all comparison-relevant inputs/configuration. Canonical serialization remains open. |
 | `evaluated_at` | `Instant` | Required | Server-trusted evaluation time. |
+| `actor_reference` | `ActorReference` | Required | Authenticated service/human identity from trusted command context. |
+| `authorization_reference` | `AuthorizationReference` | Required | Immutable ALLOW reference for the exact `article.duplicate.evaluate` action, canonical revision pair, scope, policy/version and input fingerprint. |
 | `metadata` | `JSON/object` | Optional | Versioned extension only; cannot override typed fields or contain secrets/restricted content by default. |
 
 Candidate ID and creation metadata are server-owned. The revision pair must be canonicalized so reverse-order requests resolve to the same logical candidate. The exact canonical ordering rule must be deterministic and versioned; it must not depend on an unapproved identifier encoding. Repeated evaluation with the same canonical pair, method/policy version and input fingerprint is idempotent. Changed inputs or policy create a new immutable candidate.
@@ -1082,6 +1084,7 @@ Candidate generation failure, timeout, insufficient content or unavailable signa
 | `decision_policy_version` | `Version` | Required | Exact decision policy version. |
 | `decision_confidence` | `number/null` | Nullable | Null when not assessed; semantics and calibration must be explicit and distinct from candidate similarity. |
 | `actor_reference` | `ActorReference` | Required | Authenticated actor/service identity from trusted command context. |
+| `authorization_reference` | `AuthorizationReference` | Required | Immutable ALLOW reference for the exact `article.duplicate.decide` action, candidate, outcome, effective predecessor and policy/version. |
 | `decided_at` | `Instant` | Required | Server-trusted immutable decision time. |
 | `supersedes_decision_id` | `Optional<ID<DuplicateDecision>>` | Nullable | Null only for the first decision; otherwise must identify the current effective decision for the same candidate. |
 | `metadata` | `JSON/object` | Optional | Versioned extension only; cannot override typed decision fields. |
@@ -1122,12 +1125,12 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.1  
+**Version:** 3.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
 **Revision Note (v2.8):** Tightened provider-backed analysis provenance by requiring each provider request to create an LLMUsageRecord linked to the exact Analysis/ProcessingRun and to preserve privacy, purpose, data-category, region, transfer and content-rights decision references. Added the explicit privacy-processing authorization permission to the PersistAnalysis crosswalk. No provider egress is authorized by this contract.
 
-**Revision Note (v3.1):** Clarified aggregate ownership of EvidenceLocation, AnalysisInput/AnalysisEvidenceLink, and report provenance-link records. EvidenceRepository, AnalysisRepository, and ReportRepository now explicitly own the related child writes within their atomic UnitOfWork boundaries; no additional application-level repository transaction owners are introduced.
+**Revision Note (v3.2):** Added explicit actor and immutable authorization-reference fields to DuplicateCandidate and DuplicateDecision persistence contracts, and bound each reference to the exact deduplication permission and operation scope. This aligns the data model, security catalogue and first-slice DTOs; no decision policy or ADR status changed.
 
 **End of Document**
