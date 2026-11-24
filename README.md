@@ -1,317 +1,62 @@
 # Global Economic News Intelligence
 
-**Project:** Global Economic News Intelligence  
-**Repository:** [Ghassem296/global-economic-news-intelligence](https://github.com/Ghassem296/global-economic-news-intelligence)  
-**Documentation:** [docs/README.md](docs/README.md)  
-**Project Status:** Architecture Design and Documentation Review
+GENI is an event-centric global economic news intelligence platform. It separates published articles from real-world events, preserves evidence provenance, represents uncertainty explicitly, and uses deterministic workflows with bounded LLM assistance.
 
----
+## Repository status
 
-## 1. Overview
+The repository contains architecture and governance documentation plus the initial executable Python foundation. The current code establishes pure domain lifecycle policies, a minimal CLI, and automated quality checks. It is **not** a production news-ingestion or publishing system.
 
-Global Economic News Intelligence is a planned AI-powered platform for collecting, processing, connecting, and analyzing international news with a primary focus on economics and global financial developments.
+The following capabilities remain disabled until their architecture, rights, privacy, security, and operational gates are satisfied:
 
-The platform is designed to transform individual news articles into structured, evidence-based intelligence about significant global events.
+- Production source acquisition and full-text retention.
+- External LLM transmission of source content.
+- Automatic event creation and matching decisions.
+- Market-data integrations and semantic retrieval.
+- Publication execution and recipient delivery.
+- Processing of personal data outside an approved test context.
 
-Rather than treating every article as an independent information item, the system follows an **event-centric intelligence architecture**. Multiple reports about the same real-world event can be connected, compared, and analyzed within a unified event context.
+The authoritative readiness assessment is [Document 16](docs/16-implementation-readiness-and-release-gates.md). The first-slice contracts are in [Document 15](docs/15-first-slice-implementation-contracts.md).
 
-The project aims to support informed understanding of global economic developments through structured information, source attribution, analytical context, and explicit uncertainty representation.
+## Development setup
 
-## 2. Project Objectives
+Requirements: Python 3.12 or 3.13.
 
-The main objectives are:
+~~~powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+~~~
 
-- Collect relevant news from international sources.
-- Normalize and structure incoming news content.
-- Identify duplicate and near-duplicate articles.
-- Detect significant economic and geopolitical events.
-- Connect multiple articles to the same underlying event.
-- Extract relevant entities, claims, and supporting evidence.
-- Analyze economic implications while distinguishing facts from interpretation.
-- Generate structured intelligence reports.
-- Preserve source attribution, provenance, and uncertainty.
-- Support progressively richer content formats and delivery channels.
+## Commands
 
-## 3. Core Architectural Principles
+~~~powershell
+geni version
+geni readiness
+ruff check .
+mypy
+pytest
+~~~
 
-The project is guided by the following principles:
+Or run the CLI without installing the console script:
 
-### Event-Centric Intelligence
+~~~powershell
+python -m global_economic_news_intelligence version
+~~~
 
-Events are the primary units of intelligence. Articles are source documents that provide information about events.
+## Architecture boundaries
 
-An event may be associated with multiple articles, sources, entities, claims, and analytical reports.
+- Domain lifecycle policies are pure Python and have no persistence or provider dependencies.
+- Application workflows own orchestration and authorization.
+- Repositories own persistence; domain policies do not import database or ORM types.
+- LLM output is untrusted input and cannot directly perform material domain transitions.
+- External side effects require durable intent, idempotency, and reconciliation.
+- Rights and privacy authorization are separate, operation-specific controls.
 
-### Evidence-Based Analysis
+## Persistence status
 
-Analytical outputs should be traceable to available source material and supporting evidence.
+No database engine or migration tool is configured yet. GENI-ADR-005 remains Proposed; a relational persistence proof-of-concept and explicit decision are required before choosing the production persistence adapter. The current foundation intentionally avoids creating a misleading in-memory or SQLite production implementation.
 
-The system must distinguish between:
+## License and content
 
-- Verified or sufficiently corroborated facts.
-- Claims reported by individual sources.
-- AI-generated analysis and interpretation.
-- Forecasts and uncertain projections.
-
-### Source Independence
-
-Multiple articles do not necessarily represent independent confirmation. Syndicated or copied reports must not be treated as independent corroboration.
-
-### Explicit Uncertainty
-
-Uncertainty, conflicting reports, insufficient evidence, and unresolved event relationships must be represented explicitly rather than hidden behind confident-looking conclusions.
-
-### Workflow-First Architecture
-
-The platform is primarily a structured processing system, not a general-purpose conversational AI agent.
-
-AI models are intended to support specific tasks within controlled workflows. A generic conversational agent runtime, persistent conversational memory, or general-purpose tool orchestration is not assumed to be necessary.
-
-### Technology Independence
-
-Technology selections should be documented and justified through Architecture Decision Records (ADRs). Proposed technologies must not be treated as approved implementation decisions until formally accepted.
-
-## 4. Planned Processing Workflow
-
-The intended high-level processing pipeline is:
-
-1. **News Acquisition** — Collect news and source information.
-2. **Normalization** — Convert incoming content into a consistent internal representation.
-3. **Article Deduplication** — Identify exact and near-duplicate articles.
-4. **Event Detection** — Identify potential real-world events.
-5. **Event Matching** — Determine whether an article relates to an existing event or a new event.
-6. **Information Extraction** — Extract entities, claims, dates, and relevant evidence.
-7. **Evidence Assessment** — Evaluate source relationships, corroboration, and uncertainty.
-8. **Economic Analysis** — Assess relevant economic implications using available evidence and data.
-9. **Intelligence Reporting** — Generate structured reports linked to their supporting sources.
-10. **Quality Control and Delivery** — Apply publication decisions and deliver approved outputs.
-
-This workflow represents the intended architecture, not a claim that these components have already been implemented.
-
-## 5. Subject Coverage
-
-The primary editorial focus is global economics and financial developments.
-
-Planned subject areas include:
-
-- Monetary Policy
-- Financial Markets
-- Macroeconomics
-- Trade and Industry
-- Energy and Resources
-- Fiscal Policy and Public Debt
-- Geopolitical Economic Risk
-
-Political and geopolitical developments are relevant when they have meaningful economic, financial, trade, energy, or market implications.
-
-## 6. Planned Development Phases
-
-The product is intended to evolve incrementally.
-
-| Phase | Focus |
-|---|---|
-| Phase 1 | Text-based news intelligence |
-| Phase 2 | Audio-based intelligence and delivery |
-| Phase 3 | Video-based intelligence and delivery |
-| Phase 4 | Advanced intelligence, personalization, and automation |
-
-These are product development phases. Engineering milestones and implementation priorities are maintained separately in the project documentation.
-
-## 7. Documentation
-
-The `docs/` directory contains the project's product architecture, component specifications, data model, implementation roadmap, architecture governance, documentation governance, and technical references.
-
-Start here:
-
-**[Documentation Index](docs/README.md)**
-
-The main documentation includes:
-
-| Document | Purpose |
-|---|---|
-| [01 — Product and System Architecture](docs/01-product-and-system-architecture.md) | Product vision, scope, system boundaries, and high-level architecture |
-| [02 — Component Architecture and Interfaces](docs/02-component-architecture-and-interfaces.md) | Component responsibilities, dependencies, and interface contracts |
-| [03 — Data Model and Storage Design](docs/03-data-model-and-storage-design.md) | Domain entities, relationships, persistence, and data lifecycle |
-| [04 — Implementation Plan and Roadmap](docs/04-implementation-plan-and-roadmap.md) | Development stages, dependencies, and acceptance criteria |
-| [05 — Architecture Decision Records Governance](docs/05-architecture-decision-records.md) | ADR lifecycle, decision approval, and architectural change control |
-| [06 — Documentation Governance and Change Management](docs/06-documentation-governance-and-change-management.md) | Documentation ownership, review, versioning, and change management |
-| [07 — Documentation Registry](docs/07-documentation-registry.md) | Central inventory of project documents and their status |
-| [08 — Security Architecture and Threat Model](docs/08-security-architecture-and-threat-model.md) | Trust boundaries, threats, security controls, and verification |
-| [09 — API and Integration Contracts](docs/09-api-and-integration-contracts.md) | Cross-component, repository, provider, and API contract rules |
-| [10 — Source Credibility and Independence](docs/10-source-credibility-and-independence.md) | Source relationships, reliability context, and independent corroboration |
-| [11 — Economic Taxonomy Specification](docs/11-economic-taxonomy-specification.md) | Stable subject identifiers, classification, and taxonomy governance |
-| [12 — Testing and Evaluation Strategy](docs/12-testing-and-evaluation-strategy.md) | Test layers, datasets, metrics, and release quality gates |
-| [13 — Deployment, Operations, and Observability](docs/13-deployment-operations-and-observability.md) | Runtime, deployment, monitoring, recovery, and readiness |
-| [14 — Data Protection and Privacy Specification](docs/14-data-protection-and-privacy-specification.md) | Personal-data inventory, purposes, retention, deletion, rights requests, processors, and privacy risk controls |
-| [15 — First-Slice Implementation Contracts](docs/15-first-slice-implementation-contracts.md) | Repository method contracts, transaction boundaries, command DTOs, state-machine readiness, and implementation gates |
-
-### Architecture Decision Records
-
-Individual Architecture Decision Records are maintained in [`docs/adr/`](docs/adr/README.md).
-
-The ADR registry identifies decision topics, priorities, dependencies, and current statuses.
-
-The [ADR Registry](docs/adr/README.md) is the sole authoritative inventory for individual ADR identifiers, titles, repository paths, priorities, and decision statuses. This README intentionally does not reproduce that inventory; consult the registry for the current list and status of all decision records.
-
-The existence or publication of an ADR does not imply that its proposal has been formally accepted.
-
-Decision status and implementation status must be checked separately in the individual ADR and registry.
-
-### Technical Reference Material
-
-Generic Agent Template material is maintained under:
-
-[`docs/references/agent-template/`](docs/references/agent-template/README.md)
-
-These documents are reference material. They do not automatically impose implementation requirements on the product.
-
-## 8. Current Project Status
-
-The repository establishes the initial product, architecture, data design, implementation planning, and documentation governance baseline.
-
-The project is currently in the architecture design and review stage. The documentation is published as a proposed design baseline and remains subject to review, reconciliation, and formal architectural decisions. The repository has a documentation-validation workflow, unit tests for that validator, and a documentation inventory script; these do not constitute application CI or evidence that a GENI application has been implemented.
-
-The following items should not be assumed to be finalized or implemented:
-
-- Programming language and supported runtime version (Python is listed as a candidate in Document 04, not yet an accepted selection).
-- Application entry point and executable application.
-- Application dependency management and package configuration (the documentation-validation workflow uses Python 3.12 independently of the future application runtime).
-- Database and persistence technology.
-- LLM provider and model selection.
-- News acquisition providers and source integrations.
-- Deployment and hosting infrastructure.
-- Publication and delivery integrations.
-- Licensing and content-retention policies.
-
-These decisions and implementation details will be established through the relevant specifications, implementation work, and Architecture Decision Records. The current automation validates documentation metadata and ADR inventory only; application package installation, linting, type checking, migrations, database integration, and product end-to-end behavior are not yet covered.
-
-A published document is not necessarily an accepted architectural decision. An accepted decision is not necessarily implemented. These states must remain distinct throughout the project lifecycle.
-
-## 9. Documentation Repository Structure
-
-The following tree lists the repository's Markdown documentation structure. It is not a complete inventory of non-Markdown files such as GitHub Actions workflows, validation scripts, or tests:
-
-```text
-global-economic-news-intelligence/
-│
-├── README.md
-│
-└── docs/
-    │
-    ├── README.md
-    │
-    ├── 01-product-and-system-architecture.md
-    ├── 02-component-architecture-and-interfaces.md
-    ├── 03-data-model-and-storage-design.md
-    ├── 04-implementation-plan-and-roadmap.md
-    ├── 05-architecture-decision-records.md
-    ├── 06-documentation-governance-and-change-management.md
-    ├── 07-documentation-registry.md
-    ├── 08-security-architecture-and-threat-model.md
-    ├── 09-api-and-integration-contracts.md
-    ├── 10-source-credibility-and-independence.md
-    ├── 11-economic-taxonomy-specification.md
-    ├── 12-testing-and-evaluation-strategy.md
-    ├── 13-deployment-operations-and-observability.md
-    ├── 14-data-protection-and-privacy-specification.md
-    ├── 15-first-slice-implementation-contracts.md
-    ├── 16-implementation-readiness-and-release-gates.md
-    │
-    ├── adr/
-    │   ├── README.md
-    │   ├── adr-template.md
-    │   │
-    │   └── decisions/
-    │       ├── GENI-ADR-001-event-centric-intelligence-architecture.md
-    │       ├── GENI-ADR-002-article-deduplication-and-event-matching.md
-    │       ├── GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md
-    │       ├── GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md
-    │       ├── GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md
-    │       ├── GENI-ADR-006-provider-independent-llm-execution-architecture.md
-    │       ├── GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md
-    │       ├── GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md
-    │       ├── GENI-ADR-009-near-real-time-news-acquisition-strategy.md
-    │       ├── GENI-ADR-010-phased-text-audio-and-video-delivery.md
-    │       ├── GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md
-    │       ├── GENI-ADR-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md
-    │       ├── GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md
-    │       ├── GENI-ADR-014-human-review-corrections-and-withdrawals.md
-    │       ├── GENI-ADR-015-market-data-integration-and-economic-impact-classification.md
-    │       ├── GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md
-    │       ├── GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md
-    │       ├── GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md
-    │       ├── GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md
-    │       └── GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md
-    │
-    └── references/
-        └── agent-template/
-            ├── README.md
-            ├── agent-template-architecture.md
-            └── agent-template-implementation-specification.md
-```
-
-This tree reflects the documented structure of the repository at the time of this revision. It must be updated when files or directories are added, moved, renamed, or removed.
-
-## 10. Development and Contribution
-
-Development should follow the approved architecture and documented implementation plan.
-
-Before introducing a significant architectural dependency or changing an established system boundary:
-
-1. Review the relevant architecture documentation.
-2. Identify affected components and interfaces.
-3. Evaluate operational, security, and maintenance implications.
-4. Create or update the relevant Architecture Decision Record when necessary.
-5. Keep implementation and documentation consistent.
-
-Contributions should prioritize:
-
-- Clear separation of responsibilities.
-- Explicit interfaces and data contracts.
-- Testability and maintainability.
-- Reliable processing and recovery.
-- Evidence traceability.
-- Security and responsible handling of source content.
-- Measurable quality and evaluation criteria.
-
-Documentation changes must follow the project's documentation governance and change-management rules.
-
-### Documentation Quality Checks
-
-The repository includes automated documentation validation:
-
-- `scripts/validate_docs.py` checks document metadata, registries, ADR inventory, cross-document contracts, Markdown links, and repository documentation inventories.
-- `tests/test_validate_docs.py` contains unit tests for validator behavior.
-- `.github/workflows/docs-validation.yml` runs the unit tests and documentation validator on pushes and pull requests targeting `main`.
-
-Run the checks locally with Python 3.12:
-
-```bash
-python -m unittest discover -s tests -v
-python scripts/validate_docs.py
-```
-
-## 11. Responsible Intelligence and Limitations
-
-The platform is intended to support research and understanding, not to present AI-generated conclusions as unquestionable facts.
-
-In particular:
-
-- AI-generated analysis must remain distinguishable from source-reported information.
-- Market reactions must not be presented as observed facts without supporting market data.
-- Conflicting reports must be represented transparently.
-- Forecasts must be identified as forecasts, not established outcomes.
-- Access to source content does not automatically grant permission to store or republish it.
-- Publication decisions must account for evidence quality, uncertainty, and applicable content rights.
-
-## 12. License
-
-No open-source license has been finalized for this repository.
-
-Until a license is explicitly selected and added, all rights remain with the applicable copyright holder. Reuse and redistribution should not be assumed to be permitted.
-
----
-
-**Project:** Global Economic News Intelligence  
-**Repository:** [Ghassem296/global-economic-news-intelligence](https://github.com/Ghassem296/global-economic-news-intelligence)  
-**Documentation:** [docs/README.md](docs/README.md)
+This repository does not grant rights to third-party news content. Source access, storage, model processing, quotation, and republication must each be authorized for the specific operation.
