@@ -550,8 +550,9 @@ def validate_publication_decision_provenance_contract() -> None:
     implementation = read_text(ROOT / "docs/15-first-slice-implementation-contracts.md")
     security = read_text(ROOT / "docs/08-security-architecture-and-threat-model.md")
 
+    publication = data_model.split("### 11.6 PublicationDecision", 1)[1].split("### 11.7", 1)[0]
     for field in ("actor_type", "actor_reference", "authorization_reference"):
-        if f"- `{field}`" not in data_model:
+        if f"- `{field}`" not in publication:
             fail(f"PublicationDecision data model is missing required provenance field: {field}")
         if f"| `{field}` |" not in implementation:
             fail(f"AppendPublicationDecision DTO is missing required provenance field: {field}")
