@@ -2,11 +2,11 @@
 ## Product and System Architecture
 
 **Document ID:** GENI-ARCH-001  
-**Version:** 1.24  
+**Version:** 1.25  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-18
+**Last Updated:** 2026-11-24
 
 ---
 
