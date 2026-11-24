@@ -121,7 +121,7 @@ def validate_first_slice_duplicate_contract_alignment() -> None:
         "adr": read_text(ROOT / "docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md"),
     }
     required = {
-        "component": ("### 4.4 ArticleDeduplicator", "### 4.4.1 Article Deduplication Workflow"),
+        "component": ("### 4.4 ArticleDeduplicator", "### 4.4.1 Article Deduplication Workflow", "At minimum, the first vertical slice requires method-level contracts and repository tests for `SourceRepository`, `ArticleRepository`, `ArticleRevisionRepository`, `DuplicateCandidateRepository`, `DuplicateDecisionRepository`"),
         "data": (
             "### 5.8 DuplicateCandidate",
             "### 5.9 DuplicateDecision",
