@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SEC-008  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -85,9 +85,12 @@ The following permission identifiers are a proposed logical vocabulary for imple
 | Collect from a source | `source.collect` | Exact Source, adapter/endpoint and collection operation | Current operation-specific access/collection rights; SSRF and egress controls |
 | Read article metadata/content | `article.metadata.read` / `article.content.read` | Exact Article/revision and permitted content scope | Content-rights check for restricted content; metadata permission is not content permission |
 | Append an article revision | `article.revision.append` | Exact Source and source-scoped Article identity | Collection authorization, rights/retention scope, idempotency and concurrency checks |
+| Create an event-match case | `event.match.case.create` | Exact ArticleRevision and development scope | Approved case-creation policy, idempotency and exact input provenance |
 | Evaluate event candidates | `event.match.evaluate` | Exact EventMatchCase and candidate set | Evaluation may append candidate evidence but cannot activate an ArticleEventLink |
 | Append an event-match decision | `event.match.decide` | Exact case, candidate, predecessor and aggregate version | Immutable authorization reference; approved decision policy; atomic successor/link reconciliation |
 | Create an Event | `event.create` | Exact preassigned Event ID and candidate/case | Effective NEW_EVENT_CANDIDATE decision, approved EventCreationPolicy and idempotency |
+| Evaluate content-rights scope | `rights.assessment.evaluate` | Exact Source/Article/revision, operation, content scope and purpose | Current rights policy, source/contract evidence and explicit ALLOW; unknown or conflicting rights deny |
+| Administer rights policy | `rights.policy.administer` | Exact policy/assessment rule and effective period | Separate governance approval and immutable policy version; no runtime content permission is implied |
 | Append evidence | `evidence.append` | Exact claim/analysis context and evidence origin | Exact rights/retention permission for any stored quotation or extract |
 | Append analysis | `analysis.append` | Exact input revision/evidence set and analysis purpose | If a provider is used: current privacy authorization, provider/model/region/purpose and content-rights decisions |
 | Generate a report version | `report.generate` | Exact report aggregate, version and input snapshot | Provenance completeness; generation does not authorize publication |
@@ -155,7 +158,7 @@ Logs, traces, prompts, exception messages and evaluation artifacts are privacy-r
 ---
 
 **Document ID:** GENI-SEC-008  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Architecture Review  
 
 
