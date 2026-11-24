@@ -112,7 +112,7 @@ After correctness gates pass, measure each engine using the workload profile:
 
 Record warm-up separately. Run enough repetitions to show variability; publish the raw observations and method. Do not select a candidate from a single run or from a synthetic microbenchmark that does not represent the workload.
 
-No numeric pass threshold is defined in this protocol. Thresholds must be approved from the workload profile, product requirements, and operational policy before the comparative results are examined. Do not invent thresholds after seeing the results to make a preferred engine pass.
+No numeric pass threshold is defined in this protocol. Predeclared thresholds must be approved from the workload profile, product requirements, and operational policy before the comparative results are examined. Do not invent thresholds after seeing the results to make a preferred engine pass.
 
 ## 7. Decision method
 
