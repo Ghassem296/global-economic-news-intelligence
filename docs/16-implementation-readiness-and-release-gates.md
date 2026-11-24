@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -47,7 +47,7 @@ The following remain absent or incomplete:
 - No selected physical database, driver, ORM, or migration mechanism; GENI-ADR-005 remains Proposed.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
 - Field-level DTO schemas and authorization matrices remain incomplete.
-- No validated application configuration, structured logging, centralized error envelope, or operational telemetry foundation.
+- Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
 - No source acquisition, rights adapter, LLM execution adapter, economic analysis workflow, report generator, publication client, or delivery client.
 - No application integration, concurrency, crash-recovery, or end-to-end vertical-slice tests.
 - All 20 ADRs remain Proposed in the current registry snapshot.
@@ -160,7 +160,7 @@ A first-slice implementation may start only when all applicable gates below have
 | R1 — Technology baseline | Accepted ADR-005 and recorded language/runtime, package manager, database/driver, migration, async, transaction, and LLM adapter choices | Reproducible environment and documented rationale; database proof-of-concept passes |
 | R2 — Contract baseline | Approved Document 15; complete DTO schemas and transition matrices for every enabled workflow | No enabled workflow depends on an unresolved state, field, authorization, or concurrency rule |
 | R3 — Security, rights, and privacy | Threat-model controls, operation-specific rights decisions, privacy authorization boundaries, secret handling | Deny/unknown/expired/revoked/scope-mismatch cases fail closed; test-source permissions are documented |
-| R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, logging, errors, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
+| R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, safe errors, structured logging, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
 | R5 — Domain and persistence verification | Contract tests, schema constraints, transaction tests, concurrency/idempotency/failure-injection tests | Required invariants are demonstrated, not merely documented |
 | R6 — Vertical-slice verification | End-to-end fixture run and trace preserving provenance from ArticleRevision to Report and PublicationDecision | Reproducible run; no unauthorized side effect; all quality gates and budgets enforced |
 | R7 — Operational release | Backup/restore, recovery, observability, incident and rollback procedures, deployment security | Operational acceptance criteria in Documents 13 and 04 are demonstrated |
