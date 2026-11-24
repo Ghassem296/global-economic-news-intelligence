@@ -338,3 +338,7 @@ def test_resolved_case_requires_successor_for_review_reopen() -> None:
             EventMatchCaseStatus.RESOLVED,
             EventMatchCaseStatus.PENDING_REVIEW,
         )
+
+def test_delivery_outcome_is_not_a_processing_step_status() -> None:
+    assert "DELIVERED" not in {status.value for status in ProcessingStepStatus}
+    assert ExternalOperationStatus.DELIVERED.value == "DELIVERED"
