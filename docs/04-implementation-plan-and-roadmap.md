@@ -433,7 +433,7 @@ Not every future capability must be fully designed before the first implementati
 
 ## 7. Development Stage 1 — Project Foundation
 
-**Foundation baseline note:** The initial package metadata, Python 3.12–3.13 runtime declaration, CLI, pure lifecycle policy module, unit tests, Ruff/mypy configuration, and application CI are implemented as the first executable baseline described in GENI-FOUNDATION-017. Validated runtime configuration, structured logging, centralized error handling, persistence, and migration tooling remain outstanding.
+**Foundation baseline note:** The initial executable baseline described in GENI-FOUNDATION-017 was first introduced with Python 3.12–3.13 metadata and CI. That historical configuration has since been superseded by the Python 3.15-only runtime policy recorded in the current package metadata and CI. Validated runtime configuration, structured logging, centralized error handling, persistence, and migration tooling remain outstanding.
 
 ### Objectives
 
