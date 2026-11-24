@@ -59,7 +59,9 @@ No database engine or migration tool is configured yet. GENI-ADR-005 remains Pro
 
 ## License and content
 
-This repository does not grant rights to third-party news content. Source access, storage, model processing, quotation, and republication must each be authorized for the specific operation.
+No open-source software license has been selected or granted for this repository. Public visibility does not grant permission to reuse, modify, or redistribute the software; do not assume that a license exists until an explicit license is approved and added.
+
+This repository also does not grant rights to third-party news content. Source access, storage, model processing, quotation, and republication must each be authorized for the specific operation.
 
 
 ## Documentation repository tree
