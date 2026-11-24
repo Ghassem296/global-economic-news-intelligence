@@ -863,7 +863,7 @@ These gaps must remain explicit. They must not be filled by silently choosing a 
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.3  
+**Version:** 2.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
