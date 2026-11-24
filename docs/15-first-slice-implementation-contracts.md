@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.2  
+**Version:** 2.3  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -72,6 +72,7 @@ Every state-changing application command carries:
 - `command_id`;
 - `schema_version`;
 - authenticated `actor` or service identity;
+- immutable `authorization_reference` for operations that require an authorization decision;
 - `correlation_id` and optional `causation_id`;
 - `idempotency_key` with a documented operation scope;
 - `expected_aggregate_version` when updating an existing aggregate;
@@ -423,6 +424,7 @@ The allowed candidate processing vocabulary is only exemplified as `GENERATED`, 
 | `matching_policy_version` | `Version` | Required | Exact policy version used. | Document 03 §7.3 |
 | `decided_by_type` | `string/enum` | Required | Actor category; vocabulary and authorization mapping TBD. | Document 03 §7.3 |
 | `decided_by_reference` | `string/reference` | Required | Must resolve to authenticated actor/service identity; representation TBD. | Document 03 §7.3 |
+| `authorization_reference` | `AuthorizationReference` | Required | Immutable reference from trusted security/application context; must resolve to the exact action, case/resource, actor, scope, policy/version, timestamp, and result. | Documents 03 §7.3, 08 §5 |
 | `supersedes_decision_id` | `Optional<ID<EventMatchDecision>>` | Nullable | If present, same case and must be prior effective decision; one direct successor constraint applies. | Document 03 §§7.3–7.4 |
 | `created_at` | `Instant` | Required | Immutable decision timestamp. | Document 03 §7.3 |
 | `metadata` | `JSON/object` | Optional | Must not override typed authoritative fields. | Document 03 §7.3 |
@@ -631,7 +633,7 @@ The candidate record ID, candidate processing status, evaluated_at, and created_
 | `matching_policy_version` | `Version` | Required | Exact policy version used. |
 | `supersedes_decision_id` | `ID<EventMatchDecision>/null` | Conditional | Absent for the first decision; otherwise must identify the current effective predecessor in the same case. |
 
-The decision ID, trusted actor identity, decision timestamp, effective-decision pointer, and aggregate version are server/application-owned. Actor identity and authorization are taken from authenticated command context, never caller-supplied role text. The current data model names the decision actor but does not yet consistently define a persisted authorization-reference field for EventMatchDecision; the audit/security mapping for that reference must be reconciled before material decision writes are enabled. The append, effective-pointer update, case projection, and any ArticleEventLink reconciliation form one atomic local write set. A stale predecessor/version or competing successor returns CONFLICT.
+The decision ID, trusted actor identity, authorization reference, decision timestamp, effective-decision pointer, and aggregate version are server/application-owned. Actor identity and authorization are taken from authenticated command/security context, never caller-supplied role text. The authorization reference must resolve to the exact decision action, case/resource, actor/service, scope, policy/version, timestamp, and result; missing, stale, revoked, or unverifiable references fail closed. The append, effective-pointer update, case projection, and any ArticleEventLink reconciliation form one atomic local write set. A stale predecessor/version or competing successor returns CONFLICT.
 
 #### 10.11.4 ActivateArticleEventLink and DeactivateArticleEventLink
 
@@ -751,7 +753,6 @@ This tranche does not claim that Gate A is complete. The following remain unreso
 - `SourceArticleIdentity`: exact canonical identifier grammar and collision/redirect rules.
 - Article projection creation/update DTO: explicit ownership and field mapping between Article and ArticleRevision, including metadata-only content availability.
 - `EventCandidateQuery`, `CandidateListQuery`, `AnalysisListQuery`, and `EvidenceListQuery`: complete filters, sort vocabulary, cursor consistency, and default/maximum page size.
-- EventMatchDecision authorization provenance: align the decision entity's persisted actor fields with the required immutable authorization/audit reference.
 - Evidence origin-type mapping and the complete EvidenceType vocabulary.
 - Analysis structured-output schemas for each enabled analysis_type; the generic Analysis record is not a substitute for those schemas.
 - Report scope/type/content-format vocabularies, generation_provenance schema, and exact report-family/version allocation rules.
@@ -781,6 +782,6 @@ No unresolved item above may be filled with an arbitrary default. A capability r
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.2):** Added tranche v1.3 of field-level command/query payload contracts for article revision persistence, event candidate evaluation and decisions, ArticleEventLink application, evidence, analysis, report versioning, and shared pagination. Explicitly separated server-owned values and preserved unresolved schema, authorization-provenance, rights, and persistence gates. This does not complete Gate A or approve any ADR.
+**Revision Note (v2.3):** Added the required immutable authorization reference to EventMatchDecision and the common state-changing command metadata, aligning the component, data-model, security, and first-slice contracts. The broader authorization matrix and policy approvals remain outstanding; no ADR or capability gate is accepted by this revision.
 
 **End of Document**
