@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -35,8 +35,8 @@ The following evidence is present on the implementation branch and is intended t
 
 - Python package metadata and supported runtime range (Python 3.12–3.13).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
-- A CLI that reports package version and disabled capability boundaries.
-- Unit tests for transition guards, aggregation, successor-decision linearity, review projection, and external-outcome reconciliation.
+- A CLI that reports package version and disabled capability boundaries, using validated settings and safe logging initialization.
+- Unit tests for transition guards, aggregation, successor-decision linearity, review projection, external-outcome reconciliation, validated configuration, safe errors/logging, and domain dependency boundaries.
 - Application CI for Python 3.12 and 3.13, running Ruff, mypy, and pytest.
 - Existing documentation CI and registry validation remain separate and are preserved.
 
@@ -223,7 +223,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
 
