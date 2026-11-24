@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -19,14 +19,14 @@ The code is the executable expression of the lifecycle rules below. A change to 
 
 The initial development foundation uses:
 
-- Python 3.12 and 3.13; Python 3.14 is not included in the supported range.
+- Python 3.15 only, enforced by `pyproject.toml` (`requires-python = ">=3.15,<3.16"`), `.python-version`, and the Application CI matrix.
 - A setuptools-based pyproject package.
 - No runtime third-party dependencies in the domain foundation.
 - Validated environment/log-level configuration, safe machine-classifiable errors, and allowlisted structured JSON logging.
 - pytest, Ruff, and mypy as development tools.
 - GitHub Actions for application CI.
 
-The supported runtime range and tools are implementation baseline choices for this foundation. They do not settle database, LLM provider, source acquisition, or deployment architecture. The runtime baseline should be revisited when security support windows or dependency requirements change.
+The Python 3.15-only runtime range and tools are implementation baseline choices for this foundation and are verified by the main-branch Application CI workflow. Python 3.12 and 3.13 are not supported project runtimes. These choices do not settle database, LLM provider, source acquisition, or deployment architecture. The runtime baseline should be revisited when security support windows or dependency requirements change.
 
 ## 3. Dependency boundaries
 
@@ -222,5 +222,7 @@ The initial Python code implements pure transition and projection rules only. Pe
 The first executable baseline includes the Python package, validated configuration, safe error primitives, allowlisted structured logging, pure lifecycle policy module, CLI, tests (including domain dependency-boundary enforcement), Ruff, mypy, and application CI. It deliberately does not include a production persistence adapter, external source fetcher, LLM adapter, publication client, or delivery adapter. These remain gated by their corresponding ADRs and evidence in Document 16.
 
 ---
+
+**Revision Note (v1.3):** Aligns the executable foundation's runtime statement with the current Python 3.15-only policy enforced by package metadata, `.python-version`, and Application CI. No other architecture or capability approval is implied.
 
 **End of Document**
