@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -46,7 +46,7 @@ The following remain absent or incomplete:
 
 - No selected physical database, driver, ORM, or migration mechanism; GENI-ADR-005 remains Proposed.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
-- Field-level DTO schemas and authorization matrices remain incomplete.
+- Document 15 v2.5 now defines the first source and article-to-report command/query DTO tranches and a proposed command-to-permission crosswalk; Document 08 v1.7 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
 - No source acquisition, rights adapter, LLM execution adapter, economic analysis workflow, report generator, publication client, or delivery client.
 - No application integration, concurrency, crash-recovery, or end-to-end vertical-slice tests.
@@ -60,7 +60,7 @@ The following work can proceed without pretending that unresolved architecture h
 
 1. Documentation maintenance, cross-document reconciliation, and automated documentation checks.
 2. Review of ADR alternatives and recording of explicit decisions by the Project Owner.
-3. Completion and review of remaining field-level DTO schemas, authorization matrices, persistence/transaction proofs, attempt/history records, and integration contracts. The logical lifecycle tables for the implemented pure policies are already specified in GENI-FOUNDATION-017; their durable persistence and transactional enforcement remain outstanding.
+3. Completion and review of remaining field-level DTO schemas, final role-to-permission assignments, persistence/transaction proofs, attempt/history records, and integration contracts. The initial deny-by-default authorization matrices and first-slice command crosswalk now exist in Documents 08 and 15, but they do not grant runtime permissions or complete the approval gate. The logical lifecycle tables for the implemented pure policies are already specified in GENI-FOUNDATION-017; their durable persistence and transactional enforcement remain outstanding.
 4. Technology proof-of-concepts that are isolated, disposable, and clearly labelled as experiments; they must not become hidden production commitments.
 5. Fixture design and human-reviewed evaluation-dataset preparation, provided fixtures are synthetic or their use is authorized.
 6. The existing Python 3.12–3.13 package and CLI are a bounded development foundation recorded in GENI-FOUNDATION-017, not an approval of the production application stack. Additional application capabilities that depend on unresolved technology or architecture decisions may proceed only after the relevant ADR and specification gates are satisfied.
@@ -108,7 +108,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 
 ### 5.1 Field-level DTO and command schemas
 
-Complete versioned schemas for the first-slice commands and queries, including exact types, nullability, bounds, canonicalization, server-owned fields, actor/authorization references, idempotency scope, expected aggregate version, and typed errors. Document 15 §10.10.1 identifies the initial DTO inventory.
+Document 15 §10.11–10.13 now provides field-level DTO tranches for the core article-to-report flow, source configuration/identity, and command-to-permission authorization crosswalk. Document 08 §5 provides the proposed deny-by-default role and operation matrices. Remaining work is to close the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5 and 10.13.2: exact serialization/bounds/canonicalization, remaining query schemas, analysis/report-family schemas, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
 
@@ -123,7 +123,7 @@ Complete the GENI-ADR-005 proof-of-concept and decision before selecting the pro
 
 ### 5.3 Security, source rights, and privacy
 
-Implement and test fail-closed authorization at each operation boundary. GENI-ADR-013 must govern real source-content access/retention/transmission; GENI-ADR-020 and Document 14 govern personal-data processing and provider/region authorization. Unknown, expired, revoked, or mismatched authorization must deny the operation.
+Implement and test fail-closed authorization at each operation boundary using the proposed deny-by-default baseline in Document 08 §5 and the first-slice crosswalk in Document 15 §10.13. Final role grants, identity/session lifecycle, policy decision point, grant administration, separation-of-duties exceptions and break-glass controls remain open. GENI-ADR-013 must govern real source-content access/retention/transmission; GENI-ADR-020 and Document 14 govern personal-data processing and provider/region authorization. Unknown, expired, revoked, or mismatched authorization must deny the operation.
 
 ### 5.4 LLM and analysis execution
 
@@ -223,8 +223,10 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-24
+
+**Revision Note (v1.6):** Updated readiness evidence to reflect the proposed deny-by-default authorization matrices in Document 08 v1.7 and the first-slice command/permission crosswalk in Document 15 v2.5. Clarified that these logical contracts do not grant runtime permissions or close approval, schema, policy-administration, or implementation gates.
 
 **End of Document**
