@@ -29,7 +29,6 @@ class ProcessingStepStatus(StrEnum):
     READY = "READY"
     RUNNING = "RUNNING"
     SUCCEEDED = "SUCCEEDED"
-    DELIVERED = "DELIVERED"
     FAILED = "FAILED"
     BLOCKED = "BLOCKED"
     SKIPPED = "SKIPPED"
