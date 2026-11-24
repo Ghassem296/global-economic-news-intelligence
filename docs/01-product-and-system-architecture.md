@@ -75,7 +75,7 @@ The initial release includes:
 
 The initial release must remain operationally simple and must not require audio, video, advanced personalization, or mandatory cloud infrastructure.
 
-The first implementation slice enables exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. `REPORT_VERSION` is publication-eligibility review for an exact immutable Report version and its effective PublicationDecision; it is not review of an external publication operation. `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` remain architecturally mapped but disabled until their successor workflows, authorization rules, and integration tests are implemented.
+The target first-slice review scope is exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. `REPORT_VERSION` means publication-eligibility review for an exact immutable Report version and its exact effective PublicationDecision; it is not review of an external publication operation. This is target scope, not current enablement: no ReviewService material action may be enabled until the ReviewRepository and ReviewContextLinkRepository contracts, field-level command/query schemas, ReviewRecord/ReviewAction transition and projection rules, reviewer authorization rules, and the applicable GENI-ADR-014 approval are complete and verified by integration tests. `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` remain deferred and disabled.
 
 ### 3.2 Future Product Releases
 
