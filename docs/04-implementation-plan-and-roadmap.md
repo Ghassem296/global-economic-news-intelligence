@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.35
+**Version:** 1.36
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-24
 **Project:** Global Economic News Intelligence  
@@ -130,7 +130,7 @@ These product phases do not prescribe the order of engineering tasks. The develo
 
 ## 4. Development Environment and Technology Strategy
 
-### 4.1 Initial Technology Candidates
+### 4.1 Initial Technology Baseline and Candidates
 
 The following technologies are candidates for the initial implementation. Choices requiring architectural commitment must be approved through the ADR process.
 
@@ -138,7 +138,7 @@ The following technologies are candidates for the initial implementation. Choice
 |---|---|
 | Language | Python |
 | Python version | CPython 3.15 only (`>=3.15,<3.16`); older and newer minor versions are outside the supported runtime range |
-| Package management | uv |
+| Package management | uv 0.13.9 (selected project tooling; exact version required) |
 | Data validation | Pydantic |
 | LLM integration | Provider-independent adapter, with LiteLLM as a candidate |
 | Database | Relational database; SQLite and PostgreSQL are candidates pending the GENI-ADR-005 workload proof-of-concept |
@@ -152,6 +152,8 @@ The following technologies are candidates for the initial implementation. Choice
 | Logging | Structured logging |
 | CI | GitHub Actions |
 | Version control | Git |
+
+The project package manager is uv 0.13.9, pinned by `[tool.uv].required-version` in `pyproject.toml`; `uv.lock` is committed and is the authoritative resolution for the Python 3.15 development environment. CI verifies the lock with `uv lock --check` and installs using `uv sync --locked`. The setuptools build backend is pinned to 84.2.1. This is a project tooling baseline, not an acceptance of the pending database, LLM, source-acquisition, or deployment decisions.
 
 The project runtime baseline is CPython 3.15 only. `.python-version`, package metadata, Ruff, mypy, and the application CI matrix must remain aligned to 3.15. Python 3.12–3.14 are not supported runtime targets. The selected database access library, migration mechanism, async database strategy, and LLM adapter must be recorded in the appropriate architecture decisions before they become implementation constraints.
 
@@ -1848,6 +1850,8 @@ Privacy execution is a cross-cutting implementation dependency. Before productio
 
 Exit criteria require executable tests and operational evidence, not document presence. Publication does not establish legal compliance. See GENI-ADR-020 and Document 14.
 
+
+**Revision Note (v1.36):** Records uv 0.13.9 as the selected project package manager, a committed Python 3.15 lockfile, locked CI installation, and a pinned setuptools build backend. Database and other capability-dependent technology decisions remain subject to their respective ADRs.
 
 **End of Document**
 
