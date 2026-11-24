@@ -228,6 +228,23 @@ def validate_vertical_slice_roadmap_alignment() -> None:
     if missing:
         fail(f"Document 16 first-slice scope guard is incomplete: {missing}")
 
+    stage8_start = roadmap.index("## 14. Development Stage 8 — Evidence and Economic Analysis")
+    stage8_end = roadmap.index("## 15. Development Stage 9 — Event Dossiers and Reporting", stage8_start)
+    stage8 = roadmap[stage8_start:stage8_end].casefold()
+    required_stage8 = (
+        "a real llm/provider integration belongs to this stage",
+        "geni-adr-006",
+        "geni-adr-007",
+        "geni-adr-017",
+        "geni-adr-020",
+        "llmusagerecord",
+        "fail closed",
+        "a fake adapter is a test dependency",
+    )
+    missing = [item for item in required_stage8 if item.casefold() not in stage8]
+    if missing:
+        fail(f"Stage 8 provider-backed analysis gates are incomplete: {missing}")
+
 
 def validate_adrs() -> None:
     paths = sorted(ADR_DIR.glob("GENI-ADR-*.md"))
