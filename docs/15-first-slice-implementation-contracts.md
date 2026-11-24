@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.3  
+**Version:** 2.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -761,6 +761,90 @@ This tranche does not claim that Gate A is complete. The following remain unreso
 
 No unresolved item above may be filled with an arbitrary default. A capability remains blocked until its own contract and governing ADR/authorization gates are satisfied.
 
+
+### 10.12 Source registry and collection query contracts (tranche v1.4)
+
+This tranche closes the source-configuration and source-identity payload catalogue to the extent supported by Documents 02, 03, 08, and the existing repository signatures. It does not authorize source discovery or collection. Source operations remain subject to operation-specific content-rights decisions and the applicable security controls.
+
+#### 10.12.1 UpdateSourceConfiguration
+
+The command is scoped to one existing Source and participates in optimistic concurrency through the repository method's expected_version. The command is a change set, not permission to replace the Source identity.
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| source_id | ID<Source> | Required | Must identify an existing Source; identity is immutable. |
+| changes.name | string | Optional change | If supplied, must be non-empty after normalization; exact length and normalization remain open. |
+| changes.source_type | string/enum | Optional change | Must select a supported source adapter type. RSS, API, web, and official dataset are examples, not a closed enum. |
+| changes.base_url | URL | Optional change | Must pass URL validation and the Document 08 SSRF/redirect policy; DNS and redirect destinations require revalidation at use time. |
+| changes.language | string/null | Optional change | Null clears the declared primary language; language-tag format remains to be selected. |
+| changes.country_code | string/null | Optional change | Null clears the declared country; country-code format remains to be selected. |
+| changes.ownership_group | string/null | Optional change | Null means unknown/unrecorded, not proof of independent ownership. |
+| changes.syndication_group | string/null | Optional change | Null means unknown/unrecorded; do not infer a group from domain similarity alone. |
+| changes.collection_config | object | Optional change | Non-secret, source-type-specific configuration only; schema must be validated by the selected adapter. Credentials and secret values are prohibited. |
+| changes.is_active | boolean | Optional change | Enables/disables collection eligibility only; it does not grant content-access or retention rights. |
+
+The command must contain at least one actual change. Omitted fields mean unchanged; explicit null is accepted only for fields declared nullable. The exact serialized patch representation and distinction between omitted and explicit null must be fixed before implementation. The expected_version argument is supplied separately as required by the repository signature in §4.1; it is the compare-and-swap guard and is not duplicated inside the command payload. The application/server owns Source ID, created_at, updated_at, resulting version, and audit provenance.
+
+**Excluded from this generic command:** reliability_profile and reliability_profile_version. Source reliability is an assessed attribute with its own evidence and version semantics; it must not be silently overwritten as ordinary collection configuration. A dedicated reliability-profile update/evaluation contract remains to be specified.
+
+Changing is_active does not rewrite collection history or rights assessments. Changing base_url or source_type must not silently transfer existing rights decisions to the new endpoint or adapter. Re-evaluate applicable access permissions before the next source operation. No credential, token, cookie, or secret may be included in collection_config, command errors, or ordinary logs.
+
+#### 10.12.2 SourceCollectionQuery
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| source_type | string/enum or list | Optional filter | Only supported source types; exact scalar/list semantics remain open. |
+| language | string or list | Optional filter | Matches declared source language; unknown language is not treated as a match. |
+| geographic_scope | string/typed scope | Optional filter | Scope vocabulary and whether it maps to country_code or a broader coverage model remain open. |
+| status | string/enum | Optional filter | Must map to an explicitly defined source lifecycle/collection state; it must not be silently interpreted as a rights decision. |
+| limit | integer | Required or service-defaulted | Positive and bounded; default and maximum are deployment settings not specified here. |
+| cursor | opaque string/null | Optional | Bound to the exact filter and sort context; encoding and consistency model remain open. |
+
+The query returns only collection-enabled Sources for the list_collection_enabled operation, uses stable ordering with a deterministic tie-breaker, and never returns secret values. A cursor cannot be reused with different filters or sort order. Authorization to view Source configuration is checked independently of collection eligibility. Access to a Source record does not authorize any NewsCollector operation.
+
+#### 10.12.3 SourceArticleIdentity
+
+| Field | Type | Requiredness | Validation / ownership |
+|---|---|---|---|
+| canonical_source_identifier | string | Required | Stable identity within one Source, produced by deterministic, versioned source-specific normalization. |
+| canonical_url | URL/null | Optional | Secondary lookup signal only; not globally unique and not a substitute for source-scoped identity. |
+| normalization_version | Version | Required | Identifies the exact identity-normalization rules used. |
+
+The enclosing repository call supplies source_id; the identity must never be compared across different Sources as though globally unique. The original article URL and source-provided external_id remain separately preserved on Article. The algorithm for selecting the canonical source identifier, precedence between external_id and other source-specific identifiers, redirect handling, URL canonicalization, collision resolution, and migration between normalization versions remain explicit open decisions. A collision returns CONFLICT; it never silently merges Articles.
+
+#### 10.12.4 Article projection ownership and revision boundary
+
+The Article record is a current projection, not a second independently editable copy of revision content.
+
+| Article field group | Contract ownership |
+|---|---|
+| id, source_id, source-scoped identity | Stable identity; assigned/validated by the application and never silently changed by a revision update. |
+| external_id, url, canonical_url | Source identity and URL references; preserve original and canonical forms separately. |
+| title, content, summary, language, content_hash | Current projection derived from the latest valid ArticleRevision; content remains subject to exact rights and retention permissions. |
+| current_revision_id | Server-owned pointer updated atomically with ArticleRevision append/reuse. |
+| collected_at, last_seen_at | Server-owned observation projections; first successful collection and latest observation are distinct. |
+| content_availability | Explicit state; the documented examples are available, partial, metadata-only, and unavailable. Missing content is never represented as an empty successful article. |
+| rights_status | Summary projection only; never a substitute for operation-specific RightsAssessment records. |
+| author, published_at, metadata | Present on Article in Document 03, but not all are represented on ArticleRevision. Their historical snapshot/update semantics remain unresolved; do not claim they are revision-stable until reconciled. |
+| created_at, updated_at | Server-owned timestamps. |
+
+ArticleRevision creation/reuse and Article projection update remain one UnitOfWork. A repeated unchanged normalized revision must not create a new revision; the same hash under a different normalization version is not presumed equivalent. The projection may expose only content permitted for the current operation and retention state. A later rights revocation or content restriction must not be bypassed by reading the Article projection or an old cache.
+
+#### 10.12.5 Remaining source-contract blockers
+
+The following remain open and block the corresponding implementation detail:
+
+- Exact patch wire representation, omitted-versus-null serialization, and field-level string/URL bounds for UpdateSourceConfiguration.
+- Supported source_type vocabulary and source-adapter configuration schemas.
+- Dedicated Source reliability-profile update/evaluation contract, evidence requirements, and version/supersession rules.
+- Geographic-scope vocabulary and its relationship to Source.country_code and source coverage.
+- SourceArticleIdentity canonicalization algorithm, external_id precedence, redirect handling, collision remediation, and normalization-version migration.
+- Historical snapshot semantics for Article.author, Article.published_at, and source metadata that are currently present on Article but absent from ArticleRevision.
+- Cursor encoding, default/max page sizes, stable sort keys, and page consistency under concurrent source configuration changes.
+- Secret-reference management, if source adapters require credentials; this contract intentionally prohibits secret values and does not select a secret manager.
+
+These gaps must remain explicit. They must not be filled by silently choosing a provider, URL policy, identity algorithm, page-size limit, or credential mechanism.
+
 ## 11. Related documents
 
 - Document 02 — Component Architecture and Interface Contracts.
@@ -778,10 +862,10 @@ No unresolved item above may be filled with an arbitrary default. A capability r
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.3  
+**Version:** 2.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.3):** Added the required immutable authorization reference to EventMatchDecision and the common state-changing command metadata, aligning the component, data-model, security, and first-slice contracts. The broader authorization matrix and policy approvals remain outstanding; no ADR or capability gate is accepted by this revision.
+**Revision Note (v2.4):** Added source configuration, source collection query, source-scoped article identity, and Article projection ownership contracts. Distinguished assessed reliability metadata from routine source configuration and recorded unresolved identity, pagination, secret-reference, and ArticleRevision snapshot boundaries. This does not authorize source collection or complete Gate A.
 
 **End of Document**
