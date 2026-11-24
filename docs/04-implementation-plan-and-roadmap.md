@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.34
+**Version:** 1.35
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-24
 **Project:** Global Economic News Intelligence  
@@ -137,7 +137,7 @@ The following technologies are candidates for the initial implementation. Choice
 | Area | Candidate |
 |---|---|
 | Language | Python |
-| Python version | A supported stable Python release, explicitly pinned for the project |
+| Python version | CPython 3.15 only (`>=3.15,<3.16`); older and newer minor versions are outside the supported runtime range |
 | Package management | uv |
 | Data validation | Pydantic |
 | LLM integration | Provider-independent adapter, with LiteLLM as a candidate |
@@ -153,7 +153,7 @@ The following technologies are candidates for the initial implementation. Choice
 | CI | GitHub Actions |
 | Version control | Git |
 
-The selected Python version, database access library, migration mechanism, async database strategy, and LLM adapter must be recorded in the appropriate architecture decisions before they become implementation constraints.
+The project runtime baseline is CPython 3.15 only. `.python-version`, package metadata, Ruff, mypy, and the application CI matrix must remain aligned to 3.15. Python 3.12–3.14 are not supported runtime targets. The selected database access library, migration mechanism, async database strategy, and LLM adapter must be recorded in the appropriate architecture decisions before they become implementation constraints.
 
 ### 4.2 Database Considerations
 
@@ -1852,5 +1852,5 @@ Exit criteria require executable tests and operational evidence, not document pr
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.34
+**Version:** 1.35
 **Status:** Draft — Under Architecture Review
