@@ -26,7 +26,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
-~~~
+```
 
 ## Commands
 
@@ -64,7 +64,7 @@ This repository does not grant rights to third-party news content. Source access
 
 ## Documentation repository tree
 
-~~~text
+```text
 global-economic-news-intelligence/
 ├── docs/
 │   ├── 01-product-and-system-architecture.md
