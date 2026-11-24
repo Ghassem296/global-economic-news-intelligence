@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.52  
+**Version:** 1.53  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -259,6 +259,24 @@ Responsibilities:
 It must not merge articles merely because they describe the same event.
 
 ArticleDeduplicator produces immutable DuplicateCandidate evaluations only. The Article Deduplication Workflow owns policy application and immutable DuplicateDecision creation/supersession. Neither candidate scoring nor duplicate decision may delete the source Article or erase source provenance.
+
+### 4.4.1 Article Deduplication Workflow
+
+The Article Deduplication Workflow coordinates pairwise duplicate evaluation independently of event matching.
+
+Responsibilities:
+
+- Accept only exact, immutable ArticleRevision references and validate that each revision belongs to its stated Article.
+- Generate or retrieve immutable DuplicateCandidate records using the approved candidate-generation method, policy version and deterministic input fingerprint.
+- Keep candidate generation/evaluation separate from the authoritative decision command.
+- Apply the approved duplicate-decision policy and append immutable DuplicateDecision records with actor, authorization, rationale, policy version and supersession provenance.
+- Resolve the effective decision for one candidate from its linear supersession history; stale or competing successors must fail with a conflict.
+- Preserve unresolved and REVIEW_REQUIRED outcomes without forcing a negative decision or enabling a material review action.
+- Expose duplicate relationships only from effective CONFIRMED_DUPLICATE decisions for the exact revision pair.
+
+Pairwise duplicate decisions are not transitive. A–B and B–C do not establish A–C. Connected components may be shown only as non-authoritative candidate/review clusters. A near-duplicate group is authoritative only when every member pair has an effective CONFIRMED_DUPLICATE decision (complete-link) or a separately approved group-decision contract is introduced. Exact-duplicate grouping requires the same documented normalization/fingerprint identity. The workflow must not merge or delete Article or ArticleRevision records and must not treat a duplicate decision as an event-matching decision.
+
+The workflow is idempotent for the same canonical revision pair, method/policy version and input fingerprint. A changed input or policy creates a new immutable candidate evaluation; a correction creates a successor decision and preserves prior history.
 
 ### 4.5 TopicClassifier
 
