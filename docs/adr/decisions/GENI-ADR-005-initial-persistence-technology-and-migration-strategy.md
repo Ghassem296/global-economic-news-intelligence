@@ -333,6 +333,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | 1.1 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Aligned decision and review authority terminology with the Project Owner role defined in GENI-GOV-005. | AI Architecture Assistant |
 | 1.3 | 2026-11-24 | Proposed | Added reproducible PoC protocol, predeclared workload/threshold requirements, correctness gates, and evidence-artifact criteria; database selection remains pending. | AI Architecture Assistant |
-| 1.4 | 2026-11-24 | Proposed | Added the stable GENI-ADR-005-POC-001 identifier to the ADR evidence reference. |
+| 1.4 | 2026-11-24 | Proposed | Added the stable GENI-ADR-005-POC-001 identifier to the ADR evidence reference. | AI Architecture Assistant |
 
 **End of ADR**
