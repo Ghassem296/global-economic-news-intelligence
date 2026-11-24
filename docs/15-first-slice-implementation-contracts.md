@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.0  
+**Version:** 3.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -39,7 +39,7 @@ The first-slice repository set is:
 - ReviewRepository
 - ReviewContextLinkRepository
 
-The contracts below define the minimum operations and invariants for those repositories. Related repositories for report provenance links, publication operations/attempts, rights assessments, content access, collection checkpoints, processing steps, idempotency records, and execution leases must be specified before their respective capabilities are implemented. Review persistence is included in the target first-slice repository baseline because `REPORT_VERSION` is part of the target review scope; however, inclusion does not enable review execution. ReviewService material actions remain disabled until the review DTO schemas, lifecycle/projection rules, authorization policy, and GENI-ADR-014 approval pass Gate A and the corresponding integration tests pass Gate C.
+The contracts below define the minimum operations and invariants for those repositories. The first-slice aggregate repositories also own the related link records defined in Documents 02/03: EvidenceRepository owns EvidenceLocation writes; AnalysisRepository owns AnalysisInput and AnalysisEvidenceLink writes; and ReportRepository owns ReportEventLink, ReportEvidenceLink, ReportArticleLink and ReportAnalysisLink writes. These child records must be persisted and queried through the parent aggregate contract and the same UnitOfWork; they are not independent application-level transaction owners. Infrastructure may use private child adapters only when the aggregate repository preserves the atomic boundary. Separate repositories for publication operations/attempts, rights assessments, content access, collection checkpoints, processing steps, idempotency records and execution leases must be specified before their respective capabilities are implemented. Review persistence is included in the target first-slice repository baseline because `REPORT_VERSION` is part of the target review scope; however, inclusion does not enable review execution. ReviewService material actions remain disabled until the review DTO schemas, lifecycle/projection rules, authorization policy, and GENI-ADR-014 approval pass Gate A and the corresponding integration tests pass Gate C.
 
 The baseline excludes:
 - production source acquisition or full-text retention until GENI-ADR-013 is accepted and source-specific operation rights are approved;
@@ -198,7 +198,7 @@ No method may create or activate a link from a candidate score, NEW_EVENT_CANDID
 | Method | Signature | Contract |
 |---|---|---|
 | `get_by_id` | `get_by_id(evidence_id: ID<Evidence>) -> Optional<Evidence>` | Returns evidence metadata and permitted provenance/location references. |
-| `append_evidence` | `append_evidence(evidence: Evidence, uow: UnitOfWork) -> Evidence` | Persists evidence identity, origin, source attribution, verification state and permitted location references. Evidence does not by itself prove a claim. Source-derived content is subject to operation-specific rights and retention controls. |
+| `append_evidence` | `append_evidence(evidence: Evidence, uow: UnitOfWork) -> Evidence` | Persists evidence identity, origin, source attribution, verification state and all permitted EvidenceLocation records atomically in the same UnitOfWork. Evidence does not by itself prove a claim. Source-derived content is subject to operation-specific rights and retention controls. |
 | `list_for_subject` | `list_for_subject(subject: EvidenceSubject, query: EvidenceListQuery) -> Page<Evidence>` | Returns bounded, stable, access-controlled evidence references for an ArticleRevision, Event, Claim or Analysis as supported by the model. |
 
 ### 4.10 AnalysisRepository
@@ -206,7 +206,7 @@ No method may create or activate a link from a candidate score, NEW_EVENT_CANDID
 | Method | Signature | Contract |
 |---|---|---|
 | `get_by_id` | `get_by_id(analysis_id: ID<Analysis>) -> Optional<Analysis>` | Returns immutable analysis output and version metadata. |
-| `append_analysis` | `append_analysis(command: AppendAnalysis, uow: UnitOfWork) -> Analysis` | Persists one versioned analysis with exact input/evidence references, result-schema version, methodology version, model/prompt provenance where used, and explicit unknown/uncertainty semantics. |
+| `append_analysis` | `append_analysis(command: AppendAnalysis, uow: UnitOfWork) -> Analysis` | Persists one versioned Analysis together with its exact AnalysisInput and AnalysisEvidenceLink records in the same UnitOfWork, plus result-schema version, methodology version, model/prompt provenance where used, and explicit unknown/uncertainty semantics. |
 | `list_for_event` | `list_for_event(event_id: ID<Event>, analysis_type: AnalysisType, query: AnalysisListQuery) -> Page<Analysis>` | Returns only the requested analysis type; importance, economic relevance and economic impact remain distinct types. |
 
 The write command must reject missing required provenance and must not collapse unknown, not-established, zero, and false into one value.
@@ -217,7 +217,7 @@ The write command must reject missing required provenance and must not collapse 
 |---|---|---|
 | `get_by_id` | `get_by_id(report_id: ID<Report>) -> Optional<Report>` | Returns the exact immutable report version. |
 | `get_latest_for_subject` | `get_latest_for_subject(subject: ReportSubject) -> Optional<Report>` | Returns the latest version for the requested subject without mutating historical versions. |
-| `append_report_version` | `append_report_version(command: AppendReportVersion, uow: UnitOfWork) -> Report` | Appends an immutable report version with exact event/article-revision/analysis/evidence provenance. Report content and all required provenance links commit atomically. Generation alone does not publish or deliver the report. |
+| `append_report_version` | `append_report_version(command: AppendReportVersion, uow: UnitOfWork) -> Report` | Appends an immutable report version with exact event/article-revision/analysis/evidence provenance. Report content, immutable content manifest, and all ReportEventLink, ReportEvidenceLink, ReportArticleLink and ReportAnalysisLink records commit atomically through ReportRepository. Generation alone does not publish or deliver the report. |
 
 The report command includes a deterministic input fingerprint, template/version, generation provenance, and explicit content representation. Repeating the same logical generation request must not create uncontrolled duplicate versions.
 
@@ -293,8 +293,8 @@ The following local write sets are indivisible. They must be implemented through
 | Append a duplicate decision | Immutable DuplicateDecision insert + linear supersession constraint/idempotency result; effective outcome resolves from the unique terminal decision in the chain |
 | Create an Event | Event insert + initial EventHistory + authorized creation/idempotency provenance |
 | Record an event-match decision | EventMatchDecision append + EventMatchCase effective pointer + required ArticleEventLink activation/deactivation |
-| Persist evidence-backed analysis | Analysis append + exact AnalysisInput and AnalysisEvidenceLink set |
-| Persist report version | Report version + all required report-to-event/article-revision/analysis/evidence links |
+| Persist evidence-backed analysis | Analysis append + exact AnalysisInput and AnalysisEvidenceLink set, all owned by AnalysisRepository and committed atomically |
+| Persist report version | Report version + immutable content manifest + all ReportEventLink, ReportArticleLink, ReportAnalysisLink and ReportEvidenceLink rows, committed atomically by ReportRepository |
 | Record publication eligibility | PublicationDecision append + supersession/effective-decision projection, if one is used |
 | Create review task | ReviewRecord insert + initial `CREATED` ReviewAction + initial projection, once the approved initial-state/action mapping exists |
 | Append review action | ReviewAction append + sequence/idempotency claim + ReviewRecord projection update, once the approved action-to-projection mapping exists |
@@ -1122,12 +1122,12 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.0  
+**Version:** 3.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
 **Revision Note (v2.8):** Tightened provider-backed analysis provenance by requiring each provider request to create an LLMUsageRecord linked to the exact Analysis/ProcessingRun and to preserve privacy, purpose, data-category, region, transfer and content-rights decision references. Added the explicit privacy-processing authorization permission to the PersistAnalysis crosswalk. No provider egress is authorized by this contract.
 
-**Revision Note (v3.0):** Added the missing DuplicateCandidateRepository and DuplicateDecisionRepository contracts, atomic/idempotent write boundaries, duplicate-evaluation and decision authorization crosswalk, and field-level pairwise DTO semantics. Explicitly prohibited transitive near-duplicate grouping. Remaining policy/calibration decisions stay gated; no ADR approval or production capability is implied.
+**Revision Note (v3.1):** Clarified aggregate ownership of EvidenceLocation, AnalysisInput/AnalysisEvidenceLink, and report provenance-link records. EvidenceRepository, AnalysisRepository, and ReportRepository now explicitly own the related child writes within their atomic UnitOfWork boundaries; no additional application-level repository transaction owners are introduced.
 
 **End of Document**
