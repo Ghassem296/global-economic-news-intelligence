@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SEC-008  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -102,6 +102,7 @@ The following permission identifiers are a proposed logical vocabulary for imple
 | Append publication decision | `publication.decide` | Exact immutable report version and publication scope | Approved publication policy and authorized decision actor |
 | Authorize distribution | `distribution.authorize` | Exact report version, recipient, destination, channel and content-scope fingerprint | Complete current source-rights assessment set and approved DistributionAuthorizationPolicy |
 | Dispatch delivery | `delivery.dispatch` | Exact effective distribution decision and authorized content manifest | Revalidate decision, rights dependencies, expiry, payload fingerprint and idempotency immediately before side effect |
+| Authorize a privacy-processing request | `privacy.processing.authorize` | Exact purpose, operation, data category, payload/input fingerprint, provider/model and processing region | PrivacyProcessingAuthorization must independently issue an immutable ALLOW decision for this exact request; retries or changed context require re-evaluation |
 | Administer privacy processing policy | `privacy.policy.administer` | Exact purpose, operation, data category and policy record | Separate authorized policy-administration process; never inferred from provider availability |
 | Read restricted audit/security records | `security.audit.read` | Exact record class, incident or operational purpose | Explicit least-privilege grant and access audit |
 | Change security-sensitive configuration | `security.config.change` | Exact setting/environment and change window | Authenticated, authorized, audited change with rollback/recovery plan |
@@ -145,7 +146,7 @@ Identity provider and session/token lifecycle; final role-to-permission assignme
 
 ## 10. Related Documents
 
-Documents 02, 03, 09, 10, 12, 13, and [14 — Data Protection and Privacy Specification](14-data-protection-and-privacy-specification.md); GENI-ADR-004, 008, 013, 014, 016, 017, and 020. Related ADRs retain their own status; this document does not accept them.
+Documents 02, 03, 09, 10, 12, 13, [14 — Data Protection and Privacy Specification](14-data-protection-and-privacy-specification.md), and 15 — First-Slice Implementation Contracts; GENI-ADR-004, 008, 013, 014, 016, 017, and 020. Related ADRs retain their own status; this document does not accept them.
 
 ## 11. Privacy Processing Authorization and LLM Egress
 
@@ -158,10 +159,10 @@ Logs, traces, prompts, exception messages and evaluation artifacts are privacy-r
 ---
 
 **Document ID:** GENI-SEC-008  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Draft — Under Architecture Review  
 
 
-**Revision Note (v1.7):** Added a deny-by-default logical role-boundary matrix, a minimum operation-permission catalogue covering source, article, event, rights, evidence, analysis, report, review, processing, publication, distribution and delivery actions, and immutable authorization-reference requirements. These are proposed logical controls, not approved role grants or deployment selections; identity lifecycle, final grant assignments, break-glass rules and policy administration remain open.
+**Revision Note (v1.8):** Added an explicit privacy-processing authorization permission bound to exact purpose, operation, data category, payload fingerprint, provider/model and region; linked the first-slice implementation contracts. The privacy decision remains independent from execution permission and source-content rights. Role grants and deployment policy remain unapproved.
 
 **End of Document**
