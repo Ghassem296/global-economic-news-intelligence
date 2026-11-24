@@ -167,14 +167,14 @@ PublicationDecision is immutable and scoped to one exact immutable Report versio
 
 ## 9. PublicationRecord and PublicationAttempt
 
-PublicationRecord and DeliveryRecord use the common external-operation lifecycle: PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELLED, RECONCILIATION_REQUIRED.
+PublicationRecord and DeliveryRecord use the common external-operation lifecycle: PENDING, IN_PROGRESS, SUCCEEDED (publication), DELIVERED (delivery), FAILED, CANCELLED, RECONCILIATION_REQUIRED.
 
 | Current operation state | Attempt | Immutable attempt outcome | Next operation state |
 |---|---|---|---|
-| IN_PROGRESS | EXECUTE | CONFIRMED_SUCCESS | SUCCEEDED |
+| IN_PROGRESS | EXECUTE | CONFIRMED_SUCCESS | SUCCEEDED for publication; DELIVERED for delivery |
 | IN_PROGRESS | EXECUTE | CONFIRMED_FAILURE | FAILED |
 | IN_PROGRESS | EXECUTE | OUTCOME_UNKNOWN | RECONCILIATION_REQUIRED |
-| RECONCILIATION_REQUIRED | RECONCILE | RECONCILED_SUCCESS | SUCCEEDED |
+| RECONCILIATION_REQUIRED | RECONCILE | RECONCILED_SUCCESS | SUCCEEDED for publication; DELIVERED for delivery |
 | RECONCILIATION_REQUIRED | RECONCILE | RECONCILED_NOT_APPLIED | PENDING only if the exact same operation remains authorized and retry policy permits; otherwise FAILED |
 
 Rules:
@@ -187,7 +187,7 @@ Rules:
 - A late attempt result is retained as immutable evidence and may update the projection only if its attempt/operation version is still current; contradictory late results trigger reconciliation/incident handling, never overwrite a confirmed result.
 - Cancellation is allowed before execution or after reconciliation proves no effect. An in-flight operation with unknown outcome must not be marked CANCELLED.
 
-Delivery uses the same lifecycle but remains a separate aggregate and must revalidate recipient/destination authorization immediately before dispatch. A delivery failure never reverses confirmed publication.
+Delivery uses the same transition policy but remains a separate aggregate. The pure policy function accepts an explicit success_status: SUCCEEDED for publication and DELIVERED for delivery. A delivery must revalidate recipient/destination authorization immediately before dispatch. A delivery failure never reverses confirmed publication.
 
 ## 10. ReviewRecord and ReviewAction
 
