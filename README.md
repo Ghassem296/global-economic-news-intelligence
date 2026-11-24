@@ -19,10 +19,10 @@ The authoritative readiness assessment is [Document 16](docs/16-implementation-r
 
 ## Development setup
 
-Requirements: Python 3.12 or 3.13.
+Requirement: Python 3.15 only.
 
 ```powershell
-python -m venv .venv
+py -3.15 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
