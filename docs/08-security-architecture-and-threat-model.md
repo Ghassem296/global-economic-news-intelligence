@@ -162,4 +162,6 @@ Logs, traces, prompts, exception messages and evaluation artifacts are privacy-r
 **Status:** Draft — Under Architecture Review  
 
 
+**Revision Note (v1.7):** Added a deny-by-default logical role-boundary matrix, a minimum operation-permission catalogue covering source, article, event, rights, evidence, analysis, report, review, processing, publication, distribution and delivery actions, and immutable authorization-reference requirements. These are proposed logical controls, not approved role grants or deployment selections; identity lifecycle, final grant assignments, break-glass rules and policy administration remain open.
+
 **End of Document**
