@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Proposed test protocol — no engine selected  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -83,7 +83,7 @@ Correctness gates are pass/fail. A fast result cannot compensate for a violated 
 | POC-05 | Atomic EvidenceLocation, AnalysisInput/AnalysisEvidenceLink, and Report provenance child writes through parent repositories | A failure rolls back the entire parent aggregate write set |
 | POC-06 | Optimistic concurrency with two stale writers | At most one update succeeds for the same expected aggregate version; the other receives a typed conflict |
 | POC-07 | Competing lease acquisition/renewal | Ownership is atomic; one current owner is authoritative |
-| POC-08 | Stale worker resumes after lease takeover | Old fencing token cannot commit any protected state change |
+| POC-08 | Stale worker resumes after lease takeover | A stale fencing token cannot commit any protected state change |
 | POC-09 | Process termination during a transaction | Transaction is wholly committed or rolled back; no partial write set |
 | POC-10 | Process termination after durable local commit but before acknowledgement | Same-fingerprint retry safely returns/resumes the existing logical operation |
 | POC-11 | Concurrent read/write workload | No lost updates, dirty reads, or violations of the documented isolation contract |
@@ -177,5 +177,6 @@ After acceptance, record the exact engine/version, driver, migration tool, async
 | Version | Date | Status | Change Summary |
 |---|---|---|---|
 | 1.0 | 2026-11-24 | Proposed | Initial reproducible persistence PoC protocol; no engine selected |
+| 1.1 | 2026-11-24 | Proposed | Clarified the stale-worker fencing acceptance criterion for machine-checkable alignment. |
 
 **End of Evidence Protocol**
