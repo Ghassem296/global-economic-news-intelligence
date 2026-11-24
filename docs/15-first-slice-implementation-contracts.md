@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.7  
+**Version:** 2.8  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -700,7 +700,7 @@ Evidence ID and created_at are server-owned. An origin must be resolvable or exp
 | `evidence_references` | `List<ID<Evidence>>` | Required | Exact evidence set considered; an empty set must be explicit and cannot be represented as successful evidential support. |
 | `input_references` | `List<typed AnalysisInput references>` | Required | Typed references and versions for every non-evidence input consumed. |
 
-Analysis ID, created_at, completed_at, and the next version are server-owned. Provider/model/prompt fields are provenance, not authorization; model-assisted processing remains disabled unless the exact provider, purpose, data category, region, privacy decision, and source-rights scope are authorized. A successful result is immutable; corrections or re-analysis create a successor record.
+Analysis ID, created_at, completed_at, and the next version are server-owned. Provider/model/prompt fields are provenance, not authorization. Every actual provider request must produce an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep, with the applicable `privacy_authorization_decision_id`, `processing_purpose_id`, `data_category`, `processing_region`, `transfer_assessment_id`, `content_rights_decision_refs`, provider/model, prompt/schema versions, outcome and retry provenance required by Document 03 §13.5. The PrivacyAuthorizationDecision must independently ALLOW the exact purpose, operation, data category, provider/model and region; source-content rights must separately cover the exact payload and use. Missing, unknown, expired, revoked or mismatched references block egress. A successful result is immutable; corrections or re-analysis create a successor record.
 
 #### 10.11.7 AppendReportVersion
 
@@ -859,7 +859,7 @@ This section maps the first-slice application commands and queries to the propos
 | `ResolveEventDevelopment` | `event.match.case.create` and `event.match.evaluate` | Exact ArticleRevision, development scope, matching-policy version and candidate set | Candidate evaluation is not an authoritative decision and cannot create an Event or ArticleEventLink |
 | `ApplyEventMatchDecision` | `event.match.decide` | Exact case, decision, predecessor, selected candidate and expected case version | Approved matching policy and immutable authorization reference; Event creation separately requires `event.create` and EventCreationPolicy |
 | `RecordEvidence` | `evidence.append` | Exact evidence origin, subject, stored representation and content location | Rights/retention decision must cover the exact quotation, extract or derived text being stored |
-| `PersistAnalysis` | `analysis.append` | Exact immutable input manifest, evidence set, analysis type and methodology version | Provider execution additionally requires current privacy authorization and source-content rights for exact purpose, payload, provider/model and region |
+| `PersistAnalysis` | `analysis.append`; plus `privacy.processing.authorize` for provider requests | Exact immutable input manifest, evidence set, analysis type and methodology version; exact purpose/category/provider/model/region for egress | Provider execution additionally requires an immutable ALLOW PrivacyAuthorizationDecision, applicable transfer assessment, source-content rights for the exact payload/use, and LLMUsageRecord provenance under Document 03 §13.5 |
 | `CreateReportVersion` | `report.generate` | Exact report aggregate, input revisions, evidence/analysis references, template and fingerprint | Provenance and content-rights checks; report generation does not authorize publication or delivery |
 | `DecidePublicationEligibility` | `publication.decide` | Exact immutable report version and publication scope | Approved publication policy, required review references and current rights/security context; decision is not a dispatch command |
 | `CreateReviewTask` | `review.task.create` | Exact review family, typed subject, assignment and reviewer-visible context | Approved trigger/priority policy; authorize access to every linked context item |
@@ -1034,10 +1034,10 @@ The following remain open and must be resolved before production report generati
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.7  
+**Version:** 2.8  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
-**Revision Note (v2.7):** Added language-neutral ReportContent and ReportGenerationProvenance contracts, including semantic content blocks, exact section-level provenance, report-version lineage and separation from publication/delivery. Serialization, template identity, input-manifest canonicalization and report-family rules remain open; no publication or production generation capability is enabled.
+**Revision Note (v2.8):** Tightened provider-backed analysis provenance by requiring each provider request to create an LLMUsageRecord linked to the exact Analysis/ProcessingRun and to preserve privacy, purpose, data-category, region, transfer and content-rights decision references. Added the explicit privacy-processing authorization permission to the PersistAnalysis crosswalk. No provider egress is authorized by this contract.
 
 **End of Document**
