@@ -267,7 +267,7 @@ def aggregate_run_status(
     if not step_statuses:
         return ProcessingRunStatus.PENDING
 
-    active = {ProcessingStepStatus.PENDING, ProcessingStepStatus.READY, ProcessingStepStatus.RUNNING}
+    active = {\n        ProcessingStepStatus.PENDING,\n        ProcessingStepStatus.READY,\n        ProcessingStepStatus.RUNNING,\n    }
     if any(status in active for status in step_statuses):
         return ProcessingRunStatus.RUNNING
 
