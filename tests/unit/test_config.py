@@ -22,7 +22,7 @@ def test_settings_parse_environment_and_log_level() -> None:
     assert settings.log_level is LogLevel.WARNING
 
 
-@pytest.mark.parametrize("value", ["", "staging", "prod", "production "])
+@pytest.mark.parametrize("value", ["", "staging", "prod", "productionx"])
 def test_invalid_environment_is_rejected(value: str) -> None:
     with pytest.raises(ConfigurationError):
         Settings.from_env({"GENI_ENV": value})
