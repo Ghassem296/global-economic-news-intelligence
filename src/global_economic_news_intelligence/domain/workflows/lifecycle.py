@@ -29,6 +29,7 @@ class ProcessingStepStatus(StrEnum):
     READY = "READY"
     RUNNING = "RUNNING"
     SUCCEEDED = "SUCCEEDED"
+    DELIVERED = "DELIVERED"
     FAILED = "FAILED"
     BLOCKED = "BLOCKED"
     SKIPPED = "SKIPPED"
@@ -203,6 +204,7 @@ EXTERNAL_OPERATION_TRANSITIONS: Final[
     ExternalOperationStatus.IN_PROGRESS: frozenset(
         {
             ExternalOperationStatus.SUCCEEDED,
+            ExternalOperationStatus.DELIVERED,
             ExternalOperationStatus.FAILED,
             ExternalOperationStatus.CANCELLED,
             ExternalOperationStatus.RECONCILIATION_REQUIRED,
@@ -211,6 +213,7 @@ EXTERNAL_OPERATION_TRANSITIONS: Final[
     ExternalOperationStatus.RECONCILIATION_REQUIRED: frozenset(
         {
             ExternalOperationStatus.SUCCEEDED,
+            ExternalOperationStatus.DELIVERED,
             ExternalOperationStatus.PENDING,
             ExternalOperationStatus.FAILED,
         }
@@ -308,7 +311,7 @@ def transition_case(
     _transition(current, target, CASE_TRANSITIONS, context="EventMatchCase")
     if (
         current is EventMatchCaseStatus.RESOLVED
-        and target is EventMatchCaseStatus.OPEN
+        and target in {EventMatchCaseStatus.OPEN, EventMatchCaseStatus.PENDING_REVIEW}
         and not successor_decision_authorized
     ):
         raise TransitionError(
@@ -357,13 +360,20 @@ class ExternalAttemptResult:
 def external_operation_status_after_attempt(
     current: ExternalOperationStatus,
     result: ExternalAttemptResult,
+    *,
+    success_status: ExternalOperationStatus = ExternalOperationStatus.SUCCEEDED,
 ) -> ExternalOperationStatus:
     """Map immutable attempt evidence to the operation's current-state projection."""
+    if success_status not in {
+        ExternalOperationStatus.SUCCEEDED,
+        ExternalOperationStatus.DELIVERED,
+    }:
+        raise TransitionError("Success status must be SUCCEEDED or DELIVERED.")
     if result.attempt_type is ExternalAttemptType.EXECUTE:
         if current is not ExternalOperationStatus.IN_PROGRESS:
             raise TransitionError("EXECUTE attempts require an IN_PROGRESS operation.")
         mapping = {
-            ExternalAttemptOutcome.CONFIRMED_SUCCESS: ExternalOperationStatus.SUCCEEDED,
+            ExternalAttemptOutcome.CONFIRMED_SUCCESS: success_status,
             ExternalAttemptOutcome.CONFIRMED_FAILURE: ExternalOperationStatus.FAILED,
             ExternalAttemptOutcome.OUTCOME_UNKNOWN: ExternalOperationStatus.RECONCILIATION_REQUIRED,
         }
@@ -379,7 +389,7 @@ def external_operation_status_after_attempt(
     if current is not ExternalOperationStatus.RECONCILIATION_REQUIRED:
         raise TransitionError("RECONCILE attempts require RECONCILIATION_REQUIRED state.")
     if result.outcome is ExternalAttemptOutcome.RECONCILED_SUCCESS:
-        return ExternalOperationStatus.SUCCEEDED
+        return success_status
     if result.outcome is ExternalAttemptOutcome.RECONCILED_NOT_APPLIED:
         if result.retry_authorized:
             return ExternalOperationStatus.PENDING
