@@ -535,9 +535,9 @@ def validate_review_activation_gates() -> None:
     required_contracts = (
         "### 4.14 ReviewRepository",
         "### 4.15 ReviewContextLinkRepository",
-        "### 10.10 Required transition tables before implementation",
-        "ReviewRecord/ReviewAction transition and projection matrix",
-        "Blocked for execution; ADR-014 and Gate A approval required",
+        "### 10.10 Remaining contract blockers",
+        "GENI-FOUNDATION-017",
+        "reviewer authorization rules",
     )
     missing = [term for term in required_contracts if term not in implementation]
     if missing:
