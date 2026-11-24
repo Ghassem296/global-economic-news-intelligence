@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 1.3  
+**Version:** 1.4  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -234,7 +234,7 @@ These relationships do not imply that any related Proposed ADR has been accepted
 
 ## 9.1 Required persistence proof-of-concept protocol
 
-The comparative test method, workload-profile template, mandatory correctness/failure matrix, measurement controls, decision method, and evidence-artifact requirements are defined in `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`.
+The comparative test method, workload-profile template, mandatory correctness/failure matrix, measurement controls, decision method, and evidence-artifact requirements are defined in GENI-ADR-005-POC-001, `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`.
 
 That protocol is part of the evidence required to resolve this ADR. It is not itself evidence that either engine has passed. The workload profile and numeric pass thresholds must be approved before comparative results are examined. All tests must use synthetic data and reproducible configurations; no real source content, personal data, production secrets, or provider calls are permitted.
 
@@ -333,5 +333,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | 1.1 | 2026-11-18 | Proposed | Standardized decision authority terminology to Project Owner, consistent with GENI-GOV-005. | AI Architecture Assistant |
 | 1.2 | 2026-11-18 | Proposed | Aligned decision and review authority terminology with the Project Owner role defined in GENI-GOV-005. | AI Architecture Assistant |
 | 1.3 | 2026-11-24 | Proposed | Added reproducible PoC protocol, predeclared workload/threshold requirements, correctness gates, and evidence-artifact criteria; database selection remains pending. | AI Architecture Assistant |
+| 1.4 | 2026-11-24 | Proposed | Added the stable GENI-ADR-005-POC-001 identifier to the ADR evidence reference. |
 
 **End of ADR**
