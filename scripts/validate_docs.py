@@ -208,10 +208,11 @@ def validate_vertical_slice_roadmap_alignment() -> None:
         "no network access",
         "no publication or delivery side effect is attempted",
     )
-    missing = [item for item in required_stage if item not in stage]
+    stage_normalized = stage.casefold()
+    missing = [item for item in required_stage if item.casefold() not in stage_normalized]
     forbidden_stage = [
         item for item in ("Collect One Article", "Authorized Review", "Authorized Event Creation")
-        if item in stage
+        if item.casefold() in stage_normalized
     ]
     if missing or forbidden_stage:
         fail(
