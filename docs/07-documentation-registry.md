@@ -192,7 +192,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | ADR ID | Title | Repository Path | Actual Version | Decision Status | Publication State | Decision Owner | Proposal / Revision Date | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.4 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.6 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -210,7 +210,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `docs/adr/decisions/GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | `docs/adr/decisions/GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | `docs/adr/decisions/GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-020 | Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture | `docs/adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-020 | Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture | `docs/adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
 
 ### 6.1 ADR Publication and Availability
 
