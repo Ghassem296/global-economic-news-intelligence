@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 3.1  
+**Version:** 3.2  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -146,7 +146,7 @@ Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevis
 
 The following rules apply across Documents 01–17 and all ADRs:
 
-1. **Technology candidates are not selections.** Document 04 §4.1 lists candidates. Python, uv, Pydantic, LiteLLM, SQLite/PostgreSQL, SQLAlchemy, Alembic, pytest, Ruff, and GitHub Actions must not be described as an approved application stack until the relevant decision is recorded.
+1. **Selected project tooling is distinct from unresolved architecture candidates.** Document 04 §4.1 records CPython 3.15, uv 0.13.9, setuptools 84.2.1, pytest, Ruff, and mypy as the bounded development toolchain. Pydantic, LiteLLM, SQLite/PostgreSQL, SQLAlchemy, Alembic, source-acquisition mechanisms, and deployment choices remain candidates or pending decisions; they must not be treated as approved application architecture until their relevant ADR and evidence gates pass.
 2. **Language-neutral contracts remain language-neutral until approval.** Document 15's `ID<T>`, `Version`, `Instant`, `Fingerprint`, and DTO notation must not be silently translated into a concrete representation before the runtime/serialization decision.
 3. **Domain decisions remain distinct from workflow state.** Candidate evaluation, case resolution, review tasks, publication eligibility, external publication attempts, and delivery attempts are separate concepts.
 4. **Unknown is not failure, zero, denial, or absence.** Unknown external outcomes require reconciliation; unknown rights/authorization context fails closed.
