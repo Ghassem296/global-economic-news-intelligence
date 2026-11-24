@@ -88,6 +88,8 @@ global-economic-news-intelligence/
 │   ├── 17-executable-foundation-and-domain-lifecycle-contracts.md
 │   ├── adr/
 │   │   ├── adr-template.md
+│   │   ├── evidence/
+│   │   │   └── GENI-ADR-005-persistence-proof-of-concept-protocol.md
 │   │   ├── decisions/
 │   │   │   ├── GENI-ADR-001-event-centric-intelligence-architecture.md
 │   │   │   ├── GENI-ADR-002-article-deduplication-and-event-matching.md
