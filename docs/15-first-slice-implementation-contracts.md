@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.9  
+**Version:** 3.0  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -24,6 +24,8 @@ The first-slice repository set is:
 - SourceRepository
 - ArticleRepository
 - ArticleRevisionRepository
+- DuplicateCandidateRepository
+- DuplicateDecisionRepository
 - EventRepository
 - EventMatchCaseRepository
 - EventMatchCandidateRepository
@@ -260,6 +262,26 @@ A run status timestamp is not proof of lease ownership. No worker may commit a s
 
 Context links are immutable once the review is completed. Corrections require a successor task or an append-only action consistent with the approved review policy. Field-level DTO schemas, ordering, uniqueness, and completion-race behavior remain Gate A decisions.
 
+### 4.16 DuplicateCandidateRepository
+
+| Method | Signature | Contract |
+|---|---|---|
+| `get_by_id` | `get_by_id(candidate_id: ID<DuplicateCandidate>) -> Optional<DuplicateCandidate>` | Returns one immutable pairwise candidate evaluation and its exact ArticleRevision references. |
+| `find_by_identity` | `find_by_identity(article_revision_id_a: ID<ArticleRevision>, article_revision_id_b: ID<ArticleRevision>, matching_method: DuplicateMatchingMethod, matching_policy_version: Version, input_fingerprint: Fingerprint) -> Optional<DuplicateCandidate>` | Resolves the candidate using the approved canonical revision-pair ordering. Reverse-order input must resolve to the same logical pair. |
+| `append_candidate` | `append_candidate(command: AppendDuplicateCandidate, uow: UnitOfWork) -> DuplicateCandidate` | Appends immutable candidate evidence. Enforces distinct revisions, Article/revision ownership, canonical pair ordering and idempotency for the same pair/method/policy/input fingerprint. A changed input or policy creates a new candidate evaluation. |
+
+The repository does not decide whether the pair is duplicate, merge or delete Articles, or create an event association. Similarity scores remain nullable and are not probabilities unless separately calibrated.
+
+### 4.17 DuplicateDecisionRepository
+
+| Method | Signature | Contract |
+|---|---|---|
+| `get_by_id` | `get_by_id(decision_id: ID<DuplicateDecision>) -> Optional<DuplicateDecision>` | Returns one immutable decision and its supersession reference. |
+| `get_effective_for_candidate` | `get_effective_for_candidate(candidate_id: ID<DuplicateCandidate>) -> Optional<DuplicateDecision>` | Resolves the unique terminal decision in the candidate's linear supersession chain. No decision means no effective outcome. |
+| `append_decision` | `append_decision(command: AppendDuplicateDecision, expected_effective_decision_id: Optional<ID<DuplicateDecision>>, uow: UnitOfWork) -> DuplicateDecision` | Appends an immutable decision only when the expected predecessor equals the current effective decision. The first decision requires no predecessor; a successor must reference the current effective decision for the same candidate. Enforces one initial decision and at most one direct successor per decision. Stale or competing writes return CONFLICT. |
+
+The effective decision is the unique terminal node of the immutable supersession chain; it is not a mutable flag on a DuplicateDecision. An optional materialized lookup value is only a rebuildable projection and cannot replace the authoritative chain. A duplicate decision never deletes, merges, or rewrites either Article or ArticleRevision and never creates an ArticleEventLink.
+
 ## 5. Cross-repository transaction map
 
 The following local write sets are indivisible. They must be implemented through one UnitOfWork or an equivalent proven consistency mechanism:
@@ -267,6 +289,8 @@ The following local write sets are indivisible. They must be implemented through
 | Operation | Atomic local write set |
 |---|---|
 | Persist a material article revision | ArticleRevision insert + Article current-projection update + associated processing/idempotency state required by the operation |
+| Append a duplicate candidate | Immutable DuplicateCandidate insert + scoped idempotency result; no Article or ArticleRevision is merged or deleted |
+| Append a duplicate decision | Immutable DuplicateDecision insert + linear supersession constraint/idempotency result; effective outcome resolves from the unique terminal decision in the chain |
 | Create an Event | Event insert + initial EventHistory + authorized creation/idempotency provenance |
 | Record an event-match decision | EventMatchDecision append + EventMatchCase effective pointer + required ArticleEventLink activation/deactivation |
 | Persist evidence-backed analysis | Analysis append + exact AnalysisInput and AnalysisEvidenceLink set |
@@ -285,6 +309,8 @@ Repositories are not called directly by transport handlers or LLM-generated tool
 | Application operation | Required inputs | Required result |
 |---|---|---|
 | `PersistArticleRevision` | Source ID, source-scoped article identity, normalized revision content/reference, content fingerprint, normalization version, observed time, rights decision references, idempotency metadata | Article ID, exact revision ID, created/reused indicator, resulting Article version |
+| `EvaluateArticleDuplicate` | Two exact ArticleRevision IDs and owning Article IDs, approved duplicate method/policy version, exact comparison inputs and fingerprint, similarity signals where available | Immutable DuplicateCandidate ID; candidate evaluation only, never an authoritative duplicate decision |
+| `ApplyDuplicateDecision` | DuplicateCandidate ID, one allowed outcome, rationale, decision method/policy version, actor/authorization context, expected effective predecessor and idempotency metadata | Immutable DuplicateDecision ID and effective outcome for that exact pair; no Article merge/deletion and no event decision |
 | `ResolveEventDevelopment` | Exact ArticleRevision ID, stable development key, scope description, matching policy version, candidate retrieval/evaluation inputs, execution metadata | EventMatchCase ID, immutable candidate IDs, immutable decision ID or explicit unresolved outcome |
 | `ApplyEventMatchDecision` | Case ID, decision ID, expected case version, authorization context where required | Effective decision ID and resulting active-link state |
 | `RecordEvidence` | Evidence source/origin, exact subject references, permitted location references, rights provenance, idempotency metadata | Evidence ID and provenance result |
@@ -530,7 +556,7 @@ For each first-slice DTO, define a versioned schema with:
 - Validation and typed failure outcomes.
 - Data classification and permitted logging behavior.
 
-The DTOs required for the first persistence slice include SourceCollectionQuery, UpdateSourceConfiguration, SourceArticleIdentity, article/revision append commands, EventCandidateQuery, CreateEventMatchCase, candidate evaluation, EventMatchDecision append, ArticleEventLink activation/deactivation, Evidence append, Analysis append, Report version append, and PublicationDecision append. Query DTOs must also define stable ordering, maximum page size, and cursor consistency.
+The DTOs required for the first persistence slice include SourceCollectionQuery, UpdateSourceConfiguration, SourceArticleIdentity, article/revision append commands, DuplicateCandidate evaluation, DuplicateDecision append, EventCandidateQuery, CreateEventMatchCase, event candidate evaluation, EventMatchDecision append, ArticleEventLink activation/deactivation, Evidence append, Analysis append, Report version append, and PublicationDecision append. Query DTOs must also define stable ordering, maximum page size, and cursor consistency.
 
 #### 10.10.2 Persistence and transaction proof
 
@@ -548,6 +574,7 @@ For each multi-aggregate transition, identify the exact write set and prove atom
 #### 10.10.3 Authorization, policy, and capability gates
 
 The following are separate from lifecycle mechanics and remain governed by their ADRs:
+- GENI-ADR-002 article-deduplication/event-matching separation and pairwise duplicate-decision semantics.
 - GENI-ADR-004 publication eligibility and publication policy.
 - GENI-ADR-005 persistence selection.
 - GENI-ADR-006 provider-independent LLM execution.
@@ -858,6 +885,8 @@ This section maps the first-slice application commands and queries to the propos
 | `UpdateSourceConfiguration` | `source.config.update` | Exact Source, changed field set and expected version | Re-evaluate rights after source type or endpoint change; secret values prohibited |
 | Source discovery / collection execution | `source.collect` | Exact Source, adapter, endpoint and collection purpose | Current source-specific access/collection rights; SSRF/egress controls; no blanket permission from `is_active` |
 | `PersistArticleRevision` | `article.revision.append` and the applicable `source.collect` grant | Exact Source, source-scoped Article identity, revision fingerprint and content-availability state | Every retained/processed content field must be covered by the exact current rights/retention assessment; metadata-only permission cannot authorize content storage |
+| `EvaluateArticleDuplicate` | `article.duplicate.evaluate` plus applicable article metadata/content read permission | Exact pair of ArticleRevision records, owning Articles, comparison method/policy version and input fingerprint | Current content-rights authorization for every content operation and derived candidate storage; candidate evaluation cannot decide, merge, or delete |
+| `ApplyDuplicateDecision` | `article.duplicate.decide` | Exact DuplicateCandidate, outcome, effective predecessor and candidate scope | Approved duplicate-decision policy and immutable authorization reference; pairwise decisions are not transitive and cannot alter EventMatchDecision/ArticleEventLink |
 | `ResolveEventDevelopment` | `event.match.case.create` and `event.match.evaluate` | Exact ArticleRevision, development scope, matching-policy version and candidate set | Candidate evaluation is not an authoritative decision and cannot create an Event or ArticleEventLink |
 | `ApplyEventMatchDecision` | `event.match.decide` | Exact case, decision, predecessor, selected candidate and expected case version | Approved matching policy and immutable authorization reference; Event creation separately requires `event.create` and EventCreationPolicy |
 | `RecordEvidence` | `evidence.append` | Exact evidence origin, subject, stored representation and content location | Rights/retention decision must cover the exact quotation, extract or derived text being stored |
@@ -1019,6 +1048,63 @@ The generation-provenance object is evidence of how the report was produced, not
 
 The following remain open and must be resolved before production report generation: exact ReportContent serialization and content_format vocabulary; section/block schema and stable section-reference grammar; source-attribution representation; template identity and immutable template storage; canonical input-manifest serialization and fingerprint algorithm; version-allocation and supersession concurrency contract; generation-run and LLMUsageRecord reference lifecycle; and report-family-specific content/required-section rules. No HTML/Markdown/JSON format, template engine, or provider is selected by this tranche.
 
+### 10.16 Article duplicate candidate and decision contracts (tranche v1.8)
+
+This tranche closes the missing first-slice repository and logical DTO boundary for article deduplication, using GENI-ADR-002, Document 02 §§4.4/4.4.1, Document 03 §§5.8–5.9 and §16, and Document 08 §5.2. It does not approve a matching algorithm, score scale, threshold, physical schema, or human-review workflow. GENI-ADR-002 remains Proposed and its approval gate applies before production duplicate decisions are enabled.
+
+#### 10.16.1 AppendDuplicateCandidate
+
+| Field | Logical type | Requiredness | Validation / invariant |
+|---|---|---|---|
+| `article_id_a` | `ID<Article>` | Required | Must own `article_revision_id_a`. |
+| `article_revision_id_a` | `ID<ArticleRevision>` | Required | Exact immutable revision in the canonical pair. |
+| `article_id_b` | `ID<Article>` | Required | Must own `article_revision_id_b`. |
+| `article_revision_id_b` | `ID<ArticleRevision>` | Required | Exact immutable revision; must differ from revision A. |
+| `similarity_score` | `number/null` | Nullable | Null when no score was evaluated; scale, direction and interpretation are method/policy-specific. Never coerce missing to zero or call it a probability without calibration. |
+| `matching_method` | `DuplicateMatchingMethod` | Required | Exact candidate-generation/evaluation method; vocabulary remains policy-governed. |
+| `matching_policy_version` | `Version` | Required | Exact policy/configuration version used. |
+| `input_fingerprint` | `Fingerprint` | Required | Deterministic fingerprint of the canonical exact revision pair and all comparison-relevant inputs/configuration. Canonical serialization remains open. |
+| `evaluated_at` | `Instant` | Required | Server-trusted evaluation time. |
+| `metadata` | `JSON/object` | Optional | Versioned extension only; cannot override typed fields or contain secrets/restricted content by default. |
+
+Candidate ID and creation metadata are server-owned. The revision pair must be canonicalized so reverse-order requests resolve to the same logical candidate. The exact canonical ordering rule must be deterministic and versioned; it must not depend on an unapproved identifier encoding. Repeated evaluation with the same canonical pair, method/policy version and input fingerprint is idempotent. Changed inputs or policy create a new immutable candidate.
+
+Candidate generation failure, timeout, insufficient content or unavailable signals must not create a negative DuplicateDecision. A null similarity score is not a zero score. Candidate similarity is not EventMatch confidence.
+
+#### 10.16.2 AppendDuplicateDecision
+
+| Field | Logical type | Requiredness | Validation / invariant |
+|---|---|---|---|
+| `duplicate_candidate_id` | `ID<DuplicateCandidate>` | Required | Exact immutable pairwise candidate. |
+| `outcome` | `enum` | Required | Exactly `CONFIRMED_DUPLICATE`, `NOT_DUPLICATE`, or `REVIEW_REQUIRED`. |
+| `decision_reason` | `string` | Required | Explains the outcome; exact length and controlled reason-code vocabulary remain open. |
+| `decision_method` | `string/enum` | Required | Method that produced/authorized the decision; vocabulary remains policy-governed. |
+| `decision_policy_version` | `Version` | Required | Exact decision policy version. |
+| `decision_confidence` | `number/null` | Nullable | Null when not assessed; semantics and calibration must be explicit and distinct from candidate similarity. |
+| `actor_reference` | `ActorReference` | Required | Authenticated actor/service identity from trusted command context. |
+| `decided_at` | `Instant` | Required | Server-trusted immutable decision time. |
+| `supersedes_decision_id` | `Optional<ID<DuplicateDecision>>` | Nullable | Null only for the first decision; otherwise must identify the current effective decision for the same candidate. |
+| `metadata` | `JSON/object` | Optional | Versioned extension only; cannot override typed decision fields. |
+
+The common command metadata in §3.2 also applies, including immutable `authorization_reference`, schema version, correlation/causation, scoped idempotency key and request fingerprint. The repository receives `expected_effective_decision_id` separately as the compare-and-swap predecessor. The first decision is accepted only when no prior decision exists; a successor must name the current terminal decision. Enforce one root decision per candidate and at most one direct successor per decision. A stale or competing append returns CONFLICT. The effective decision is the unique terminal decision in the linear chain, not a mutable flag on an immutable decision.
+
+A correction creates a successor decision and preserves the previous decision. Only an effective `CONFIRMED_DUPLICATE` establishes a confirmed pairwise duplicate relationship. `REVIEW_REQUIRED` preserves uncertainty and does not enable a material review action unless GENI-ADR-014 and its contracts are accepted. Duplicate decisions do not merge/delete Articles or ArticleRevisions, do not modify source identity, and do not create or modify EventMatchDecision or ArticleEventLink.
+
+#### 10.16.3 Pairwise and group semantics
+
+- Duplicate decisions are pairwise and scoped to the exact two ArticleRevision records.
+- Pairwise duplicate decisions are not transitive: A–B and B–C do not establish A–C.
+- A connected component may be exposed only as a non-authoritative candidate/review cluster.
+- Exact-duplicate grouping is permitted only when the same documented normalization/fingerprint rule yields the same exact-content identity.
+- A near-duplicate group is authoritative only when every member pair has an effective `CONFIRMED_DUPLICATE` decision (complete-link), or when a separately versioned and approved group-decision contract is introduced by a future ADR.
+- Missing, conflicting, or superseded pairwise decisions prevent automatic promotion to an authoritative group.
+- Group reconstruction must be deterministic and retain the exact pairwise decisions, candidate inputs and policy versions used.
+- Duplicate identity decisions remain separate from event identity and independent-source corroboration.
+
+#### 10.16.4 Remaining duplicate-contract blockers
+
+The following remain open and block production implementation of the corresponding detail: canonical revision-pair ordering rule; matching-method vocabulary and score semantics/ranges; exact candidate input fingerprint serialization; decision-method and reason-code vocabularies; decision-confidence semantics/calibration; and any authoritative multi-article group-decision model. These values must be established by approved policy, representative evaluation data and the relevant ADRs, not invented in repository code. The first-slice baseline is pairwise only and must not implement transitive near-duplicate clustering.
+
 ## 11. Related documents
 
 - Document 02 — Component Architecture and Interface Contracts.
@@ -1036,12 +1122,12 @@ The following remain open and must be resolved before production report generati
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 2.9  
+**Version:** 3.0  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-24
 
 **Revision Note (v2.8):** Tightened provider-backed analysis provenance by requiring each provider request to create an LLMUsageRecord linked to the exact Analysis/ProcessingRun and to preserve privacy, purpose, data-category, region, transfer and content-rights decision references. Added the explicit privacy-processing authorization permission to the PersistAnalysis crosswalk. No provider egress is authorized by this contract.
 
-**Revision Note (v2.9):** Clarified that `RATE_LIMITED` and `BUDGET_EXCEEDED` remain valid API/provider-boundary outcomes under GENI-API-009 but are not repository-specific persistence failures. No capability or approval gate changed.
+**Revision Note (v3.0):** Added the missing DuplicateCandidateRepository and DuplicateDecisionRepository contracts, atomic/idempotent write boundaries, duplicate-evaluation and decision authorization crosswalk, and field-level pairwise DTO semantics. Explicitly prohibited transitive near-duplicate grouping. Remaining policy/calibration decisions stay gated; no ADR approval or production capability is implied.
 
 **End of Document**
