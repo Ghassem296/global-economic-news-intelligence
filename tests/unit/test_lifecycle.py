@@ -235,3 +235,49 @@ def test_review_actions_cannot_reopen_nonterminal_tasks() -> None:
 def test_publication_outcome_enum_remains_distinct_from_external_execution() -> None:
     assert PublicationDecisionOutcome.PUBLISH.value == "PUBLISH"
     assert PublicationDecisionOutcome.PUBLISH_WITH_CAVEATS.value == "PUBLISH_WITH_CAVEATS"
+
+def test_resolved_case_can_require_review_after_authorized_successor_decision() -> None:
+    assert (
+        transition_case(
+            EventMatchCaseStatus.RESOLVED,
+            EventMatchCaseStatus.PENDING_REVIEW,
+            successor_decision_authorized=True,
+        )
+        is EventMatchCaseStatus.PENDING_REVIEW
+    )
+
+
+def test_resolved_case_cannot_be_closed_without_explicit_transition_policy() -> None:
+    assert (
+        transition_case(EventMatchCaseStatus.RESOLVED, EventMatchCaseStatus.CLOSED)
+        is EventMatchCaseStatus.CLOSED
+    )
+
+
+def test_cancelled_and_closed_cases_are_terminal() -> None:
+    with pytest.raises(TransitionError):
+        transition_case(EventMatchCaseStatus.CANCELLED, EventMatchCaseStatus.OPEN)
+    with pytest.raises(TransitionError):
+        transition_case(EventMatchCaseStatus.CLOSED, EventMatchCaseStatus.OPEN)
+
+
+def test_external_reconciliation_rejects_execute_outcome() -> None:
+    with pytest.raises(TransitionError):
+        external_operation_status_after_attempt(
+            ExternalOperationStatus.RECONCILIATION_REQUIRED,
+            ExternalAttemptResult(
+                ExternalAttemptType.RECONCILE,
+                ExternalAttemptOutcome.OUTCOME_UNKNOWN,
+            ),
+        )
+
+
+def test_review_metadata_actions_preserve_active_status() -> None:
+    for action in (
+        ReviewAction.ASSIGNED,
+        ReviewAction.REASSIGNED,
+        ReviewAction.PRIORITY_CHANGED,
+        ReviewAction.NOTE_ADDED,
+        ReviewAction.ESCALATED,
+    ):
+        assert project_review_action(ReviewStatus.PENDING, action).status is ReviewStatus.PENDING
