@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-19
+**Last Updated:** 2026-11-24
 
 ---
 
@@ -34,8 +34,10 @@ The first-slice repository set is:
 - ReportRepository
 - PublicationDecisionRepository
 - ProcessingRunRepository
+- ReviewRepository
+- ReviewContextLinkRepository
 
-The contracts below define the minimum operations and invariants for those repositories. Related repositories for report provenance links, review records, publication operations/attempts, rights assessments, content access, collection checkpoints, processing steps, idempotency records, and execution leases must be specified before their respective capabilities are implemented. The first-slice list is not permission to omit those dependencies.
+The contracts below define the minimum operations and invariants for those repositories. Related repositories for report provenance links, publication operations/attempts, rights assessments, content access, collection checkpoints, processing steps, idempotency records, and execution leases must be specified before their respective capabilities are implemented. Review persistence is included in the target first-slice repository baseline because `REPORT_VERSION` is part of the target review scope; however, inclusion does not enable review execution. ReviewService material actions remain disabled until the review DTO schemas, lifecycle/projection rules, authorization policy, and GENI-ADR-014 approval pass Gate A and the corresponding integration tests pass Gate C.
 
 The baseline excludes:
 - production source acquisition or full-text retention until GENI-ADR-013 is accepted and source-specific operation rights are approved;
@@ -232,6 +234,26 @@ A decision for one report version does not authorize publication of a different 
 
 A run status timestamp is not proof of lease ownership. No worker may commit a state change without validating its current fencing token when durable leases are enabled.
 
+### 4.14 ReviewRepository
+
+| Method | Signature | Contract |
+|---|---|---|
+| `get_by_id` | `get_by_id(review_record_id: ID<ReviewRecord>) -> Optional<ReviewRecord>` | Returns the current review-task projection and aggregate version; it does not authorize an action or imply that the lifecycle is implementation-ready. |
+| `create_task` | `create_task(command: CreateReviewTask, uow: UnitOfWork) -> ReviewRecord` | Creates one typed review task for an exact supported subject and decision reference. The initial status and required `CREATED` action must be assigned by the approved lifecycle policy; this method is blocked until that policy and DTO schema are approved. |
+| `append_action` | `append_action(command: AppendReviewAction, expected_version: Version, uow: UnitOfWork) -> ReviewAction` | Appends one immutable action with atomically allocated per-task sequence and idempotency enforcement. Updating the ReviewRecord projection in the same UnitOfWork is permitted only under the approved action-to-projection mapping; no mapping is inferred here. |
+| `list_actions` | `list_actions(review_record_id: ID<ReviewRecord>, query: ReviewActionListQuery) -> Page<ReviewAction>` | Returns immutable actions in sequence order with bounded pagination; it does not reconstruct a projection using unapproved transition rules. |
+
+`ReviewRepository` owns persistence of ReviewRecord and ReviewAction only. ReviewService validates actor authority and the approved lifecycle policy; a review action never directly mutates the authoritative domain decision or performs publication, delivery, rights, or event-identity side effects.
+
+### 4.15 ReviewContextLinkRepository
+
+| Method | Signature | Contract |
+|---|---|---|
+| `add_context_links` | `add_context_links(review_record_id: ID<ReviewRecord>, links: NonEmptyList<ReviewContextLinkInput>, uow: UnitOfWork) -> List<ReviewContextLink>` | Adds exact typed context references for an existing review task. The application validates reference existence, subject association, reviewer access, and task mutability. All links in the command are persisted atomically. |
+| `list_for_review` | `list_for_review(review_record_id: ID<ReviewRecord>) -> List<ReviewContextLink>` | Returns the task's immutable context references in deterministic order. It must not dereference or copy restricted source content. |
+
+Context links are immutable once the review is completed. Corrections require a successor task or an append-only action consistent with the approved review policy. Field-level DTO schemas, ordering, uniqueness, and completion-race behavior remain Gate A decisions.
+
 ## 5. Cross-repository transaction map
 
 The following local write sets are indivisible. They must be implemented through one UnitOfWork or an equivalent proven consistency mechanism:
@@ -244,6 +266,9 @@ The following local write sets are indivisible. They must be implemented through
 | Persist evidence-backed analysis | Analysis append + exact AnalysisInput and AnalysisEvidenceLink set |
 | Persist report version | Report version + all required report-to-event/article-revision/analysis/evidence links |
 | Record publication eligibility | PublicationDecision append + supersession/effective-decision projection, if one is used |
+| Create review task | ReviewRecord insert + initial `CREATED` ReviewAction + initial projection, once the approved initial-state/action mapping exists |
+| Append review action | ReviewAction append + sequence/idempotency claim + ReviewRecord projection update, once the approved action-to-projection mapping exists |
+| Attach review context | All ReviewContextLink inserts for one command, after subject/access validation |
 
 The external publication call is explicitly outside the transaction. Its logical PublicationRecord and durable intent must exist before the call; attempt result and reconciliation state are committed afterward. Delivery follows the equivalent durable-intent pattern.
 
@@ -260,6 +285,9 @@ Repositories are not called directly by transport handlers or LLM-generated tool
 | `PersistAnalysis` | Analysis type, exact inputs/evidence IDs, schema/methodology/prompt/model versions as applicable, result and uncertainty representation | Immutable Analysis ID |
 | `CreateReportVersion` | Exact source revisions, event/analysis/evidence references, template version, generation provenance, deterministic fingerprint | Immutable Report version ID and provenance completeness result |
 | `DecidePublicationEligibility` | Exact Report version, policy version, evidence/rights/security context, reviewer decision references where applicable | Immutable PublicationDecision ID and permitted next action |
+| `CreateReviewTask` | One canonical review family, exact subject and related decision references, reason, priority-policy version, actor/authorization context, idempotency metadata | ReviewRecord ID; execution remains blocked until approved initial-state and DTO contracts exist |
+| `AppendReviewAction` | ReviewRecord ID, action type, actor/authorization context, expected version, idempotency metadata, action-specific fields | Immutable ReviewAction ID and resulting projection only under an approved transition contract |
+| `AttachReviewContext` | ReviewRecord ID and exact typed context references with reviewer-access context | Immutable ReviewContextLink IDs; no source content is copied |
 
 These command names identify logical boundaries; they do not authorize a workflow whose governing ADR or policy is still Proposed. The application must fail closed when required authorization or policy references are missing, stale, revoked, or out of scope.
 
@@ -283,6 +311,7 @@ These command names identify logical boundaries; they do not authorize a workflo
 Before implementation of these contracts:
 - Project Owner reviews and approves this document.
 - The relevant ADRs are explicitly accepted or the affected capability is isolated behind a disabled boundary.
+- For any ReviewService capability: approve the `CreateReviewTask`, `AppendReviewAction`, and `ReviewActionListQuery` schemas; define the initial ReviewRecord state, complete status transition graph, action-to-projection mapping, terminal/cancellation semantics, reopen-segment identity, concurrency/sequence behavior, and authorization matrix; accept GENI-ADR-014. Until all are complete, ReviewRepository and ReviewContextLinkRepository may be contract-tested as persistence interfaces only, but no material review workflow may be enabled.
 - Document 02 ownership and transaction crosswalk remains consistent with these method contracts.
 - Document 03 schema constraints can enforce the listed uniqueness and referential invariants.
 - Security, content-rights and privacy authorization requirements are mapped to each operation.
@@ -302,6 +331,7 @@ Before a first-slice milestone is declared complete:
 - Optimistic concurrency has stale-write tests.
 - Idempotency has same-fingerprint replay and different-fingerprint conflict tests.
 - Event matching has case-scoped candidate/decision/link invariant tests.
+- Review tests cover task creation, exact typed subjects, append-only action ordering, idempotency, projection rebuild, authorization, concurrency, context-link access, and all approved transitions; tests must not encode provisional transitions.
 - Publication decision tests prove no external publication side effect occurs.
 - Rights/privacy denial, unknown, expiry, revocation and scope-mismatch tests fail closed.
 - Processing recovery tests prove stale workers cannot commit.
@@ -320,6 +350,7 @@ The following remain open and must not be guessed by implementers:
 - Source-specific rights profiles, retention periods and permitted content operations.
 - Privacy lawful-basis/jurisdiction rules, provider/region allowlists and transfer decisions.
 - Publication quality thresholds, reviewer roles and target-specific replacement/withdrawal capabilities.
+- Review priority scale/SLA, task initial-state rule, action-to-status projection, reopened task-segment identity, terminal-state and cancellation rules, and reviewer role/separation-of-duties matrix.
 - Numeric retry counts, timeouts, page-size maxima, lease durations and recovery objectives.
 - External API or transport framework.
 
@@ -474,7 +505,9 @@ This inventory distinguishes defined state vocabulary from defined transition be
 | DeliveryRecord | PENDING, IN_PROGRESS, DELIVERED, FAILED, CANCELLED | Vocabulary and same-operation idempotency requirement exist; initial state, allowed transitions, terminal/cancellation/retry semantics, and DeliveryAttempt outcome mapping are not defined. | **Partially specified; transition contract required before delivery implementation** |
 | ExecutionLease | ACTIVE, RELEASED, EXPIRED | Exclusive acquisition, monotonic fencing, owner/token-bound renewal/release and stale-worker rejection specified in Document 03 §13.2.1. | **Specified at logical level; numeric lease policy is operational TBD** |
 | IdempotencyRecord | IN_PROGRESS, COMPLETED, FAILED, RECONCILIATION_REQUIRED | Same-fingerprint replay, different-fingerprint conflict, external reconciliation semantics specified in Document 03 §13.2.2. | **Specified at logical level; exact retry/expiry policy TBD** |
-| ReviewRecord | PENDING, IN_PROGRESS, COMPLETED, CANCELLED | Append-only ReviewAction vocabulary/history and successor workflows are defined; allowed status transitions, action-to-status projection, terminal rules, and reopened-segment identity remain unresolved. | **Partially specified; ADR-014 approval required** |
+| ReviewRecord | PENDING, IN_PROGRESS, COMPLETED, CANCELLED | Append-only ReviewAction vocabulary/history and successor workflows are defined; allowed status transitions, action-to-status projection, terminal rules, and reopened-segment identity remain unresolved. | **Blocked for execution; ADR-014 and Gate A approval required** |
+| ReviewAction | CREATED, ASSIGNED, REASSIGNED, PRIORITY_CHANGED, STARTED, NOTE_ADDED, ESCALATED, COMPLETED, CANCELLED, REOPENED | Immutable action vocabulary and per-task sequence/idempotency constraints exist; complete action validity, projection mapping, reopen-segment identity, and concurrency behavior remain unresolved. | **Blocked for lifecycle execution** |
+| ReviewContextLink | Typed immutable context reference | Subject/reference validation and no-content-copy rule exist; uniqueness, ordering, completion-race, and access-policy DTO rules remain unresolved. | **Persistence contract specified; workflow activation gated** |
 
 ### 10.10 Required transition tables before implementation
 
@@ -487,9 +520,11 @@ The following must be completed from approved policy and reconciled across Docum
 5. EventMatchCandidate complete status vocabulary and creation/evaluation contract, including eligibility guards, interrupted generation, idempotent evaluation, and immutable successor-record behavior for changed inputs/policy.
 6. PublicationDecision effective-successor algorithm, concurrent-append guard, and actor/authorization provenance reconciliation.
 7. PublicationAttempt outcome-to-PublicationRecord transition matrix, including confirmed failure, unknown outcome, reconciliation-not-applied, retry eligibility, and terminal/cancelled behavior.
-8. ReviewRecord transition matrix aligned with immutable ReviewAction sequence and ADR-014, including action-to-status projection, terminal/cancellation behavior, and reopened task-segment identity.
-9. DeliveryRecord transition matrix, including retry/cancellation/unknown-outcome semantics, and DeliveryAttempt outcome vocabulary and mapping.
-10. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
+8. ReviewRecord/ReviewAction transition and projection matrix aligned with ADR-014, including action validity, action-to-status projection, terminal/cancellation behavior, concurrency, and reopened task-segment identity.
+9. ReviewContextLink uniqueness, deterministic ordering, reviewer-access checks, and completion-race behavior.
+10. DeliveryRecord transition matrix, including retry/cancellation/unknown-outcome semantics, and DeliveryAttempt outcome vocabulary and mapping.
+11. Concrete nullability, enum serialization, field lengths, canonicalization, and validation constraints for every remaining DTO and query.
+
 
 ### 10.10.1 Processing execution lifecycle closure questions
 
@@ -581,10 +616,10 @@ No implementation may invent missing transitions or treat timestamps as substitu
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Proposed — Pending Project Owner Approval  
-**Last Updated:** 2026-11-19
+**Last Updated:** 2026-11-24
 
-**Revision Note (v1.7):** Expanded ReviewRecord and DeliveryRecord lifecycle blockers into an explicit contract-closure checklist covering action-to-status projection, task reopening segments, concurrency, delivery attempt outcomes, authorization revalidation, retry, and reconciliation. No new statuses or transition rules were invented; implementation remains blocked pending resolution and Project Owner approval.
+**Revision Note (v1.8):** Added ReviewRepository and ReviewContextLinkRepository to the first-slice contract baseline, defined their method-level persistence boundaries and transaction expectations, and explicitly gated all ReviewService material actions on field-level DTO schemas, approved ReviewRecord/ReviewAction transition and projection rules, reviewer authorization, GENI-ADR-014 acceptance, and passing integration tests. No provisional review transitions were invented.
 
 **End of Document**

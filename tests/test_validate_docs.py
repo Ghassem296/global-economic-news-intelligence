@@ -87,6 +87,14 @@ docs/
     def test_document_footer_metadata_matches_header(self) -> None:
         validator.validate_document_footer_metadata()
 
+    def test_first_slice_review_activation_is_gated_consistently(self) -> None:
+        validator.validate_review_activation_gates()
+
+    def test_first_slice_contract_document_is_registry_controlled(self) -> None:
+        self.assertIn("docs/15-first-slice-implementation-contracts.md", validator.CONTROLLED_DOCUMENTS)
+        validator.validate_document_versions()
+        validator.validate_document_registry_metadata_alignment()
+
     def test_expected_adr_inventory_includes_adr_020(self) -> None:
         self.assertIn("GENI-ADR-020", validator.EXPECTED_ADR_IDS)
         self.assertEqual(len(validator.EXPECTED_ADR_IDS), 20)

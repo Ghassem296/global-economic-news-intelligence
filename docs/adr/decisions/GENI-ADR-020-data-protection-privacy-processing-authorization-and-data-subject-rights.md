@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-020  
 **Title:** Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture  
 **Status:** Proposed  
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -47,7 +47,19 @@ Rejected. Policy without service, data and workflow contracts cannot reliably en
 
 Recommended. Introduce a logical Privacy domain, a PrivacyManagementService, an independent PrivacyProcessingAuthorization policy, personal-data lineage, processor/transfer governance records and explicit workflow contracts. Physical persistence and public transport remain implementation decisions.
 
-## 5. Recommended Decision
+## 5. Evaluation and Comparison
+
+The alternatives are compared against authorization independence, enforceability, auditability, data-subject rights execution, provider/transfer control, and implementation complexity.
+
+| Alternative | Authorization separation | Executable rights workflows | Provider/transfer governance | Assessment |
+|---|---|---|---|---|
+| Privacy as a Content Rights extension | Fails: publisher permissions and personal-data permissions have different subjects and scopes. | Partial and ambiguous. | Does not provide an independent control plane. | Rejected |
+| Documentation-only privacy policy | Conceptually separate but not enforced at runtime. | Not executable. | Cannot reliably block unknown provider posture. | Rejected |
+| Dedicated Privacy domain and cross-cutting authorization | Independent and conjunctive with content-rights checks. | Explicit service, lineage, request, and deletion workflows. | Versioned provider/region/purpose authorization. | Recommended |
+
+No legal basis, jurisdiction, processor, retention duration, or provider is selected by this comparison. Those remain subject to qualified review and separate approval.
+
+## 6. Recommended Decision
 
 Adopt the following proposed architecture:
 
@@ -62,13 +74,28 @@ Adopt the following proposed architecture:
 9. **API neutrality.** Define internal command/query contracts first. A public endpoint, UI, support channel or identity mechanism is not selected by this ADR; the authorized intake channel must be specified before production.
 10. **Legal review boundary.** Controller/processor roles, lawful bases, applicable rights, deadlines, exceptions, transfer mechanisms, notice obligations and retention periods remain jurisdiction- and fact-dependent open decisions requiring qualified legal/privacy review.
 
-## 6. Rationale
+### 6.1 Rationale
 
 This separation prevents publisher licensing from being mistaken for permission to process personal data. A dedicated workflow makes rights requests actionable and auditable. Personal-data lineage is necessary to find derived and externally processed data. Fail-closed provider controls reduce accidental disclosure when provider terms or transfer posture are unknown.
 
-## 7. Consequences and Trade-Offs
+## 7. Final Decision
 
-### 7.1 Positive Consequences
+**Selected Alternative:** Pending formal approval  
+**Decision Status:** Proposed  
+**Decision Owner:** Project Owner  
+**Approved By:** Not yet approved  
+**Approval Date:** N/A
+
+**Decision Rationale:** Section 6 contains the recommendation. No production personal-data processing is authorized by this proposal.
+
+**Conditions or Restrictions:**
+- Maintain Proposed status until the Project Owner explicitly accepts or rejects this ADR.
+- Do not infer legal basis, jurisdiction, processor approval, transfer permission, retention duration, or rights-request deadlines.
+- Keep affected production processing disabled until the required legal/privacy review, implementation controls, and verification evidence are complete.
+
+## 8. Consequences and Trade-Offs
+
+### 8.1 Positive Consequences
 
 - Explicit, independently testable privacy authorization.
 - Discoverable relationships between subjects, processing and derived artifacts.
@@ -76,14 +103,14 @@ This separation prevents publisher licensing from being mistaken for permission 
 - Provider and transfer posture becomes reviewable and enforceable.
 - Clear separation between content rights, privacy rights and article provenance.
 
-### 7.2 Negative Consequences
+### 8.2 Negative Consequences
 
 - Additional domain records, policy evaluation and workflow complexity.
 - Data lineage increases write volume and retention considerations.
 - Provider deletion and backup reconciliation may be technically unavailable or asynchronous.
 - Identity verification and legal exceptions require human governance and jurisdiction-specific procedures.
 
-## 8. Risks and Mitigations
+### 8.6 Risks and Mitigations
 
 | Risk | Mitigation |
 |---|---|
@@ -144,5 +171,6 @@ Reconsider if legal review changes the applicable roles/rights, provider capabil
 |---|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Initial privacy execution architecture proposal | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Added immutable scoped privacy authorization decision and repository contract | AI Architecture Assistant |
+| 1.2 | 2026-11-24 | Proposed | Aligned section structure with the standard ADR template; added explicit alternative evaluation and a separate pending Final Decision gate without authorizing production processing. | AI Architecture Assistant |
 
 **End of ADR**

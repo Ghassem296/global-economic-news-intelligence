@@ -3,9 +3,9 @@
 
 This directory contains independent study notes, chapter summaries, and learning materials based on *Build an AI Agent (From Scratch)* by Jungjun Hur and Younghee Song, published by Manning.
 
-These documents are intended to support structured learning, technical review, and the gradual application of the book's concepts to this repository's AI agent project.
+These documents are standalone personal educational notes, not GENI architecture specifications, approved design decisions, or implementation requirements. Project-specific examples in these notes refer to the separate learning repository `Ghassem296/build-an-ai-agent-from-scratch`, not to this Global Economic News Intelligence (GENI) repository.
 
-They are personal educational notes, not official Manning documentation or a replacement for the book.
+They are not official Manning documentation or a replacement for the book.
 
 ## Table of Contents
 
@@ -33,11 +33,11 @@ A recommended learning sequence:
 5. Examine the application notes and determine which concepts are relevant to this repository.
 6. Verify the current implementation before treating any suggested change as an implemented feature.
 
-## Applying the Book to This Repository
+## Applying the Book to the Separate Agent-Learning Repository
 
-Some chapters include sections discussing how their concepts could be applied to this GitHub project.
+Some chapters include sections discussing how their concepts could be applied to `Ghassem296/build-an-ai-agent-from-scratch`, a separate educational project.
 
-These sections are educational analysis and implementation proposals unless explicitly verified in the source code.
+These sections are educational analysis and implementation proposals. They do not describe GENI architecture, GENI implementation, or approved GENI decisions.
 
 The repository's actual implementation, dependencies, tests, and documentation are the authoritative sources for determining what has been implemented.
 

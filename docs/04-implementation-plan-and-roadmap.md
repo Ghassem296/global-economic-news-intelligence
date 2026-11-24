@@ -519,7 +519,7 @@ Implement and test:
 - Analysis versioning.
 - Report versioning.
 - Publication decision rules.
-- Review task transitions, exact ReviewContextLink references, and append-only ReviewAction history for exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. Keep `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` disabled until their specified successor workflows, authorization rules, and integration tests are implemented.
+- The target first-slice review scope is exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. `REPORT_VERSION` is publication-eligibility review for an exact immutable Report version and its exact effective `PublicationDecision`, not review of an external publication operation. This is target scope, not current enablement: no ReviewService material action may be enabled until the ReviewRepository and ReviewContextLinkRepository contracts, field-level command/query schemas, ReviewRecord/ReviewAction transition and projection rules, reviewer authorization rules, and the applicable GENI-ADR-014 approval are complete and verified by integration tests. Keep `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` deferred and disabled.
 - Delivery idempotency boundaries.
 
 ### Initial Evaluation Work
