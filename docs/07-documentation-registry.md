@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 3.1
+**Version:** 3.2
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24  
@@ -159,7 +159,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.25 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
 | GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.54 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.46 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.35 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.36 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.8 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
 | GENI-API-009 | API and Integration Contracts | `docs/09-api-and-integration-contracts.md` | 1.3 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
@@ -169,8 +169,8 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 3.3 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-24 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 3.0 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-24 | No architectural approval implied |
-| GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 1.3 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-24 | No ADR approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 3.1 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-24 | No architectural approval implied |
+| GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 1.4 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-24 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
 
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 3.1 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-24 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 3.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-24 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.18 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -412,10 +412,10 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-24  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `2a45cb563d6625f975845d2c5a62488304f5d762`
+**Baseline Commit Inspected:** `eafd6e9304390a78e9b43305ba42e7f73cf60b9a`
 **Registry Refresh:** This audit inspected the published `main` branch at the baseline commit above. This registry revision follows that inspected commit and records the resulting document versions and paths. The refreshed snapshot includes the executable Python foundation and lifecycle contracts; first-slice source, pairwise article-deduplication, event-matching, evidence, analysis, report and publication-decision contracts; explicit aggregate ownership for evidence locations, analysis inputs/evidence links and report provenance links; deny-by-default authorization boundaries; and privacy/rights provenance gates before provider egress. Document 02 v1.54 includes duplicate repositories in the first-slice test baseline. Document 03 v1.46 and Document 15 v3.3 require exact actor/authorization provenance for duplicate evaluation and decision records. Document 04 v1.35 and Document 16 v3.0 agree that the first executable slice is fixture-driven, while provider-backed analysis is deferred to Stage 8 and remains gated by accepted ADRs and exact rights/privacy/transfer authorization. Document 16 v3.0 records successful Python 3.15 application CI (run 45465238823) and the unresolved dependency reproducibility gap: no lockfile exists, CI still installs via pip from declared version ranges, and the package-manager decision remains pending. GENI-ADR-005 v1.4 is accompanied by proposed GENI-ADR-005-POC-001 v1.2, a reproducible test protocol covering workload definition, correctness/failure, concurrency, migrations, backup/restore and recovery. It records the previously stated single-instance/local SQLite-first planning baseline without inventing workload numbers. It is not test evidence and does not select a database; ADR-005 and ADR-016 remain Proposed. The runtime policy is now CPython 3.15 only; `.python-version`, package metadata, Ruff/mypy targets, and application CI are aligned to that target. The Python 3.12/3.13 CI matrix is historical and has been superseded. The snapshot is repository-only; it does not claim local Working Tree inspection. The successful Python 3.15 application CI run is explicitly recorded as run 45465238823; this does not imply full product or operational readiness. Publication and validator presence do not constitute formal architecture approval, implementation, legal compliance, or operational verification.
 
-This refresh was performed directly against the published GitHub `main` branch. Document 17 was advanced to v1.3 to correct its stale Python 3.12/3.13 statement; the executable contract now agrees with the Python 3.15-only runtime enforced by package metadata, `.python-version`, and CI. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
+This refresh was performed directly against the published GitHub `main` branch. Document 17 v1.4 now records the Python 3.15-only runtime, uv 0.13.9, committed `uv.lock`, and setuptools 84.2.1. Document 04 v1.36 and Document 16 v3.1 record the same selected package-management baseline and locked CI process. The database and other capability-dependent architecture decisions remain pending their ADR and evidence gates. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
 
 **Registry refresh (v3.0):** Updated Document 16 to v3.0, recorded the successful Python 3.15 Application CI run, and made the unresolved package-manager/lockfile status explicit. No package manager, database, or other architectural candidate is thereby approved.
 
@@ -471,5 +471,7 @@ It does not replace individual documents, ADR governance, documentation change m
 Every controlled document and architectural decision must retain its own lifecycle status, publication state, and approval history.
 
 **Revision Note (v3.1):** Refreshes the Document 17 inventory version and inspected baseline after aligning the executable foundation contract to Python 3.15 only. No approval status is changed.
+
+**Revision Note (v3.2):** Refreshes the registry after selecting and pinning uv 0.13.9, committing the Python 3.15 lockfile, pinning setuptools 84.2.1, and aligning Documents 04, 16, and 17. No architectural approval status is changed.
 
 **End of Document**
