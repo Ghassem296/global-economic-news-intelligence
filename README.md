@@ -169,13 +169,13 @@ These documents are reference material. They do not automatically impose impleme
 
 The repository establishes the initial product, architecture, data design, implementation planning, and documentation governance baseline.
 
-The project is currently in the architecture design and review stage. The documentation is published as a proposed design baseline and remains subject to review, reconciliation, and formal architectural decisions.
+The project is currently in the architecture design and review stage. The documentation is published as a proposed design baseline and remains subject to review, reconciliation, and formal architectural decisions. The repository has a documentation-validation workflow, unit tests for that validator, and a documentation inventory script; these do not constitute application CI or evidence that a GENI application has been implemented.
 
 The following items should not be assumed to be finalized or implemented:
 
-- Programming language and supported runtime version.
+- Programming language and supported runtime version (Python is listed as a candidate in Document 04, not yet an accepted selection).
 - Application entry point and executable application.
-- Dependency management and package configuration.
+- Application dependency management and package configuration (the documentation-validation workflow uses Python 3.12 independently of the future application runtime).
 - Database and persistence technology.
 - LLM provider and model selection.
 - News acquisition providers and source integrations.
@@ -183,7 +183,7 @@ The following items should not be assumed to be finalized or implemented:
 - Publication and delivery integrations.
 - Licensing and content-retention policies.
 
-These decisions and implementation details will be established through the relevant specifications, implementation work, and Architecture Decision Records.
+These decisions and implementation details will be established through the relevant specifications, implementation work, and Architecture Decision Records. The current automation validates documentation metadata and ADR inventory only; application package installation, linting, type checking, migrations, database integration, and product end-to-end behavior are not yet covered.
 
 A published document is not necessarily an accepted architectural decision. An accepted decision is not necessarily implemented. These states must remain distinct throughout the project lifecycle.
 
@@ -215,6 +215,7 @@ global-economic-news-intelligence/
     ├── 13-deployment-operations-and-observability.md
     ├── 14-data-protection-and-privacy-specification.md
     ├── 15-first-slice-implementation-contracts.md
+    ├── 16-implementation-readiness-and-release-gates.md
     │
     ├── adr/
     │   ├── README.md
