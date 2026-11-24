@@ -566,8 +566,10 @@ def validate_first_slice_review_set() -> None:
         missing = sorted(family for family in families if family not in content)
         if missing:
             fail(f"Review family vocabulary incomplete in {relative}: {missing}")
-        if "first implementation slice" not in content.lower():
-            fail(f"First-slice Review activation is not stated in {relative}")
+        if "target first-slice review scope" not in content.lower():
+            fail(f"First-slice Review target scope is not stated in {relative}")
+        if "not current enablement" not in content.lower():
+            fail(f"First-slice Review activation gate is not stated in {relative}")
 
 
 def validate_event_identity_operation_contract() -> None:
