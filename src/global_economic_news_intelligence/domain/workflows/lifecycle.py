@@ -174,7 +174,11 @@ CASE_TRANSITIONS: Final[dict[EventMatchCaseStatus, frozenset[EventMatchCaseStatu
         }
     ),
     EventMatchCaseStatus.RESOLVED: frozenset(
-        {EventMatchCaseStatus.OPEN, EventMatchCaseStatus.CLOSED}
+        {
+            EventMatchCaseStatus.OPEN,
+            EventMatchCaseStatus.PENDING_REVIEW,
+            EventMatchCaseStatus.CLOSED,
+        }
     ),
     EventMatchCaseStatus.CLOSED: frozenset(),
     EventMatchCaseStatus.CANCELLED: frozenset(),
