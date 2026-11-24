@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SEC-008  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-24
@@ -85,6 +85,8 @@ The following permission identifiers are a proposed logical vocabulary for imple
 | Collect from a source | `source.collect` | Exact Source, adapter/endpoint and collection operation | Current operation-specific access/collection rights; SSRF and egress controls |
 | Read article metadata/content | `article.metadata.read` / `article.content.read` | Exact Article/revision and permitted content scope | Content-rights check for restricted content; metadata permission is not content permission |
 | Append an article revision | `article.revision.append` | Exact Source and source-scoped Article identity | Collection authorization, rights/retention scope, idempotency and concurrency checks |
+| Evaluate duplicate candidates | `article.duplicate.evaluate` | Exact pair of ArticleRevision records, comparison method/policy version and input fingerprint | Candidate generation/evaluation only; current rights must permit every content/metadata operation and derived candidate storage; no final decision or article merge is authorized |
+| Append duplicate decisions | `article.duplicate.decide` | Exact DuplicateCandidate, outcome, effective predecessor and candidate scope | Immutable authorization reference, approved duplicate-decision policy and linear supersession; decisions never delete or merge Article/ArticleRevision records |
 | Create an event-match case | `event.match.case.create` | Exact ArticleRevision and development scope | Approved case-creation policy, idempotency and exact input provenance |
 | Evaluate event candidates | `event.match.evaluate` | Exact EventMatchCase and candidate set | Evaluation may append candidate evidence but cannot activate an ArticleEventLink |
 | Append an event-match decision | `event.match.decide` | Exact case, candidate, predecessor and aggregate version | Immutable authorization reference; approved decision policy; atomic successor/link reconciliation |
@@ -159,10 +161,10 @@ Logs, traces, prompts, exception messages and evaluation artifacts are privacy-r
 ---
 
 **Document ID:** GENI-SEC-008  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Draft — Under Architecture Review  
 
 
-**Revision Note (v1.8):** Added an explicit privacy-processing authorization permission bound to exact purpose, operation, data category, payload fingerprint, provider/model and region; linked the first-slice implementation contracts. The privacy decision remains independent from execution permission and source-content rights. Role grants and deployment policy remain unapproved.
+**Revision Note (v1.9):** Added separate deny-by-default permissions for duplicate-candidate evaluation and immutable duplicate-decision append. The permissions do not authorize article merging, deletion, or event matching.
 
 **End of Document**
