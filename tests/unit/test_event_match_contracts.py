@@ -59,12 +59,13 @@ def test_case_requires_exact_revision_and_development_scope() -> None:
         CreateEventMatchCase("revision-1", " ", "Development")
 
 
-def test_case_metadata_is_copied_and_read_only() -> None:
-    source = {"fixture": "synthetic"}
+def test_case_metadata_is_deeply_immutable() -> None:
+    source = {"fixture": {"labels": ["synthetic", "authorized-fixture"]}}
     case = CreateEventMatchCase("revision-1", "dev-1", "Scope", source)
-    source["fixture"] = "changed"
+    source["fixture"]["labels"].append("changed")  # type: ignore[index, union-attr]
     assert case.metadata is not None
-    assert case.metadata["fixture"] == "synthetic"
+    nested = case.metadata["fixture"]
+    assert nested["labels"] == ("synthetic", "authorized-fixture")  # type: ignore[index]
     with pytest.raises(TypeError):
         case.metadata["new"] = "value"  # type: ignore[index]
 
