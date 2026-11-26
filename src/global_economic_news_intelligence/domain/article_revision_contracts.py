@@ -227,6 +227,47 @@ class PersistArticleRevision:
             raise ValueError("rights_assessment_references must not contain duplicates.")
         object.__setattr__(self, "metadata", _freeze_metadata(self.metadata))
 
+
+@dataclass(frozen=True, slots=True)
+class ArticleRevisionRecord:
+    """Server-owned immutable persistence record for one ArticleRevision."""
+
+    revision_id: str
+    article_id: str
+    revision_number: int
+    payload: PersistArticleRevision
+    revision_fingerprint: str
+    revision_fingerprint_schema_version: str
+    created_at: datetime
+
+    def __post_init__(self) -> None:
+        _required_text(self.revision_id, "revision_id")
+        _required_text(self.article_id, "article_id")
+        if (
+            isinstance(self.revision_number, bool)
+            or not isinstance(self.revision_number, int)
+            or self.revision_number <= 0
+        ):
+            raise ValueError("revision_number must be a positive integer.")
+        if not isinstance(self.payload, PersistArticleRevision):
+            raise TypeError("payload must be a PersistArticleRevision instance.")
+        _required_text(self.revision_fingerprint, "revision_fingerprint")
+        if len(self.revision_fingerprint) != 64 or any(
+            character not in "0123456789abcdef"
+            for character in self.revision_fingerprint
+        ):
+            raise ValueError(
+                "revision_fingerprint must be a 64-character lowercase SHA-256 hex digest."
+            )
+        if self.revision_fingerprint != self.payload.revision_fingerprint:
+            raise ValueError("Persisted revision_fingerprint does not match the payload.")
+        if (
+            self.revision_fingerprint_schema_version
+            != ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION
+        ):
+            raise ValueError("Unsupported revision_fingerprint_schema_version.")
+        _aware_instant(self.created_at, "created_at")
+
     @property
     def revision_fingerprint(self) -> str:
         """SHA-256 identity for the semantic revision, not for retained article text."""
