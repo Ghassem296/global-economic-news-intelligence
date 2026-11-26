@@ -1,22 +1,27 @@
 """Typed payload contract for persisting an immutable ArticleRevision.
 
-This module validates the revision payload shape only. Source identity
-canonicalization, metadata-only idempotency, rights decisions, and persistence
-remain application/policy responsibilities.
+Revision identity is independent from the optional retained-content hash. The
+fingerprint is built only from the versioned, permission-filtered revision
+snapshot; storage references, observation time, and rights-decision references
+do not create new content revisions.
 """
 
 from __future__ import annotations
 
-import math
+import hashlib
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from types import MappingProxyType
 from urllib.parse import urlsplit
 
-type JsonScalar = str | int | float | bool | None
+type JsonScalar = str | int | bool | None
 type FrozenJson = JsonScalar | tuple[FrozenJson, ...] | Mapping[str, FrozenJson]
+
+ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION = "article-revision-fingerprint-v1"
+_MAX_SAFE_INTEGER = (2**53) - 1
 
 
 class ContentAvailability(StrEnum):
@@ -26,35 +31,47 @@ class ContentAvailability(StrEnum):
     UNAVAILABLE = "unavailable"
 
 
+def _valid_unicode(value: str, field_name: str) -> None:
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise ValueError(f"{field_name} must contain valid Unicode scalar values.") from exc
+
+
 def _required_text(value: object, field_name: str) -> None:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field_name} must be a non-empty string.")
+    _valid_unicode(value, field_name)
 
 
 def _optional_text(value: object, field_name: str) -> None:
-    if value is not None and (not isinstance(value, str) or not value.strip()):
-        raise ValueError(f"{field_name} must be a non-empty string when supplied.")
+    if value is not None:
+        _required_text(value, field_name)
 
 
 def _aware_instant(value: object, field_name: str) -> None:
     if not isinstance(value, datetime) or value.utcoffset() is None:
         raise ValueError(f"{field_name} must be a timezone-aware datetime.")
+    if value.microsecond % 1000:
+        raise ValueError(f"{field_name} must have millisecond precision.")
 
 
 def _http_url(value: object, field_name: str) -> None:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field_name} must be a non-empty string.")
+    _required_text(value, field_name)
     parsed = urlsplit(value)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         raise ValueError(f"{field_name} must be an absolute HTTP(S) URL.")
 
 
 def _freeze_json(value: object, field_name: str) -> FrozenJson:
-    if value is None or isinstance(value, (str, bool, int)):
+    if value is None or isinstance(value, bool):
         return value
-    if isinstance(value, float):
-        if not math.isfinite(value):
-            raise ValueError(f"{field_name} cannot contain a non-finite number.")
+    if isinstance(value, str):
+        _valid_unicode(value, field_name)
+        return value
+    if isinstance(value, int):
+        if abs(value) > _MAX_SAFE_INTEGER:
+            raise ValueError(f"{field_name} integers must be within the JCS safe range.")
         return value
     if isinstance(value, Mapping):
         frozen: dict[str, FrozenJson] = {}
@@ -64,7 +81,10 @@ def _freeze_json(value: object, field_name: str) -> FrozenJson:
         return MappingProxyType(frozen)
     if isinstance(value, (list, tuple)):
         return tuple(_freeze_json(item, field_name) for item in value)
-    raise TypeError(f"{field_name} must contain JSON-compatible values.")
+    raise TypeError(
+        f"{field_name} must contain JCS-safe JSON values "
+        "(string, boolean, null, safe integer, array, or object)."
+    )
 
 
 def _freeze_metadata(value: Mapping[str, object] | None) -> Mapping[str, FrozenJson] | None:
@@ -74,6 +94,41 @@ def _freeze_metadata(value: Mapping[str, object] | None) -> Mapping[str, FrozenJ
     if not isinstance(frozen, Mapping):
         raise TypeError("metadata must be a mapping.")
     return frozen
+
+
+def _jcs_string(value: str) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def _jcs(value: FrozenJson | dict[str, FrozenJson]) -> str:
+    """Serialize the supported JCS subset; floating-point values are excluded."""
+
+    if value is None:
+        return "null"
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if isinstance(value, str):
+        return _jcs_string(value)
+    if isinstance(value, int):
+        if abs(value) > _MAX_SAFE_INTEGER:
+            raise ValueError("JCS integer is outside the safe interoperable range.")
+        return str(value)
+    if isinstance(value, Mapping):
+        keys = sorted(value, key=lambda item: item.encode("utf-16-be"))
+        return "{" + ",".join(
+            f"{_jcs_string(key)}:{_jcs(value[key])}" for key in keys
+        ) + "}"
+    if isinstance(value, tuple):
+        return "[" + ",".join(_jcs(item) for item in value) + "]"
+    raise TypeError("Unsupported value in ArticleRevision fingerprint manifest.")
+
+
+def _timestamp_for_fingerprint(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    return value.astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,8 +173,14 @@ class PersistArticleRevision:
         if not isinstance(self.source_article_identity, SourceArticleIdentity):
             raise ValueError("source_article_identity must be a SourceArticleIdentity.")
         _http_url(self.original_url, "original_url")
-        for field_name in ("external_id", "content_reference", "content_hash",
-                           "content_normalization_version", "summary", "language"):
+        for field_name in (
+            "external_id",
+            "content_reference",
+            "content_hash",
+            "content_normalization_version",
+            "summary",
+            "language",
+        ):
             _optional_text(getattr(self, field_name), field_name)
         if not isinstance(self.content_availability, ContentAvailability):
             raise ValueError("content_availability must be a ContentAvailability.")
@@ -139,13 +200,14 @@ class PersistArticleRevision:
                     "available or partial content requires content_reference, "
                     "content_hash, and content_normalization_version."
                 )
-        elif has_reference:
+            if len(self.content_hash or "") != 64 or any(
+                character not in "0123456789abcdef" for character in self.content_hash or ""
+            ):
+                raise ValueError("content_hash must be a 64-character lowercase SHA-256 hex digest.")
+        elif has_reference or has_hash or has_normalization:
             raise ValueError(
-                "metadata-only or unavailable content must not have content_reference."
-            )
-        if has_hash != has_normalization:
-            raise ValueError(
-                "content_hash and content_normalization_version must be supplied together."
+                "metadata-only or unavailable content must not persist "
+                "content_reference, content_hash, or content_normalization_version."
             )
 
         if not isinstance(self.rights_assessment_references, tuple):
@@ -157,3 +219,27 @@ class PersistArticleRevision:
         ):
             raise ValueError("rights_assessment_references must not contain duplicates.")
         object.__setattr__(self, "metadata", _freeze_metadata(self.metadata))
+
+    @property
+    def revision_fingerprint(self) -> str:
+        """SHA-256 identity for the semantic revision, not for retained article text."""
+
+        manifest: dict[str, FrozenJson] = {
+            "schema_version": ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+            "source_id": self.source_id,
+            "canonical_source_identifier": (
+                self.source_article_identity.canonical_source_identifier
+            ),
+            "source_identity_normalization_version": (
+                self.source_article_identity.normalization_version
+            ),
+            "normalized_title": self.normalized_title,
+            "summary": self.summary,
+            "language": self.language,
+            "published_at": _timestamp_for_fingerprint(self.published_at),
+            "content_availability": self.content_availability.value,
+            "content_hash": self.content_hash,
+            "content_normalization_version": self.content_normalization_version,
+            "metadata": self.metadata if self.metadata is not None else MappingProxyType({}),
+        }
+        return hashlib.sha256(_jcs(manifest).encode("utf-8")).hexdigest()
