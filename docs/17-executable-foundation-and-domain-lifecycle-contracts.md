@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 1.4  
+**Version:** 1.5  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-26
 
 ---
 
@@ -187,7 +187,7 @@ Rules:
 - A confirmed failure is terminal for that operation; a new attempt requires an explicitly authorized successor operation or a provider contract that proves safe same-operation retry.
 - Reconciled-not-applied is not automatically retryable; authorization and retry policy are rechecked.
 - A late attempt result is retained as immutable evidence and may update the projection only if its attempt/operation version is still current; contradictory late results trigger reconciliation/incident handling, never overwrite a confirmed result.
-- Cancellation is allowed before execution or after reconciliation proves no effect. An in-flight operation with unknown outcome must not be marked CANCELLED.
+- Cancellation before execution requires explicit authorization and transitions PENDING to CANCELLED. An IN_PROGRESS operation cannot transition directly to CANCELLED: it must first enter RECONCILIATION_REQUIRED. Cancellation from RECONCILIATION_REQUIRED requires explicit authorization plus durable reconciliation evidence that no external effect occurred; otherwise it remains blocked. The cancellation evidence and projection update must commit atomically. Terminal operations cannot be cancelled.
 
 Delivery uses the same transition policy but remains a separate aggregate. The pure policy function accepts an explicit success_status: SUCCEEDED for publication and DELIVERED for delivery. A delivery must revalidate recipient/destination authorization immediately before dispatch. A delivery failure never reverses confirmed publication.
 
@@ -227,5 +227,7 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v1.3):** Aligns the executable foundation's runtime statement with the current Python 3.15-only policy enforced by package metadata, `.python-version`, and Application CI. No other architecture or capability approval is implied.
 
 **Revision Note (v1.4):** Adds the selected, pinned uv package manager, committed dependency lockfile, and exact setuptools build-backend version to the executable foundation baseline. No database, LLM, acquisition, publication, or deployment decision is implied.
+
+**Revision Note (v1.5):** Aligns external-operation cancellation with the documented safe-cancellation rule: pending operations may be cancelled with authorization; in-flight operations must first be reconciled; only a proven no-effect outcome permits cancellation from reconciliation. The lifecycle implementation and tests enforce the same rule.
 
 **End of Document**
