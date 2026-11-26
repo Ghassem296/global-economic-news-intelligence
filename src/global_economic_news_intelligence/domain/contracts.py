@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Generic, Protocol, TypeVar
+from typing import Protocol, TypeVar
 
 
 T = TypeVar("T")
@@ -57,7 +57,7 @@ class CommandMetadata:
 
 
 @dataclass(frozen=True, slots=True)
-class Page(Generic[T]):
+class Page[T]:
     """Stable, bounded query result with an opaque continuation cursor."""
 
     items: tuple[T, ...]
