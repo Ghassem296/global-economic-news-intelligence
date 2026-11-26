@@ -145,6 +145,13 @@ def test_observation_and_publication_times_must_be_timezone_aware() -> None:
         revision(published_at=datetime(2026, 11, 26, 10, 0))
 
 
+def test_revision_fingerprint_v1_matches_golden_sha256_vector() -> None:
+    result = revision()
+    assert result.revision_fingerprint == (
+        "7c90a88070e9643d26b70690ab270cb7c8c66b4cb3030d1c40e541d7b7d9caab"
+    )
+
+
 def test_fingerprint_is_stable_across_observation_storage_and_rights_metadata() -> None:
     first = revision(
         content_reference="content://first-location",
