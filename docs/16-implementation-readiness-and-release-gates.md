@@ -141,7 +141,7 @@ Lifecycle mechanics are specified, but material review actions, publication poli
 
 ### 5.6 End-to-end verification
 
-Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevision through deduplication, event matching, evidence, analysis, Report version, and PublicationDecision. Verify exact provenance, idempotency, concurrency, rollback, recovery, and absence of unauthorized external effects.
+Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevision through deduplication, event matching, evidence, analysis, and Report version. Verify exact provenance, idempotency, concurrency, rollback, recovery, and absence of unauthorized external effects. PublicationDecision and publication eligibility are explicitly outside this slice until GENI-ADR-004 and dependent gates are accepted.
 
 ## 6. Cross-document consistency rules
 
@@ -168,7 +168,7 @@ A first-slice implementation may start only when all applicable gates below have
 | R3 — Security, rights, and privacy | Threat-model controls, operation-specific rights decisions, privacy authorization boundaries, secret handling | Deny/unknown/expired/revoked/scope-mismatch cases fail closed; test-source permissions are documented |
 | R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, safe errors, structured logging, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
 | R5 — Domain and persistence verification | Contract tests, schema constraints, transaction tests, concurrency/idempotency/failure-injection tests | Required invariants are demonstrated, not merely documented |
-| R6 — Vertical-slice verification | End-to-end fixture run and trace preserving provenance from ArticleRevision to Report and PublicationDecision | Reproducible run; no unauthorized side effect; all quality gates and budgets enforced |
+| R6 — Vertical-slice verification | End-to-end fixture run and trace preserving provenance from ArticleRevision through duplicate/event decisions, Evidence, Analysis, and Report | Reproducible run; no unauthorized side effect; all enabled-slice quality gates and budgets enforced |
 | R7 — Operational release | Backup/restore, recovery, observability, incident and rollback procedures, deployment security | Operational acceptance criteria in Documents 13 and 04 are demonstrated |
 
 Passing an earlier gate does not imply that a later gate has passed. A gate may be passed for a limited capability while other capabilities remain disabled.
