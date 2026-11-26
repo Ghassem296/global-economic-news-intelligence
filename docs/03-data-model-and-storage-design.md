@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.48
+**Version:** 1.49
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -416,7 +416,7 @@ Fields:
 | published_at | timestamp/null | Original publication time |
 | collected_at | timestamp | First successful collection time |
 | last_seen_at | timestamp | Most recent observation |
-| content_hash | string/null | Current normalized content fingerprint |
+| content_hash | SHA-256/null | Hash of the exact permitted normalized content representation referenced by the current revision; null when content is not persistently retained. Not an article/revision identity. |
 | content_availability | enum/string | Available, partial, metadata-only, unavailable |
 | rights_status | enum/string | Content access and retention classification |
 | current_revision_id | UUID/string/null | Current revision reference |
@@ -452,8 +452,10 @@ Fields:
 - `title`
 - `content_availability` — the availability state of this exact revision: `available`, `partial`, `metadata-only`, or `unavailable`
 - `content_reference`
-- `content_hash`
-- `content_normalization_version`
+- `content_hash` — SHA-256 of the exact normalized content bytes retained by this revision; null for metadata-only/unavailable revisions
+- `content_normalization_version` — required with content_hash; identifies the exact normalization rules used before hashing
+- `revision_fingerprint` — SHA-256 identity of the semantic revision snapshot, independent of the content hash and storage location
+- `revision_fingerprint_schema_version` — exact schema/canonicalization version used for the revision fingerprint
 - `summary`
 - `language`
 - `observed_at`
@@ -468,7 +470,11 @@ Constraints:
 - Material changes must preserve the previous revision.
 - `content_availability` is required on every revision and uses exactly one of: `available`, `partial`, `metadata-only`, or `unavailable`.
 - `available` and `partial` require a non-null `content_reference`; the reference must resolve only to the exact content representation permitted for the relevant operation.
-- `metadata-only` and `unavailable` require a null `content_reference`; an empty string or placeholder object is not a substitute for an absent reference.
+- `metadata-only` and `unavailable` require null `content_reference`, `content_hash`, and `content_normalization_version`; an empty string or placeholder object is not a substitute for an absent value.
+- `content_hash` is the lowercase 64-hex SHA-256 digest of the exact UTF-8 bytes of the retained normalized content representation. The normalization algorithm/version must be explicit. The hash is itself content-derived data and may be persisted only when the applicable rights decision permits retention of that fingerprint; this baseline requires it only for persistently retained `available`/`partial` content.
+- `revision_fingerprint` is a separate lowercase 64-hex SHA-256 digest used only to identify semantic equality with the current revision of the same Article. It is not a content hash, a cross-article identity, or evidence of rights permission. It must be computed from the versioned revision-fingerprint manifest defined in Document 15 and verified on persistence/read.
+- Repeated collection is compared only with the Article's current revision. If the current fingerprint and schema version match, no new revision is created. If the article changes away and later returns to an earlier representation, the return is a new chronological revision; fingerprints are not globally unique across all historical revisions.
+- A metadata-only or unavailable revision uses a metadata-derived revision fingerprint; it must never persist a content hash merely to obtain idempotency.
 - A metadata-only revision may retain only metadata and other source-derived fields explicitly permitted by the applicable source/content rights decision.
 - `Article.content_availability` is a current-state projection and must agree with the `content_availability` of `Article.current_revision_id`; it must not be independently edited.
 - Content references must comply with the project's content retention and licensing policy.
@@ -3246,3 +3252,5 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.47):** Aligns the persistence strategy with the Project Owner's PostgreSQL target selection recorded in GENI-ADR-005 v1.5. Replaces SQLite-specific initial-storage guidance with PostgreSQL qualification requirements; production activation and exact tooling remain gated by PoC evidence and formal ADR acceptance.
+
+**Revision Note (v1.49):** Separates retained-content SHA-256 from the semantic ArticleRevision fingerprint, defines the no-content hash/reference invariant, and clarifies current-revision-only idempotency so a later return to prior content remains a new chronological revision. No production rights or persistence approval is implied.
