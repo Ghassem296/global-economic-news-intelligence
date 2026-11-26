@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 3.5
+**Version:** 3.6
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 3.5 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-26 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 3.4 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-26 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 3.5 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-26 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 1.5 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-26 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -412,7 +412,7 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-26  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `54e54e9ba7618a39beddc7a2e3c17e0a0ccc091a`
+**Baseline Commit Inspected:** `746f4a6a59c84ec2cb7ef89e359b8647279c6434`
 **Registry Refresh:** This audit inspected the published `main` branch at the baseline commit above. This registry revision follows that inspected commit and records the resulting document versions and paths. The refreshed snapshot includes the executable Python foundation and lifecycle contracts; first-slice source, pairwise article-deduplication, event-matching, evidence, analysis, report and publication-decision contracts; explicit aggregate ownership for evidence locations, analysis inputs/evidence links and report provenance links; deny-by-default authorization boundaries; and privacy/rights provenance gates before provider egress. Document 02 v1.54 includes duplicate repositories in the first-slice test baseline. Document 03 v1.46 and Document 15 v3.3 require exact actor/authorization provenance for duplicate evaluation and decision records. Document 04 v1.35 and Document 16 v3.0 agree that the first executable slice is fixture-driven, while provider-backed analysis is deferred to Stage 8 and remains gated by accepted ADRs and exact rights/privacy/transfer authorization. Document 16 v3.0 records successful Python 3.15 application CI (run 45465238823) and the unresolved dependency reproducibility gap: no lockfile exists, CI still installs via pip from declared version ranges, and the package-manager decision remains pending. GENI-ADR-005 v1.5 records the Project Owner's explicit selection of PostgreSQL as the target relational database. GENI-ADR-005-POC-001 v1.3 is now a PostgreSQL-specific qualification protocol covering approved workload definition, correctness/failure, concurrency, migrations, backup/restore and recovery. It is a test plan, not test evidence or production authorization; ADR-005 remains Proposed until qualification evidence is reviewed and formal acceptance is recorded. ADR-016 remains Proposed. The runtime policy is now CPython 3.15 only; `.python-version`, package metadata, Ruff/mypy targets, and application CI are aligned to that target. The Python 3.12/3.13 CI matrix is historical and has been superseded. The snapshot is repository-only; it does not claim local Working Tree inspection. The successful Python 3.15 application CI run is explicitly recorded as run 45465238823; this does not imply full product or operational readiness. Publication and validator presence do not constitute formal architecture approval, implementation, legal compliance, or operational verification.
 
 This refresh was performed directly against the published GitHub `main` branch. Document 17 v1.4 now records the Python 3.15-only runtime, uv 0.13.9, committed `uv.lock`, and setuptools 84.2.1. Document 04 v1.36 and Document 16 v3.2 record the same selected package-management baseline and locked CI process, and explicitly distinguish selected project tooling from pending architecture decisions. The PostgreSQL target direction is owner-selected, while production qualification, exact driver/ORM/migration/async choices, and other capability-dependent architecture decisions remain pending their ADR and evidence gates. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
@@ -481,5 +481,7 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v3.5):** Refreshes the ADR inventory to GENI-ADR-005 v1.5 and GENI-ADR-005-POC-001 v1.3; records the Project Owner's PostgreSQL target selection while preserving the Proposed status and production qualification gate. The registry snapshot was refreshed on 2026-11-26.
 
 **Revision Note (v3.5):** Refreshes the ADR inventory and controlled document versions after the Project Owner selected PostgreSQL as the target persistence engine. PostgreSQL remains subject to qualification evidence and formal ADR-005 acceptance; this registry does not imply production readiness.
+
+**Revision Note (v3.6):** Refreshes controlled versions for GENI-DATA-003, GENI-IMPL-015, GENI-READY-016 and GENI-ADR-013 after recording the Project Owner's source-aware mixed content-retention direction. The registry records document state only; ADR-013 remains Proposed and no source-specific legal permission is implied. The inspected baseline is the preceding main-branch commit.
 
 **End of Document**
