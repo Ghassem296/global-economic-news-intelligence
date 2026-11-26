@@ -138,8 +138,8 @@ The completed PoC package must include:
 ### 8.1 Results register
 
 | Field | PostgreSQL |
-|---|---|---|
-| Exact version/configuration | Not run | Not run |
+|---|---|
+| Exact version/configuration | Not run |
 | Workload profile ID | Not established |
 | Correctness matrix | Not run | Not run |
 | Migration/upgrade | Not run |
