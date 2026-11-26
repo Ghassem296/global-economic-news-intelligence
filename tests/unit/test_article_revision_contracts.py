@@ -112,7 +112,10 @@ def test_source_identity_is_source_scoped_and_does_not_guess_canonicalization() 
         SourceArticleIdentity(" ", "source-id-v1")
 
 
-@pytest.mark.parametrize("url", ["example.com/article", "ftp://example.com/file", "https:///missing-host"])
+@pytest.mark.parametrize(
+    "url",
+    ["example.com/article", "ftp://example.com/file", "https:///missing-host"],
+)
 def test_original_url_requires_absolute_http_url(url: str) -> None:
     with pytest.raises(ValueError, match="absolute HTTP"):
         revision(original_url=url)
