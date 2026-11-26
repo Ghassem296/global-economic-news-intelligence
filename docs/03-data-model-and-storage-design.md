@@ -133,44 +133,17 @@ The Event record is not the authoritative storage location for these assessment 
 
 ### 3.1 Initial Relational Storage
 
-PostgreSQL is the Project Owner-selected target relational engine for GENI, as recorded in GENI-ADR-005 v1.5 on 2026-11-26. SQLite is not an active implementation target. The PostgreSQL qualification workload, correctness/failure matrix, measurement controls, and required evidence artifacts are defined in GENI-ADR-005-POC-001 (`docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`). That protocol is a test plan, not evidence that qualification has passed or that production is authorized. Exact PostgreSQL, driver, query/ORM, migration, async, transaction, and connection-pool versions/settings remain gated by the qualification evidence and formal ADR acceptance.
+PostgreSQL is the Project Owner-selected target relational engine for GENI, as recorded in GENI-ADR-005 v1.5 on 2026-11-26. SQLite is not an active implementation target. The PostgreSQL qualification workload, correctness/failure matrix, measurement controls, and required evidence artifacts are defined in GENI-ADR-005-POC-001. That protocol is a test plan, not evidence that qualification has passed or that production is authorized. Exact PostgreSQL, driver, query/ORM, migration, async, transaction, and connection-pool versions/settings remain gated by qualification evidence and formal ADR acceptance.
 
-The selected initial implementation should support:
+The selected implementation must support relational integrity, versioned migrations, transactional updates, controlled connection lifecycle, explicit isolation/locking behavior, async access, indexes, and tested backup/restore.
 
-- Local development and the intended deployment model.
-- Relational integrity.
-- Versioned migrations.
-- Transactional updates.
-- Controlled database connection lifecycle.
+The PostgreSQL implementation must explicitly configure and test foreign-key enforcement, transaction isolation and boundaries, row/advisory-lock strategy, deadlock handling, connection-pool sizing/lifecycle/timeouts, backup and restore, migrations, indexes, and async cancellation/connection cleanup.
 
-The implementation must explicitly configure and test:
-
-- Foreign key enforcement.
-- Transaction isolation and boundaries.
-- Busy timeout and lock handling.
-- Connection management.
-- Backup and restore behavior.
-- Migration execution.
-- Appropriate indexes.
-- Async access and write serialization strategy.
-
-WAL mode may be considered after validating concurrency, deployment, and backup requirements. It must not be enabled without testing its operational implications.
-
-SQLite concurrency limitations must be documented. Concurrent asynchronous workflows must not assume unrestricted concurrent writes.
+PostgreSQL durability settings, checkpointing, autovacuum, indexes, and pool behavior must be tested against the approved workload. Durability must not be weakened merely to improve benchmark results.
 
 ### 3.2 Future Relational Storage
 
 PostgreSQL is the sole target for the initial relational persistence implementation. Production activation remains gated by the PostgreSQL qualification protocol and formal acceptance of GENI-ADR-005. No SQLite adapter or dual-engine portability promise is in scope.
-
-Possible triggers include:
-
-- Multiple application instances.
-- Higher write concurrency.
-- Multiple independent workers.
-- Larger datasets.
-- More advanced operational and backup requirements.
-
-Migration must preserve domain behavior and repository contracts.
 
 ### 3.3 Logical Storage Categories
 
