@@ -17,7 +17,9 @@ NOW = datetime(2026, 11, 26, 10, 0, tzinfo=UTC)
 def revision(**overrides: object) -> PersistArticleRevision:
     values: dict[str, object] = {
         "source_id": "source-1",
-        "source_article_identity": SourceArticleIdentity(\n            "publisher:item:123", "source-identity-v1"\n        ),
+        "source_article_identity": SourceArticleIdentity(
+            "publisher:item:123", "source-identity-v1"
+        ),
         "original_url": "https://example.com/news/123",
         "external_id": "123",
         "normalized_title": "Central bank keeps rates unchanged",
@@ -104,7 +106,8 @@ def test_hash_and_normalization_version_must_be_supplied_together() -> None:
 
 def test_source_identity_is_source_scoped_and_does_not_guess_canonicalization() -> None:
     identity = SourceArticleIdentity("provider:opaque-id:ABC", "source-id-v2")
-    assert identity.canonical_source_identifier == "provider:opaque-id:ABC"\n    assert identity.normalization_version == "source-id-v2"
+    assert identity.canonical_source_identifier == "provider:opaque-id:ABC"
+    assert identity.normalization_version == "source-id-v2"
     with pytest.raises(ValueError, match="canonical_source_identifier"):
         SourceArticleIdentity(" ", "source-id-v1")
 
