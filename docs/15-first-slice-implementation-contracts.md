@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.6  
+**Version:** 3.7  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -148,10 +148,34 @@ The signatures below are logical signatures. Request and result structures named
 |---|---|---|
 | `get_by_id` | `get_by_id(revision_id: ID<ArticleRevision>) -> Optional<ArticleRevision>` | Returns an immutable revision. |
 | `get_current_for_article` | `get_current_for_article(article_id: ID<Article>) -> Optional<ArticleRevision>` | Resolves the exact revision referenced by the Article projection. |
-| `find_by_content_identity` | `find_by_content_identity(article_id: ID<Article>, content_hash: Fingerprint, normalization_version: Version) -> Optional<ArticleRevision>` | Finds an unchanged normalized content revision for the same Article. Hash equality across different normalization versions is not assumed equivalent. |
+| `find_current_by_revision_fingerprint` | `find_current_by_revision_fingerprint(article_id: ID<Article>, revision_fingerprint: Fingerprint, schema_version: Version) -> Optional<ArticleRevision>` | Matches only the current revision of the same Article. It must not search all historical revisions or impose global uniqueness on fingerprints. |
 | `append_revision` | `append_revision(revision: ArticleRevision, expected_article_version: Optional<Version>, uow: UnitOfWork) -> ArticleRevision` | Appends a new immutable revision and updates the Article projection in the same UnitOfWork through ArticleRevisionService. Enforces unique `(article_id, revision_number)`; repeated identical content returns/reuses the existing logical revision rather than creating a duplicate. |
 
-The write command must include the exact content reference permitted for the operation, content hash, normalization version, observed time, language, change reason, and applicable rights-assessment reference(s). A hash is not permission to retain the underlying content. Unknown or insufficient rights block restricted content operations.
+The write command carries the exact permitted content reference (only for persistently retained content), content hash and content-normalization version (only for `available`/`partial` content), observed time, language, change reason, and applicable immutable rights-assessment reference(s). A content hash is not permission to retain the underlying content. Unknown, expired, revoked, unverifiable, or insufficient rights block the restricted operation.
+
+#### ArticleRevision identity and idempotency contract
+
+Two different digests serve different purposes and must never be conflated:
+
+- `content_hash`: SHA-256 of the exact UTF-8 bytes of the normalized content representation that is persistently retained. It is present only for `available` and `partial` revisions whose persistent-storage permission is current and verified. It is null for `metadata-only` and `unavailable`. The digest is lowercase 64-character hexadecimal; the associated `content_normalization_version` is mandatory and identifies the exact transformation used before hashing.
+- `revision_fingerprint`: SHA-256 of a versioned semantic revision manifest. It supports idempotency when content is not retained and is computed for every revision. It is not a content digest, cross-article identifier, permission, or authorization token. Persist both the digest and `revision_fingerprint_schema_version` so the comparison is reproducible.
+
+Fingerprint v1 is SHA-256 over UTF-8 RFC 8785 JSON Canonicalization Scheme (JCS) serialization of an object containing exactly:
+1. `schema_version` = `article-revision-fingerprint-v1`;
+2. `source_id`;
+3. `canonical_source_identifier` and `source_identity_normalization_version`;
+4. `normalized_title`, `summary`, `language`, and `published_at`;
+5. `content_availability`;
+6. `content_hash` and `content_normalization_version` (both null for metadata-only/unavailable revisions);
+7. `metadata`, containing only source/article metadata permitted for retention and normalized by the source adapter.
+
+For this fingerprint schema, `published_at` is UTC RFC 3339 with exactly millisecond precision and a trailing `Z`. Metadata is restricted to valid Unicode strings, booleans, null, safe integers in the IEEE-754 interoperable range, arrays, and objects; floating-point values are rejected. Object keys follow JCS UTF-16 code-unit ordering. Unicode strings are preserved exactly and are not normalized during canonicalization. The source adapter must exclude volatile observation/transport fields from `metadata`; such operational data belongs in collection records, not the semantic revision manifest.
+
+The fingerprint deliberately excludes `content_reference` (storage relocation is not a content change), `original_url` and `external_id` (source-scoped canonical identity is authoritative), `observed_at`, `change_reason`, and rights-assessment references (observation, audit reason, and rights decisions do not change the semantic article revision). The canonical source identity and its normalization version remain included.
+
+Idempotency compares the incoming fingerprint only with the Article's current revision. A match reuses the current revision and creates no new revision. A non-match appends a new revision under the Article's expected version. Do not impose a unique constraint across all historical fingerprints: if an article changes from A to B and later returns to A, the return is a new chronological revision even though its fingerprint equals the earlier A revision. The unique revision constraint remains `(article_id, revision_number)`.
+
+The domain contract implements this deterministic fingerprint for the restricted JCS-safe value set. The application/repository layer must persist and verify the computed value; the storage adapter must not invent a second serialization or hashing scheme. The metadata-only fingerprint contains only permitted metadata; it does not justify retaining otherwise restricted content or derivatives.
 
 ### 4.4 EventRepository
 
@@ -1153,5 +1177,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v3.5):** Records the Project Owner-selected source-aware mixed content-retention direction, adds revision-level content-availability states, and makes the content-reference invariant explicit. It also identifies the unresolved metadata-only revision idempotency fingerprint and content-hash semantics as blockers; no repository implementation or source-specific content permission is implied.
 
 **Revision Note (v3.6):** Makes the source-identity canonicalization version an explicit required field, separate from content-normalization version, so identity normalization can be reproduced and audited. The metadata-only revision idempotency fingerprint and exact content-hash semantics remain open.
+
+**Revision Note (v3.7):** Defines a versioned semantic revision fingerprint separate from retained-content SHA-256, specifies its exact JCS manifest and metadata-only behavior, and limits idempotency comparison to the current revision so historical returns remain append-only.
 
 **End of Document**
