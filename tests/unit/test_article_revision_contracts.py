@@ -30,6 +30,7 @@ def revision(**overrides: object) -> PersistArticleRevision:
         "content_hash": CONTENT_HASH,
         "content_normalization_version": "normalization-v1",
         "summary": None,
+        "author": "A. Writer",
         "language": "en",
         "published_at": None,
         "observed_at": NOW,
@@ -158,6 +159,12 @@ def test_fingerprint_is_stable_across_observation_storage_and_rights_metadata() 
         rights_assessment_references=("rights-v2",),
     )
     assert first.revision_fingerprint == second.revision_fingerprint
+
+
+def test_author_snapshot_participates_in_revision_fingerprint() -> None:
+    first = revision(author="A. Writer")
+    changed = revision(author="B. Writer")
+    assert first.revision_fingerprint != changed.revision_fingerprint
 
 
 def test_metadata_only_revision_fingerprint_tracks_permitted_metadata() -> None:
