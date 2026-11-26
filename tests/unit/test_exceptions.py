@@ -31,3 +31,24 @@ def test_unknown_external_outcome_is_not_marked_retryable() -> None:
         correlation_id="corr-456",
     )
     assert not error.retryable
+
+
+@pytest.mark.parametrize(
+    "code",
+    (
+        ErrorCode.DUPLICATE_IDENTITY,
+        ErrorCode.STALE_VERSION,
+        ErrorCode.INVARIANT_VIOLATION,
+        ErrorCode.IDEMPOTENCY_KEY_REUSE_CONFLICT,
+    ),
+)
+def test_repository_specific_failures_keep_distinct_machine_codes(
+    code: ErrorCode,
+) -> None:
+    error = GeniError(
+        code,
+        "The repository operation was rejected.",
+        correlation_id="corr-repository",
+    )
+    assert error.to_safe_dict()["code"] == code.value
+    assert not error.retryable
