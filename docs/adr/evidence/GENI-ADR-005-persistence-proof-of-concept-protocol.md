@@ -32,43 +32,21 @@ The PoC supplies the evidence required for the Project Owner to complete formal 
 
 ## 3. Preconditions: define the workload before measuring
 
-### 3.1 Previously stated initial planning baseline
+### 3.1 Owner-selected PostgreSQL target
 
-The project owner's earlier planning direction establishes the following provisional baseline for the first deployment:
+The Project Owner explicitly selected PostgreSQL as GENI's target relational engine on 2026-11-26. This supersedes the earlier SQLite-first planning assumption. SQLite is not an active candidate or implementation target. The initial deployment topology, workload volumes, concurrent readers/writers, retention, availability, RPO/RTO, hosting, and budget must still be explicitly established; no numeric values may be invented.
 
-- Single application instance and local/early-validation deployment.
-- A limited set of reputable international news sources.
-- Simple scheduling; no distributed task queue in the initial stage.
-- SQLite is the preferred initial candidate for operational simplicity.
-- PostgreSQL is a later-scale alternative to reconsider if multiple application instances, higher write concurrency, larger datasets, or concurrent workers become necessary.
+The engine direction is an owner decision, not a measured capacity claim or production authorization. The PoC qualifies PostgreSQL itself and verifies that the selected configuration meets approved workload and operational requirements. The project must not introduce distributed infrastructure or numeric service guarantees without evidence.
 
-These are planning assumptions and a preference, not an Accepted ADR, a measured workload, or production authorization. The PoC must test whether SQLite actually satisfies the workload and correctness requirements. PostgreSQL remains a comparative challenger; the project must not build unnecessary distributed infrastructure merely to benchmark it.
+No numeric article volume, concurrent-writer count, event/report volume, retention duration, availability target, RPO/RTO, hosting specification, or budget has been established in the available project decisions. These values remain unknown and must not be invented. The Project Owner must approve any numeric workload and operational thresholds before results are examined. If those figures remain unavailable, the PoC may complete correctness and operational-feasibility tests, but it cannot claim workload capacity or final production readiness.
 
-No numeric article volume, concurrent-writer count, event/report volume, retention duration, availability target, RPO/RTO, hosting specification, or budget has been established in the available project decisions. These values remain unknown and must not be invented. The Project Owner must derive and approve any numeric workload and operational thresholds before the comparative results are examined. If those figures remain unavailable, the PoC may complete correctness and operational-feasibility tests, but it cannot claim workload capacity or final engine selection.
-
-The Project Owner must record a workload profile before running comparative benchmarks. Unknown values remain explicitly unknown; they must not be filled with convenient guesses.
-
-| Profile field | Required evidence |
-|---|---|
-| Deployment topology | Single process, multiple processes, hosts, regions, and expected growth |
-| Concurrent writers | Expected normal, peak, and burst writer counts, with derivation |
-| Concurrent readers | Expected normal, peak, and burst reader counts, with derivation |
-| Ingestion workload | Expected articles/revisions per time interval and burst pattern |
-| Domain workload | Expected duplicate evaluations, event-match decisions, evidence, analyses, and report writes |
-| Read workload | Main query shapes, pagination, history access, and read/write mix |
-| Dataset profile | Representative row counts, relationship cardinalities, payload-size distribution, and retention horizon |
-| Async behavior | Worker count, task duration, cancellation, deadlines, and connection lifecycle |
-| Availability | Required service availability and acceptable maintenance windows |
-| Recovery | Approved Recovery Point Objective (RPO) and Recovery Time Objective (RTO), if defined |
-| Operations | Hosting constraints, backup destination, monitoring, restore operator, and maintenance capacity |
-| Security | Access-control, encryption, secret-management, backup-protection, and audit requirements |
-| Cost | Hosting, storage, operations, support, and migration cost assumptions |
+The Project Owner must record a workload profile before running qualification measurements. Unknown values remain explicitly unknown; they must not be filled with convenient guesses.
 
 The workload profile must identify the source and confidence of each value. Product aspirations are not workload measurements. If a mandatory target has not been approved, record it as an unresolved decision and do not declare a candidate compliant with it.
 
 ## 4. Candidate implementations and fairness controls
 
-Evaluate the PostgreSQL implementation against the logical repository contracts, domain write sets, synthetic fixtures, application revision, and approved workload profile. SQLite comparison runs are out of scope because it is no longer an active candidate.
+Evaluate only the PostgreSQL implementation against the logical repository contracts, domain write sets, synthetic fixtures, application revision, and approved workload profile. SQLite comparison runs are out of scope.
 
 For each run, capture:
 
@@ -82,7 +60,7 @@ For each run, capture:
 - Dataset seed, row counts, payload distribution, workload generator version, and test duration.
 - Warm-up, repetitions, cache state, measurement method, raw output, errors, and deviations.
 
-Do not compare different hardware, durability guarantees, transaction semantics, dataset sizes, or application behavior as if they were equivalent. Any engine-specific tuning must be documented and reviewed; default and tuned results must be distinguished. WAL must be an explicit SQLite test variant, not silently assumed. PostgreSQL durability must not be weakened merely to improve benchmark numbers.
+Do not compare different hardware, durability guarantees, transaction semantics, dataset sizes, or application behavior as if they were equivalent. Any engine-specific tuning must be documented and reviewed; default and tuned results must be distinguished. PostgreSQL durability must not be weakened merely to improve benchmark numbers.
 
 ## 5. Mandatory correctness and failure matrix
 
@@ -124,9 +102,9 @@ After correctness gates pass, measure PostgreSQL using the approved workload pro
 - Recovery behavior and data loss, measured against approved RPO/RTO.
 - Operational steps, manual interventions, failure modes, and maintenance burden.
 
-Record warm-up separately. Run enough repetitions to show variability; publish the raw observations and method. Do not select a candidate from a single run or from a synthetic microbenchmark that does not represent the workload.
+Record warm-up separately. Run enough repetitions to show variability; publish the raw observations and method. Do not claim qualification from a single run or from a synthetic microbenchmark that does not represent the workload.
 
-No numeric pass threshold is defined in this protocol. Predeclared thresholds must be approved from the workload profile, product requirements, and operational policy before the comparative results are examined. Do not invent thresholds after seeing the results to make a preferred engine pass.
+No numeric pass threshold is defined in this protocol. Predeclared thresholds must be approved from the workload profile, product requirements, and operational policy before results are examined. Do not invent thresholds after seeing the results to make a preferred engine pass.
 
 ## 7. Decision method
 
@@ -135,10 +113,10 @@ Apply the following order:
 1. **Hard correctness gates:** Any reproducible integrity, atomicity, fencing, migration, or recovery failure is a blocker until fixed and retested.
 2. **Mandatory workload gates:** A candidate must satisfy every approved workload, deployment, security, availability, backup, and recovery requirement.
 3. **Operational feasibility:** Confirm that the project can reliably deploy, monitor, back up, restore, secure, upgrade, and support the candidate.
-4. **Comparative evidence:** Compare performance, resource use, cost, complexity, and growth headroom using the same workload and documented methodology.
-5. **Selection:** If only one candidate passes all mandatory gates, recommend it with limitations. If both pass, select based on the approved workload and operational trade-offs; the simpler operational model may be preferred only when it meets all requirements. If neither passes, do not select either: revise the architecture or requirements and repeat the PoC.
+4. **Comparative evidence:** Review measured performance, resource use, cost, complexity, and growth headroom using the approved workload and documented methodology.
+5. **Selection:** If every mandatory PostgreSQL gate passes, submit the reproducible evidence for formal ADR-005 acceptance. If any mandatory gate fails, do not authorize production activation; revise the implementation or requirements and repeat the affected tests.
 
-A repository abstraction is not proof of portability. Portability is limited to repository behaviors exercised by contract tests on every supported engine. Engine-specific locking, isolation, migrations, indexes, and backup procedures remain explicitly documented.
+A repository abstraction is not proof of portability. This project targets PostgreSQL only; engine-specific locking, isolation, migrations, indexes, and backup procedures remain explicitly documented. Engine-specific locking, isolation, migrations, indexes, and backup procedures remain explicitly documented.
 
 ## 8. Required evidence artifacts
 
