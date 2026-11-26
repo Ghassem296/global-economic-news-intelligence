@@ -3,9 +3,9 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.36
+**Version:** 1.37
 **Status:** Draft — Under Architecture Review
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-26
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
 
@@ -529,7 +529,7 @@ Implement and test:
 - Analysis versioning.
 - Report versioning.
 - Publication decision rules.
-- The target first-slice review scope is exactly `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. `REPORT_VERSION` is publication-eligibility review for an exact immutable Report version and its exact effective `PublicationDecision`, not review of an external publication operation. This is target scope, not current enablement: no ReviewService material action may be enabled until the ReviewRepository and ReviewContextLinkRepository contracts, field-level command/query schemas, ReviewRecord/ReviewAction transition and projection rules, reviewer authorization rules, and the applicable GENI-ADR-014 approval are complete and verified by integration tests. Keep `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` deferred and disabled.
+- The later target review scope is `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. `REPORT_VERSION` is publication-eligibility review for an exact immutable Report version and its exact effective `PublicationDecision`, not review of an external publication operation. This review capability is outside the initial deterministic Report slice because that slice does not create a PublicationDecision. It remains disabled until GENI-ADR-004/014, the ReviewRepository and ReviewContextLinkRepository contracts, field-level command/query schemas, ReviewRecord/ReviewAction transition and projection rules, reviewer authorization rules, and the applicable integration tests are complete. Keep `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` deferred and disabled.
 - Delivery idempotency boundaries.
 
 ### Initial Evaluation Work
@@ -582,7 +582,7 @@ Implement the minimum reliable persistence layer for the first end-to-end workfl
 6. Implement transaction boundaries.
 7. Enforce foreign keys and required unique constraints.
 8. Implement processing run and step persistence.
-9. Implement collection checkpoint persistence.
+9. Defer collection checkpoint persistence to the source-acquisition stage; it is not required by the fixture-only first slice.
 10. Implement idempotency keys for supported operations.
 11. Implement recovery of expired or interrupted work.
 12. Add repository contract tests.
@@ -633,16 +633,11 @@ The exact persistence design must follow the accepted data model and ADRs.
 
 ---
 
-## 10. Development Stage 4 — Fixture-Driven Vertical Slice and Gated LLM Execution
+## 10. Development Stage 4 — Fixture-Driven Report Vertical Slice
 
 ### Objectives
 
-Prove the first-slice domain and persistence workflow end-to-end using synthetic, authorized fixtures and controlled local dependencies. Establish the provider-independent LLM boundary without enabling external provider egress.
-
-This stage has two distinct outcomes:
-
-1. **First executable slice:** a deterministic, fixture-driven ArticleRevision-to-PublicationDecision workflow. It must be runnable without network access, production source content, external LLM calls, publication, or delivery.
-2. **Provider-backed LLM capability:** a separately gated extension. Defining and testing provider-independent contracts or a fake adapter does not authorize a real provider integration or external data transfer.
+Prove the first-slice domain and persistence workflow end-to-end using synthetic, authorized fixtures and controlled local dependencies. The first executable slice is a deterministic ArticleRevision-to-Report workflow. It must run without network access, production source content, provider calls, publication eligibility, publication, or delivery. Provider-independent LLM execution is a separate capability and is neither a dependency nor an acceptance criterion for this slice.
 
 ### First-slice workflow
 
@@ -658,7 +653,7 @@ Implement the narrow workflow defined by Document 16 §9:
 - Attach typed Evidence with exact fixture provenance and rights references.
 - Persist a versioned structured Analysis using a deterministic test fixture. Do not invoke an external or local LLM as part of this first-slice acceptance test.
 - Create an immutable Report version with its complete provenance links.
-- Create a PublicationDecision. Do not execute publication or delivery.
+- Stop after creating the immutable Report version. Do not create an authoritative PublicationDecision or evaluate publication eligibility.
 
 The slice is intentionally a workflow and persistence proof, not a production news-acquisition or intelligence-quality claim.
 
@@ -719,17 +714,15 @@ ArticleEventLink     state; no review action  no Event creation
        Append Report version + provenance links
                          |
                          v
-             Append PublicationDecision
-                         |
-                         v
-             Stop: no external side effect
+             Stop: no publication decision
+                 or external side effect
 ```
 
 ### Deliverables
 
 - Fixture-driven first vertical slice with deterministic test data.
 - Repository contract, transaction, idempotency and failure-injection tests for the enabled slice.
-- Exact provenance trace from ArticleRevision through duplicate/event decisions, Evidence, Analysis, Report and PublicationDecision.
+- Exact provenance trace from ArticleRevision through duplicate/event decisions, Evidence, Analysis, and Report.
 - Tests proving that ambiguous/new-event outcomes cannot bypass decision or event-creation gates.
 - Provider-independent LLM contracts and a deterministic fake adapter, if required by the approved test scope.
 - Explicit tests proving no live-source network access, external provider egress, publication, or delivery occurs.
@@ -742,7 +735,7 @@ ArticleEventLink     state; no review action  no Event creation
 - NEW_EVENT_CANDIDATE does not create an Event; AMBIGUOUS/REVIEW_REQUIRED does not trigger a material review action.
 - Evidence, Analysis, Report and all provenance links persist atomically with exact fixture references.
 - The workflow is idempotent and preserves prior candidate/decision history.
-- PublicationDecision cannot be bypassed, and no publication or delivery side effect is attempted.
+- No authoritative PublicationDecision is created; publication eligibility, publication, and delivery are not attempted.
 - No live-source content, real provider call, or production permission is inferred from synthetic fixtures.
 
 ---
@@ -1852,6 +1845,8 @@ Exit criteria require executable tests and operational evidence, not document pr
 
 
 **Revision Note (v1.36):** Records uv 0.13.9 as the selected project package manager, a committed Python 3.15 lockfile, locked CI installation, and a pinned setuptools build backend. Database and other capability-dependent technology decisions remain subject to their respective ADRs.
+
+**Revision Note (v1.37):** Reconciles Stage 4 with Document 16: the first deterministic vertical slice ends at the immutable Report; authoritative PublicationDecision/eligibility and provider-backed LLM execution are separate gated capabilities. Moves collection checkpoint persistence out of the fixture-only persistence baseline and clarifies that report-version review requires the later publication-decision and review gates.
 
 **End of Document**
 
