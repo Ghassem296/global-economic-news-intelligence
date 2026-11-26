@@ -147,6 +147,7 @@ def is_rights_assessment_effective(
         or assessment.source_id != source_id
         or assessment.content_scope_fingerprint != content_scope_fingerprint
         or assessment.operation is not operation
+        or at < assessment.assessed_at
         or at < assessment.effective_from
         or (assessment.expires_at is not None and at >= assessment.expires_at)
     ):
