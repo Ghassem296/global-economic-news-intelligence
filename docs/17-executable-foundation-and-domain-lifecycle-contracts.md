@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 2.1  
+**Version:** 2.2  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -59,6 +59,12 @@ The domain package now includes the immutable `ArticleRevisionRecord`, which bin
 
 The Protocol is an application port, not a PostgreSQL adapter. ArticleRepository, ArticleRevisionService, rights-decision evaluation, concurrency/transaction integration, and concrete persistence remain unimplemented and gated.
 
+### 3.4 Content-rights assessment and persistence gate
+
+The pure domain package now includes `domain/content_rights_contracts.py` and unit tests. It defines the operation vocabulary and assessment states from GENI-ADR-013, immutable source/content-scope-specific RightsAssessment records, versioned retention-mode contracts, and a fail-closed persistence decision. Persistent content is eligible only when an ALLOWED assessment matches the exact source, SHA-256 content-scope fingerprint, PERSISTENT_STORAGE operation, effective time window, and retention-policy version. Missing, mismatched, future, expired, denied, revoked, unknown, or review-required assessments result in metadata-only handling. NO_PERSISTENT_CONTENT and TEMPORARY_PROCESSING_ONLY never authorize persistent storage.
+
+This is a bounded pure policy gate, not a legal determination or a complete rights-management subsystem. It does not verify license evidence, establish that an assessment is legally sufficient or freshly reviewed, calculate limited-retention deadlines, implement temporary buffers, persist assessments, evaluate other processing operations, propagate revocation, delete content, or authorize external LLM/provider egress. Those capabilities remain disabled and gated by the applicable ADRs and integration tests. The code must not be interpreted as production authorization.
+ 
 ## 4. ProcessingRun lifecycle
 
 ### 4.1 States
