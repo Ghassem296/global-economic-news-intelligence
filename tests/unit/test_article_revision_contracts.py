@@ -6,6 +6,7 @@ import pytest
 
 from global_economic_news_intelligence.domain.article_revision_contracts import (
     ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+    ArticleRevisionRecord,
     ContentAvailability,
     PersistArticleRevision,
     SourceArticleIdentity,
@@ -143,6 +144,57 @@ def test_observation_and_publication_times_must_be_timezone_aware() -> None:
         revision(observed_at=datetime(2026, 11, 26, 10, 0))
     with pytest.raises(ValueError, match="published_at"):
         revision(published_at=datetime(2026, 11, 26, 10, 0))
+
+
+def test_article_revision_record_validates_persisted_fingerprint_and_identity() -> None:
+    payload = revision()
+    record = ArticleRevisionRecord(
+        revision_id="revision-1",
+        article_id="article-1",
+        revision_number=1,
+        payload=payload,
+        revision_fingerprint=payload.revision_fingerprint,
+        revision_fingerprint_schema_version=ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+        created_at=NOW,
+    )
+    assert record.revision_fingerprint == payload.revision_fingerprint
+
+
+def test_article_revision_record_rejects_fingerprint_mismatch() -> None:
+    payload = revision()
+    with pytest.raises(ValueError, match="does not match the payload"):
+        ArticleRevisionRecord(
+            revision_id="revision-1",
+            article_id="article-1",
+            revision_number=1,
+            payload=payload,
+            revision_fingerprint="0" * 64,
+            revision_fingerprint_schema_version=ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+            created_at=NOW,
+        )
+
+
+def test_article_revision_record_rejects_invalid_server_owned_fields() -> None:
+    payload = revision()
+    values = {
+        "revision_id": "revision-1",
+        "article_id": "article-1",
+        "revision_number": 1,
+        "payload": payload,
+        "revision_fingerprint": payload.revision_fingerprint,
+        "revision_fingerprint_schema_version": ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+        "created_at": NOW,
+    }
+    with pytest.raises(ValueError, match="positive integer"):
+        ArticleRevisionRecord(**(values | {"revision_number": True}))  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="Unsupported revision_fingerprint_schema_version"):
+        ArticleRevisionRecord(
+            **(values | {"revision_fingerprint_schema_version": "unknown-v2"})
+        )  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="created_at"):
+        ArticleRevisionRecord(
+            **(values | {"created_at": datetime(2026, 11, 26, 10, 0)})
+        )  # type: ignore[arg-type]
 
 
 def test_revision_fingerprint_v1_matches_golden_sha256_vector() -> None:
