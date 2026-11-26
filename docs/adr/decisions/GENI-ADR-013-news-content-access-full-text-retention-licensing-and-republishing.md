@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **ADR ID:** GENI-ADR-013  
 **Title:** News Content Access, Full-Text Retention, Licensing, and Republishing  
-**Version:** 1.6
+**Version:** 1.7
 **Status:** Proposed  
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
@@ -800,7 +800,9 @@ This ADR is currently **Proposed**.
 
 **Recommended Alternative:** Alternative C.
 
-**Selected Alternative:** Not yet formally selected.
+**Owner-Selected Direction (2026-11-26):** The Project Owner selected the source-aware, mixed-retention policy represented by Alternative C. Full or partial article text may be retained only where the applicable source/content-specific persistent-storage permission is current and verified. Where that permission is absent, unknown, expired, revoked, or unverifiable, the system may retain only metadata and other content expressly permitted for the relevant operation, or record the revision as unavailable. Permission to retrieve or analyze content does not imply permission to persist, transmit externally, quote, or republish it.
+
+**Selected Alternative:** Alternative C is the Project Owner's selected architectural direction. Formal ADR acceptance remains pending.
 
 **Decision Status:** Proposed
 
@@ -1193,6 +1195,7 @@ Source-specific rights and legal requirements must be verified before production
 | 1.4 | 2026-11-18 | Proposed | Defined complete per-source CUSTOMER_DISTRIBUTION rights coverage for composite reports and other multi-source derived outputs; clarified reduced-scope authorization. | AI Architecture Assistant |
 | 1.5 | 2026-11-18 | Proposed | Defined deterministic content-scope and rights-assessment fingerprints, upstream-rights revocation propagation, fail-closed reauthorization, and atomic persistence requirements. | AI Architecture Assistant |
 | 1.6 | 2026-11-18 | Proposed | Clarified exact immutable artifact-byte hashing for text and binary media, timestamp precision, and identifier canonicalization. | AI Architecture Assistant |
+| 1.7 | 2026-11-26 | Proposed | Recorded the Project Owner's selection of source-aware mixed retention (Alternative C) while preserving the formal ADR acceptance and source-specific legal/contractual permission gates. | Project Owner direction recorded by AI Architecture Assistant |
 
 ---
 
