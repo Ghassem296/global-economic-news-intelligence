@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.4  
+**Version:** 3.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -625,9 +625,10 @@ This tranche makes the operation payloads explicit for the core article-to-repor
 | `original_url` | `string` | Required | Must pass URL validation; preserve separately from canonical_url. |
 | `external_id` | `string/null` | Optional | Source-provided identifier; uniqueness is source-scoped and applies only when meaningful. |
 | `normalized_title` | `string` | Required | The title stored on the immutable revision and current Article projection. |
-| `content_reference` | `reference/null` | Conditional | Required when content is retained or referenced; absent only with an explicit metadata-only/unavailable content state. Must point only to content permitted for this operation. |
-| `content_hash` | `Fingerprint` | Required | Computed from the declared normalized representation; a hash does not grant content-retention rights. |
-| `content_normalization_version` | `Version` | Required | Identifies the exact normalization rules used for the hash and any offsets. |
+| `content_availability` | `string/enum` | Required | Exactly one of `available`, `partial`, `metadata-only`, or `unavailable`; describes this exact revision, not merely the source's general capability. |
+| `content_reference` | `reference/null` | Conditional | Required for `available` or `partial`; must be null for `metadata-only` or `unavailable`. It may point only to the exact content representation permitted for the relevant operation. |
+| `content_hash` | `Fingerprint/null` | Conditional — unresolved | A hash of the declared normalized content representation; it does not grant retrieval, processing, or retention rights. Nullability and the idempotency fingerprint for metadata-only/unavailable revisions must be resolved before implementing PersistArticleRevision. |
+| `content_normalization_version` | `Version` | Required when a content representation is normalized or hashed | Identifies the exact normalization rules used for the hash and any offsets; must not be fabricated when no content representation exists. |
 | `summary` | `string/null` | Optional | May contain only source material or derived text permitted by the applicable rights decision. |
 | `language` | `string/null` | Optional | Declared or detected language; exact language-tag format remains a serialization decision. |
 | `published_at` | `Instant/null` | Optional | Source publication time; unknown remains null. |
@@ -636,7 +637,11 @@ This tranche makes the operation payloads explicit for the core article-to-repor
 | `rights_assessment_references` | `List<ID<RightsAssessment>>` | Conditional | Required for every source-derived content operation that is governed by a rights assessment; each reference must cover the exact operation and content scope. |
 | `metadata` | `object` | Optional | Versioned, non-secret extension; must not duplicate authoritative typed fields. |
 
-Server-owned values include Article ID when first created, ArticleRevision ID, revision number, current_revision_id, rights_status projection, created/updated timestamps, and resulting aggregate version. The application must atomically append/reuse the immutable ArticleRevision and update the Article current projection. Same Article + same content hash + same normalization version reuses the existing logical revision; a different normalization version is not presumed equivalent.
+Server-owned values include Article ID when first created, ArticleRevision ID, revision number, current_revision_id, rights_status and content_availability projections, created/updated timestamps, and resulting aggregate version. The application must atomically append/reuse the immutable ArticleRevision and update the Article current projection. The Article content_availability projection must equal the current revision's state.
+
+For content-backed revisions, same Article + same non-null content hash + same normalization version may resolve to the same logical revision only when the source identity and applicable rights scope also match; a different normalization version is not presumed equivalent. The idempotency identity for metadata-only or unavailable revisions is not yet specified: the current contract has no approved metadata fingerprint or canonicalization rule that safely distinguishes unchanged observations from materially changed metadata. Do not invent one or implement the ArticleRevision append/reuse repository until this is resolved. A null content hash must never be treated as a shared identity across unrelated observations.
+
+The selected content-retention direction is source-aware and operation-specific: persist full or partial text only when the applicable persistent-storage permission is current and verified; otherwise retain only permitted metadata or mark the revision unavailable. A retrieval or analysis permission does not imply persistent storage, external LLM transmission, quotation, or republication permission. Missing, unknown, expired, revoked, or unverifiable rights fail closed for the affected operation.
 
 #### 10.11.2 EvaluateEventMatchCandidate
 
