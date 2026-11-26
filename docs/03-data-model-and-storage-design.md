@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.51
+**Version:** 1.52
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -418,7 +418,7 @@ Fields:
 | last_seen_at | timestamp | Most recent observation |
 | content_hash | SHA-256/null | Hash of the exact permitted normalized content representation referenced by the current revision; null when content is not persistently retained. Not an article/revision identity. |
 | content_availability | enum/string | Available, partial, metadata-only, unavailable |
-| rights_status | enum/string | Content access and retention classification |
+| rights_status | string/null | Non-authoritative current content-rights summary for display/operations monitoring; never an authorization decision. |
 | current_revision_id | UUID/string/null | Current revision reference |
 | metadata | JSON | Additional source metadata |
 | created_at | timestamp | Record creation |
@@ -435,6 +435,8 @@ Constraints:
 - Canonical URL and content fingerprints may support duplicate detection but must not automatically merge articles without the configured matching policy.
 
 A unique constraint on `(source_id, external_id)` should apply only when `external_id` is present and meaningful.
+
+`Article.rights_status` is a display/monitoring projection only. Every restricted operation must resolve a current, immutable RightsAssessment for the exact source/content scope and operation; this summary field must never authorize retrieval, persistent storage, external processing, quotation, or distribution.
 
 The exact treatment of nullable unique values must be verified for each database implementation.
 
@@ -3263,3 +3265,5 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 **Revision Note (v1.50):** Adds a source-reported author snapshot to ArticleRevision so the Article current projection and historical revision preserve the same author semantics. The author is included in the semantic revision fingerprint and remains subject to source-specific metadata permissions.
 
 **Revision Note (v1.51):** Makes ArticleRevision's rights provenance explicit as immutable operation/content-scope RightsAssessment references rather than a single ambiguous `rights_status` field. Adds the complete historical publication-time/metadata snapshot and server creation timestamp; operation-specific rights remain authoritative in RightsAssessment records.
+
+**Revision Note (v1.52):** Clarifies that Article.rights_status is a non-authoritative summary projection only. Every restricted operation must consult the current operation- and content-scope-specific RightsAssessment; the summary field cannot grant permission.
