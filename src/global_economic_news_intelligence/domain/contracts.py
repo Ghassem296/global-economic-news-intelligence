@@ -63,7 +63,11 @@ class PageRequest:
     cursor: str | None = None
 
     def __post_init__(self) -> None:
-        if isinstance(self.limit, bool) or self.limit <= 0:
+        if (
+            isinstance(self.limit, bool)
+            or not isinstance(self.limit, int)
+            or self.limit <= 0
+        ):
             raise ValueError("limit must be a positive integer.")
         if self.cursor is not None and not self.cursor.strip():
             raise ValueError("cursor must be non-empty when supplied.")
