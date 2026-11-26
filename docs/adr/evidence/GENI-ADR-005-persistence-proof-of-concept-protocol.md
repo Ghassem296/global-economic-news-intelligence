@@ -34,7 +34,7 @@ The PoC supplies the evidence required for the Project Owner to complete formal 
 
 ### 3.1 Owner-selected PostgreSQL target
 
-The Project Owner explicitly selected PostgreSQL as GENI's target relational engine on 2026-11-26. This supersedes the earlier SQLite-first planning assumption. SQLite is not an active candidate or implementation target. The initial deployment topology, workload volumes, concurrent readers/writers, retention, availability, RPO/RTO, hosting, and budget must still be explicitly established; no numeric values may be invented.
+The Project Owner explicitly selected PostgreSQL as GENI's target relational engine on 2026-11-26. The initial qualification topology assumes a single application instance and local/early-validation deployment; any move beyond that topology requires an updated workload profile. This supersedes the earlier SQLite-first planning assumption. SQLite is not an active candidate or implementation target. The initial deployment topology, workload volumes, concurrent readers/writers, retention, availability, RPO/RTO, hosting, and budget must still be explicitly established; no numeric values may be invented.
 
 The engine direction is an owner decision, not a measured capacity claim or production authorization. The PoC qualifies PostgreSQL itself and verifies that the selected configuration meets approved workload and operational requirements. The project must not introduce distributed infrastructure or numeric service guarantees without evidence.
 
@@ -46,7 +46,7 @@ The workload profile must identify the source and confidence of each value. Prod
 
 ## 4. Candidate implementations and fairness controls
 
-Evaluate only the PostgreSQL implementation against the logical repository contracts, domain write sets, synthetic fixtures, application revision, and approved workload profile. SQLite comparison runs are out of scope.
+Evaluate only the PostgreSQL implementation against the same logical repository contracts, domain write sets, synthetic fixtures, application revision, and approved workload profile. SQLite comparison runs are out of scope.
 
 For each run, capture:
 
@@ -147,7 +147,7 @@ The completed PoC package must include:
 | Operational assessment | Not assessed | Not assessed |
 | Mandatory gates | Not evaluated | Not evaluated |
 
-This register must be updated only from actual retained evidence. “Not run” must never be rewritten as “pass” based on design review or documentation.
+This register must be updated only from actual retained evidence. Production qualification has not yet passed. “Not run” must never be rewritten as “pass” based on design review or documentation.
 
 ## 9. Approval and implementation boundary
 
