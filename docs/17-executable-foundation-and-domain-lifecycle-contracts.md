@@ -269,4 +269,6 @@ The first executable baseline includes the Python package, validated configurati
 
 **Revision Note (v2.2):** Adds immutable, operation- and content-scope-specific RightsAssessment contracts and a fail-closed persistent-content eligibility gate aligned to GENI-ADR-013 Alternative C. This pure policy does not verify legal sufficiency, implement retention expiry/deletion, persist assessments, propagate revocation, or authorize external provider processing.
 
+**Revision Note (v2.3):** Tightens the LIMITED_RETENTION contract to require an explicit positive maximum duration. Expiry scheduling, deadline calculation, and deletion execution remain outside this pure domain policy.
+
 **End of Document**
