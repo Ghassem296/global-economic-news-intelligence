@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 4.5
+**Version:** 4.6
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26  
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 4.5 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-26 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 4.6 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-26 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.19 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -412,7 +412,7 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-26  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `48bcbcf9583a5a3b933a80646b3c00f9dd733ab0`
+**Baseline Commit Inspected:** `bb77ad4ab709d4d2c1b1008ccfd9b3f5bc8aeca3`
 **Registry Refresh:** This audit inspected the published `main` branch at the baseline commit above. This registry revision follows that inspected commit and records the resulting document versions and paths. The refreshed snapshot includes the executable Python foundation and lifecycle contracts; first-slice source, pairwise article-deduplication, event-matching, evidence, analysis, report and publication-decision contracts; explicit aggregate ownership for evidence locations, analysis inputs/evidence links and report provenance links; deny-by-default authorization boundaries; and privacy/rights provenance gates before provider egress. Document 02 v1.54 includes duplicate repositories in the first-slice test baseline. Document 03 v1.46 and Document 15 v3.3 require exact actor/authorization provenance for duplicate evaluation and decision records. Document 04 v1.35 and Document 16 v3.0 agree that the first executable slice is fixture-driven, while provider-backed analysis is deferred to Stage 8 and remains gated by accepted ADRs and exact rights/privacy/transfer authorization. Document 16 v3.0 records successful Python 3.15 application CI (run 45465238823) and the unresolved dependency reproducibility gap: no lockfile exists, CI still installs via pip from declared version ranges, and the package-manager decision remains pending. GENI-ADR-005 v1.5 records the Project Owner's explicit selection of PostgreSQL as the target relational database. GENI-ADR-005-POC-001 v1.3 is now a PostgreSQL-specific qualification protocol covering approved workload definition, correctness/failure, concurrency, migrations, backup/restore and recovery. It is a test plan, not test evidence or production authorization; ADR-005 remains Proposed until qualification evidence is reviewed and formal acceptance is recorded. ADR-016 remains Proposed. The runtime policy is now CPython 3.15 only; `.python-version`, package metadata, Ruff/mypy targets, and application CI are aligned to that target. The Python 3.12/3.13 CI matrix is historical and has been superseded. The snapshot is repository-only; it does not claim local Working Tree inspection. The successful Python 3.15 application CI run is explicitly recorded as run 45465238823; this does not imply full product or operational readiness. Publication and validator presence do not constitute formal architecture approval, implementation, legal compliance, or operational verification.
 
 This refresh was performed directly against the published GitHub `main` branch. Document 17 v1.4 now records the Python 3.15-only runtime, uv 0.13.9, committed `uv.lock`, and setuptools 84.2.1. Document 04 v1.36 and Document 16 v3.2 record the same selected package-management baseline and locked CI process, and explicitly distinguish selected project tooling from pending architecture decisions. The PostgreSQL target direction is owner-selected, while production qualification, exact driver/ORM/migration/async choices, and other capability-dependent architecture decisions remain pending their ADR and evidence gates. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
@@ -501,5 +501,7 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v4.4):** Records that Article.rights_status is non-authoritative and cannot grant operation permission; exact current RightsAssessment references remain mandatory for restricted operations. Refreshes Document 16 and the inspected main-branch baseline.
 
 **Revision Note (v4.5):** Records the fail-closed, operation- and content-scope-specific content-rights persistence gate in Document 17 v2.2 and the corresponding readiness limitations in Document 16 v4.2. The gate is a pure domain policy only; it does not verify legal sufficiency, enforce retention deadlines, persist assessments, propagate revocation, delete content, or authorize provider egress. GENI-ADR-013 remains Proposed.
+
+**Revision Note (v4.6):** Refreshes the inspected baseline after aligning the controlled revision footers for Documents 16 and 17 with their headers. No decision status or production authorization is changed.
 
 **End of Document**
