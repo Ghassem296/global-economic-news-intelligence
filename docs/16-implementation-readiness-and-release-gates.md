@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 3.2  
+**Version:** 3.3  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-24  
+**Last Updated:** 2026-11-26  
 **Baseline:** Published `main` snapshot reviewed on 2026-11-24
 
 ---
@@ -79,7 +79,7 @@ The following decisions affect the architecture or invariants of the first slice
 
 - **GENI-ADR-001 and 002:** event-centric architecture and the separation of article deduplication from event matching.
 - **GENI-ADR-005:** persistence technology and migration strategy, after the workload/backup/concurrency proof-of-concept.
-- **GENI-ADR-006 and 007:** provider-independent LLM execution and deterministic workflow boundaries.
+- **GENI-ADR-007:** deterministic workflow boundaries. GENI-ADR-006 is capability-dependent because the first slice makes no provider or LLM call.
 - **GENI-ADR-008:** evidence provenance and uncertainty representation.
 - **GENI-ADR-011:** event identity and matching lifecycle.
 
@@ -90,7 +90,8 @@ These decisions are required before enabling the corresponding capability:
 | Decision | Required before |
 |---|---|
 | GENI-ADR-003 | Finalizing editorial scope and economic-intelligence prioritization |
-| GENI-ADR-004 | Enabling publication eligibility policy or any publication operation |
+| GENI-ADR-004 | Enabling publication eligibility policy, creating an authoritative PublicationDecision, or any publication operation |
+| GENI-ADR-006 | Enabling provider-backed LLM execution or external LLM transmission; not required for deterministic fixture analysis |
 | GENI-ADR-009 | Selecting and operating near-real-time acquisition mechanisms |
 | GENI-ADR-012 | Enabling semantic retrieval or embedding persistence |
 | GENI-ADR-013 | Accessing, transmitting, retaining, deriving from, or republishing real source content under the relevant rights rules |
@@ -98,7 +99,7 @@ These decisions are required before enabling the corresponding capability:
 | GENI-ADR-015 | Integrating market data or describing market observations as measured |
 | GENI-ADR-016 | Enabling durable asynchronous execution, leases, fencing, idempotency, and recovery |
 | GENI-ADR-017 | Enabling governed LLM budgets, usage accounting, and evaluation policy |
-| GENI-ADR-018 | Enabling multilingual processing or translation |
+| GENI-ADR-018 | Enabling cross-language analytical processing, multilingual model-based classification/matching, or translation; source-language identification and preservation remain baseline metadata requirements |
 | GENI-ADR-019 | Enabling the governed importance/relevance/impact assessment methodology |
 | GENI-ADR-020 | Processing personal data or enabling provider/region-specific privacy authorization |
 
@@ -195,11 +196,11 @@ The slice should prove the core chain:
 6. Attach typed evidence with exact provenance and rights references.
 7. Persist a versioned structured analysis with uncertainty.
 8. Create an immutable Report version with provenance.
-9. Produce a PublicationDecision without performing an external publication.
+9. Stop at the immutable Report version and its provenance. Publication eligibility is outside this slice.
 
-For `NEW_EVENT_CANDIDATE`, persist the proposal only; do not create an Event until the applicable policy and GENI-ADR-011 gate are approved. For `AMBIGUOUS` or `REVIEW_REQUIRED`, preserve the unresolved outcome and do not execute a material ReviewService action until GENI-ADR-014 and its contracts are approved. Analysis and Report in this slice use deterministic fixtures; no LLM or provider call is part of first-slice acceptance.
+For `NEW_EVENT_CANDIDATE`, persist the proposal only; do not create an Event until the applicable policy and GENI-ADR-011 gate are approved. For `AMBIGUOUS` or `REVIEW_REQUIRED`, preserve the unresolved outcome and do not execute a material ReviewService action until GENI-ADR-014 and its contracts are approved. Analysis and Report in this slice use deterministic fixtures; no LLM or provider call is part of first-slice acceptance. Do not create or persist an authoritative `PublicationDecision`, evaluate publication eligibility, create a `PublicationRecord`/`PublicationAttempt`, or dispatch delivery; those capabilities remain disabled until GENI-ADR-004 and all dependent review, rights, authorization, and target contracts are accepted. The `PublicationDecisionRepository` contract in Document 15 is dormant in this slice.
 
-The first slice must not silently expand to production crawling, full-text retention, semantic search, market data, translation, audio/video, user personalization, external publication, or delivery. Each is separately gated.
+The first slice must not silently expand to production crawling, full-text retention, semantic search, market data, cross-language analytical processing, translation, provider-backed LLM execution, publication eligibility, audio/video, user personalization, external publication, or delivery. Source-language identification and preservation of the original-language representation are metadata/provenance requirements, not a claim of multilingual analytical coverage. Each excluded capability is separately gated.
 
 ## 10. Correction policy and limitations
 
@@ -230,14 +231,16 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 3.2
+**Version:** 3.3
 **Status:** Proposed — Readiness assessment; not an architectural approval  
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-26
 
 **Revision Note (v2.8):** Tightened R1 and persistence blockers to require completed GENI-ADR-005-POC-001 evidence and formal ADR-005 acceptance before selecting a production database. Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
 
 **Revision Note (v3.0):** Recorded successful Python 3.15 main-branch Application CI verification and the then-open dependency reproducibility gap.
 
 **Revision Note (v3.1):** Records uv 0.13.9 as the selected package manager, setuptools 84.2.1 as the pinned build backend, the committed Python 3.15 `uv.lock`, and successful locked dependency installation and quality checks. This resolves the package-resolution gap only; database selection, persistence proofs, contracts, security, rights, and vertical-slice gates remain open.
+
+**Revision Note (v3.3):** Makes provider-independent LLM execution capability-dependent rather than a prerequisite for the deterministic first slice; removes authoritative PublicationDecision creation from that slice until ADR-004 is accepted; separates source-language metadata preservation from multilingual analysis/translation gated by ADR-018; and records the corresponding disabled capabilities. No ADR is accepted by this documentation change.
 
 **End of Document**
