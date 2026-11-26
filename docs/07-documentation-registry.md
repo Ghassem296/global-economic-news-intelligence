@@ -478,6 +478,8 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 **Revision Note (v3.4):** Corrects the Document 16 footer metadata to match v3.2 and refreshes the inspected baseline. No architecture approval status is changed.
 
-**Revision Note (v3.5):** Refreshes the ADR inventory to GENI-ADR-005 v1.5 and GENI-ADR-005-POC-001 v1.3; records the Project Owner's PostgreSQL target selection while preserving the Proposed status and production qualification gate. The registry snapshot was refreshed on 2026-11-26.\n\n**Revision Note (v3.5):** Refreshes the ADR inventory and controlled document versions after the Project Owner selected PostgreSQL as the target persistence engine. PostgreSQL remains subject to qualification evidence and formal ADR-005 acceptance; this registry does not imply production readiness.
+**Revision Note (v3.5):** Refreshes the ADR inventory to GENI-ADR-005 v1.5 and GENI-ADR-005-POC-001 v1.3; records the Project Owner's PostgreSQL target selection while preserving the Proposed status and production qualification gate. The registry snapshot was refreshed on 2026-11-26.
+
+**Revision Note (v3.5):** Refreshes the ADR inventory and controlled document versions after the Project Owner selected PostgreSQL as the target persistence engine. PostgreSQL remains subject to qualification evidence and formal ADR-005 acceptance; this registry does not imply production readiness.
 
 **End of Document**
