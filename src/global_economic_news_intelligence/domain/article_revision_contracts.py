@@ -163,6 +163,7 @@ class PersistArticleRevision:
     content_hash: str | None
     content_normalization_version: str | None
     summary: str | None
+    author: str | None
     language: str | None
     published_at: datetime | None
     observed_at: datetime
@@ -182,6 +183,7 @@ class PersistArticleRevision:
             "content_hash",
             "content_normalization_version",
             "summary",
+            "author",
             "language",
         ):
             _optional_text(getattr(self, field_name), field_name)
@@ -240,6 +242,7 @@ class PersistArticleRevision:
             ),
             "normalized_title": self.normalized_title,
             "summary": self.summary,
+            "author": self.author,
             "language": self.language,
             "published_at": _timestamp_for_fingerprint(self.published_at),
             "content_availability": self.content_availability.value,
