@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from types import MappingProxyType
+from typing import cast
 from urllib.parse import urlsplit
 
 type JsonScalar = str | int | bool | None
@@ -57,6 +58,8 @@ def _aware_instant(value: object, field_name: str) -> None:
 
 
 def _http_url(value: object, field_name: str) -> None:
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} must be a non-empty string.")
     _required_text(value, field_name)
     parsed = urlsplit(value)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
@@ -242,6 +245,6 @@ class PersistArticleRevision:
             "content_availability": self.content_availability.value,
             "content_hash": self.content_hash,
             "content_normalization_version": self.content_normalization_version,
-            "metadata": self.metadata if self.metadata is not None else MappingProxyType({}),
+            "metadata": cast(FrozenJson, self.metadata) if self.metadata is not None else MappingProxyType({}),
         }
         return hashlib.sha256(_jcs(manifest).encode("utf-8")).hexdigest()
