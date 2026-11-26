@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.3  
+**Version:** 3.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-26
 
 ---
 
@@ -19,7 +19,11 @@ The notation is language- and database-neutral. Identifiers are opaque domain id
 
 ## 2. Scope and explicit exclusions
 
-The first-slice repository set is:
+The following is the repository-contract inventory for the first slice and adjacent gated capabilities; listing a repository here does not enable its capability. The currently scoped deterministic fixture slice uses SourceRepository for fixture reads, ArticleRepository, ArticleRevisionRepository, DuplicateCandidateRepository, DuplicateDecisionRepository, EventRepository for pre-seeded fixtures only, EventMatchCaseRepository, EventMatchCandidateRepository, EventMatchDecisionRepository, ArticleEventLinkRepository, EvidenceRepository, AnalysisRepository, ReportRepository, and ProcessingRunRepository where run tracking is required.
+
+The following contracts are retained for later gated capabilities and are dormant in the first executable slice: PublicationDecisionRepository, ReviewRepository, and ReviewContextLinkRepository. In particular, the first slice does not create or persist an authoritative PublicationDecision, evaluate publication eligibility, create PublicationRecord/PublicationAttempt, or dispatch delivery. Review repositories may be contract-tested, but no material ReviewService action is enabled.
+
+The complete repository-contract inventory is:
 
 - SourceRepository
 - ArticleRepository
@@ -41,7 +45,12 @@ The first-slice repository set is:
 
 The contracts below define the minimum operations and invariants for those repositories. The first-slice aggregate repositories also own the related link records defined in Documents 02/03: EvidenceRepository owns EvidenceLocation writes; AnalysisRepository owns AnalysisInput and AnalysisEvidenceLink writes; and ReportRepository owns ReportEventLink, ReportEvidenceLink, ReportArticleLink and ReportAnalysisLink writes. These child records must be persisted and queried through the parent aggregate contract and the same UnitOfWork; they are not independent application-level transaction owners. Infrastructure may use private child adapters only when the aggregate repository preserves the atomic boundary. Separate repositories for publication operations/attempts, rights assessments, content access, collection checkpoints, processing steps, idempotency records and execution leases must be specified before their respective capabilities are implemented. Review persistence is included in the target first-slice repository baseline because `REPORT_VERSION` is part of the target review scope; however, inclusion does not enable review execution. ReviewService material actions remain disabled until the review DTO schemas, lifecycle/projection rules, authorization policy, and GENI-ADR-014 approval pass Gate A and the corresponding integration tests pass Gate C.
 
-The baseline excludes:
+The first executable fixture slice additionally excludes:
+- source collection, source-configuration updates, and collection checkpoints; SourceRepository is read-only against synthetic or otherwise authorized fixtures;
+- production SourceArticleIdentity canonicalization; fixture identity is explicitly test-scoped and does not establish a production identity algorithm;
+- authoritative PublicationDecision creation and publication-eligibility evaluation until GENI-ADR-004 and dependent contracts are accepted;
+- material review actions until GENI-ADR-014 and all review contracts/authorization gates are accepted;
+- provider-backed LLM execution and external provider egress until GENI-ADR-006/017/020 and exact rights/privacy gates are accepted;
 - production source acquisition or full-text retention until GENI-ADR-013 is accepted and source-specific operation rights are approved;
 - external LLM transmission until content-rights and privacy-processing authorization are independently satisfied;
 - automatic Event creation until the EventCreationPolicy and authorization owner are approved;
@@ -363,8 +372,8 @@ Before a first-slice milestone is declared complete:
 - Optimistic concurrency has stale-write tests.
 - Idempotency has same-fingerprint replay and different-fingerprint conflict tests.
 - Event matching has case-scoped candidate/decision/link invariant tests.
-- Review tests cover task creation, exact typed subjects, append-only action ordering, idempotency, projection rebuild, authorization, concurrency, context-link access, and all approved transitions; tests must not encode provisional transitions.
-- Publication decision tests prove no external publication side effect occurs.
+- Review lifecycle tests are required only before a later ReviewService capability is enabled; they must cover task creation, exact typed subjects, append-only action ordering, idempotency, projection rebuild, authorization, concurrency, context-link access, and all approved transitions, and must not encode provisional transitions.
+- The first slice creates no PublicationDecision and invokes no publication or delivery operation; tests must prove those boundaries remain disabled.
 - Rights/privacy denial, unknown, expiry, revocation and scope-mismatch tests fail closed.
 - Processing recovery tests prove stale workers cannot commit.
 - End-to-end fixture tests preserve exact ArticleRevision, Evidence, Analysis and Report provenance.
@@ -556,7 +565,7 @@ For each first-slice DTO, define a versioned schema with:
 - Validation and typed failure outcomes.
 - Data classification and permitted logging behavior.
 
-The DTOs required for the first persistence slice include SourceCollectionQuery, UpdateSourceConfiguration, SourceArticleIdentity, article/revision append commands, DuplicateCandidate evaluation, DuplicateDecision append, EventCandidateQuery, CreateEventMatchCase, event candidate evaluation, EventMatchDecision append, ArticleEventLink activation/deactivation, Evidence append, Analysis append, Report version append, and PublicationDecision append. Query DTOs must also define stable ordering, maximum page size, and cursor consistency.
+For the deterministic fixture slice, complete only the DTOs exercised by its enabled operations: fixture-backed Source/Article references and article/revision append commands; pairwise DuplicateCandidate evaluation and DuplicateDecision append; EventCandidateQuery (if candidate retrieval is performed), CreateEventMatchCase, event candidate evaluation, EventMatchDecision append, ArticleEventLink activation/deactivation; Evidence append; deterministic fixture Analysis append; Report version append; and ProcessingRun commands/queries if run tracking is included. Each enabled query must define stable ordering, bounded page size, and cursor consistency. The following are not first-slice DTO requirements and remain deferred: SourceCollectionQuery, UpdateSourceConfiguration, production SourceArticleIdentity canonicalization, PublicationDecision append, material ReviewService commands, and provider-specific request/usage DTOs. A test-scoped fixture identity or deterministic fixture payload must not be promoted to a production canonicalization, analysis methodology, or report-format decision.
 
 #### 10.10.2 Persistence and transaction proof
 
@@ -1125,12 +1134,14 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.3  
+**Version:** 3.4  
 **Status:** Proposed — Pending Project Owner Approval  
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-26
 
 **Revision Note (v2.8):** Tightened provider-backed analysis provenance by requiring each provider request to create an LLMUsageRecord linked to the exact Analysis/ProcessingRun and to preserve privacy, purpose, data-category, region, transfer and content-rights decision references. Added the explicit privacy-processing authorization permission to the PersistAnalysis crosswalk. No provider egress is authorized by this contract.
 
 **Revision Note (v3.3):** Gate B now requires the reproducible GENI-ADR-005-POC-001 evidence protocol, predeclared workload thresholds, complete correctness gates, and an accepted engine decision before persistence adapter selection. Added explicit actor and immutable authorization-reference fields to DuplicateCandidate and DuplicateDecision persistence contracts, and bound each reference to the exact deduplication permission and operation scope. This aligns the data model, security catalogue and first-slice DTOs; no decision policy or ADR status changed.
+
+**Revision Note (v3.4):** Separates the deterministic fixture-slice repository/DTO subset from adjacent dormant contracts. Source collection/configuration, production source identity, PublicationDecision, material review actions, and provider-backed LLM execution are explicitly excluded from first-slice acceptance. The broader contract inventory remains available for later gated capabilities; no ADR is accepted by this revision.
 
 **End of Document**
