@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 2.0  
+**Version:** 2.1  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -52,6 +52,12 @@ This is a payload/fingerprint contract only. It does not choose or execute produ
 The application package now includes `application/article_revision_commands.py` and its unit tests. `PersistArticleRevisionCommand` composes the common `CommandMetadata` envelope with the typed `PersistArticleRevision` payload and an optional target Article ID. The expected aggregate version is carried only by `CommandMetadata`, never duplicated on the command. Create requests have no target Article ID or expected version; updates require both. The envelope keeps application authorization separate from source-content rights-assessment references.
 
 This is an immutable command contract only. It does not implement ArticleRevisionService, idempotency storage, rights evaluation, repositories, UnitOfWork orchestration, or database persistence.
+
+### 3.3 ArticleRevision persistence record and repository port
+
+The domain package now includes the immutable `ArticleRevisionRecord`, which binds server-owned revision identity/number/timestamp to the immutable payload and verifies that the persisted fingerprint and schema version match the recomputed payload fingerprint. The application package includes the technology-neutral `ArticleRevisionRepository` Protocol. Its methods read by ID/current Article, match only the current fingerprint, and append through a caller-owned UnitOfWork; the repository must not commit that UnitOfWork.
+
+The Protocol is an application port, not a PostgreSQL adapter. ArticleRepository, ArticleRevisionService, rights-decision evaluation, concurrency/transaction integration, and concrete persistence remain unimplemented and gated.
 
 ## 4. ProcessingRun lifecycle
 
@@ -252,5 +258,7 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v1.9):** Adds the source-reported author as an immutable revision snapshot and a semantic fingerprint input. Source-specific metadata allowlists and rights decisions remain application-boundary responsibilities.
 
 **Revision Note (v2.0):** Adds the typed application command envelope for ArticleRevision persistence and documents its separation from the common CommandMetadata and rights-assessment references. No service or persistence adapter is implied.
+
+**Revision Note (v2.1):** Adds the immutable ArticleRevisionRecord and the technology-neutral ArticleRevisionRepository Protocol. The port does not select or implement a database adapter and must participate in the caller's UnitOfWork.
 
 **End of Document**
