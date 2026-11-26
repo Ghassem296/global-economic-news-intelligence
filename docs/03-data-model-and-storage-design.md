@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.46
+**Version:** 1.47
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -133,7 +133,7 @@ The Event record is not the authoritative storage location for these assessment 
 
 ### 3.1 Initial Relational Storage
 
-SQLite is a candidate for the initial relational persistence proof-of-concept, not a selected production engine. The comparative workload, correctness/failure matrix, measurement controls, and required evidence artifacts are defined in GENI-ADR-005-POC-001 (`docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`); that protocol contains no benchmark results and selects no engine. The initial engine must be chosen under GENI-ADR-005 after measuring the expected workload, concurrent writers, locking and transaction behavior, backup/restore needs, deployment model, and operational capacity. PostgreSQL remains an alternative for the initial selection if those measurements require it.
+PostgreSQL is the Project Owner-selected target relational engine for GENI, as recorded in GENI-ADR-005 v1.5 on 2026-11-26. SQLite is not an active implementation target. The PostgreSQL qualification workload, correctness/failure matrix, measurement controls, and required evidence artifacts are defined in GENI-ADR-005-POC-001 (`docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`). That protocol is a test plan, not evidence that qualification has passed or that production is authorized. Exact PostgreSQL, driver, query/ORM, migration, async, transaction, and connection-pool versions/settings remain gated by the qualification evidence and formal ADR acceptance.
 
 The selected initial implementation should support:
 
@@ -160,7 +160,7 @@ SQLite concurrency limitations must be documented. Concurrent asynchronous workf
 
 ### 3.2 Future Relational Storage
 
-PostgreSQL is an alternative initial engine as well as a possible future implementation. Whether it is selected initially or introduced later must follow the workload proof-of-concept and formal approval under GENI-ADR-005.
+PostgreSQL is the sole target for the initial relational persistence implementation. Production activation remains gated by the PostgreSQL qualification protocol and formal acceptance of GENI-ADR-005. No SQLite adapter or dual-engine portability promise is in scope.
 
 Possible triggers include:
 
@@ -3262,3 +3262,6 @@ Backups may expire under an approved schedule. A deletion ledger/tombstone must 
 See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 ---
+
+
+**Revision Note (v1.47):** Aligns the persistence strategy with the Project Owner's PostgreSQL target selection recorded in GENI-ADR-005 v1.5. Replaces SQLite-specific initial-storage guidance with PostgreSQL qualification requirements; production activation and exact tooling remain gated by PoC evidence and formal ADR acceptance.
