@@ -338,7 +338,7 @@ Defines the proposed method-level repository contracts, field-level DTO schema t
 **File:** `16-implementation-readiness-and-release-gates.md`  
 **Document ID:** `GENI-READY-016`
 
-Records the implementation-readiness assessment, distinguishes the existing documentation-validation automation from application CI, identifies which decisions are foundational versus capability-dependent, and defines evidence-based gates for enabling first-slice workflows. It preserves unresolved contracts in Document 15 rather than inventing transitions or approving technologies.
+Records the implementation-readiness assessment, distinguishes foundational from capability-dependent ADRs, and defines evidence-based gates. The first deterministic fixture slice ends at the versioned Report: it excludes authoritative publication decisions and publication execution, provider-backed LLM calls, and cross-language analysis/translation. It preserves unresolved contracts in Document 15 rather than inventing transitions or approving technologies.
 
 **Consult this document when:**
 
@@ -367,7 +367,9 @@ Records the first executable Python package baseline and the normative, tested l
 - Implementing or changing domain lifecycle transitions.
 - Reviewing run/step aggregation and recovery semantics.
 - Implementing event matching, review, publication, or delivery state projections.
+- Enforcing safe external-operation cancellation and reconciliation semantics.
 - Checking which capabilities remain disabled pending persistence, authorization, or ADR gates.
+- Confirming that the first slice does not depend on LLM/provider execution or publication eligibility.
 
 **Authority:** Normative lifecycle contract for the initial executable foundation. It does not accept Proposed ADRs or authorize external operations.
 
