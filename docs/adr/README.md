@@ -119,7 +119,7 @@ The following twenty individual ADR documents are committed to the published mai
 | GENI-ADR-002 | Article Deduplication and Event Matching Separation | Published | Proposed | `decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | Published | Proposed | `decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | Published | Proposed | `decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` |
-| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | Published | Proposed — PostgreSQL owner-selected; qualification pending | `decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | Published | Proposed | `decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | Published | Proposed | `decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` |
 | GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | Published | Proposed | `decisions/GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md` |
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | Published | Proposed | `decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` |
