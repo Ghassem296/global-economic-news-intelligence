@@ -142,7 +142,7 @@ def is_rights_assessment_effective(
     ):
         raise ValueError("content_scope_fingerprint must be a lowercase SHA-256 hex digest.")
 
-    if (
+    return not (
         assessment.status is not RightsAssessmentStatus.ALLOWED
         or assessment.source_id != source_id
         or assessment.content_scope_fingerprint != content_scope_fingerprint
@@ -150,9 +150,7 @@ def is_rights_assessment_effective(
         or at < assessment.assessed_at
         or at < assessment.effective_from
         or (assessment.expires_at is not None and at >= assessment.expires_at)
-    ):
-        return False
-    return True
+    )
 
 
 def decide_content_persistence(
