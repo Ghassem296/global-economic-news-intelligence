@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 1.9  
+**Version:** 2.0  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -46,6 +46,12 @@ The initial code creates the package, CLI, validated configuration, safe error p
 The pure domain package now includes `domain/article_revision_contracts.py` and its unit tests. The contract defines the revision-level `ContentAvailability` vocabulary (`available`, `partial`, `metadata-only`, `unavailable`), enforces that metadata-only/unavailable revisions persist no content reference/hash/content-normalization version, validates SHA-256 content hashes for retained full/partial content, and computes a separate versioned semantic `revision_fingerprint`. Fingerprint v1 uses a restricted JCS-safe JSON value set and a fixed semantic manifest; it excludes observation time, content storage location, change reason, and rights-assessment references. The fingerprint is intended for comparison with the current revision only, not for global historical uniqueness. The contract also snapshots the source-reported author and includes it in the fingerprint, validates source identity shape/version, absolute HTTP(S) URLs, millisecond-precision timezone-aware timestamps, unique immutable rights-assessment references, and deeply immutable JCS-safe metadata.
 
 This is a payload/fingerprint contract only. It does not choose or execute production source-identity canonicalization, decide whether a rights assessment allows an operation, manage retention expiry/deletion or rights revocation, or persist an Article/ArticleRevision aggregate. The source adapter must provide the versioned source identity and only permission-filtered semantic metadata; the application/repository layer must compare the computed fingerprint with the current revision under optimistic concurrency. A null content hash is expected for metadata-only/unavailable revisions and is never used as an idempotency key.
+
+### 3.2 ArticleRevision application command envelope
+
+The application package now includes `application/article_revision_commands.py` and its unit tests. `PersistArticleRevisionCommand` composes the common `CommandMetadata` envelope with the typed `PersistArticleRevision` payload and an optional target Article ID. The expected aggregate version is carried only by `CommandMetadata`, never duplicated on the command. Create requests have no target Article ID or expected version; updates require both. The envelope keeps application authorization separate from source-content rights-assessment references.
+
+This is an immutable command contract only. It does not implement ArticleRevisionService, idempotency storage, rights evaluation, repositories, UnitOfWork orchestration, or database persistence.
 
 ## 4. ProcessingRun lifecycle
 
@@ -244,5 +250,7 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v1.8):** Adds the deterministic ArticleRevision fingerprint v1 contract and makes persisted content hashes unavailable to metadata-only/unavailable revisions. The contract remains a pure domain component and does not implement source rights enforcement, retention deletion, repositories, or PostgreSQL persistence.
 
 **Revision Note (v1.9):** Adds the source-reported author as an immutable revision snapshot and a semantic fingerprint input. Source-specific metadata allowlists and rights decisions remain application-boundary responsibilities.
+
+**Revision Note (v2.0):** Adds the typed application command envelope for ArticleRevision persistence and documents its separation from the common CommandMetadata and rights-assessment references. No service or persistence adapter is implied.
 
 **End of Document**
