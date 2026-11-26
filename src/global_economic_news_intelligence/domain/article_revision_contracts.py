@@ -245,6 +245,10 @@ class PersistArticleRevision:
             "content_availability": self.content_availability.value,
             "content_hash": self.content_hash,
             "content_normalization_version": self.content_normalization_version,
-            "metadata": cast(FrozenJson, self.metadata) if self.metadata is not None else MappingProxyType({}),
+            "metadata": (
+                cast(FrozenJson, self.metadata)
+                if self.metadata is not None
+                else MappingProxyType({})
+            ),
         }
         return hashlib.sha256(_jcs(manifest).encode("utf-8")).hexdigest()
