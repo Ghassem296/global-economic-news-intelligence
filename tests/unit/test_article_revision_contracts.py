@@ -17,7 +17,7 @@ NOW = datetime(2026, 11, 26, 10, 0, tzinfo=UTC)
 def revision(**overrides: object) -> PersistArticleRevision:
     values: dict[str, object] = {
         "source_id": "source-1",
-        "source_article_identity": SourceArticleIdentity("publisher:item:123", "source-identity-v1"),
+        "source_article_identity": SourceArticleIdentity(\n            "publisher:item:123", "source-identity-v1"\n        ),
         "original_url": "https://example.com/news/123",
         "external_id": "123",
         "normalized_title": "Central bank keeps rates unchanged",
