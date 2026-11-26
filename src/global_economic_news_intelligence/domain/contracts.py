@@ -61,6 +61,8 @@ class Page[T]:
     next_cursor: str | None = None
 
     def __post_init__(self) -> None:
+        if not isinstance(self.items, tuple):
+            raise TypeError("items must be an immutable tuple.")
         if self.next_cursor is not None and not self.next_cursor.strip():
             raise ValueError("next_cursor must be non-empty when supplied.")
 
