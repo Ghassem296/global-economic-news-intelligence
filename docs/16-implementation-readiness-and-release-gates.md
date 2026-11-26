@@ -111,7 +111,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 
 ### 5.1 Field-level DTO and command schemas
 
-Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.45 now requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope.
+Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.47 now requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope.
 For every actual provider request, Document 15 v3.4 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
 Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5, 10.15.4 and 10.16.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, duplicate-pair canonicalization and score/decision calibration, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
@@ -231,7 +231,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 3.3
+**Version:** 3.4
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-26
 
@@ -241,6 +241,8 @@ If new evidence changes readiness, update this document and the affected source-
 
 **Revision Note (v3.1):** Records uv 0.13.9 as the selected package manager, setuptools 84.2.1 as the pinned build backend, the committed Python 3.15 `uv.lock`, and successful locked dependency installation and quality checks. This resolves the package-resolution gap only; database selection, persistence proofs, contracts, security, rights, and vertical-slice gates remain open.
 
-**Revision Note (v3.3):** Makes provider-independent LLM execution capability-dependent rather than a prerequisite for the deterministic first slice; removes authoritative PublicationDecision creation from that slice until ADR-004 is accepted; separates source-language metadata preservation from multilingual analysis/translation gated by ADR-018; and records the corresponding disabled capabilities. No ADR is accepted by this documentation change.\n\n**Revision Note (v3.4):** Aligns the persistence readiness gate with the Project Owner-selected PostgreSQL target. PostgreSQL qualification and formal ADR-005 acceptance remain mandatory before production activation.
+**Revision Note (v3.3):** Makes provider-independent LLM execution capability-dependent rather than a prerequisite for the deterministic first slice; removes authoritative PublicationDecision creation from that slice until ADR-004 is accepted; separates source-language metadata preservation from multilingual analysis/translation gated by ADR-018; and records the corresponding disabled capabilities. No ADR is accepted by this documentation change.
+
+**Revision Note (v3.4):** Aligns the persistence readiness gate with the Project Owner-selected PostgreSQL target. PostgreSQL qualification and formal ADR-005 acceptance remain mandatory before production activation.
 
 **End of Document**
