@@ -228,6 +228,35 @@ class PersistArticleRevision:
         object.__setattr__(self, "metadata", _freeze_metadata(self.metadata))
 
 
+    @property
+    def revision_fingerprint(self) -> str:
+        """SHA-256 identity for the semantic revision, not for retained article text."""
+
+        manifest: dict[str, FrozenJson] = {
+            "schema_version": ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+            "source_id": self.source_id,
+            "canonical_source_identifier": (
+                self.source_article_identity.canonical_source_identifier
+            ),
+            "source_identity_normalization_version": (
+                self.source_article_identity.normalization_version
+            ),
+            "normalized_title": self.normalized_title,
+            "summary": self.summary,
+            "author": self.author,
+            "language": self.language,
+            "published_at": _timestamp_for_fingerprint(self.published_at),
+            "content_availability": self.content_availability.value,
+            "content_hash": self.content_hash,
+            "content_normalization_version": self.content_normalization_version,
+            "metadata": (
+                cast(FrozenJson, self.metadata)
+                if self.metadata is not None
+                else MappingProxyType({})
+            ),
+        }
+        return hashlib.sha256(_jcs(manifest).encode("utf-8")).hexdigest()
+
 @dataclass(frozen=True, slots=True)
 class ArticleRevisionRecord:
     """Server-owned immutable persistence record for one ArticleRevision."""
@@ -268,31 +297,3 @@ class ArticleRevisionRecord:
             raise ValueError("Unsupported revision_fingerprint_schema_version.")
         _aware_instant(self.created_at, "created_at")
 
-    @property
-    def revision_fingerprint(self) -> str:
-        """SHA-256 identity for the semantic revision, not for retained article text."""
-
-        manifest: dict[str, FrozenJson] = {
-            "schema_version": ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
-            "source_id": self.source_id,
-            "canonical_source_identifier": (
-                self.source_article_identity.canonical_source_identifier
-            ),
-            "source_identity_normalization_version": (
-                self.source_article_identity.normalization_version
-            ),
-            "normalized_title": self.normalized_title,
-            "summary": self.summary,
-            "author": self.author,
-            "language": self.language,
-            "published_at": _timestamp_for_fingerprint(self.published_at),
-            "content_availability": self.content_availability.value,
-            "content_hash": self.content_hash,
-            "content_normalization_version": self.content_normalization_version,
-            "metadata": (
-                cast(FrozenJson, self.metadata)
-                if self.metadata is not None
-                else MappingProxyType({})
-            ),
-        }
-        return hashlib.sha256(_jcs(manifest).encode("utf-8")).hexdigest()
