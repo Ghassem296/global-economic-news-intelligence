@@ -151,7 +151,7 @@ def validate_first_slice_duplicate_contract_alignment() -> None:
         "readiness": (
             "Evaluate duplicate candidates and record an explicit immutable decision.",
             "through deduplication, event matching",
-            "Document 15 v3.3",
+            f"Document 15 v{document_version(ROOT / \"docs/15-first-slice-implementation-contracts.md\")}",
             "Document 08 v1.9",
         ),
         "adr": (
