@@ -9,6 +9,7 @@ from global_economic_news_intelligence.domain.contracts import (
     CommitResult,
     CommitStatus,
     Page,
+    PageRequest,
     UnitOfWork,
     UnitOfWorkFactory,
 )
@@ -21,7 +22,8 @@ def valid_metadata(**overrides: object) -> CommandMetadata:
         "actor_reference": "actor-1",
         "authorization_reference": "auth-1",
         "correlation_id": "corr-1",
-        "idempotency_key": "scope:key-1",
+        "idempotency_scope": "article.revision.append",
+        "idempotency_key": "key-1",
     }
     values.update(overrides)
     return CommandMetadata(**values)  # type: ignore[arg-type]
@@ -107,3 +109,18 @@ def test_unit_of_work_contract_is_structurally_implementable() -> None:
     assert transaction.commit().status is CommitStatus.COMMITTED
     assert isinstance(transaction, FakeUnitOfWork)
     assert transaction.committed
+
+
+def test_page_request_requires_positive_integer_limit() -> None:
+    assert PageRequest(limit=25, cursor="opaque").limit == 25
+    with pytest.raises(ValueError, match="positive integer"):
+        PageRequest(limit=0)
+    with pytest.raises(ValueError, match="positive integer"):
+        PageRequest(limit=-1)
+    with pytest.raises(ValueError, match="positive integer"):
+        PageRequest(limit=True)  # type: ignore[arg-type]
+
+
+def test_page_request_rejects_empty_cursor() -> None:
+    with pytest.raises(ValueError, match="cursor"):
+        PageRequest(limit=10, cursor=" ")
