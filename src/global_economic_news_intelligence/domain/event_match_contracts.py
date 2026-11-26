@@ -10,18 +10,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from enum import StrEnum
+import math
 from types import MappingProxyType
 
-
-class EventMatchOutcome(StrEnum):
-    """Closed decision outcomes defined by GENI-IMPL-015."""
-
-    MATCH = "MATCH"
-    NEW_EVENT_CANDIDATE = "NEW_EVENT_CANDIDATE"
-    NO_MATCH = "NO_MATCH"
-    AMBIGUOUS = "AMBIGUOUS"
-    REVIEW_REQUIRED = "REVIEW_REQUIRED"
+from global_economic_news_intelligence.domain.workflows.lifecycle import EventMatchOutcome
 
 
 def _required_text(value: object, field_name: str) -> None:
@@ -41,15 +33,31 @@ def _aware_instant(value: object, field_name: str) -> None:
         raise ValueError(f"{field_name} must be a timezone-aware datetime.")
 
 
+def _freeze_json(value: object, field_name: str) -> object:
+    if value is None or isinstance(value, (str, bool, int)):
+        return value
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError(f"{field_name} cannot contain a non-finite number.")
+        return value
+    if isinstance(value, Mapping):
+        frozen: dict[str, object] = {}
+        for key, item in value.items():
+            _required_text(key, f"{field_name} key")
+            frozen[key] = _freeze_json(item, field_name)
+        return MappingProxyType(frozen)
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_json(item, field_name) for item in value)
+    raise TypeError(f"{field_name} must contain JSON-compatible values.")
+
+
 def _metadata(value: Mapping[str, object] | None) -> Mapping[str, object] | None:
     if value is None:
         return None
-    if not isinstance(value, Mapping):
+    frozen = _freeze_json(value, "metadata")
+    if not isinstance(frozen, Mapping):
         raise TypeError("metadata must be a mapping.")
-    copied = dict(value)
-    for key in copied:
-        _required_text(key, "metadata key")
-    return MappingProxyType(copied)
+    return frozen
 
 
 @dataclass(frozen=True, slots=True)
