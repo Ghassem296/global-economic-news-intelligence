@@ -1139,7 +1139,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.4  
+**Version:** 3.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
@@ -1148,5 +1148,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v3.3):** Gate B now requires the reproducible GENI-ADR-005-POC-001 evidence protocol, predeclared workload thresholds, complete correctness gates, and an accepted engine decision before persistence adapter selection. Added explicit actor and immutable authorization-reference fields to DuplicateCandidate and DuplicateDecision persistence contracts, and bound each reference to the exact deduplication permission and operation scope. This aligns the data model, security catalogue and first-slice DTOs; no decision policy or ADR status changed.
 
 **Revision Note (v3.4):** Separates the deterministic fixture-slice repository/DTO subset from adjacent dormant contracts. Source collection/configuration, production source identity, PublicationDecision, material review actions, and provider-backed LLM execution are explicitly excluded from first-slice acceptance. The broader contract inventory remains available for later gated capabilities; no ADR is accepted by this revision.
+
+**Revision Note (v3.5):** Records the Project Owner-selected source-aware mixed content-retention direction, adds revision-level content-availability states, and makes the content-reference invariant explicit. It also identifies the unresolved metadata-only revision idempotency fingerprint and content-hash semantics as blockers; no repository implementation or source-specific content permission is implied.
 
 **End of Document**
