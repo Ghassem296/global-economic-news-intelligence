@@ -47,6 +47,7 @@ def test_command_metadata_accepts_complete_trusted_context() -> None:
         "actor_reference",
         "authorization_reference",
         "correlation_id",
+        "idempotency_scope",
         "idempotency_key",
     ),
 )
@@ -65,6 +66,8 @@ def test_command_metadata_rejects_empty_optional_references() -> None:
 def test_command_metadata_requires_timezone_aware_deadline() -> None:
     with pytest.raises(ValueError, match="timezone-aware"):
         valid_metadata(deadline=datetime(2026, 11, 26, 12, 0))
+    with pytest.raises(ValueError, match="timezone-aware"):
+        valid_metadata(deadline="not-a-datetime")
 
 
 def test_page_preserves_order_and_optional_cursor() -> None:
@@ -78,9 +81,11 @@ def test_page_rejects_mutable_items() -> None:
         Page(items=["mutable"])  # type: ignore[arg-type]
 
 
-def test_page_rejects_empty_cursor() -> None:
+def test_page_rejects_empty_or_non_string_cursor() -> None:
     with pytest.raises(ValueError, match="next_cursor"):
         Page(items=(), next_cursor=" ")
+    with pytest.raises(ValueError, match="next_cursor"):
+        Page(items=(), next_cursor=123)  # type: ignore[arg-type]
 
 
 def test_commit_result_is_explicit() -> None:
@@ -123,6 +128,8 @@ def test_page_request_requires_positive_integer_limit() -> None:
         PageRequest(limit=1.5)  # type: ignore[arg-type]
 
 
-def test_page_request_rejects_empty_cursor() -> None:
+def test_page_request_rejects_empty_or_non_string_cursor() -> None:
     with pytest.raises(ValueError, match="cursor"):
         PageRequest(limit=10, cursor=" ")
+    with pytest.raises(ValueError, match="cursor"):
+        PageRequest(limit=10, cursor=123)  # type: ignore[arg-type]
