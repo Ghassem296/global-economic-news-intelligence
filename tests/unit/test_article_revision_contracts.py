@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import pytest
 
 from global_economic_news_intelligence.domain.article_revision_contracts import (
+    ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
     ContentAvailability,
     PersistArticleRevision,
     SourceArticleIdentity,
@@ -12,6 +13,7 @@ from global_economic_news_intelligence.domain.article_revision_contracts import 
 
 
 NOW = datetime(2026, 11, 26, 10, 0, tzinfo=UTC)
+CONTENT_HASH = "a" * 64
 
 
 def revision(**overrides: object) -> PersistArticleRevision:
@@ -25,7 +27,7 @@ def revision(**overrides: object) -> PersistArticleRevision:
         "normalized_title": "Central bank keeps rates unchanged",
         "content_availability": ContentAvailability.AVAILABLE,
         "content_reference": "content://article/revision-1",
-        "content_hash": "sha256:fingerprint",
+        "content_hash": CONTENT_HASH,
         "content_normalization_version": "normalization-v1",
         "summary": None,
         "language": "en",
@@ -45,7 +47,7 @@ def revision(**overrides: object) -> PersistArticleRevision:
         (ContentAvailability.PARTIAL, "content://permitted-extract"),
     ],
 )
-def test_content_backed_revision_requires_reference_and_fingerprint(
+def test_content_backed_revision_requires_reference_and_sha256(
     availability: ContentAvailability, reference: str
 ) -> None:
     result = revision(
@@ -59,7 +61,7 @@ def test_content_backed_revision_requires_reference_and_fingerprint(
     "availability",
     [ContentAvailability.METADATA_ONLY, ContentAvailability.UNAVAILABLE],
 )
-def test_metadata_only_and_unavailable_revisions_have_no_content_reference(
+def test_non_content_revision_has_no_content_reference_or_content_hash(
     availability: ContentAvailability,
 ) -> None:
     result = revision(
@@ -70,14 +72,23 @@ def test_metadata_only_and_unavailable_revisions_have_no_content_reference(
     )
     assert result.content_reference is None
     assert result.content_hash is None
+    assert result.content_normalization_version is None
 
 
-def test_metadata_only_revision_may_keep_a_permitted_transient_content_fingerprint() -> None:
-    result = revision(
-        content_availability=ContentAvailability.METADATA_ONLY,
-        content_reference=None,
-    )
-    assert result.content_hash == "sha256:fingerprint"
+def test_metadata_only_revision_rejects_persisted_content_fingerprint() -> None:
+    with pytest.raises(ValueError, match="must not persist"):
+        revision(
+            content_availability=ContentAvailability.METADATA_ONLY,
+            content_reference=None,
+        )
+
+
+def test_unavailable_revision_rejects_persisted_content_fingerprint() -> None:
+    with pytest.raises(ValueError, match="must not persist"):
+        revision(
+            content_availability=ContentAvailability.UNAVAILABLE,
+            content_reference=None,
+        )
 
 
 def test_available_or_partial_revision_requires_all_content_fields() -> None:
@@ -88,28 +99,33 @@ def test_available_or_partial_revision_requires_all_content_fields() -> None:
 
 
 def test_metadata_only_or_unavailable_rejects_persistent_content_reference() -> None:
-    with pytest.raises(ValueError, match="must not have content_reference"):
+    with pytest.raises(ValueError, match="must not persist"):
         revision(
             content_availability=ContentAvailability.METADATA_ONLY,
             content_reference="content://not-permitted",
         )
 
 
+def test_content_hash_must_be_lowercase_sha256_hex() -> None:
+    with pytest.raises(ValueError, match="64-character lowercase SHA-256"):
+        revision(content_hash="sha256:fingerprint")
+    with pytest.raises(ValueError, match="64-character lowercase SHA-256"):
+        revision(content_hash="A" * 64)
+
+
 def test_hash_and_normalization_version_must_be_supplied_together() -> None:
-    with pytest.raises(ValueError, match="must be supplied together"):
-        revision(
-            content_availability=ContentAvailability.METADATA_ONLY,
-            content_reference=None,
-            content_normalization_version=None,
-        )
+    with pytest.raises(ValueError, match="requires content_reference"):
+        revision(content_normalization_version=None)
 
 
-def test_source_identity_is_source_scoped_and_does_not_guess_canonicalization() -> None:
+def test_source_identity_is_source_scoped_and_versioned() -> None:
     identity = SourceArticleIdentity("provider:opaque-id:ABC", "source-id-v2")
     assert identity.canonical_source_identifier == "provider:opaque-id:ABC"
     assert identity.normalization_version == "source-id-v2"
     with pytest.raises(ValueError, match="canonical_source_identifier"):
         SourceArticleIdentity(" ", "source-id-v1")
+    with pytest.raises(ValueError, match="normalization_version"):
+        SourceArticleIdentity("provider:id", " ")
 
 
 @pytest.mark.parametrize(
@@ -128,11 +144,56 @@ def test_observation_and_publication_times_must_be_timezone_aware() -> None:
         revision(published_at=datetime(2026, 11, 26, 10, 0))
 
 
-def test_rights_assessment_references_are_immutable_and_unique() -> None:
-    with pytest.raises(TypeError, match="immutable tuple"):
-        revision(rights_assessment_references=["rights-1"])  # type: ignore[arg-type]
-    with pytest.raises(ValueError, match="duplicates"):
-        revision(rights_assessment_references=("rights-1", "rights-1"))
+def test_fingerprint_is_stable_across_observation_storage_and_rights_metadata() -> None:
+    first = revision(
+        content_reference="content://first-location",
+        observed_at=NOW,
+        change_reason="INITIAL_COLLECTION",
+        rights_assessment_references=("rights-v1",),
+    )
+    second = revision(
+        content_reference="content://moved-location",
+        observed_at=datetime(2026, 11, 26, 11, 0, tzinfo=UTC),
+        change_reason="RECOLLECTION",
+        rights_assessment_references=("rights-v2",),
+    )
+    assert first.revision_fingerprint == second.revision_fingerprint
+
+
+def test_metadata_only_revision_fingerprint_tracks_permitted_metadata() -> None:
+    first = revision(
+        content_availability=ContentAvailability.METADATA_ONLY,
+        content_reference=None,
+        content_hash=None,
+        content_normalization_version=None,
+        metadata={"publisher_section": "economy", "author": "A. Writer"},
+    )
+    changed = revision(
+        content_availability=ContentAvailability.METADATA_ONLY,
+        content_reference=None,
+        content_hash=None,
+        content_normalization_version=None,
+        metadata={"publisher_section": "economy", "author": "B. Writer"},
+    )
+    assert first.revision_fingerprint != changed.revision_fingerprint
+    assert len(first.revision_fingerprint) == 64
+
+
+def test_revision_fingerprint_ignores_metadata_key_order_and_uses_versioned_schema() -> None:
+    first = revision(metadata={"b": "two", "a": "one"})
+    second = revision(metadata={"a": "one", "b": "two"})
+    assert first.revision_fingerprint == second.revision_fingerprint
+    assert ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION == "article-revision-fingerprint-v1"
+
+
+def test_fingerprint_uses_utc_millisecond_timestamp_precision() -> None:
+    utc_revision = revision(published_at=datetime(2026, 11, 26, 10, 0, tzinfo=UTC))
+    equivalent_offset = revision(
+        published_at=datetime.fromisoformat("2026-11-26T13:30:00+03:30")
+    )
+    assert utc_revision.revision_fingerprint == equivalent_offset.revision_fingerprint
+    with pytest.raises(ValueError, match="millisecond precision"):
+        revision(published_at=datetime(2026, 11, 26, 10, 0, 0, 1, tzinfo=UTC))
 
 
 def test_revision_metadata_is_deeply_immutable() -> None:
@@ -145,6 +206,10 @@ def test_revision_metadata_is_deeply_immutable() -> None:
         item.metadata["new"] = "value"  # type: ignore[index]
 
 
-def test_revision_rejects_non_json_metadata() -> None:
-    with pytest.raises(TypeError, match="JSON-compatible"):
+def test_revision_rejects_non_jcs_metadata_values() -> None:
+    with pytest.raises(TypeError, match="JCS-safe JSON"):
         revision(metadata={"bad": object()})
+    with pytest.raises(TypeError, match="JCS-safe JSON"):
+        revision(metadata={"floating": 1.25})
+    with pytest.raises(ValueError, match="safe range"):
+        revision(metadata={"large_integer": 2**54})
