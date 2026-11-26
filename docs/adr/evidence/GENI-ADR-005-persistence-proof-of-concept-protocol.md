@@ -132,7 +132,7 @@ The completed PoC package must include:
 - Backup/restore and migration logs, including integrity-check output.
 - Deviations, failed runs, fixes, and retest links.
 - Operational runbook drafts and estimated recurring effort/cost with assumptions.
-- Comparative analysis, limitations, and recommendation.
+- Qualification analysis, limitations, and recommendation.
 - Commit SHA and CI evidence for the exact tested revision.
 
 ### 8.1 Results register
