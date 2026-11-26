@@ -81,10 +81,12 @@ class SourceArticleIdentity:
     """Source-scoped canonical identity; the canonicalization algorithm is external."""
 
     canonical_source_identifier: str
+    normalization_version: str
     canonical_url: str | None = None
 
     def __post_init__(self) -> None:
         _required_text(self.canonical_source_identifier, "canonical_source_identifier")
+        _required_text(self.normalization_version, "normalization_version")
         if self.canonical_url is not None:
             _http_url(self.canonical_url, "canonical_url")
 
