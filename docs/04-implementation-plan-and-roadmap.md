@@ -1848,7 +1848,7 @@ Exit criteria require executable tests and operational evidence, not document pr
 **End of Document**
 
 **Document ID:** GENI-PLAN-004
-**Version:** 1.37
+**Version:** 1.38
 **Status:** Draft — Under Architecture Review
 
 
