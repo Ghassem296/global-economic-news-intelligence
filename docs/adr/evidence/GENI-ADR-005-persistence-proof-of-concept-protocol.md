@@ -141,13 +141,13 @@ The completed PoC package must include:
 |---|---|
 | Exact version/configuration | Not run |
 | Workload profile ID | Not established |
-| Correctness matrix | Not run | Not run |
+| Correctness matrix | Not run |
 | Migration/upgrade | Not run |
 | Backup/restore | Not run |
 | Concurrency and async | Not run |
-| Performance results | Not measured | Not measured |
-| Operational assessment | Not assessed | Not assessed |
-| Mandatory gates | Not evaluated | Not evaluated |
+| Performance results | Not measured |
+| Operational assessment | Not assessed |
+| Mandatory gates | Not evaluated |
 
 This register must be updated only from actual retained evidence. Production qualification has not yet passed. “Not run” must never be rewritten as “pass” based on design review or documentation.
 
