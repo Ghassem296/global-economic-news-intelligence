@@ -182,11 +182,10 @@ def decide_content_persistence(
         operation=RightsOperation.PERSISTENT_STORAGE,
         at=at,
     )
-    if not allowed:
+    if not allowed or assessment.policy_version != policy.policy_version:
         return ContentPersistenceOutcome.METADATA_ONLY
 
     if policy.mode in {
-        ContentRetentionMode.TEMPORARY_PROCESSING_ONLY,
         ContentRetentionMode.LIMITED_RETENTION,
         ContentRetentionMode.LICENSED_PERSISTENT_STORAGE,
         ContentRetentionMode.UNRESTRICTED_BY_DOCUMENTED_POLICY,
