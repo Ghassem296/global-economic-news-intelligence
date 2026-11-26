@@ -42,7 +42,8 @@ def _aware_instant(value: object, field_name: str) -> None:
 
 
 def _http_url(value: object, field_name: str) -> None:
-    _required_text(value, field_name)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field_name} must be a non-empty string.")
     parsed = urlsplit(value)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         raise ValueError(f"{field_name} must be an absolute HTTP(S) URL.")
