@@ -267,4 +267,6 @@ The first executable baseline includes the Python package, validated configurati
 
 **Revision Note (v2.1):** Adds the immutable ArticleRevisionRecord and the technology-neutral ArticleRevisionRepository Protocol. The port does not select or implement a database adapter and must participate in the caller's UnitOfWork.
 
+**Revision Note (v2.2):** Adds immutable, operation- and content-scope-specific RightsAssessment contracts and a fail-closed persistent-content eligibility gate aligned to GENI-ADR-013 Alternative C. This pure policy does not verify legal sufficiency, implement retention expiry/deletion, persist assessments, propagate revocation, or authorize external provider processing.
+
 **End of Document**
