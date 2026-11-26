@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -213,7 +213,7 @@ Review states: PENDING, IN_PROGRESS, COMPLETED, CANCELLED.
 
 ## 11. DTO and concurrency invariants added to executable baseline
 
-The initial Python code implements pure transition and projection rules only. Persistence and command DTOs must additionally enforce:
+The Python domain package implements pure transition/projection rules and typed payload contracts for duplicate evaluation/decisions, event matching, ProcessingRun commands, and ArticleRevision persistence input. It does not implement persistence. Repository and application boundaries must additionally enforce:
 
 - Enum values serialize by their exact uppercase symbolic values.
 - State-changing commands carry schema version, actor/service identity, authorization reference, correlation ID, idempotency key, and expected aggregate version where updating an existing aggregate.
@@ -227,7 +227,7 @@ The initial Python code implements pure transition and projection rules only. Pe
 
 ## 12. Implementation boundary
 
-The first executable baseline includes the Python package, validated configuration, safe error primitives, allowlisted structured logging, pure lifecycle policy module, CLI, tests (including domain dependency-boundary enforcement), Ruff, mypy, and application CI. It deliberately does not include a production persistence adapter, external source fetcher, LLM adapter, publication client, or delivery adapter. These remain gated by their corresponding ADRs and evidence in Document 16.
+The first executable baseline includes the Python package, validated configuration, safe error primitives, allowlisted structured logging, pure lifecycle policy and typed payload-contract modules, CLI, tests (including domain dependency-boundary enforcement), Ruff, mypy, and application CI. It deliberately does not include a production persistence adapter, external source fetcher, LLM adapter, publication client, or delivery adapter. These remain gated by their corresponding ADRs and evidence in Document 16.
 
 ---
 
@@ -238,5 +238,7 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v1.5):** Aligns external-operation cancellation with the documented safe-cancellation rule: pending operations may be cancelled with authorization; in-flight operations must first be reconciled; only a proven no-effect outcome permits cancellation from reconciliation. The lifecycle implementation and tests enforce the same rule.
 
 **Revision Note (v1.6):** Adds the source-aware ArticleRevision payload contract and its executable validation tests. The contract enforces revision-level content-availability/reference consistency while leaving source canonicalization, rights adjudication, metadata-only idempotency and persistence explicitly gated.
+
+**Revision Note (v1.7):** Clarifies that the executable domain baseline includes typed payload contracts as well as pure lifecycle policies; it does not imply repository implementations, application authorization services, or persistence adapters.
 
 **End of Document**
