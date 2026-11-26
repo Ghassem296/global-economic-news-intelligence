@@ -119,6 +119,8 @@ def test_page_request_requires_positive_integer_limit() -> None:
         PageRequest(limit=-1)
     with pytest.raises(ValueError, match="positive integer"):
         PageRequest(limit=True)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="positive integer"):
+        PageRequest(limit=1.5)  # type: ignore[arg-type]
 
 
 def test_page_request_rejects_empty_cursor() -> None:
