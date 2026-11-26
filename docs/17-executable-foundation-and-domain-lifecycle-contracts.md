@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -43,9 +43,9 @@ The initial code creates the package, CLI, validated configuration, safe error p
 
 ### 3.1 ArticleRevision payload contract
 
-The pure domain package now includes `domain/article_revision_contracts.py` and its unit tests. The contract defines the revision-level `ContentAvailability` vocabulary (`available`, `partial`, `metadata-only`, `unavailable`) and validates the conditional relationship between availability, content reference, content hash, and normalization version. It also validates source identity shape, absolute HTTP(S) URLs, timezone-aware observation/publication timestamps, unique immutable rights-assessment references, and deeply immutable JSON metadata.
+The pure domain package now includes `domain/article_revision_contracts.py` and its unit tests. The contract defines the revision-level `ContentAvailability` vocabulary (`available`, `partial`, `metadata-only`, `unavailable`), enforces that metadata-only/unavailable revisions persist no content reference/hash/content-normalization version, validates SHA-256 content hashes for retained full/partial content, and computes a separate versioned semantic `revision_fingerprint`. Fingerprint v1 uses a restricted JCS-safe JSON value set and a fixed semantic manifest; it excludes observation time, content storage location, change reason, and rights-assessment references. The fingerprint is intended for comparison with the current revision only, not for global historical uniqueness. The contract also validates source identity shape/version, absolute HTTP(S) URLs, millisecond-precision timezone-aware timestamps, unique immutable rights-assessment references, and deeply immutable metadata.
 
-This is a payload-shape contract only. It does not canonicalize source identifiers or URLs, decide whether a rights assessment allows an operation, calculate a content fingerprint, establish metadata-only idempotency, manage retention expiry/deletion, or persist an Article/ArticleRevision aggregate. Those responsibilities remain outside the domain payload until their policies and repository contracts are complete. In particular, a null content hash is not a cross-article identity and must never be used as a shared idempotency key.
+This is a payload/fingerprint contract only. It does not choose or execute production source-identity canonicalization, decide whether a rights assessment allows an operation, manage retention expiry/deletion or rights revocation, or persist an Article/ArticleRevision aggregate. The source adapter must provide the versioned source identity and only permission-filtered semantic metadata; the application/repository layer must compare the computed fingerprint with the current revision under optimistic concurrency. A null content hash is expected for metadata-only/unavailable revisions and is never used as an idempotency key.
 
 ## 4. ProcessingRun lifecycle
 
@@ -240,5 +240,7 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v1.6):** Adds the source-aware ArticleRevision payload contract and its executable validation tests. The contract enforces revision-level content-availability/reference consistency while leaving source canonicalization, rights adjudication, metadata-only idempotency and persistence explicitly gated.
 
 **Revision Note (v1.7):** Clarifies that the executable domain baseline includes typed payload contracts as well as pure lifecycle policies; it does not imply repository implementations, application authorization services, or persistence adapters.
+
+**Revision Note (v1.8):** Adds the deterministic ArticleRevision fingerprint v1 contract and makes persisted content hashes unavailable to metadata-only/unavailable revisions. The contract remains a pure domain component and does not implement source rights enforcement, retention deletion, repositories, or PostgreSQL persistence.
 
 **End of Document**
