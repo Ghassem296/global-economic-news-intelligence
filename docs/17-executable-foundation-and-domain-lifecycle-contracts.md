@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -40,6 +40,12 @@ The initial package root is src/global_economic_news_intelligence.
 - Integration and end-to-end tests must use controlled fixtures and must not access production sources by default.
 
 The initial code creates the package, CLI, validated configuration, safe error primitives, scalar-allowlisted structured logging, pure workflow lifecycle policies, and an automated test that prevents infrastructure/provider dependencies from entering the domain layer. Directories for future capabilities are created when an implemented use case requires them.
+
+### 3.1 ArticleRevision payload contract
+
+The pure domain package now includes `domain/article_revision_contracts.py` and its unit tests. The contract defines the revision-level `ContentAvailability` vocabulary (`available`, `partial`, `metadata-only`, `unavailable`) and validates the conditional relationship between availability, content reference, content hash, and normalization version. It also validates source identity shape, absolute HTTP(S) URLs, timezone-aware observation/publication timestamps, unique immutable rights-assessment references, and deeply immutable JSON metadata.
+
+This is a payload-shape contract only. It does not canonicalize source identifiers or URLs, decide whether a rights assessment allows an operation, calculate a content fingerprint, establish metadata-only idempotency, manage retention expiry/deletion, or persist an Article/ArticleRevision aggregate. Those responsibilities remain outside the domain payload until their policies and repository contracts are complete. In particular, a null content hash is not a cross-article identity and must never be used as a shared idempotency key.
 
 ## 4. ProcessingRun lifecycle
 
@@ -230,5 +236,7 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v1.4):** Adds the selected, pinned uv package manager, committed dependency lockfile, and exact setuptools build-backend version to the executable foundation baseline. No database, LLM, acquisition, publication, or deployment decision is implied.
 
 **Revision Note (v1.5):** Aligns external-operation cancellation with the documented safe-cancellation rule: pending operations may be cancelled with authorization; in-flight operations must first be reconciled; only a proven no-effect outcome permits cancellation from reconciliation. The lifecycle implementation and tests enforce the same rule.
+
+**Revision Note (v1.6):** Adds the source-aware ArticleRevision payload contract and its executable validation tests. The contract enforces revision-level content-availability/reference consistency while leaving source canonicalization, rights adjudication, metadata-only idempotency and persistence explicitly gated.
 
 **End of Document**
