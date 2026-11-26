@@ -206,7 +206,6 @@ EXTERNAL_OPERATION_TRANSITIONS: Final[
             ExternalOperationStatus.SUCCEEDED,
             ExternalOperationStatus.DELIVERED,
             ExternalOperationStatus.FAILED,
-            ExternalOperationStatus.CANCELLED,
             ExternalOperationStatus.RECONCILIATION_REQUIRED,
         }
     ),
@@ -216,6 +215,7 @@ EXTERNAL_OPERATION_TRANSITIONS: Final[
             ExternalOperationStatus.DELIVERED,
             ExternalOperationStatus.PENDING,
             ExternalOperationStatus.FAILED,
+            ExternalOperationStatus.CANCELLED,
         }
     ),
     ExternalOperationStatus.FAILED: frozenset(),
@@ -368,6 +368,40 @@ def validate_decision_successor(
             "A decision must supersede the current effective decision; "
             "concurrent branches are not permitted."
         )
+
+
+def cancel_external_operation(
+    current: ExternalOperationStatus,
+    *,
+    cancellation_authorized: bool,
+    external_outcome_reconciled: bool = False,
+) -> ExternalOperationStatus:
+    """Cancel before execution or after evidence proves that no external effect occurred."""
+    if not cancellation_authorized:
+        raise TransitionError("External-operation cancellation requires explicit authorization.")
+    if current is ExternalOperationStatus.PENDING:
+        return _transition(
+            current,
+            ExternalOperationStatus.CANCELLED,
+            EXTERNAL_OPERATION_TRANSITIONS,
+            context="ExternalOperation",
+        )
+    if current is ExternalOperationStatus.RECONCILIATION_REQUIRED:
+        if not external_outcome_reconciled:
+            raise TransitionError(
+                "An uncertain external outcome must be reconciled before cancellation."
+            )
+        return _transition(
+            current,
+            ExternalOperationStatus.CANCELLED,
+            EXTERNAL_OPERATION_TRANSITIONS,
+            context="ExternalOperation",
+        )
+    if current is ExternalOperationStatus.IN_PROGRESS:
+        raise TransitionError(
+            "An in-flight operation must enter reconciliation before it can be cancelled."
+        )
+    raise TransitionError("Only a pending or reconciled operation can be cancelled.")
 
 
 @dataclass(frozen=True, slots=True)
