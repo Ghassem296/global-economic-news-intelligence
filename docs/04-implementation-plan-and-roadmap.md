@@ -159,22 +159,19 @@ The project runtime baseline is CPython 3.15 only. `.python-version`, package me
 
 ### 4.2 Database Considerations
 
-The PostgreSQL qualification protocol is GENI-ADR-005-POC-001 (`docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`). It requires an approved workload profile, thresholds declared before results are examined, mandatory correctness/failure tests, reproducible raw evidence, migration and backup/restore proof, and formal ADR-005 acceptance. The Project Owner has selected PostgreSQL as the target; the protocol is a test plan, not a test result or production authorization.
+The PostgreSQL qualification protocol is GENI-ADR-005-POC-001. It requires an approved workload profile, thresholds declared before results are examined, mandatory correctness/failure tests, reproducible raw evidence, migration and backup/restore proof, and formal ADR-005 acceptance. The Project Owner has selected PostgreSQL as the target; the protocol is a test plan, not a test result or production authorization.
 
 The PostgreSQL implementation must explicitly address:
+- Foreign-key and relational integrity enforcement.
+- Transaction boundaries and isolation.
+- Row/advisory locking, deadlock handling, and optimistic concurrency.
+- Connection-pool sizing, lifecycle, limits, and timeouts.
+- Async access, cancellation, and connection cleanup.
+- Backup consistency, restore verification, and recovery procedures.
+- Versioned migration testing and appropriate indexes.
+- Durability, checkpoint, and autovacuum configuration.
 
-- Foreign key enforcement.
-- Transaction boundaries.
-- Write concurrency.
-- Busy timeout behavior.
-- WAL suitability and configuration.
-- Async access strategy.
-- Backup consistency.
-- Migration testing.
-
-The system must not assume that SQLite provides the same concurrency characteristics as a client-server database.
-
-PostgreSQL may be selected for the initial deployment if the comparative GENI-ADR-005 proof-of-concept demonstrates that it meets the approved workload and operational constraints better than SQLite, or that SQLite fails a mandatory gate; either candidate may be selected only through formal ADR-005 acceptance. Migration must not be assumed to be automatic merely because repositories are used.
+PostgreSQL is the only target for new persistence implementation. Production activation requires the PostgreSQL-specific correctness, workload, security, migration, backup/restore, recovery, and operational qualification gates plus formal ADR-005 acceptance. Repository boundaries do not imply automatic portability or migration to another engine.
 
 ### 4.3 Development Tools
 
