@@ -349,7 +349,6 @@ The following priorities are a suggested review order based on architectural ris
 | P0 | GENI-ADR-011 | Defines event identity, continuation, merging, and splitting rules. |
 | P0 | GENI-ADR-004 | Establishes publication outcomes and quality gates. |
 | P0 | GENI-ADR-014 | Defines human review, corrections, and withdrawals. |
-| P0 | GENI-ADR-006 | Establishes the shared provider-independent LLM execution boundary. |
 | P0 | GENI-ADR-013 | Addresses content access, retention, licensing, and republication constraints. |
 | P0 | GENI-ADR-020 | Establishes privacy processing authorization, personal-data lineage, processor governance and data-subject rights before production personal-data processing. |
 | P1 | GENI-ADR-008 | Defines evidence provenance and uncertainty representation. |
@@ -360,6 +359,7 @@ The following priorities are a suggested review order based on architectural ris
 | P1 | GENI-ADR-016 | Defines async execution, idempotency, and recovery requirements. |
 | P1 | GENI-ADR-017 | Establishes LLM budgets, usage tracking, and evaluation strategy. |
 | P1 | GENI-ADR-007 | Defines deterministic workflows and selective use of agent reasoning. |
+| P1 | GENI-ADR-006 | Required before provider-backed LLM execution; not a prerequisite for the deterministic fixture slice. |
 | P1 | GENI-ADR-019 | Defines the separate Event Importance, Economic Relevance, and Economic Impact assessment boundaries required by core reporting. |
 | P2 | GENI-ADR-018 | Defines multilingual processing, translation, and language policy. |
 | P2 | GENI-ADR-003 | Formalizes economic-intelligence scope and editorial prioritization. |
