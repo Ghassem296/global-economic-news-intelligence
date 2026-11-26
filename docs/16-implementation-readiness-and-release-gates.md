@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 3.6  
+**Version:** 3.7  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26  
@@ -246,5 +246,7 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v3.4):** Aligns the persistence readiness gate with the Project Owner-selected PostgreSQL target. PostgreSQL qualification and formal ADR-005 acceptance remain mandatory before production activation.
 
 **Revision Note (v3.5):** Records the Project Owner-selected source-aware mixed content-retention direction from GENI-ADR-013 Alternative C and aligns Document 15 v3.6 / Document 03 v1.48. Full or partial text remains gated by current source-specific persistent-storage permission; metadata-only/unavailable revisions remain supported. The ArticleRevision metadata-only idempotency fingerprint and exact hash semantics remain unresolved, so the ArticleRevision repository contract is not yet implementation-ready. ADR-013 remains Proposed and no source license or production content-processing permission is implied.
+
+**Revision Note (v3.7):** Records the versioned ArticleRevision semantic fingerprint and separate retained-content hash contract defined in Document 15 v3.7 / Document 03 v1.49. Metadata-only/unavailable revisions persist no content reference/hash/normalization version; current-revision-only comparison preserves append-only history when content later returns to an earlier state. Source-specific rights, production persistence and PostgreSQL qualification remain gated; ADR-013 remains Proposed.
 
 **End of Document**
