@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.8  
+**Version:** 3.9  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -665,6 +665,12 @@ This tranche makes the operation payloads explicit for the core article-to-repor
 | `rights_assessment_references` | `List<ID<RightsAssessment>>` | Conditional | Required for every source-derived content operation that is governed by a rights assessment; each reference must cover the exact operation and content scope. |
 | `metadata` | `object` | Optional | Versioned, non-secret extension; must not duplicate authoritative typed fields. |
 
+The payload is wrapped by the application-layer `PersistArticleRevisionCommand` and the common `CommandMetadata` envelope. The envelope is not copied into the payload and is not duplicated as a second metadata structure:
+- `metadata` carries command ID/schema version, actor, application authorization reference, correlation/causation, idempotency scope/key, and optional expected aggregate version.
+- `revision` carries the immutable source/article revision data and its source-content rights-assessment references. The application authorization reference and content-rights assessment references are independent and neither substitutes for the other.
+- `article_id` is null for a create-by-source-identity request. For an update to a known Article it is required, and `metadata.expected_aggregate_version` is also required. For a create request the expected aggregate version must be null. There is no separate `expected_article_version` command field; the repository receives the value from the common envelope.
+- The idempotency key is scoped by `metadata.idempotency_scope`; the application service must bind it to a deterministic request fingerprint and reject reuse with a different request. Repository retries must not bypass rights re-evaluation when the relevant source permission changes.
+
 Server-owned values include Article ID when first created, ArticleRevision ID, revision number, current_revision_id, rights_status and content_availability projections, created/updated timestamps, and resulting aggregate version. The application must atomically append/reuse the immutable ArticleRevision and update the Article current projection. The Article content_availability projection must equal the current revision's state.
 
 ArticleRevision idempotency is defined by the semantic `revision_fingerprint` and its schema version, not by `content_hash`. Compare the incoming fingerprint only with the current revision for the same Article. An equal fingerprint reuses the current revision; a different fingerprint appends a new revision. Do not enforce uniqueness across all historical fingerprints: a return from A to B and later back to A is a new chronological revision. The fingerprint manifest and exclusions are specified in §4.3 and are implemented by the pure domain payload contract.
@@ -1167,7 +1173,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.8  
+**Version:** 3.9  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
@@ -1184,5 +1190,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v3.7):** Defines a versioned semantic revision fingerprint separate from retained-content SHA-256, specifies its exact JCS manifest and metadata-only behavior, and limits idempotency comparison to the current revision so historical returns remain append-only.
 
 **Revision Note (v3.8):** Adds `author` as a historical ArticleRevision snapshot and fingerprint input, aligns the command schema and current-projection ownership, and closes the prior author/published-at/metadata snapshot gap for the core revision fields.
+
+**Revision Note (v3.9):** Adds the application-layer PersistArticleRevisionCommand envelope, composes it with the shared CommandMetadata exactly once, and places expected aggregate version only in the common envelope. Application authorization and source-content rights references remain independent.
 
 **End of Document**
