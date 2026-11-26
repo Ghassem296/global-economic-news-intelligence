@@ -34,6 +34,8 @@ The PoC supplies the evidence required for the Project Owner to complete formal 
 
 ### 3.1 Owner-selected PostgreSQL target
 
+The Project Owner-selected target is PostgreSQL. The initial baseline remains a Single application instance and local/early-validation deployment; this is a planning topology, not a measured capacity or a production deployment authorization.
+
 The Project Owner explicitly selected PostgreSQL as GENI's target relational engine on 2026-11-26. The initial qualification topology assumes a single application instance and local/early-validation deployment; any move beyond that topology requires an updated workload profile. This supersedes the earlier SQLite-first planning assumption. SQLite is not an active candidate or implementation target. The initial deployment topology, workload volumes, concurrent readers/writers, retention, availability, RPO/RTO, hosting, and budget must still be explicitly established; no numeric values may be invented.
 
 The engine direction is an owner decision, not a measured capacity claim or production authorization. The PoC qualifies PostgreSQL itself and verifies that the selected configuration meets approved workload and operational requirements. The project must not introduce distributed infrastructure or numeric service guarantees without evidence.
