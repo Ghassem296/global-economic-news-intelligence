@@ -51,7 +51,9 @@ def policy(
     return ContentRetentionPolicy(
         mode=mode,
         policy_version="rights-policy-v1",
-        maximum_retention_seconds=(86_400 if mode is ContentRetentionMode.LIMITED_RETENTION else None),
+        maximum_retention_seconds=(
+            86_400 if mode is ContentRetentionMode.LIMITED_RETENTION else None
+        ),
     )
 
 
