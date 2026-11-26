@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.7  
+**Version:** 3.8  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -164,7 +164,7 @@ Fingerprint v1 is SHA-256 over UTF-8 RFC 8785 JSON Canonicalization Scheme (JCS)
 1. `schema_version` = `article-revision-fingerprint-v1`;
 2. `source_id`;
 3. `canonical_source_identifier` and `source_identity_normalization_version`;
-4. `normalized_title`, `summary`, `language`, and `published_at`;
+4. `normalized_title`, `summary`, `author`, `language`, and `published_at`;
 5. `content_availability`;
 6. `content_hash` and `content_normalization_version` (both null for metadata-only/unavailable revisions);
 7. `metadata`, containing only source/article metadata permitted for retention and normalized by the source adapter.
@@ -652,9 +652,12 @@ This tranche makes the operation payloads explicit for the core article-to-repor
 | `normalized_title` | `string` | Required | The title stored on the immutable revision and current Article projection. |
 | `content_availability` | `string/enum` | Required | Exactly one of `available`, `partial`, `metadata-only`, or `unavailable`; describes this exact revision, not merely the source's general capability. |
 | `content_reference` | `reference/null` | Conditional | Required for `available` or `partial`; must be null for `metadata-only` or `unavailable`. It may point only to the exact content representation permitted for the relevant operation. |
-| `content_hash` | `Fingerprint/null` | Conditional — unresolved | A hash of the declared normalized content representation; it does not grant retrieval, processing, or retention rights. Nullability and the idempotency fingerprint for metadata-only/unavailable revisions must be resolved before implementing PersistArticleRevision. |
+| `content_hash` | `Fingerprint/null` | Required for `available`/`partial`; null for `metadata-only`/`unavailable` | Lowercase 64-hex SHA-256 of the exact UTF-8 bytes of the persistently retained normalized representation. It does not grant retrieval, processing, or retention rights. |
 | `content_normalization_version` | `Version` | Required when a content representation is normalized or hashed | Identifies the exact normalization rules used for the hash and any offsets; must not be fabricated when no content representation exists. |
-| `summary` | `string/null` | Optional | May contain only source material or derived text permitted by the applicable rights decision. |
+| `revision_fingerprint` | `Fingerprint` | Server-computed, required | SHA-256 of the versioned semantic revision manifest; separate from `content_hash`. | 
+| `revision_fingerprint_schema_version` | `Version` | Server-computed, required | Identifies the exact manifest and canonicalization rules; v1 is `article-revision-fingerprint-v1`. |
+| `summary` | `string/null` | Optional | May contain only source material or derived text permitted by the applicable rights decision; included in the semantic revision fingerprint. |
+| `author` | `string/null` | Optional | Source-reported author snapshot; included in the semantic revision fingerprint and retained only when permitted. |
 | `language` | `string/null` | Optional | Declared or detected language; exact language-tag format remains a serialization decision. |
 | `published_at` | `Instant/null` | Optional | Source publication time; unknown remains null. |
 | `observed_at` | `Instant` | Required | Trusted observation time for this revision. |
@@ -664,7 +667,7 @@ This tranche makes the operation payloads explicit for the core article-to-repor
 
 Server-owned values include Article ID when first created, ArticleRevision ID, revision number, current_revision_id, rights_status and content_availability projections, created/updated timestamps, and resulting aggregate version. The application must atomically append/reuse the immutable ArticleRevision and update the Article current projection. The Article content_availability projection must equal the current revision's state.
 
-For content-backed revisions, same Article + same non-null content hash + same normalization version may resolve to the same logical revision only when the source identity and applicable rights scope also match; a different normalization version is not presumed equivalent. The idempotency identity for metadata-only or unavailable revisions is not yet specified: the current contract has no approved metadata fingerprint or canonicalization rule that safely distinguishes unchanged observations from materially changed metadata. Do not invent one or implement the ArticleRevision append/reuse repository until this is resolved. A null content hash must never be treated as a shared identity across unrelated observations.
+ArticleRevision idempotency is defined by the semantic `revision_fingerprint` and its schema version, not by `content_hash`. Compare the incoming fingerprint only with the current revision for the same Article. An equal fingerprint reuses the current revision; a different fingerprint appends a new revision. Do not enforce uniqueness across all historical fingerprints: a return from A to B and later back to A is a new chronological revision. The fingerprint manifest and exclusions are specified in §4.3 and are implemented by the pure domain payload contract.
 
 The selected content-retention direction is source-aware and operation-specific: persist full or partial text only when the applicable persistent-storage permission is current and verified; otherwise retain only permitted metadata or mark the revision unavailable. A retrieval or analysis permission does not imply persistent storage, external LLM transmission, quotation, or republication permission. Missing, unknown, expired, revoked, or unverifiable rights fail closed for the affected operation.
 
@@ -893,7 +896,7 @@ The Article record is a current projection, not a second independently editable 
 | collected_at, last_seen_at | Server-owned observation projections; first successful collection and latest observation are distinct. |
 | content_availability | Explicit state; the documented examples are available, partial, metadata-only, and unavailable. Missing content is never represented as an empty successful article. |
 | rights_status | Summary projection only; never a substitute for operation-specific RightsAssessment records. |
-| author, published_at, metadata | Present on Article in Document 03, but not all are represented on ArticleRevision. Their historical snapshot/update semantics remain unresolved; do not claim they are revision-stable until reconciled. |
+| author, published_at, metadata | Historical snapshots on ArticleRevision; the Article projection derives these values from its current revision. Metadata contains only permitted, normalized semantic source fields; volatile collection/transport data belongs in separate collection records. |
 | created_at, updated_at | Server-owned timestamps. |
 
 ArticleRevision creation/reuse and Article projection update remain one UnitOfWork. A repeated unchanged normalized revision must not create a new revision; the same hash under a different normalization version is not presumed equivalent. The projection may expose only content permitted for the current operation and retention state. A later rights revocation or content restriction must not be bypassed by reading the Article projection or an old cache.
@@ -907,7 +910,7 @@ The following remain open and block the corresponding implementation detail:
 - Dedicated Source reliability-profile update/evaluation contract, evidence requirements, and version/supersession rules.
 - Geographic-scope vocabulary and its relationship to Source.country_code and source coverage.
 - SourceArticleIdentity canonicalization algorithm, external_id precedence, redirect handling, collision remediation, and normalization-version migration.
-- Historical snapshot semantics for Article.author, Article.published_at, and source metadata that are currently present on Article but absent from ArticleRevision.
+- Source-specific metadata field allowlists and canonicalization profile; the core ArticleRevision author/summary/language/published_at snapshot fields and fingerprint inclusion are now defined.
 - Cursor encoding, default/max page sizes, stable sort keys, and page consistency under concurrent source configuration changes.
 - Secret-reference management, if source adapters require credentials; this contract intentionally prohibits secret values and does not select a secret manager.
 
@@ -1164,7 +1167,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.7  
+**Version:** 3.8  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
@@ -1179,5 +1182,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v3.6):** Makes the source-identity canonicalization version an explicit required field, separate from content-normalization version, so identity normalization can be reproduced and audited. The metadata-only revision idempotency fingerprint and exact content-hash semantics remain open.
 
 **Revision Note (v3.7):** Defines a versioned semantic revision fingerprint separate from retained-content SHA-256, specifies its exact JCS manifest and metadata-only behavior, and limits idempotency comparison to the current revision so historical returns remain append-only.
+
+**Revision Note (v3.8):** Adds `author` as a historical ArticleRevision snapshot and fingerprint input, aligns the command schema and current-projection ownership, and closes the prior author/published-at/metadata snapshot gap for the core revision fields.
 
 **End of Document**
