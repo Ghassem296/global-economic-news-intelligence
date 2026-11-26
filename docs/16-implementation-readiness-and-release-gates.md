@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.2  
+**Version:** 4.3  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26  
@@ -259,5 +259,7 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.1):** Aligns the rights-status model with Document 03 v1.52: Article.rights_status is a display/monitoring summary only, while every restricted operation requires a current RightsAssessment for its exact operation and content scope.
 
 **Revision Note (v4.2):** Adds the pure, fail-closed content-rights persistence gate for exact source/content scope and PERSISTENT_STORAGE operation. This is not legal validation or complete rights management: assessment evidence verification, freshness, retention deadlines, temporary-content lifecycle, persistence, revocation propagation, deletion, and external-provider enforcement remain gated.
+
+**Revision Note (v4.3):** Records that LIMITED_RETENTION now requires an explicit positive maximum duration in the pure domain contract; expiry scheduling and deletion execution remain unimplemented.
 
 **End of Document**
