@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.49
+**Version:** 1.50
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -457,6 +457,7 @@ Fields:
 - `revision_fingerprint` — SHA-256 identity of the semantic revision snapshot, independent of the content hash and storage location
 - `revision_fingerprint_schema_version` — exact schema/canonicalization version used for the revision fingerprint
 - `summary`
+- `author` — source-reported author snapshot, when permitted and available
 - `language`
 - `observed_at`
 - `change_reason`
@@ -3254,3 +3255,5 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 **Revision Note (v1.47):** Aligns the persistence strategy with the Project Owner's PostgreSQL target selection recorded in GENI-ADR-005 v1.5. Replaces SQLite-specific initial-storage guidance with PostgreSQL qualification requirements; production activation and exact tooling remain gated by PoC evidence and formal ADR acceptance.
 
 **Revision Note (v1.49):** Separates retained-content SHA-256 from the semantic ArticleRevision fingerprint, defines the no-content hash/reference invariant, and clarifies current-revision-only idempotency so a later return to prior content remains a new chronological revision. No production rights or persistence approval is implied.
+
+**Revision Note (v1.50):** Adds a source-reported author snapshot to ArticleRevision so the Article current projection and historical revision preserve the same author semantics. The author is included in the semantic revision fingerprint and remains subject to source-specific metadata permissions.
