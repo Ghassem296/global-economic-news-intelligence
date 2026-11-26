@@ -9,10 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Protocol, TypeVar
-
-
-T = TypeVar("T")
+from typing import Protocol
 
 
 @dataclass(frozen=True, slots=True)
