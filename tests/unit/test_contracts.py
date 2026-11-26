@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -31,7 +31,7 @@ def test_command_metadata_accepts_complete_trusted_context() -> None:
     metadata = valid_metadata(
         causation_id="cause-1",
         expected_aggregate_version="v7",
-        deadline=datetime(2026, 11, 26, 12, 0, tzinfo=timezone.utc),
+        deadline=datetime(2026, 11, 26, 12, 0, tzinfo=UTC),
     )
     assert metadata.command_id == "cmd-1"
     assert metadata.expected_aggregate_version == "v7"
