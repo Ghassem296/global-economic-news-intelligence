@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.5  
+**Version:** 3.6  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -621,6 +621,7 @@ This tranche makes the operation payloads explicit for the core article-to-repor
 |---|---|---|---|
 | `source_id` | `ID<Source>` | Required | Must resolve to the configured Source. |
 | `source_article_identity.canonical_source_identifier` | `string` | Required | Stable canonical identity scoped to this Source; normalization is deterministic and versioned. |
+| `source_article_identity.normalization_version` | `Version` | Required | Exact version of the source-identity canonicalization rules used to produce the canonical identifier. It is distinct from content normalization. |
 | `source_article_identity.canonical_url` | `string/null` | Optional | Secondary lookup signal only; it does not replace source-scoped identity. |
 | `original_url` | `string` | Required | Must pass URL validation; preserve separately from canonical_url. |
 | `external_id` | `string/null` | Optional | Source-provided identifier; uniqueness is source-scoped and applies only when meaningful. |
@@ -1139,7 +1140,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.5  
+**Version:** 3.6  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
@@ -1150,5 +1151,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v3.4):** Separates the deterministic fixture-slice repository/DTO subset from adjacent dormant contracts. Source collection/configuration, production source identity, PublicationDecision, material review actions, and provider-backed LLM execution are explicitly excluded from first-slice acceptance. The broader contract inventory remains available for later gated capabilities; no ADR is accepted by this revision.
 
 **Revision Note (v3.5):** Records the Project Owner-selected source-aware mixed content-retention direction, adds revision-level content-availability states, and makes the content-reference invariant explicit. It also identifies the unresolved metadata-only revision idempotency fingerprint and content-hash semantics as blockers; no repository implementation or source-specific content permission is implied.
+
+**Revision Note (v3.6):** Makes the source-identity canonicalization version an explicit required field, separate from content-normalization version, so identity normalization can be reproduced and audited. The metadata-only revision idempotency fingerprint and exact content-hash semantics remain open.
 
 **End of Document**
