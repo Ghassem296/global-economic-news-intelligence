@@ -529,7 +529,7 @@ Implement and test:
 - Analysis versioning.
 - Report versioning.
 - Publication decision rules.
-- The later target review scope is `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. `REPORT_VERSION` is publication-eligibility review for an exact immutable Report version and its exact effective `PublicationDecision`, not review of an external publication operation. This review capability is outside the initial deterministic Report slice because that slice does not create a PublicationDecision. It remains disabled until GENI-ADR-004/014, the ReviewRepository and ReviewContextLinkRepository contracts, field-level command/query schemas, ReviewRecord/ReviewAction transition and projection rules, reviewer authorization rules, and the applicable integration tests are complete. Keep `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` deferred and disabled.
+- The target first-slice review scope is a later capability covering `ARTICLE_DEDUPLICATION`, `EVENT_MATCHING`, and `REPORT_VERSION`. `REPORT_VERSION` is publication-eligibility review for an exact immutable Report version and its exact effective `PublicationDecision`, not review of an external publication operation. This is target scope, not current enablement: the review capability is outside the initial deterministic Report slice because that slice does not create a PublicationDecision. It remains disabled until GENI-ADR-004/014, the ReviewRepository and ReviewContextLinkRepository contracts, field-level command/query schemas, ReviewRecord/ReviewAction transition and projection rules, reviewer authorization rules, and the applicable integration tests are complete. Keep `CLAIM_ASSESSMENT`, `PUBLICATION_OPERATION`, and `CONTENT_RIGHTS` deferred and disabled.
 - Delivery idempotency boundaries.
 
 ### Initial Evaluation Work
@@ -633,7 +633,7 @@ The exact persistence design must follow the accepted data model and ADRs.
 
 ---
 
-## 10. Development Stage 4 — Fixture-Driven Report Vertical Slice
+## 10. Development Stage 4 — Fixture-Driven Vertical Slice and Gated LLM Execution
 
 ### Objectives
 
@@ -735,7 +735,7 @@ ArticleEventLink     state; no review action  no Event creation
 - NEW_EVENT_CANDIDATE does not create an Event; AMBIGUOUS/REVIEW_REQUIRED does not trigger a material review action.
 - Evidence, Analysis, Report and all provenance links persist atomically with exact fixture references.
 - The workflow is idempotent and preserves prior candidate/decision history.
-- No authoritative PublicationDecision is created; publication eligibility, publication, and delivery are not attempted.
+- No authoritative PublicationDecision is created; publication eligibility is not evaluated, and no publication or delivery side effect is attempted.
 - No live-source content, real provider call, or production permission is inferred from synthetic fixtures.
 
 ---
