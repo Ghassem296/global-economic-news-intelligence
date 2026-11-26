@@ -107,16 +107,30 @@ class RightsAssessment:
 
 @dataclass(frozen=True, slots=True)
 class ContentRetentionPolicy:
-    """Source/content-specific retention mode; no universal duration is assumed."""
+    """Source/content-specific retention mode and optional bounded duration."""
 
     mode: ContentRetentionMode
     policy_version: str
+    maximum_retention_seconds: int | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.mode, ContentRetentionMode):
             raise TypeError("mode must be a ContentRetentionMode.")
         if not isinstance(self.policy_version, str) or not self.policy_version.strip():
             raise ValueError("policy_version must be a non-empty string.")
+        if self.mode is ContentRetentionMode.LIMITED_RETENTION:
+            if (
+                isinstance(self.maximum_retention_seconds, bool)
+                or not isinstance(self.maximum_retention_seconds, int)
+                or self.maximum_retention_seconds <= 0
+            ):
+                raise ValueError(
+                    "LIMITED_RETENTION requires a positive maximum_retention_seconds."
+                )
+        elif self.maximum_retention_seconds is not None:
+            raise ValueError(
+                "maximum_retention_seconds is only valid for LIMITED_RETENTION."
+            )
 
 
 def is_rights_assessment_effective(
