@@ -14,10 +14,9 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import TypeAlias
 
-JsonScalar: TypeAlias = str | int | float | bool | None
-FrozenJson: TypeAlias = JsonScalar | tuple["FrozenJson", ...] | Mapping[str, "FrozenJson"]
+type JsonScalar = str | int | float | bool | None
+type FrozenJson = JsonScalar | tuple[FrozenJson, ...] | Mapping[str, FrozenJson]
 
 
 class DuplicateDecisionOutcome(StrEnum):
