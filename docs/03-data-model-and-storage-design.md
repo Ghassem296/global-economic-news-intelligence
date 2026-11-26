@@ -1,11 +1,11 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.47
+**Version:** 1.48
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-26
 
 ---
 
@@ -450,6 +450,7 @@ Fields:
 - `article_id`
 - `revision_number`
 - `title`
+- `content_availability` — the availability state of this exact revision: `available`, `partial`, `metadata-only`, or `unavailable`
 - `content_reference`
 - `content_hash`
 - `content_normalization_version`
@@ -465,10 +466,17 @@ Constraints:
 - `(article_id, revision_number)` must be unique.
 - Repeated collection of unchanged content must not create a revision.
 - Material changes must preserve the previous revision.
+- `content_availability` is required on every revision and uses exactly one of: `available`, `partial`, `metadata-only`, or `unavailable`.
+- `available` and `partial` require a non-null `content_reference`; the reference must resolve only to the exact content representation permitted for the relevant operation.
+- `metadata-only` and `unavailable` require a null `content_reference`; an empty string or placeholder object is not a substitute for an absent reference.
+- A metadata-only revision may retain only metadata and other source-derived fields explicitly permitted by the applicable source/content rights decision.
+- `Article.content_availability` is a current-state projection and must agree with the `content_availability` of `Article.current_revision_id`; it must not be independently edited.
 - Content references must comply with the project's content retention and licensing policy.
 - A revision must identify the text representation and content-normalization version to which its hashes and offsets refer.
+- Technical access, retrieval, temporary processing, persistent storage, external transmission, derived use, quotation, and republication are separate permission scopes. Permission for one operation does not imply permission for another.
+- Unknown, expired, revoked, or unverifiable permission must fail closed for the affected restricted operation; it must not be converted into a permissive rights status.
 
-`content_reference` may point to relationally stored content or an approved external content store. The physical storage method is an implementation decision.
+`content_reference` may point to relationally stored content or an approved external content store. The physical storage method is an implementation decision. Under the selected source-aware policy, a reference is created only after the applicable persistent-storage permission has been verified; metadata-only and unavailable revisions remain valid revision records without a content reference.
 
 ### 5.6 Event
 
