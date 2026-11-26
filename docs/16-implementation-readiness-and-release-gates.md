@@ -117,7 +117,7 @@ Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.
 
 ### 5.2 Persistence and transaction implementation
 
-Complete the PostgreSQL qualification in GENI-ADR-005-POC-001 using an approved workload profile and predeclared thresholds; retain raw results, failed runs, environment/configuration, commit SHA, migration and backup/restore evidence. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. Formal acceptance of GENI-ADR-005 and passing the qualification gates are required before production activation. Then implement:
+Complete the PostgreSQL qualification in GENI-ADR-005-POC-001 using an approved workload profile and predeclared thresholds; retain raw results, failed runs, environment/configuration, commit SHA, migration and backup/restore evidence. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all PostgreSQL qualification gates must pass, before production activation. Then implement:
 - Database adapter, migrations, repository implementations, and UnitOfWork.
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
