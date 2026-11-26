@@ -18,6 +18,7 @@ from global_economic_news_intelligence.domain.workflows.lifecycle import (
     TransitionError,
     aggregate_run_status,
     case_status_for_decision,
+    cancel_external_operation,
     external_operation_status_after_attempt,
     project_review_action,
     transition_candidate,
@@ -176,6 +177,42 @@ def test_execute_attempt_mapping(
         external_operation_status_after_attempt(ExternalOperationStatus.IN_PROGRESS, result)
         is expected
     )
+
+
+def test_external_operation_cancellation_requires_authorization_and_safe_state() -> None:
+    with pytest.raises(TransitionError):
+        cancel_external_operation(
+            ExternalOperationStatus.PENDING, cancellation_authorized=False
+        )
+    assert (
+        cancel_external_operation(
+            ExternalOperationStatus.PENDING, cancellation_authorized=True
+        )
+        is ExternalOperationStatus.CANCELLED
+    )
+    with pytest.raises(TransitionError):
+        cancel_external_operation(
+            ExternalOperationStatus.IN_PROGRESS,
+            cancellation_authorized=True,
+            external_outcome_reconciled=True,
+        )
+    with pytest.raises(TransitionError):
+        cancel_external_operation(
+            ExternalOperationStatus.RECONCILIATION_REQUIRED,
+            cancellation_authorized=True,
+        )
+    assert (
+        cancel_external_operation(
+            ExternalOperationStatus.RECONCILIATION_REQUIRED,
+            cancellation_authorized=True,
+            external_outcome_reconciled=True,
+        )
+        is ExternalOperationStatus.CANCELLED
+    )
+    with pytest.raises(TransitionError):
+        cancel_external_operation(
+            ExternalOperationStatus.SUCCEEDED, cancellation_authorized=True
+        )
 
 
 def test_unknown_external_outcome_must_be_reconciled_before_retry() -> None:
