@@ -203,7 +203,9 @@ class PersistArticleRevision:
             if len(self.content_hash or "") != 64 or any(
                 character not in "0123456789abcdef" for character in self.content_hash or ""
             ):
-                raise ValueError("content_hash must be a 64-character lowercase SHA-256 hex digest.")
+                raise ValueError(
+                    "content_hash must be a 64-character lowercase SHA-256 hex digest."
+                )
         elif has_reference or has_hash or has_normalization:
             raise ValueError(
                 "metadata-only or unavailable content must not persist "
