@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.37
+**Version:** 1.38
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-26
 **Project:** Global Economic News Intelligence  
@@ -141,7 +141,7 @@ The following technologies are candidates for the initial implementation. Choice
 | Package management | uv 0.13.9 (selected project tooling; exact version required) |
 | Data validation | Pydantic |
 | LLM integration | Provider-independent adapter, with LiteLLM as a candidate |
-| Database | Relational database; SQLite and PostgreSQL are candidates pending the GENI-ADR-005 workload proof-of-concept |
+| Database | PostgreSQL (Project Owner-selected target; production qualification pending GENI-ADR-005-POC-001 and formal ADR acceptance) |
 | Database access | SQLAlchemy or an equivalent repository-backed approach |
 | Migrations | Alembic or an equivalent migration mechanism |
 | Testing | pytest |
@@ -153,15 +153,15 @@ The following technologies are candidates for the initial implementation. Choice
 | CI | GitHub Actions |
 | Version control | Git |
 
-The project package manager is uv 0.13.9, pinned by `[tool.uv].required-version` in `pyproject.toml`; `uv.lock` is committed and is the authoritative resolution for the Python 3.15 development environment. CI verifies the lock with `uv lock --check` and installs using `uv sync --locked`. The setuptools build backend is pinned to 84.2.1. This is a project tooling baseline, not an acceptance of the pending database, LLM, source-acquisition, or deployment decisions.
+The project package manager is uv 0.13.9, pinned by `[tool.uv].required-version` in `pyproject.toml`; `uv.lock` is committed and is the authoritative resolution for the Python 3.15 development environment. CI verifies the lock with `uv lock --check` and installs using `uv sync --locked`. The setuptools build backend is pinned to 84.2.1. PostgreSQL is the owner-selected database target; its production qualification and exact access/migration tooling remain subject to GENI-ADR-005 and its PoC.
 
 The project runtime baseline is CPython 3.15 only. `.python-version`, package metadata, Ruff, mypy, and the application CI matrix must remain aligned to 3.15. Python 3.12–3.14 are not supported runtime targets. The selected database access library, migration mechanism, async database strategy, and LLM adapter must be recorded in the appropriate architecture decisions before they become implementation constraints.
 
 ### 4.2 Database Considerations
 
-The comparative selection protocol is GENI-ADR-005-POC-001 (`docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`). It requires an approved workload profile, thresholds declared before results are examined, mandatory correctness/failure tests, reproducible raw evidence, and a formal ADR-005 decision. The protocol is a test plan, not a test result; neither SQLite nor PostgreSQL is selected by this roadmap.
+The PostgreSQL qualification protocol is GENI-ADR-005-POC-001 (`docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`). It requires an approved workload profile, thresholds declared before results are examined, mandatory correctness/failure tests, reproducible raw evidence, migration and backup/restore proof, and formal ADR-005 acceptance. The Project Owner has selected PostgreSQL as the target; the protocol is a test plan, not a test result or production authorization.
 
-If SQLite is selected for the initial deployment, its implementation must explicitly address:
+The PostgreSQL implementation must explicitly address:
 
 - Foreign key enforcement.
 - Transaction boundaries.
@@ -1853,3 +1853,6 @@ Exit criteria require executable tests and operational evidence, not document pr
 **Document ID:** GENI-PLAN-004
 **Version:** 1.37
 **Status:** Draft — Under Architecture Review
+
+
+**Revision Note (v1.38):** Records PostgreSQL as the Project Owner-selected relational database target and aligns the technology baseline and database considerations with the PostgreSQL-only qualification protocol. Exact database tooling and production activation remain gated by GENI-ADR-005.
