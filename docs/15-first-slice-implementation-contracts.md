@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.9  
+**Version:** 4.0  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -146,10 +146,12 @@ The signatures below are logical signatures. Request and result structures named
 
 | Method | Signature | Contract |
 |---|---|---|
-| `get_by_id` | `get_by_id(revision_id: ID<ArticleRevision>) -> Optional<ArticleRevision>` | Returns an immutable revision. |
-| `get_current_for_article` | `get_current_for_article(article_id: ID<Article>) -> Optional<ArticleRevision>` | Resolves the exact revision referenced by the Article projection. |
-| `find_current_by_revision_fingerprint` | `find_current_by_revision_fingerprint(article_id: ID<Article>, revision_fingerprint: Fingerprint, schema_version: Version) -> Optional<ArticleRevision>` | Matches only the current revision of the same Article. It must not search all historical revisions or impose global uniqueness on fingerprints. |
-| `append_revision` | `append_revision(revision: ArticleRevision, expected_article_version: Optional<Version>, uow: UnitOfWork) -> ArticleRevision` | Appends a new immutable revision and updates the Article projection in the same UnitOfWork through ArticleRevisionService. Enforces unique `(article_id, revision_number)`; repeated identical content returns/reuses the existing logical revision rather than creating a duplicate. |
+| `get_by_id` | `get_by_id(revision_id: ID<ArticleRevision>) -> Optional<ArticleRevisionRecord>` | Returns an immutable, fingerprint-verified persistence record. |
+| `get_current_for_article` | `get_current_for_article(article_id: ID<Article>) -> Optional<ArticleRevisionRecord>` | Resolves the exact revision record referenced by the Article projection. |
+| `find_current_by_revision_fingerprint` | `find_current_by_revision_fingerprint(article_id: ID<Article>, revision_fingerprint: Fingerprint, schema_version: Version) -> Optional<ArticleRevisionRecord>` | Matches only the current revision of the same Article. It must not search all historical revisions or impose global uniqueness on fingerprints. |
+| `append_revision` | `append_revision(article_id: ID<Article>, revision: PersistArticleRevision, expected_article_version: Optional<Version>, uow: UnitOfWork) -> ArticleRevisionRecord` | Appends one immutable revision inside the caller's UnitOfWork. ArticleRevisionService coordinates the Article projection update through ArticleRepository in that same UnitOfWork. Enforces unique `(article_id, revision_number)`; repeated current fingerprint is reused before append. The repository must not commit the UnitOfWork. |
+
+The persistence result is `ArticleRevisionRecord`, containing the server-owned revision ID, Article ID, positive revision number, immutable `PersistArticleRevision` payload, computed fingerprint and schema version, and server creation timestamp. Construction/read validation requires the stored fingerprint to equal the payload's recomputed fingerprint and rejects unsupported fingerprint schema versions. Rights provenance is represented by the payload's immutable `rights_assessment_references`; there is no single per-revision `rights_status` because permissions are operation- and content-scope-specific.
 
 The write command carries the exact permitted content reference (only for persistently retained content), content hash and content-normalization version (only for `available`/`partial` content), observed time, language, change reason, and applicable immutable rights-assessment reference(s). A content hash is not permission to retain the underlying content. Unknown, expired, revoked, unverifiable, or insufficient rights block the restricted operation.
 
@@ -1173,7 +1175,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 3.9  
+**Version:** 4.0  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
@@ -1192,5 +1194,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v3.8):** Adds `author` as a historical ArticleRevision snapshot and fingerprint input, aligns the command schema and current-projection ownership, and closes the prior author/published-at/metadata snapshot gap for the core revision fields.
 
 **Revision Note (v3.9):** Adds the application-layer PersistArticleRevisionCommand envelope, composes it with the shared CommandMetadata exactly once, and places expected aggregate version only in the common envelope. Application authorization and source-content rights references remain independent.
+
+**Revision Note (v4.0):** Defines the typed ArticleRevisionRecord persistence result and aligns the repository port signatures with its fingerprint-verification contract. The port remains technology-neutral; no database adapter or ArticleRepository implementation is implied.
 
 **End of Document**
