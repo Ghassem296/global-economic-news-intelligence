@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 1.4  
+**Version:** 1.5  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -15,7 +15,7 @@
 
 ## 1. Context and Problem Statement
 
-GENI requires durable relational relationships across articles, revisions, events, evidence, decisions, reports, and workflow records. The project documents currently identify SQLite as an initial candidate and PostgreSQL as a possible future option, but the actual database, ORM, migration tooling, and concurrency strategy remain unapproved. A premature technology choice may constrain transactional consistency, concurrent processing, migrations, or deployment operations.
+GENI requires durable relational relationships across articles, revisions, events, evidence, decisions, reports, and workflow records. On 2026-11-26, the Project Owner explicitly directed that PostgreSQL be the target relational database for GENI. This supersedes the earlier SQLite-first planning preference and removes SQLite from the active initial-engine selection. The PostgreSQL target is an owner-selected architectural direction; production qualification, exact engine/driver/tool versions, transaction and concurrency strategy, and operational readiness remain gated by the PostgreSQL-specific proof-of-concept and formal ADR acceptance.
 
 This ADR is a proposal for formal review. It does not approve a production implementation or override an existing accepted decision.
 
@@ -65,7 +65,7 @@ What persistence architecture and selection criteria should govern the initial d
 
 ## 4. Alternatives Considered
 
-### 4.1 Alternative A — SQLite-first implementation
+### 4.1 Alternative A — SQLite-first implementation (not selected)
 
 **Description:** Select SQLite immediately and design the first release around its transaction and write-concurrency characteristics.
 
@@ -82,7 +82,7 @@ What persistence architecture and selection criteria should govern the initial d
 
 **Estimated Complexity:** Low initially
 
-### 4.2 Alternative B — PostgreSQL-first implementation
+### 4.2 Alternative B — PostgreSQL-first implementation (owner-selected target)
 
 **Description:** Use PostgreSQL from the first release and operate a client-server database.
 
@@ -97,7 +97,7 @@ What persistence architecture and selection criteria should govern the initial d
 
 **Estimated Complexity:** Medium
 
-### 4.3 Alternative C — Portable relational boundary with evidence-based engine selection
+### 4.3 Alternative C — Portable relational boundary with evidence-based engine selection (superseded)
 
 **Description:** Define relational contracts, repositories, migrations, and transaction semantics first; select SQLite or PostgreSQL after a workload and deployment proof.
 
@@ -168,7 +168,7 @@ A recommendation is not an approval. The authorized decision owner must explicit
 **Approved By:** Not yet approved  
 **Approval Date:** N/A
 
-**Decision Rationale:** Not formally recorded; see the recommendation in Section 6.
+**Decision Rationale:** The Project Owner explicitly selected PostgreSQL as the target database on 2026-11-26. The decision favors a client-server relational engine with mature multi-client concurrency and operational controls. This direction does not establish measured capacity or production readiness; those claims remain subject to the PostgreSQL-specific PoC.
 
 **Conditions or Restrictions:**
 - Keep this ADR in Proposed status until explicit approval is recorded.
