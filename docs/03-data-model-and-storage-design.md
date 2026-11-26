@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.50
+**Version:** 1.51
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -449,7 +449,7 @@ Fields:
 - `id`
 - `article_id`
 - `revision_number`
-- `title`
+- `normalized_title` — normalized source title snapshot for this revision
 - `content_availability` — the availability state of this exact revision: `available`, `partial`, `metadata-only`, or `unavailable`
 - `content_reference`
 - `content_hash` — SHA-256 of the exact normalized content bytes retained by this revision; null for metadata-only/unavailable revisions
@@ -459,10 +459,12 @@ Fields:
 - `summary`
 - `author` — source-reported author snapshot, when permitted and available
 - `language`
+- `published_at` — source publication time snapshot
 - `observed_at`
 - `change_reason`
-- `rights_status`
-- `metadata`
+- `rights_assessment_references` — immutable references to the exact operation/content-scope assessments relied on when the revision was persisted
+- `metadata` — permission-filtered semantic source metadata snapshot
+- `created_at`
 
 Constraints:
 
@@ -3259,3 +3261,5 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 **Revision Note (v1.49):** Separates retained-content SHA-256 from the semantic ArticleRevision fingerprint, defines the no-content hash/reference invariant, and clarifies current-revision-only idempotency so a later return to prior content remains a new chronological revision. No production rights or persistence approval is implied.
 
 **Revision Note (v1.50):** Adds a source-reported author snapshot to ArticleRevision so the Article current projection and historical revision preserve the same author semantics. The author is included in the semantic revision fingerprint and remains subject to source-specific metadata permissions.
+
+**Revision Note (v1.51):** Makes ArticleRevision's rights provenance explicit as immutable operation/content-scope RightsAssessment references rather than a single ambiguous `rights_status` field. Adds the complete historical publication-time/metadata snapshot and server creation timestamp; operation-specific rights remain authoritative in RightsAssessment records.
