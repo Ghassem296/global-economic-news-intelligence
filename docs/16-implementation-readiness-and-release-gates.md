@@ -232,7 +232,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.1
+**Version:** 4.2
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-26
 
@@ -257,5 +257,7 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.0):** Records the immutable ArticleRevisionRecord persistence result and technology-neutral ArticleRevisionRepository port. The Article projection repository, application service, rights adjudication, and concrete persistence adapters remain unimplemented.
 
 **Revision Note (v4.1):** Aligns the rights-status model with Document 03 v1.52: Article.rights_status is a display/monitoring summary only, while every restricted operation requires a current RightsAssessment for its exact operation and content scope.
+
+**Revision Note (v4.2):** Adds the pure, fail-closed content-rights persistence gate for exact source/content scope and PERSISTENT_STORAGE operation. This is not legal validation or complete rights management: assessment evidence verification, freshness, retention deadlines, temporary-content lifecycle, persistence, revocation propagation, deletion, and external-provider enforcement remain gated.
 
 **End of Document**
