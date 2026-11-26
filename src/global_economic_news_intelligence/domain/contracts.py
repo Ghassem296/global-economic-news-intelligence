@@ -77,8 +77,10 @@ class PageRequest:
             or self.limit <= 0
         ):
             raise ValueError("limit must be a positive integer.")
-        if self.cursor is not None and not self.cursor.strip():
-            raise ValueError("cursor must be non-empty when supplied.")
+        if self.cursor is not None and (
+            not isinstance(self.cursor, str) or not self.cursor.strip()
+        ):
+            raise ValueError("cursor must be a non-empty string when supplied.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,8 +93,10 @@ class Page[T]:
     def __post_init__(self) -> None:
         if not isinstance(self.items, tuple):
             raise TypeError("items must be an immutable tuple.")
-        if self.next_cursor is not None and not self.next_cursor.strip():
-            raise ValueError("next_cursor must be non-empty when supplied.")
+        if self.next_cursor is not None and (
+            not isinstance(self.next_cursor, str) or not self.next_cursor.strip()
+        ):
+            raise ValueError("next_cursor must be a non-empty string when supplied.")
 
 
 class CommitStatus(StrEnum):
