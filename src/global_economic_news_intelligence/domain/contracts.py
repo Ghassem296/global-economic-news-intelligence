@@ -39,20 +39,28 @@ class CommandMetadata:
         )
         for field_name in required:
             value = getattr(self, field_name)
-            if not value.strip():
-                raise ValueError(f"{field_name} must not be empty.")
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be a non-empty string.")
 
-        if self.causation_id is not None and not self.causation_id.strip():
+        if self.causation_id is not None and (
+            not isinstance(self.causation_id, str) or not self.causation_id.strip()
+        ):
             raise ValueError("causation_id must be non-empty when supplied.")
         if (
             self.expected_aggregate_version is not None
-            and not self.expected_aggregate_version.strip()
+            and (
+                not isinstance(self.expected_aggregate_version, str)
+                or not self.expected_aggregate_version.strip()
+            )
         ):
             raise ValueError(
                 "expected_aggregate_version must be non-empty when supplied."
             )
-        if self.deadline is not None and self.deadline.utcoffset() is None:
-            raise ValueError("deadline must be timezone-aware.")
+        if self.deadline is not None and (
+            not isinstance(self.deadline, datetime)
+            or self.deadline.utcoffset() is None
+        ):
+            raise ValueError("deadline must be a timezone-aware datetime.")
 
 
 @dataclass(frozen=True, slots=True)
