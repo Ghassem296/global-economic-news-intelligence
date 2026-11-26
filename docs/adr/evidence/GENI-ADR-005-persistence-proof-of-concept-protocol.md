@@ -111,8 +111,8 @@ No numeric pass threshold is defined in this protocol. Predeclared thresholds mu
 Apply the following order:
 
 1. **Hard correctness gates:** Any reproducible integrity, atomicity, fencing, migration, or recovery failure is a blocker until fixed and retested.
-2. **Mandatory workload gates:** A candidate must satisfy every approved workload, deployment, security, availability, backup, and recovery requirement.
-3. **Operational feasibility:** Confirm that the project can reliably deploy, monitor, back up, restore, secure, upgrade, and support the candidate.
+2. **Mandatory workload gates:** PostgreSQL must satisfy every approved workload, deployment, security, availability, backup, and recovery requirement.
+3. **Operational feasibility:** Confirm that the project can reliably deploy, monitor, back up, restore, secure, upgrade, and support PostgreSQL.
 4. **Comparative evidence:** Review measured performance, resource use, cost, complexity, and growth headroom using the approved workload and documented methodology.
 5. **Selection:** If every mandatory PostgreSQL gate passes, submit the reproducible evidence for formal ADR-005 acceptance. If any mandatory gate fails, do not authorize production activation; revise the implementation or requirements and repeat the affected tests.
 
@@ -123,7 +123,7 @@ A repository abstraction is not proof of portability. This project targets Postg
 The completed PoC package must include:
 
 - Approved workload profile and target thresholds, with owners and sources.
-- Reproducible setup instructions and exact candidate versions/configurations.
+- Reproducible setup instructions and exact PostgreSQL version/configuration.
 - Synthetic dataset generator, seed, and dataset summary.
 - Correctness/failure test results for every POC-01 through POC-18 case.
 - Raw benchmark output and machine-readable summary (CSV or JSON).
