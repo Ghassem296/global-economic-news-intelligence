@@ -6,7 +6,7 @@
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-24
+**Baseline:** Published `main` snapshot reviewed on 2026-11-26
 
 ---
 
