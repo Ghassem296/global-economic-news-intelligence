@@ -3,8 +3,8 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.2
-**Status:** Proposed test protocol — no engine selected  
+**Version:** 1.3
+**Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Last Updated:** 2026-11-24
@@ -13,22 +13,22 @@
 
 ## 1. Purpose and authority
 
-This protocol defines a reproducible, comparative proof-of-concept (PoC) for deciding whether SQLite or PostgreSQL can satisfy the initial GENI persistence workload.
+This protocol defines a reproducible PostgreSQL qualification proof-of-concept (PoC). The Project Owner selected PostgreSQL as GENI's target relational engine on 2026-11-26; this protocol verifies whether the proposed PostgreSQL implementation satisfies the approved workload, correctness, recovery, security, and operational requirements before production activation.
 
-It is a test plan, not test evidence, a benchmark result, an engine selection, or an approval. No result may be reported as measured until the test has actually run and its raw artifacts, environment, commit SHA, and analysis are retained.
+It is a test plan, not test evidence, a benchmark result, or production approval. The engine direction is owner-selected, but no qualification result may be reported as measured until the test has actually run and its raw artifacts, environment, commit SHA, and analysis are retained.
 
-The PoC must not change GENI-ADR-005 from Proposed. Only the authorized Project Owner can accept or reject that ADR.
+The PoC supplies the evidence required for the Project Owner to complete formal acceptance of GENI-ADR-005. Passing this protocol does not automatically accept the ADR or authorize production deployment.
 
 ## 2. Questions the PoC must answer
 
-1. Can each candidate enforce the required relational integrity and append-only history?
-2. Can each candidate preserve the documented UnitOfWork write sets under success, conflict, cancellation, and injected failure?
-3. What happens under the expected number of concurrent readers and writers, including lock contention and stale aggregate updates?
-4. Can asynchronous application workers access the engine safely without blocking the event loop or exhausting connections?
+1. Can the selected PostgreSQL version enforce the required relational integrity and append-only history?
+2. Can PostgreSQL preserve the documented UnitOfWork write sets under success, conflict, cancellation, and injected failure?
+3. What happens under the approved number of concurrent readers and writers, including lock contention and stale aggregate updates?
+4. Can asynchronous application workers access PostgreSQL safely without blocking the event loop or exhausting connections?
 5. Can idempotency, lease ownership, fencing tokens, and recovery survive process termination and competing workers?
 6. Can a clean install, schema upgrade, backup, restore, and post-restore integrity check be repeated reliably?
-7. What are the operational, deployment, security, maintenance, and recovery costs of each option?
-8. Does either option satisfy every mandatory workload and operational requirement without relying on unverified portability assumptions?
+7. Can the project reliably operate PostgreSQL, including deployment, security, monitoring, maintenance, backup, restore, and recovery?
+8. Does PostgreSQL satisfy every approved workload and operational requirement without relying on unverified portability assumptions?
 
 ## 3. Preconditions: define the workload before measuring
 
@@ -68,7 +68,7 @@ The workload profile must identify the source and confidence of each value. Prod
 
 ## 4. Candidate implementations and fairness controls
 
-Evaluate SQLite and PostgreSQL using the same logical repository contracts, domain write sets, synthetic fixtures, application revision, and workload profile.
+Evaluate the PostgreSQL implementation against the logical repository contracts, domain write sets, synthetic fixtures, application revision, and approved workload profile. SQLite comparison runs are out of scope because it is no longer an active candidate.
 
 For each run, capture:
 
@@ -78,7 +78,7 @@ For each run, capture:
 - Driver, ORM/query layer, migration tool, and exact versions.
 - Python/runtime version and dependency lockfile hash.
 - Connection/pool configuration and worker topology.
-- SQLite journal mode, synchronous setting, busy timeout, foreign-key setting, and filesystem; or PostgreSQL transaction isolation, connection limits, checkpoint/autovacuum-relevant configuration, and durability settings.
+- PostgreSQL transaction isolation, connection limits, pool settings, checkpoint/autovacuum-relevant configuration, durability settings, and deployment/storage characteristics.
 - Dataset seed, row counts, payload distribution, workload generator version, and test duration.
 - Warm-up, repetitions, cache state, measurement method, raw output, errors, and deviations.
 
@@ -113,7 +113,7 @@ Tests must use synthetic data with no personal data, licensed source text, produ
 
 ## 6. Performance and operational measurements
 
-After correctness gates pass, measure each engine using the workload profile:
+After correctness gates pass, measure PostgreSQL using the approved workload profile:
 
 - Throughput by operation class, not only aggregate transactions per second.
 - Median, p95, and p99 latency for reads and writes.
@@ -157,14 +157,14 @@ The completed PoC package must include:
 
 ### 8.1 Results register
 
-| Field | SQLite | PostgreSQL |
+| Field | PostgreSQL |
 |---|---|---|
 | Exact version/configuration | Not run | Not run |
-| Workload profile ID | Not established | Not established |
+| Workload profile ID | Not established |
 | Correctness matrix | Not run | Not run |
-| Migration/upgrade | Not run | Not run |
-| Backup/restore | Not run | Not run |
-| Concurrency and async | Not run | Not run |
+| Migration/upgrade | Not run |
+| Backup/restore | Not run |
+| Concurrency and async | Not run |
 | Performance results | Not measured | Not measured |
 | Operational assessment | Not assessed | Not assessed |
 | Mandatory gates | Not evaluated | Not evaluated |
@@ -182,7 +182,7 @@ Until the PoC is complete and GENI-ADR-005 is formally Accepted:
 - Pure domain contracts, synthetic fixtures, and database-independent repository interfaces may continue only within their approved scope.
 - Any temporary experimental adapter must be isolated, explicitly non-production, and must not leak database-specific types into domain/application contracts.
 
-After acceptance, record the exact engine/version, driver, migration tool, async strategy, transaction/locking model, connection lifecycle, supported deployment topology, and tested backup/restore procedure in the implementation baseline and update the affected documents.
+After qualification and formal acceptance, record the exact PostgreSQL version, driver, query/ORM layer, migration tool, async strategy, transaction/locking model, connection lifecycle, supported deployment topology, and tested backup/restore procedure in the implementation baseline and update the affected documents.
 
 ---
 
@@ -192,6 +192,6 @@ After acceptance, record the exact engine/version, driver, migration tool, async
 |---|---|---|---|
 | 1.0 | 2026-11-24 | Proposed | Initial reproducible persistence PoC protocol; no engine selected |
 | 1.1 | 2026-11-24 | Proposed | Clarified the stale-worker fencing acceptance criterion for machine-checkable alignment. |
-| 1.2 | 2026-11-24 | Proposed | Recorded the previously stated single-instance/local SQLite-first planning baseline while preserving unknown workload figures and the unselected ADR status. |
+| 1.2 | 2026-11-24 | Proposed | Recorded the previously stated single-instance/local SQLite-first planning baseline while preserving unknown workload figures and the unselected ADR status. |\n| 1.3 | 2026-11-26 | Proposed | Re-scoped the protocol to qualify the Project Owner-selected PostgreSQL target; removed SQLite comparative testing while preserving workload, correctness, recovery, and production-approval gates. |
 
 **End of Evidence Protocol**
