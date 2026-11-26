@@ -178,6 +178,7 @@ PublicationRecord and DeliveryRecord use the common external-operation lifecycle
 | IN_PROGRESS | EXECUTE | OUTCOME_UNKNOWN | RECONCILIATION_REQUIRED |
 | RECONCILIATION_REQUIRED | RECONCILE | RECONCILED_SUCCESS | SUCCEEDED for publication; DELIVERED for delivery |
 | RECONCILIATION_REQUIRED | RECONCILE | RECONCILED_NOT_APPLIED | PENDING only if the exact same operation remains authorized and retry policy permits; otherwise FAILED |
+| RECONCILIATION_REQUIRED | RECONCILE | RECONCILED_NOT_APPLIED + explicit cancellation authorization | CANCELLED; persist the reconciliation evidence and cancellation projection atomically |
 
 Rules:
 
