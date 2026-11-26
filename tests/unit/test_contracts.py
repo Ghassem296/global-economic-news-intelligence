@@ -71,6 +71,11 @@ def test_page_preserves_order_and_optional_cursor() -> None:
     assert page.next_cursor == "cursor-2"
 
 
+def test_page_rejects_mutable_items() -> None:
+    with pytest.raises(TypeError, match="immutable tuple"):
+        Page(items=["mutable"])  # type: ignore[arg-type]
+
+
 def test_page_rejects_empty_cursor() -> None:
     with pytest.raises(ValueError, match="next_cursor"):
         Page(items=(), next_cursor=" ")
