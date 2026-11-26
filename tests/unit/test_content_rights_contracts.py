@@ -48,7 +48,11 @@ def assessment(
 def policy(
     mode: ContentRetentionMode = ContentRetentionMode.LIMITED_RETENTION,
 ) -> ContentRetentionPolicy:
-    return ContentRetentionPolicy(mode=mode, policy_version="rights-policy-v1")
+    return ContentRetentionPolicy(
+        mode=mode,
+        policy_version="rights-policy-v1",
+        maximum_retention_seconds=(86_400 if mode is ContentRetentionMode.LIMITED_RETENTION else None),
+    )
 
 
 def test_exact_current_allowed_persistent_storage_assessment_is_effective() -> None:
@@ -201,6 +205,29 @@ def test_policy_version_mismatch_fails_closed() -> None:
         content_scope_fingerprint=SCOPE,
         at=NOW,
     ) is ContentPersistenceOutcome.METADATA_ONLY
+
+
+def test_limited_retention_requires_a_positive_explicit_duration() -> None:
+    with pytest.raises(ValueError, match="requires a positive maximum_retention_seconds"):
+        ContentRetentionPolicy(
+            mode=ContentRetentionMode.LIMITED_RETENTION,
+            policy_version="rights-policy-v1",
+        )
+    with pytest.raises(ValueError, match="requires a positive maximum_retention_seconds"):
+        ContentRetentionPolicy(
+            mode=ContentRetentionMode.LIMITED_RETENTION,
+            policy_version="rights-policy-v1",
+            maximum_retention_seconds=0,
+        )
+
+
+def test_non_limited_modes_reject_a_retention_duration() -> None:
+    with pytest.raises(ValueError, match="only valid for LIMITED_RETENTION"):
+        ContentRetentionPolicy(
+            mode=ContentRetentionMode.LICENSED_PERSISTENT_STORAGE,
+            policy_version="rights-policy-v1",
+            maximum_retention_seconds=86_400,
+        )
 
 
 def test_assessment_rejects_invalid_scope_fingerprint() -> None:
