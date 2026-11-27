@@ -1,0 +1,459 @@
+from __future__ import annotations
+
+from dataclasses import replace
+from datetime import UTC, datetime
+
+import pytest
+
+from global_economic_news_intelligence.application.article_revision_commands import (
+    PersistArticleRevisionCommand,
+    PersistArticleRevisionResult,
+)
+from global_economic_news_intelligence.application.article_revision_service import (
+    ArticleProjection,
+    ArticleRevisionService,
+)
+from global_economic_news_intelligence.domain.article_revision_contracts import (
+    ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+    ArticleRevisionRecord,
+    ContentAvailability,
+    PersistArticleRevision,
+    SourceArticleIdentity,
+)
+from global_economic_news_intelligence.domain.contracts import (
+    CommandMetadata,
+    CommitResult,
+)
+from global_economic_news_intelligence.exceptions import ErrorCode, GeniError
+
+
+NOW = datetime(2026, 11, 27, 8, 0, tzinfo=UTC)
+IDENTITY = SourceArticleIdentity("publisher:123", "source-id-v1")
+
+
+def make_revision(title: str = "Central bank holds rates") -> PersistArticleRevision:
+    return PersistArticleRevision(
+        source_id="source-1",
+        source_article_identity=IDENTITY,
+        original_url="https://example.com/article/123",
+        external_id="123",
+        normalized_title=title,
+        content_availability=ContentAvailability.METADATA_ONLY,
+        content_reference=None,
+        content_hash=None,
+        content_normalization_version=None,
+        summary="Policy decision summary",
+        author="A. Writer",
+        language="en",
+        published_at=None,
+        observed_at=NOW,
+        change_reason="INITIAL_COLLECTION",
+        rights_assessment_references=("metadata-assessment-1",),
+    )
+
+
+def make_metadata(expected_version: str | None = None) -> CommandMetadata:
+    return CommandMetadata(
+        command_id="command-1",
+        schema_version="1",
+        actor_reference="service:collector",
+        authorization_reference="authorization-1",
+        correlation_id="correlation-1",
+        idempotency_scope="article.revision.persist",
+        idempotency_key="request-1",
+        expected_aggregate_version=expected_version,
+    )
+
+
+class FakeUnitOfWork:
+    def __init__(self) -> None:
+        self.committed = False
+        self.rolled_back = False
+
+    def commit(self) -> CommitResult:
+        self.committed = True
+        return CommitResult()
+
+    def rollback(self) -> None:
+        self.rolled_back = True
+
+
+class FakeUnitOfWorkFactory:
+    def __init__(self) -> None:
+        self.items: list[FakeUnitOfWork] = []
+
+    def begin(self) -> FakeUnitOfWork:
+        item = FakeUnitOfWork()
+        self.items.append(item)
+        return item
+
+
+class FakeArticleIds:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def new_article_id(self) -> str:
+        self.calls += 1
+        return f"article-{self.calls}"
+
+
+class FakeAuthorization:
+    def __init__(self, allowed: bool = True) -> None:
+        self.allowed = allowed
+        self.calls: list[tuple[CommandMetadata, str, str]] = []
+
+    def is_authorized(
+        self,
+        metadata: CommandMetadata,
+        *,
+        action: str,
+        resource_reference: str,
+    ) -> bool:
+        self.calls.append((metadata, action, resource_reference))
+        return self.allowed
+
+
+class FakeContentRights:
+    def __init__(self, allowed: bool = True) -> None:
+        self.allowed = allowed
+        self.calls: list[tuple[PersistArticleRevision, datetime]] = []
+
+    def permits_persistent_storage(
+        self,
+        revision: PersistArticleRevision,
+        *,
+        at: datetime,
+    ) -> bool:
+        self.calls.append((revision, at))
+        return self.allowed
+
+
+class FakeIdempotency:
+    def __init__(self) -> None:
+        self.entries: dict[tuple[str, str], tuple[str, PersistArticleRevisionResult | None]] = {}
+
+    def claim(
+        self,
+        *,
+        scope: str,
+        key: str,
+        request_fingerprint: str,
+        uow: FakeUnitOfWork,
+    ) -> PersistArticleRevisionResult | None:
+        identity = (scope, key)
+        previous = self.entries.get(identity)
+        if previous is None:
+            self.entries[identity] = (request_fingerprint, None)
+            return None
+        if previous[0] != request_fingerprint:
+            raise GeniError(
+                ErrorCode.IDEMPOTENCY_KEY_REUSE_CONFLICT,
+                "Idempotency key was reused.",
+                correlation_id="correlation-1",
+            )
+        return previous[1]
+
+    def complete(
+        self,
+        *,
+        scope: str,
+        key: str,
+        request_fingerprint: str,
+        result: PersistArticleRevisionResult,
+        uow: FakeUnitOfWork,
+    ) -> None:
+        self.entries[(scope, key)] = (request_fingerprint, result)
+
+
+class FakeArticleRepository:
+    def __init__(self) -> None:
+        self.items: dict[str, ArticleProjection] = {}
+        self.save_calls = 0
+
+    def get_by_id(self, article_id: str) -> ArticleProjection | None:
+        return self.items.get(article_id)
+
+    def find_by_source_identity(
+        self,
+        source_id: str,
+        external_identity: SourceArticleIdentity,
+    ) -> ArticleProjection | None:
+        return next(
+            (
+                item
+                for item in self.items.values()
+                if item.source_id == source_id
+                and item.source_article_identity == external_identity
+            ),
+            None,
+        )
+
+    def save_projection(
+        self,
+        article: ArticleProjection,
+        expected_version: str | None,
+        uow: FakeUnitOfWork,
+    ) -> ArticleProjection:
+        self.save_calls += 1
+        version_number = 1 if expected_version is None else int(expected_version.rsplit("-", 1)[-1]) + 1
+        saved = replace(article, aggregate_version=f"article-version-{version_number}")
+        self.items[saved.article_id] = saved
+        return saved
+
+
+class FakeArticleRevisionRepository:
+    def __init__(self) -> None:
+        self.current: dict[str, ArticleRevisionRecord] = {}
+        self.append_calls = 0
+
+    def get_by_id(self, revision_id: str) -> ArticleRevisionRecord | None:
+        return next((item for item in self.current.values() if item.revision_id == revision_id), None)
+
+    def get_current_for_article(self, article_id: str) -> ArticleRevisionRecord | None:
+        return self.current.get(article_id)
+
+    def find_current_by_revision_fingerprint(
+        self,
+        article_id: str,
+        revision_fingerprint: str,
+        schema_version: str,
+    ) -> ArticleRevisionRecord | None:
+        item = self.current.get(article_id)
+        if (
+            item is not None
+            and item.revision_fingerprint == revision_fingerprint
+            and item.revision_fingerprint_schema_version == schema_version
+        ):
+            return item
+        return None
+
+    def append_revision(
+        self,
+        article_id: str,
+        revision: PersistArticleRevision,
+        expected_article_version: str | None,
+        uow: FakeUnitOfWork,
+    ) -> ArticleRevisionRecord:
+        self.append_calls += 1
+        previous = self.current.get(article_id)
+        record = ArticleRevisionRecord(
+            revision_id=f"revision-{self.append_calls}",
+            article_id=article_id,
+            revision_number=1 if previous is None else previous.revision_number + 1,
+            payload=revision,
+            revision_fingerprint=revision.revision_fingerprint,
+            revision_fingerprint_schema_version=ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+            created_at=revision.observed_at,
+        )
+        self.current[article_id] = record
+        return record
+
+
+def build_service(
+    *,
+    articles: FakeArticleRepository | None = None,
+    revisions: FakeArticleRevisionRepository | None = None,
+    authorization: FakeAuthorization | None = None,
+    rights: FakeContentRights | None = None,
+    idempotency: FakeIdempotency | None = None,
+) -> tuple[ArticleRevisionService, dict[str, object]]:
+    dependencies: dict[str, object] = {
+        "articles": articles or FakeArticleRepository(),
+        "revisions": revisions or FakeArticleRevisionRepository(),
+        "authorization": authorization or FakeAuthorization(),
+        "rights": rights or FakeContentRights(),
+        "idempotency": idempotency or FakeIdempotency(),
+        "uow_factory": FakeUnitOfWorkFactory(),
+        "ids": FakeArticleIds(),
+    }
+    service = ArticleRevisionService(
+        articles=dependencies["articles"],  # type: ignore[arg-type]
+        revisions=dependencies["revisions"],  # type: ignore[arg-type]
+        idempotency=dependencies["idempotency"],  # type: ignore[arg-type]
+        unit_of_work_factory=dependencies["uow_factory"],  # type: ignore[arg-type]
+        authorization=dependencies["authorization"],  # type: ignore[arg-type]
+        content_rights=dependencies["rights"],  # type: ignore[arg-type]
+        article_ids=dependencies["ids"],  # type: ignore[arg-type]
+    )
+    return service, dependencies
+
+
+def test_new_article_append_and_projection_share_one_unit_of_work() -> None:
+    service, deps = build_service()
+    result = service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+
+    articles = deps["articles"]
+    revisions = deps["revisions"]
+    uow_factory = deps["uow_factory"]
+    assert isinstance(articles, FakeArticleRepository)
+    assert isinstance(revisions, FakeArticleRevisionRepository)
+    assert isinstance(uow_factory, FakeUnitOfWorkFactory)
+    assert result == PersistArticleRevisionResult(
+        article_id="article-1",
+        revision_id="revision-1",
+        created=True,
+        article_version="article-version-1",
+    )
+    assert articles.items["article-1"].current_revision_id == "revision-1"
+    assert revisions.current["article-1"].revision_number == 1
+    assert uow_factory.items[0].committed
+    assert not uow_factory.items[0].rolled_back
+
+
+def test_same_current_fingerprint_reuses_revision_without_projection_write() -> None:
+    articles = FakeArticleRepository()
+    revisions = FakeArticleRevisionRepository()
+    revision = make_revision()
+    record = ArticleRevisionRecord(
+        revision_id="revision-existing",
+        article_id="article-existing",
+        revision_number=1,
+        payload=revision,
+        revision_fingerprint=revision.revision_fingerprint,
+        revision_fingerprint_schema_version=ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+        created_at=NOW,
+    )
+    revisions.current["article-existing"] = record
+    articles.items["article-existing"] = ArticleProjection(
+        article_id="article-existing",
+        source_id=revision.source_id,
+        source_article_identity=revision.source_article_identity,
+        url=revision.original_url,
+        canonical_url=revision.source_article_identity.canonical_url,
+        external_id=revision.external_id,
+        title=revision.normalized_title,
+        content_availability=revision.content_availability,
+        content_reference=revision.content_reference,
+        content_hash=revision.content_hash,
+        content_normalization_version=revision.content_normalization_version,
+        summary=revision.summary,
+        author=revision.author,
+        language=revision.language,
+        published_at=revision.published_at,
+        current_revision_id=record.revision_id,
+        metadata={},
+        aggregate_version="article-version-4",
+        created_at=NOW,
+        updated_at=NOW,
+    )
+    service, deps = build_service(articles=articles, revisions=revisions)
+    result = service.execute(
+        PersistArticleRevisionCommand(
+            make_metadata("article-version-4"),
+            revision,
+            article_id="article-existing",
+        )
+    )
+
+    assert result.revision_id == "revision-existing"
+    assert not result.created
+    assert articles.save_calls == 0
+    assert revisions.append_calls == 0
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items[0].committed
+
+
+def test_authorization_denial_prevents_transaction_start() -> None:
+    authorization = FakeAuthorization(allowed=False)
+    service, deps = build_service(authorization=authorization)
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+
+    assert exc.value.code is ErrorCode.AUTHORIZATION_DENIED
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items == []
+
+
+def test_metadata_only_revision_does_not_request_full_text_storage_rights() -> None:
+    rights = FakeContentRights()
+    service, _ = build_service(rights=rights)
+    service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+    assert rights.calls == []
+
+
+def test_existing_source_identity_with_changed_revision_requires_explicit_versioned_update() -> None:
+    articles = FakeArticleRepository()
+    revisions = FakeArticleRevisionRepository()
+    original = make_revision()
+    record = ArticleRevisionRecord(
+        revision_id="revision-current",
+        article_id="article-existing",
+        revision_number=1,
+        payload=original,
+        revision_fingerprint=original.revision_fingerprint,
+        revision_fingerprint_schema_version=ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+        created_at=NOW,
+    )
+    revisions.current["article-existing"] = record
+    articles.items["article-existing"] = ArticleProjection(
+        article_id="article-existing",
+        source_id=original.source_id,
+        source_article_identity=original.source_article_identity,
+        url=original.original_url,
+        canonical_url=original.source_article_identity.canonical_url,
+        external_id=original.external_id,
+        title=original.normalized_title,
+        content_availability=original.content_availability,
+        content_reference=original.content_reference,
+        content_hash=original.content_hash,
+        content_normalization_version=original.content_normalization_version,
+        summary=original.summary,
+        author=original.author,
+        language=original.language,
+        published_at=original.published_at,
+        current_revision_id=record.revision_id,
+        metadata={},
+        aggregate_version="article-version-2",
+        created_at=NOW,
+        updated_at=NOW,
+    )
+    service, _ = build_service(articles=articles, revisions=revisions)
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(
+            PersistArticleRevisionCommand(
+                make_metadata(),
+                make_revision("Central bank changes rates"),
+            )
+        )
+
+    assert exc.value.code is ErrorCode.CONFLICT
+
+
+def test_persistent_content_is_denied_when_rights_verifier_fails() -> None:
+    content = "Permitted full text for this synthetic test."
+    import hashlib
+
+    digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    revision = PersistArticleRevision(
+        source_id="source-1",
+        source_article_identity=IDENTITY,
+        original_url="https://example.com/article/123",
+        external_id="123",
+        normalized_title="Central bank holds rates",
+        content_availability=ContentAvailability.AVAILABLE,
+        content_reference="content://synthetic/article-123",
+        content_hash=digest,
+        content_normalization_version="normalization-v1",
+        summary=None,
+        author=None,
+        language="en",
+        published_at=None,
+        observed_at=NOW,
+        change_reason="INITIAL_COLLECTION",
+        rights_assessment_references=("storage-assessment-1",),
+    )
+    rights = FakeContentRights(allowed=False)
+    service, deps = build_service(rights=rights)
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(PersistArticleRevisionCommand(make_metadata(), revision))
+
+    assert exc.value.code is ErrorCode.RIGHTS_NOT_ALLOWED
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items == []
+    assert rights.calls[0][1] == NOW
