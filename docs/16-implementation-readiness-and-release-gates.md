@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.49  
+**Version:** 4.50  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -392,7 +392,10 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.47):** Refreshes the inspected `main` baseline to `428e6b6d3ea142175373246bba209476c50cd5c6` and synchronizes the latest verified evidence: Application CI run `45961988981` (275 tests, Ruff and mypy successful), Documentation Validation run `45961988971`, and PostgreSQL 18.7 / Python 3.15 PoC run `45961988925` (31 tests; artifact `15180889132`, archive SHA-256 `c306b10267d9bd46988c5bf8cf15b2af0ddcb7add4bf191ab8edfbb98f7d9fe0`). All three workflows succeeded. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed, production qualification and all applicable authorization/rights/security/operational gates remain open, and the overall readiness verdict is unchanged.
 
 
-**Revision Note (v4.48):** Refreshes the inspected `main` baseline to `a1f7398cad7aec5e9279fd6b96815c503739e73a` and records successful verification of POC-29 on source commit `a9dd0d9ab82a95992c28fb559a625155bbf43a96`: Application CI run `45962990531` (275 tests, Ruff and mypy successful), Documentation Validation run `45962990536`, and PostgreSQL 18.7 / Python 3.15 PoC run `45962990616` (32 tests; artifact `15181591814`, archive SHA-256 `b900d487ed456dc0dc8297731b17f0eab4f4df9c8fa28e4f7767a23436425987`). All three workflows succeeded. The new test verifies atomic concurrent ArticleRevision append/current-pointer compare-and-swap. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed, production qualification and all applicable authorization/rights/security/operational gates remain open, and the overall readiness verdict is unchanged.
+**Revision Note (v4.48):** Refreshes the inspected `main` baseline to `a1f7398cad7aec5e9279fd6b96815c503739e73a` and records successful verification of POC-29 on source commit `a9dd0d9ab82a875fff19b05d0b26fafad82a607d`: Application CI run `45962990531` (275 tests, Ruff and mypy successful), Documentation Validation run `45962990536`, and PostgreSQL 18.7 / Python 3.15 PoC run `45962990616` (32 tests; artifact `15181591814`, archive SHA-256 `b900d487ed456dc0dc8297731b17f0eab4f4df9c8fa28e4f7767a23436425987`). All three workflows succeeded. The new test verifies atomic concurrent ArticleRevision append/current-pointer compare-and-swap. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed, production qualification and all applicable authorization/rights/security/operational gates remain open, and the overall readiness verdict is unchanged.
 
 
 **Revision Note (v4.49):** Refreshes the inspected `main` baseline to `aaeb4de0c9c498c6e172ee878d2ee70875027104` and synchronizes evidence with the successful 275-test Application CI run `45963235364`, Documentation Validation run `45963235243`, and PostgreSQL 18.7 / Python 3.15 PoC run `45963235373` (32 tests; artifact `15182595241`, archive SHA-256 `5eac19ecfcb8c73cd40af1b54187f0eea28001371fd0e9bb11198df0eaf553b5`) on source commit `5c9e34af98a97326c22ac756f306225493f91e29`. POC-29 verifies one-winner concurrent ArticleRevision append/current-pointer compare-and-swap with rollback of the losing insert. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed and production qualification, security/operations, workload thresholds, and formal acceptance remain open.
+
+
+**Revision Note (v4.50):** Corrects the full source commit SHA recorded in the historical v4.48 evidence note for the POC-29 test commit. No test result, architecture decision, readiness gate, or approval status changes.
