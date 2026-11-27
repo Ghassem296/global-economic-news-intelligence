@@ -219,6 +219,15 @@ class PersistArticleRevision:
 
         if not isinstance(self.rights_assessment_references, tuple):
             raise TypeError("rights_assessment_references must be an immutable tuple.")
+        if (
+            self.content_availability
+            in {ContentAvailability.AVAILABLE, ContentAvailability.PARTIAL}
+            and not self.rights_assessment_references
+        ):
+            raise ValueError(
+                "available or partial content requires at least one "
+                "rights_assessment_reference."
+            )
         for reference in self.rights_assessment_references:
             _required_text(reference, "rights_assessment_references item")
         if len(set(self.rights_assessment_references)) != len(
