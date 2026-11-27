@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.11  
+**Version:** 4.12  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `837e81285d94f52195a5ac4558cf90175bf7408a`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `883ebeb985777d5e2edfd760271d5161ea88806c`
 
 ---
 
@@ -46,7 +46,7 @@ The project package-management choice is now uv 0.13.9, pinned by `[tool.uv].req
 
 The following remain absent or incomplete:
 
-- PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 18 test methods on commit `d0f8cec8f0df07373bf69178bd626d477a2edb9e` (GitHub Actions run `45941330079`). The suite includes a full-database backup observed during concurrent writes and restored into an isolated database, a child-process restart/reconnect check, and a least-privilege read-only role smoke test. Backup encryption, retention, off-site protection, restore authorization, broader security review, approved workload values, and performance thresholds remain outstanding. Query-plan capture is not a performance result. This is partial evidence, not PostgreSQL qualification; production toolchain, migrations, and activation remain gated, and GENI-ADR-005 remains Proposed.
+- PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 18 test methods on commit `13555a16fe4eb26cb665c3505e37d1f3c5190fe7` (GitHub Actions run `45942169818`). POC-15 verified a concurrent-write logical backup/isolated restore, mode `0600` for backup files, and an experimental AES-256-CBC/PBKDF2 plus HMAC-SHA256 envelope with wrong-key/tamper detection. POC-16 verified process-restart/reconnect; POC-17 verified a least-privilege read-only role. The test key was ephemeral and does not implement production key custody. KMS/HSM integration, key rotation, retention, off-site/immutable protection, restore authorization, cluster-global-object recovery, formal security review, approved workload values, and performance thresholds remain outstanding. Query-plan capture is not a performance result. This is partial evidence, not PostgreSQL qualification; production toolchain, migrations, and activation remain gated, and GENI-ADR-005 remains Proposed.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
 - Document 15 v4.2 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
@@ -118,7 +118,7 @@ Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.
 
 ### 5.2 Persistence and transaction implementation
 
-Continue the PostgreSQL qualification in GENI-ADR-005-POC-001 from the successful 18-test concurrent-write backup run (`45941330079`) using the disposable PoC-only candidate toolchain and synthetic data. Extend POC-17 and the operational evidence to cover backup encryption, retention, off-site protection, restore permissions, formal security review, monitoring, and operator procedures. Obtain an approved workload profile and predeclared thresholds before making capacity claims; retain raw results, failed runs, exact experimental versions/configuration, commit SHA, migration and backup/restore evidence. Correctness and operational-feasibility experiments may be recorded while numeric workload targets remain unset, but no capacity or final production-readiness claim is permitted. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all applicable PostgreSQL qualification gates must pass, before production dependencies, production migrations, or production activation. Then implement:
+Continue the PostgreSQL qualification in GENI-ADR-005-POC-001 from the successful 18-test protected-backup run (`45942169818`) using the disposable PoC-only candidate toolchain and synthetic data. Next, define and test production key custody/rotation, off-site/immutable backup storage, retention enforcement, restore authorization and cluster-global-object recovery, privacy-ledger reconciliation, monitoring, alerting, and operator procedures. The experiment's ephemeral passphrase/HMAC envelope is not a production cryptographic or key-management approval. Obtain an approved workload profile and predeclared thresholds before making capacity claims; retain raw results, failed runs, exact experimental versions/configuration, commit SHA, migration and backup/restore evidence. Correctness and operational-feasibility experiments may be recorded while numeric workload targets remain unset, but no capacity or final production-readiness claim is permitted. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all applicable PostgreSQL qualification gates must pass, before production dependencies, production migrations, or production activation. Then implement:
 - Database adapter, migrations, repository implementations, and UnitOfWork.
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
@@ -164,7 +164,7 @@ A first-slice implementation may start only when all applicable gates below have
 | Gate | Required evidence | Pass condition |
 |---|---|---|
 | R0 — Product and architecture baseline | Scope statement, accepted foundational ADRs, reconciled architecture/data/component documents | No unresolved contradiction affecting the selected slice; deferred capabilities are explicitly disabled |
-| R1 — Technology baseline | 18 PoC test methods passed on PostgreSQL 18.7/Psycopg 3.3.9, including concurrent-write full-database logical backup/restore, three migrations, child-process restart/reconnect, and least-privilege role smoke tests; remaining backup security/retention/restore controls; approved workload profile and thresholds; formal ADR-005 acceptance and explicit production-toolchain selection | All mandatory correctness, backup/security, recovery, and approved workload gates pass; reproducible evidence and operational feasibility are reviewed; production engine/tooling/configuration are explicitly recorded in the Accepted ADR. PoC-only candidates do not satisfy production selection by themselves |
+| R1 — Technology baseline | 18 PoC test methods passed on PostgreSQL 18.7/Psycopg 3.3.9, including concurrent-write full-database logical backup/restore, three migrations, experimental encrypted/authenticated backup with private file permissions, child-process restart/reconnect, and least-privilege role smoke tests; remaining production key management, retention/off-site/restore controls, approved workload profile and thresholds, formal ADR-005 acceptance and explicit production-toolchain selection | All mandatory correctness, backup/security, recovery, and approved workload gates pass; reproducible evidence and operational feasibility are reviewed; production engine/tooling/configuration are explicitly recorded in the Accepted ADR. PoC-only candidates do not satisfy production selection by themselves |
 | R2 — Contract baseline | Approved Document 15; complete DTO schemas and transition matrices for every enabled workflow | No enabled workflow depends on an unresolved state, field, authorization, or concurrency rule |
 | R3 — Security, rights, and privacy | Threat-model controls, operation-specific rights decisions, privacy authorization boundaries, secret handling | Deny/unknown/expired/revoked/scope-mismatch cases fail closed; test-source permissions are documented |
 | R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, safe errors, structured logging, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
@@ -232,7 +232,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.11
+**Version:** 4.12
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -280,3 +280,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.10):** Records the follow-up PoC run with all 18 test methods passing, including full-database logical backup/restore, a child-process restart/reconnect exercise, and least-privilege role smoke testing. Concurrent-write backup, backup encryption/retention/restore permissions, formal security review, workload approval, performance thresholds, and production acceptance remain open.
 
 **Revision Note (v4.11):** Records the follow-up PoC run with all 18 tests passing after adding a concurrent-write backup window and a third migration. The full-database backup restored successfully to an isolated database. Backup protection/retention, restore authorization, formal security review, workload approval, performance thresholds, and production acceptance remain open.
+
+**Revision Note (v4.12):** Records the successful 18-test run with private backup-file permissions and an experimental authenticated-encryption envelope, including wrong-key and tamper detection. Operations Document 13 v1.2 now specifies backup/restore requirements and the evidence boundary. Production key custody/rotation, retention, off-site/immutable storage, restore authorization, cluster-global recovery, workload/performance approval, and formal ADR-005 acceptance remain open.
