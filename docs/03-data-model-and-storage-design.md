@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.58
+**Version:** 1.59
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1002,7 +1002,7 @@ Constraints:
 
 **EventIdentityOperationReportImpact**
 
-One immutable assessment/projection record tracks the effect of one identity operation on one exact immutable Report version.
+One EventIdentityOperationReportImpact aggregate tracks the effect of one identity operation on one exact immutable Report version. Its current status is a rebuildable projection; every status transition and assessment/remediation action is preserved in append-only EventIdentityOperationReportImpactHistory.
 
 Fields:
 
@@ -1010,7 +1010,7 @@ Fields:
 - `operation_id`
 - `report_id` — exact immutable Report version, not a mutable report-family identifier
 - `impact_classification` — versioned classification describing why the report was selected and the nature of the event-identity change
-- `impact_status` — `PENDING`, `ASSESSED`, `REMEDIATION_REQUIRED`, or `RECONCILIATION_REQUIRED`
+- `impact_status` — `PENDING`, `ASSESSED`, `REMEDIATION_REQUIRED`, `RECONCILIATION_REQUIRED`, or `RESOLVED`
 - `reason_codes`
 - `assessment_summary`
 - `policy_version`
@@ -1019,8 +1019,9 @@ Fields:
 - `authorization_reference`
 - `created_at`
 - `assessed_at` nullable
-- `resolved_at` nullable
-- `resolution_reference` nullable — typed reference to the separately persisted remediation outcome, when one exists
+- `remediation_work_item_reference` nullable — typed reference to a durable, owned remediation work item; required while status is `REMEDIATION_REQUIRED`
+- `resolved_at` nullable — required when status is `RESOLVED`
+- `resolution_reference` nullable — typed reference to the separately persisted remediation outcome; required when status is `RESOLVED`
 - `metadata`
 
 Constraints:
@@ -1029,11 +1030,14 @@ Constraints:
 - The report version and all of its provenance links remain immutable. The impact record is not permission to rewrite the report or its historical event links.
 - The assessment must consider all input Event references, persisted allocation outcomes including unresolved subjects, the exact report evidence/article/analysis provenance, and whether the report was previously published or delivered.
 - An unresolved allocation or unavailable provenance needed to determine the report's scope must not be treated as no impact; the impact remains `RECONCILIATION_REQUIRED` until resolved.
-- `ASSESSED` means the impact has been evaluated and its outcome recorded. If correction is required, use `REMEDIATION_REQUIRED`; this does not imply that a corrected report has been generated or republished.
+- `ASSESSED` means the impact has been evaluated and its outcome recorded and no further report remediation is required.
+- `REMEDIATION_REQUIRED` means a concrete remediation is necessary and a durable work item with an accountable owner/workflow has been created and referenced. A free-text note or an unassigned queue entry is insufficient.
+- `RESOLVED` requires a durable resolution reference and timestamp; it means the tracked remediation has been completed and verified, not merely scheduled.
+- Allowed transitions are `PENDING` to `ASSESSED` or `RECONCILIATION_REQUIRED`; `ASSESSED` to `REMEDIATION_REQUIRED` or `RESOLVED`; `REMEDIATION_REQUIRED` to `RESOLVED` or `RECONCILIATION_REQUIRED`; and `RECONCILIATION_REQUIRED` to `PENDING`, `ASSESSED`, or `REMEDIATION_REQUIRED` after a successful retry. Terminal `RESOLVED` records are immutable; a later material change requires a successor impact record through a new/compensating identity operation.
 - A material correction creates a new immutable Report version through ReportVersionService, with new exact provenance links and a new publication-eligibility decision where applicable. The prior Report version and its PublicationDecision remain historical.
 - Replacing or withdrawing an external publication is a separate, explicitly authorized PublicationService operation. An identity operation must never automatically replace or withdraw an external publication.
 - A completed DeliveryRecord remains historical. Any recipient correction or notification requires a separately authorized ReportDelivery operation and its own rights authorization.
-- The identity operation may reach `SUCCEEDED` only after report-impact discovery is complete and every discovered report has a durable impact record whose assessment is `ASSESSED` or whose required remediation is durably assigned and tracked. Technical discovery/assessment failures remain `RECONCILIATION_REQUIRED`; they must not be hidden by marking the identity operation complete.
+- The identity operation may reach `SUCCEEDED` only after report-impact discovery is complete and every discovered report has a durable impact record in `ASSESSED`, `REMEDIATION_REQUIRED` with a valid durable work-item reference, or `RESOLVED`. Technical discovery/assessment failures and unassigned remediation remain `RECONCILIATION_REQUIRED`; they must not be hidden by marking the identity operation complete.
 - The system must not delete or reuse event identifiers after a merge or split.
 - ArticleEventLink changes require case-scoped successor EventMatchDecision records and EventService application; the identity operation must not directly repoint a historical link.
 - Survivor selection must use a documented, versioned policy and must not assume that the newest or oldest event is always correct.
@@ -1632,6 +1636,31 @@ Constraints:
 - A material update creates a new report version.
 - Published reports must not be silently modified.
 - Reports not associated with one event must be supported through explicit report scope and event relationships.
+
+
+### 7.5.2 EventIdentityOperationReportImpactHistory
+
+Represents one immutable transition or auditable assessment/remediation action for an EventIdentityOperationReportImpact aggregate.
+
+Fields:
+
+- `id`
+- `report_impact_id`
+- `sequence` — monotonically increasing within the report-impact aggregate
+- `action_type`
+- `previous_status` nullable
+- `new_status`
+- `actor_type`
+- `actor_reference` nullable
+- `authorization_reference` nullable
+- `reason_code` and/or `reason`
+- `remediation_work_item_reference` nullable
+- `resolution_reference` nullable
+- `idempotency_key`
+- `created_at`
+- `metadata`
+
+History records are append-only. `(report_impact_id, sequence)` and the non-null idempotency key within the aggregate must be unique. A status/projection update and its history row must be committed in one UnitOfWork. The current impact status and remediation/resolution references must be rebuildable from the history. The history must preserve who assessed the report, why remediation was or was not required, when a work item was assigned, and what evidence established resolution.
 
 ### 11.2 ReportEventLink
 
@@ -3351,3 +3380,6 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.58):** Defines durable per-report-version impact tracking for Event identity operations. Requires discovery through both primary Event references and ReportEventLinks, preserves immutable report/publication/delivery history, and separates report correction, external publication replacement/withdrawal, and recipient correction into their respective services. This is a logical contract update; implementation and ADR approval remain gated.
+
+
+**Revision Note (v1.59):** Completes the report-impact lifecycle by adding append-only EventIdentityOperationReportImpactHistory, an explicit RESOLVED state, and a required durable work-item reference while remediation is outstanding. The identity operation cannot complete with an unassigned report remediation. This remains a logical contract, not an implementation claim.
