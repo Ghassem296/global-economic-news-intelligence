@@ -42,14 +42,15 @@ class ArticleRepository(Protocol[ArticleT]):
     this generic port does not invent its fields or a concrete persistence type.
     """
 
-    def get_by_id(self, article_id: str) -> ArticleT | None:
-        """Return the current projection, including its current revision reference."""
+    def get_by_id(self, article_id: str, uow: UnitOfWork) -> ArticleT | None:
+        """Read the current projection using the caller's active transaction."""
         ...
 
     def find_by_source_identity(
         self,
         source_id: str,
         external_identity: SourceArticleIdentity,
+        uow: UnitOfWork,
     ) -> ArticleT | None:
         """Resolve the stable source identity tuple, never the mutable canonical URL.
 
@@ -76,8 +77,10 @@ class ArticleRevisionRepository(Protocol):
         """Return one immutable revision by its server-owned ID."""
         ...
 
-    def get_current_for_article(self, article_id: str) -> ArticleRevisionRecord | None:
-        """Return the exact revision referenced by the Article current pointer."""
+    def get_current_for_article(
+        self, article_id: str, uow: UnitOfWork
+    ) -> ArticleRevisionRecord | None:
+        """Read the current revision through the caller's active transaction."""
         ...
 
     def find_current_by_revision_fingerprint(
