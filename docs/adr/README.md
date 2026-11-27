@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.23
+**Version:** 1.24
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -416,3 +416,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **Revision Note (v1.22):** Records GENI-ADR-005 v1.7 and PoC-001 v1.5, which adds the owner-approved workload-profile template while keeping all workload values and thresholds explicitly unset.
 
 **Revision Note (v1.23):** Synchronizes the ADR inventory after GENI-ADR-005 v1.8, PoC-001 v1.6, and GENI-ADR-016 v1.2 clarified the separation between isolated PoC-only candidate tooling and production approval. Both ADRs remain Proposed; no production database dependency or capability is authorized.
+
+**Revision Note (v1.24):** Records the first successful partial PostgreSQL PoC run documented in PoC-001 v1.7. The run produced 16 passing test methods but does not qualify PostgreSQL or accept ADR-005/ADR-016; backup/restore, security review, full process-restart recovery, workload approval, and production acceptance remain outstanding.
