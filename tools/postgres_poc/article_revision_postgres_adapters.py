@@ -604,6 +604,77 @@ class PostgreSQLArticleRevisionRepository:
         )
 
 
+class PostgreSQLAuthorizationVerifier:
+    """PoC verifier that binds an exact grant row to the protected transaction."""
+
+    def __init__(self, uow_factory: PostgreSQLUnitOfWorkFactory, clock: Any) -> None:
+        self._uow_factory = uow_factory
+        self._clock = clock
+
+    def _check(
+        self,
+        metadata: Any,
+        *,
+        action: str,
+        resource_reference: str,
+        uow: PostgreSQLUnitOfWork,
+    ) -> bool:
+        at = self._clock.now()
+        if not isinstance(at, datetime) or at.utcoffset() is None:
+            raise ValueError("Authorization clock must return a timezone-aware datetime.")
+        row = uow.connection.execute(
+            """
+            SELECT status, effective_from, expires_at
+            FROM poc_authorization_grants
+            WHERE grant_reference = %s
+              AND actor_reference = %s
+              AND action = %s
+              AND resource_reference = %s
+            FOR SHARE
+            """,
+            (
+                metadata.authorization_reference,
+                metadata.actor_reference,
+                action,
+                resource_reference,
+            ),
+        ).fetchone()
+        if row is None or row[0] != "ACTIVE":
+            return False
+        effective_from, expires_at = row[1], row[2]
+        return effective_from <= at and (expires_at is None or at < expires_at)
+
+    def is_authorized(
+        self,
+        metadata: Any,
+        *,
+        action: str,
+        resource_reference: str,
+        uow: UnitOfWork | None = None,
+    ) -> bool:
+        if uow is not None:
+            return self._check(
+                metadata,
+                action=action,
+                resource_reference=resource_reference,
+                uow=_require_uow(uow),
+            )
+        preflight_uow = self._uow_factory.begin()
+        try:
+            result = self._check(
+                metadata,
+                action=action,
+                resource_reference=resource_reference,
+                uow=preflight_uow,
+            )
+        except BaseException:
+            with suppress(BaseException):
+                preflight_uow.rollback()
+            raise
+        preflight_uow.rollback()
+        return result
+
+
 class PostgreSQLIdempotencyRepository:
     """Transactional idempotency claim and typed-result replay adapter."""
 
