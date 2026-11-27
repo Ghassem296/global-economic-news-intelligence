@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.98  
+**Version:** 4.99  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -42,7 +42,7 @@ The latest exact-commit verification supersedes the historical `dd7d69e`, `e81a3
 - An executable ArticleRevisionService with technology-neutral ArticleRepository and ArticleRevisionRepository ports. It coordinates authorization, fail-closed rights checks, command idempotency, immutable revision append/reuse, and Article projection updates through one injected UnitOfWork; current tests are unit-level and do not qualify durable adapters or database concurrency.
 - A CLI that reports package version and disabled capability boundaries, using validated settings and safe logging initialization.
 - Unit tests for transition guards, aggregation, successor-decision linearity, review projection, external-outcome reconciliation, validated configuration, safe errors/logging, and domain dependency boundaries.
-- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; source-code baseline commit `4ce279e7786270475ae2618c484f2404c47b82a4` passed 297 tests, Ruff, and mypy (run `45983781564`).
+- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the latest recorded exact source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` passed all 302 tests, Ruff, and mypy (run `46001262517`). This evidence predates the current documentation-only Event Identity contract updates and is not a test run of the latest documentation commits.
 - Existing documentation CI and registry validation remain separate and are preserved.
 
 The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
@@ -53,7 +53,7 @@ The following remain absent or incomplete:
 
 - PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 41 test methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests) on source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` (GitHub Actions run `46001262732`, evidence artifact `15198735753`). POC-29 through POC-34 cover ArticleRevision concurrency, deferred ownership, idempotency claim/replay and rollback, lease takeover/fencing, and unknown external-outcome reconciliation. POC-35–38 cover transaction-bound authorization/content-rights revocation ordering using isolated row-lock experiments. This remains partial PoC evidence, not production qualification. Production KMS/HSM integration, key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, approved workload values, and performance thresholds remain outstanding. GENI-ADR-005 and GENI-ADR-016 remain Proposed.
 - The ArticleRevisionService and technology-neutral ArticleRepository/ArticleRevisionRepository ports are implemented, but no durable repository or UnitOfWork adapter, transactional idempotency store, concrete authorization/rights adapter, production migrations, lease/fencing persistence, or ProcessingStepAttempt adapter exists.
-- Document 15 v4.18 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, the PostgreSQL qualification gate, and unambiguous structured source-identity authorization resource references; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
+- Document 15 v4.23 defines the first source/article-to-report DTO tranches and a gated Event Identity Operation application-contract tranche (typed command/result/query envelopes, repository ports, prepare/apply/reconcile/finalize phases, allocation validation, report-impact tracking, idempotency and recovery). These are proposed logical contracts only: GENI-ADR-011/016 remain Proposed, no Event Identity Operation adapter or durable reconciliation-work persistence exists, and merge/split execution remains disabled. Document 08 v1.9 defines deny-by-default role boundaries and a minimum operation-permission catalogue; final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist. Non-finite numeric metadata is omitted and strict JSON serialization is enforced; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
 - A pure, fail-closed content-rights persistence gate now exists for exact source/content scope and PERSISTENT_STORAGE assessments. Rights evidence verification, freshness policy, limited-retention deadlines, temporary-content lifecycle, persistence, revocation propagation, deletion, and operation-specific external-processing enforcement remain unimplemented.
 - No source acquisition, rights adapter, LLM execution adapter, economic analysis workflow, report generator, publication client, or delivery client.
@@ -534,3 +534,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.98):** Reconciles the remaining PostgreSQL PoC narrative and detailed race-experiment paragraph with the latest verified source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` and run `46001262732` (41 methods). Earlier 37-method and 87db2fc evidence remains in historical revision notes only. No production qualification, ADR acceptance, or capability activation is implied.
+
+
+**Revision Note (v4.99):** Records the new gated Event Identity Operation application-contract tranche in GENI-IMPL-015 v4.23 and clarifies that it closes a documentation contract gap only; durable work-item persistence, adapters, ADR acceptance, integration/failure-recovery tests, and capability activation remain outstanding. Reconciles the Application CI summary to the latest recorded exact source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` (302 tests); this is not verification of the subsequent documentation commits.
