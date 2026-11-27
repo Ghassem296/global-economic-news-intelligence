@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.9 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.64 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.65 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 3.1 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -705,3 +705,5 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.24):** Synchronizes GENI-READY-016 v4.63 after clarifying that current-main CI workflow results were not available for verification; no unverified test success is claimed.
 
 **Revision Note (v10.25):** Synchronizes the controlled inventory with GENI-READY-016 v4.64 after aligning its duplicate document-control metadata and recording the verified Application CI and PostgreSQL PoC outcomes for commit `1dadc81137a54cbf80b923b1a2af8b72e7dc605a`. Documentation validation remains pending until this registry synchronization is verified.
+
+**Revision Note (v10.26):** Synchronizes the controlled inventory with GENI-READY-016 v4.65 and records the verified 295-test Application CI, 23-test Documentation Validation, and 32-test PostgreSQL 18.7 / Python 3.15 PoC on commit `20050089eb3b20f12478f4cd6fa8eadb193d59e6`. The PoC remains partial and experimental; no ADR acceptance or production authorization is implied.
