@@ -6,6 +6,7 @@ imported by the application runtime.
 
 from __future__ import annotations
 
+from contextlib import suppress
 from threading import get_ident
 from typing import Any
 
@@ -59,10 +60,8 @@ class PostgreSQLUnitOfWork:
             # Preserve that primary failure if closing the broken connection
             # also fails; cleanup must not replace the transaction error.
             self._state = "ROLLED_BACK"
-            try:
+            with suppress(BaseException):
                 self._connection.close()
-            except BaseException:
-                pass
             raise
         else:
             self._state = "ROLLED_BACK"
