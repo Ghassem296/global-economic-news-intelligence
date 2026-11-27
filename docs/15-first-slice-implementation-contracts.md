@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.28  
+**Version:** 4.29  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1255,7 +1255,7 @@ The workflow commands after preparation are distinct from the initial request an
 | ReconcileEventIdentityOperationCommand | operation_id, expected_operation_version, bounded reconciliation cursor or exact durable work-item references, lease/fencing context | Resumes discovery or one identified downstream unit after the core effect. It cannot reapply the core identity projection. Each work-item reference must be proven to belong to this operation. |
 | FinalizeEventIdentityOperationCommand | operation_id, expected_operation_version, lease/fencing context | Requests finalization; the application derives completion from durable core-effect, discovery, case/analysis reconciliation, and report-impact records. A caller-supplied completion flag or target status is forbidden. |
 
-The exact durable work-item entity/adapter and cursor serialization remain Gate A/B decisions. Until those are approved and persisted, the corresponding command cannot be enabled; in-memory queues or worker memory are not durable recovery evidence.
+GENI-DATA-003 §13.2 now defines each reconciliation work item as a typed ProcessingStep within a ProcessingRun targeted at the exact EventIdentityOperation; no parallel queue entity is introduced. The ProcessingStepRepository adapter, lease/attempt persistence, and cursor serialization remain Gate A/B dependencies. Until they are implemented and qualified, the corresponding command cannot be enabled; in-memory queues or worker memory are not durable recovery evidence.
 
 - PrepareEventIdentityOperationResult: operation ID, current operation status, request fingerprint, created/replayed indicator, and current aggregate version. Preparation persists a PENDING operation and its ordered input/output/allocation records only after validation and authorization; it does not apply the identity effect.
 - ApplyEventIdentityOperationResult: operation ID, identity_effect_state, operation status, resulting `EventHistory` versions, durable reconciliation references, and whether the core effect was newly applied or already confirmed. It never returns guessed success after an unknown commit outcome.
@@ -1287,6 +1287,9 @@ The following are logical ports, not current executable adapters:
 | ReportRepository | append_identity_impact | append_identity_impact(command, uow) -> `EventIdentityOperationReportImpact` | Atomically persists one unique (operation, exact report-version) impact aggregate and its initial append-only history action. Repeated discovery is idempotent. |
 | ReportRepository | append_identity_impact_action | append_identity_impact_action(command, expected_version, uow) -> `EventIdentityOperationReportImpactHistory` | Appends assessment/remediation/resolution action and updates the rebuildable impact projection atomically. |
 | EventRelationshipRepository | append_identity_relationships | append_identity_relationships(operation_id, inputs, outputs, uow) -> `List<EventRelationship>` | Persists policy-defined identity lineage only where the accepted taxonomy requires it; no inferred relationship type or deletion is permitted. |
+| ProcessingStepRepository | create_or_get_identity_work_item | create_or_get_identity_work_item(run_id, step_name, typed_metadata, input_fingerprint, uow) -> `ProcessingStep` | Creates or returns exactly one durable reconciliation step for the operation/work-kind/typed-target fingerprint. Enforces the GENI-DATA-003 §13.2 step-kind and metadata contract; a same identity with a different fingerprint is a conflict or successor step under approved reprocessing policy. | 
+| ProcessingStepRepository | append_attempt | append_attempt(step_id, attempt, expected_version, fencing_context, uow) -> `ProcessingStepAttempt` | Atomically allocates attempt number and appends immutable attempt evidence; validates current fencing token. Retry never overwrites an earlier attempt. |
+| ProcessingStepRepository | list_identity_work_items | list_identity_work_items(operation_id, work_kind?, query) -> `Page<ProcessingStep>` | Returns bounded deterministic work items for one operation, filtered by the typed operation/work-kind metadata; it does not treat worker memory as durable state. |
 
 The EventIdentityOperation aggregate repository owns the operation and its input/output/allocation child records. `EventIdentityOperationHistory` and `EventHistory` remain separate append-only aggregates but participate in the same UnitOfWork as the core identity effect. Report-impact records and their history are owned by ReportRepository as a report-impact aggregate. Private persistence adapters may combine physical tables but must preserve logical ownership and transaction boundaries.
 
@@ -1341,7 +1344,7 @@ Before this tranche can be implemented or enabled, all of the following are requ
 - Property/scenario tests prove merge/split cardinality, complete successor resolution, no arbitrary split selection, no direct ArticleEventLink repointing, report-version immutability, and no implicit publication/delivery action.
 - Exact-commit CI and PoC evidence is recorded. Documentation or isolated row-lock PoC evidence alone is not production qualification.
 
-The tranche remains Proposed and disabled. Numeric retry/lease/time limits, canonical fingerprint encoding, exact SQL lock strategy, work-item storage shape and operational SLAs remain explicit Gate A/B decisions; implementations must not invent defaults.
+The tranche remains Proposed and disabled. Numeric retry/lease/time limits, canonical fingerprint encoding, exact SQL lock strategy, discovery cursor serialization and operational SLAs remain explicit Gate A/B decisions; implementations must not invent defaults.
 
 ## 11. Related documents
 
@@ -1462,3 +1465,6 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 
 
 **Revision Note (v4.28):** Removes a duplicated copy of the typed result/query list in §10.17.2, leaving one authoritative result/query catalogue after the command-envelope table. No contract semantics or approval gates change.
+
+
+**Revision Note (v4.29):** Aligns the Event Identity application contract with GENI-DATA-003 v1.61 by defining durable reconciliation work items as typed ProcessingStep records, and adds the ProcessingStepRepository create/replay, immutable attempt, and bounded lookup methods. The separate queue/entity design is no longer an open choice; durable adapters, fencing and cursor serialization remain gated.
