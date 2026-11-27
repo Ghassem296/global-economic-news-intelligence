@@ -94,6 +94,10 @@ def validate_document_versions() -> None:
 def validate_readiness_document_version_references() -> None:
     """Keep Document 16's explicit version references aligned with source documents."""
     readiness = read_text(ROOT / "docs/16-implementation-readiness-and-release-gates.md")
+    # Historical revision notes intentionally retain the versions that were current at that time.
+    current_readiness = "\\n".join(
+        line for line in readiness.splitlines() if not line.startswith("**Revision Note")
+    )
     expected_versions = {
         "Document 08": document_version(ROOT / "docs/08-security-architecture-and-threat-model.md"),
         "Document 15": document_version(ROOT / "docs/15-first-slice-implementation-contracts.md"),
@@ -293,8 +297,10 @@ def validate_persistence_poc_alignment() -> None:
 
     if "formally Accepted" not in contracts or "formally Accepted" not in readiness:
         fail("Persistence implementation gates must require formal ADR-005 acceptance")
-    if "No engine is selected" not in protocol and "no engine selected" not in protocol.casefold():
-        fail("The PoC protocol must explicitly state that it selects no database")
+    if "PostgreSQL is the Project Owner-selected target relational engine" not in protocol:
+        fail("The PoC protocol must preserve the owner-selected PostgreSQL target")
+    if "SQLite comparison runs are out of scope" not in protocol:
+        fail("The PostgreSQL PoC must not reintroduce SQLite as an active comparison target")
 
 
 
