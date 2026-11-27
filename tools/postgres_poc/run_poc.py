@@ -35,7 +35,6 @@ def main() -> int:
     suite = unittest.defaultTestLoader.discover(
         str(ROOT),
         pattern="test_*.py",
-        top_level_dir=str(ROOT.parent.parent),
     )
     runner = unittest.TextTestRunner(stream=sys.stdout, verbosity=2)
     result = runner.run(suite)
