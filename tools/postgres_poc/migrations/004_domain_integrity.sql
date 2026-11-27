@@ -27,3 +27,7 @@ ALTER TABLE articles
     FOREIGN KEY (article_id, current_revision_id)
     REFERENCES article_revisions (article_id, revision_id)
     DEFERRABLE INITIALLY DEFERRED;
+
+-- The UNIQUE constraint above already provides this lookup index.
+-- Drop the duplicate standalone index created by the initial PoC schema.
+DROP INDEX IF EXISTS articles_source_identity_idx;
