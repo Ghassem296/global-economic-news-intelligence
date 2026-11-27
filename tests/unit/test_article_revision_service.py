@@ -64,6 +64,11 @@ def make_metadata(expected_version: str | None = None) -> CommandMetadata:
     )
 
 
+class FakeClock:
+    def now(self) -> datetime:
+        return datetime(2026, 11, 27, 9, 0, tzinfo=UTC)
+
+
 class FakeUnitOfWork:
     def __init__(self) -> None:
         self.committed = False
@@ -197,7 +202,10 @@ class FakeArticleRepository:
                 item
                 for item in self.items.values()
                 if item.source_id == source_id
-                and item.source_article_identity == external_identity
+                and item.source_article_identity.canonical_source_identifier
+                == external_identity.canonical_source_identifier
+                and item.source_article_identity.normalization_version
+                == external_identity.normalization_version
             ),
             None,
         )
@@ -286,6 +294,7 @@ def build_service(
         "idempotency": idempotency or FakeIdempotency(),
         "uow_factory": FakeUnitOfWorkFactory(),
         "ids": FakeArticleIds(),
+        "clock": FakeClock(),
     }
     service = ArticleRevisionService(
         articles=dependencies["articles"],  # type: ignore[arg-type]
@@ -295,6 +304,7 @@ def build_service(
         authorization=dependencies["authorization"],  # type: ignore[arg-type]
         content_rights=dependencies["rights"],  # type: ignore[arg-type]
         article_ids=dependencies["ids"],  # type: ignore[arg-type]
+        clock=dependencies["clock"],  # type: ignore[arg-type]
     )
     return service, dependencies
 
@@ -478,7 +488,7 @@ def test_persistent_content_is_denied_when_rights_verifier_fails() -> None:
     factory = deps["uow_factory"]
     assert isinstance(factory, FakeUnitOfWorkFactory)
     assert factory.items == []
-    assert rights.calls[0][1] == NOW
+    assert rights.calls[0][1] == datetime(2026, 11, 27, 9, 0, tzinfo=UTC)
 
 
 def test_metadata_rights_denial_prevents_metadata_only_persistence() -> None:
@@ -656,3 +666,83 @@ def test_addressed_article_without_aggregate_version_is_an_invariant_violation()
 
     assert exc.value.code is ErrorCode.INVARIANT_VIOLATION
     assert revisions.append_calls == 1
+
+
+def test_rights_are_evaluated_at_trusted_clock_not_source_observation_time() -> None:
+    revision = make_revision()
+    rights = FakeContentRights()
+    service, _ = build_service(rights=rights)
+
+    service.execute(PersistArticleRevisionCommand(make_metadata(), revision))
+
+    assert rights.metadata_calls[0][1] == datetime(2026, 11, 27, 9, 0, tzinfo=UTC)
+    assert rights.metadata_calls[0][1] != revision.observed_at
+
+
+def test_non_semantic_url_and_external_id_changes_refresh_projection_without_revision() -> None:
+    articles = FakeArticleRepository()
+    revisions = FakeArticleRevisionRepository()
+    original = make_revision()
+    record = ArticleRevisionRecord(
+        revision_id="revision-existing",
+        article_id="article-existing",
+        revision_number=1,
+        payload=original,
+        revision_fingerprint=original.revision_fingerprint,
+        revision_fingerprint_schema_version=ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+        created_at=NOW,
+    )
+    revisions.current["article-existing"] = record
+    articles.items["article-existing"] = ArticleProjection(
+        article_id="article-existing",
+        source_id=original.source_id,
+        source_article_identity=original.source_article_identity,
+        url=original.original_url,
+        canonical_url=original.source_article_identity.canonical_url,
+        external_id=original.external_id,
+        title=original.normalized_title,
+        content_availability=original.content_availability,
+        content_reference=original.content_reference,
+        content_hash=original.content_hash,
+        content_normalization_version=original.content_normalization_version,
+        summary=original.summary,
+        author=original.author,
+        language=original.language,
+        published_at=original.published_at,
+        current_revision_id=record.revision_id,
+        metadata={},
+        aggregate_version="article-version-4",
+        created_at=NOW,
+        updated_at=NOW,
+    )
+    changed_identity = SourceArticleIdentity(
+        IDENTITY.canonical_source_identifier,
+        IDENTITY.normalization_version,
+        canonical_url="https://example.com/canonical/123",
+    )
+    changed = replace(
+        original,
+        source_article_identity=changed_identity,
+        original_url="https://example.com/new-path/123",
+        external_id="publisher-123-new",
+    )
+    service, _ = build_service(articles=articles, revisions=revisions)
+
+    result = service.execute(
+        PersistArticleRevisionCommand(
+            make_metadata("article-version-4"),
+            changed,
+            article_id="article-existing",
+        )
+    )
+
+    saved = articles.items["article-existing"]
+    assert result.revision_id == "revision-existing"
+    assert not result.created
+    assert saved.url == changed.original_url
+    assert saved.external_id == changed.external_id
+    assert saved.canonical_url == changed_identity.canonical_url
+    assert saved.current_revision_id == "revision-existing"
+    assert saved.aggregate_version == "article-version-5"
+    assert revisions.append_calls == 0
+    assert articles.save_calls == 1
