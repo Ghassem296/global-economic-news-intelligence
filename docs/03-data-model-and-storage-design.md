@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.59
+**Version:** 1.60
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1071,6 +1071,30 @@ The permitted operation-status transitions are `PENDING` to `IN_PROGRESS` or `CA
 
 Identity resolution is a read contract as well as a storage concern. Resolving a historical identifier must return one of: `CANONICAL` (one current canonical event), `MULTIPLE_SUCCESSORS` (two or more candidate successor events after a split), or `UNRESOLVED` (no safe deterministic resolution). A merge may resolve to one survivor with its operation lineage. A split must return the complete successor set and relevant operation references; the resolver must never select an arbitrary successor. A core identity effect with state `APPLIED` is authoritative even while downstream work remains `RECONCILIATION_REQUIRED`. If the effect is `UNKNOWN`, the resolver must return `UNRESOLVED` until reconciliation determines the durable state. Callers must supply case/evidence context to choose among multiple successors, and unresolved associations remain unlinked.
 
+### 7.5.2 EventIdentityOperationReportImpactHistory
+
+Represents one immutable transition or auditable assessment/remediation action for an EventIdentityOperationReportImpact aggregate.
+
+Fields:
+
+- `id`
+- `report_impact_id`
+- `sequence` — monotonically increasing within the report-impact aggregate
+- `action_type`
+- `previous_status` nullable
+- `new_status`
+- `actor_type`
+- `actor_reference` nullable
+- `authorization_reference` nullable
+- `reason_code` and/or `reason`
+- `remediation_work_item_reference` nullable
+- `resolution_reference` nullable
+- `idempotency_key`
+- `created_at`
+- `metadata`
+
+History records are append-only. `(report_impact_id, sequence)` and the non-null idempotency key within the aggregate must be unique. A status/projection update and its history row must be committed in one UnitOfWork. The current impact status and remediation/resolution references must be rebuildable from the history. The history must preserve who assessed the report, why remediation was or was not required, when a work item was assigned, and what evidence established resolution.
+
 ### 7.6 EventRelationship
 
 Represents a typed relationship between two distinct event identities. The canonical vocabulary shared with GENI-ADR-011 is:
@@ -1637,30 +1661,6 @@ Constraints:
 - Published reports must not be silently modified.
 - Reports not associated with one event must be supported through explicit report scope and event relationships.
 
-
-### 7.5.2 EventIdentityOperationReportImpactHistory
-
-Represents one immutable transition or auditable assessment/remediation action for an EventIdentityOperationReportImpact aggregate.
-
-Fields:
-
-- `id`
-- `report_impact_id`
-- `sequence` — monotonically increasing within the report-impact aggregate
-- `action_type`
-- `previous_status` nullable
-- `new_status`
-- `actor_type`
-- `actor_reference` nullable
-- `authorization_reference` nullable
-- `reason_code` and/or `reason`
-- `remediation_work_item_reference` nullable
-- `resolution_reference` nullable
-- `idempotency_key`
-- `created_at`
-- `metadata`
-
-History records are append-only. `(report_impact_id, sequence)` and the non-null idempotency key within the aggregate must be unique. A status/projection update and its history row must be committed in one UnitOfWork. The current impact status and remediation/resolution references must be rebuildable from the history. The history must preserve who assessed the report, why remediation was or was not required, when a work item was assigned, and what evidence established resolution.
 
 ### 11.2 ReportEventLink
 
@@ -3383,3 +3383,6 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.59):** Completes the report-impact lifecycle by adding append-only EventIdentityOperationReportImpactHistory, an explicit RESOLVED state, and a required durable work-item reference while remediation is outstanding. The identity operation cannot complete with an unassigned report remediation. This remains a logical contract, not an implementation claim.
+
+
+**Revision Note (v1.60):** Places EventIdentityOperationReportImpactHistory under the Event Identity Operations section (§7.5), before EventRelationship (§7.6), correcting its structural placement without changing the lifecycle contract.
