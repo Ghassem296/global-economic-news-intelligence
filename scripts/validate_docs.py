@@ -275,7 +275,7 @@ def validate_persistence_poc_alignment() -> None:
         "backup",
         "restore",
         "raw benchmark output",
-        "Not run",
+        "remain untested",
         "production qualification not yet passed",
         "Single application instance and local/early-validation deployment",
         "PostgreSQL is the Project Owner-selected target relational engine",
