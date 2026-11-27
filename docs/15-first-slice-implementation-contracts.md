@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.23  
+**Version:** 4.24  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1223,7 +1223,7 @@ This tranche makes the application boundary reviewable without enabling it. It i
 
 #### 10.17.1 Command envelope and immutable request
 
-PrepareEventIdentityOperation is the sole state-changing request envelope. It composes the common CommandMetadata in §3.2 exactly once and contains:
+PrepareEventIdentityOperation is the initial command envelope; apply and reconciliation are separate authorized workflow commands. It composes the common CommandMetadata in §3.2 exactly once and contains:
 
 | Field | Type | Requiredness | Validation |
 |---|---|---|---|
@@ -1264,8 +1264,9 @@ The following are logical ports, not current executable adapters:
 | EventIdentityOperationRepository | get_by_id | get_by_id(operation_id, uow?) -> Optional<EventIdentityOperationAggregate> | Loads operation plus ordered inputs, outputs and allocations consistently. |
 | EventIdentityOperationRepository | find_by_idempotency | find_by_idempotency(scope, key, uow) -> Optional<EventIdentityOperationAggregate> | Same key/fingerprint returns the existing operation; different fingerprint is CONFLICT. |
 | EventIdentityOperationRepository | create_pending | create_pending(command, uow) -> EventIdentityOperationAggregate | Atomically inserts the PENDING operation, ordered input/output/allocation links, initial operation-history action, and idempotency claim/result. Enforces cardinality, unique positions, subject uniqueness and output membership. |
-| EventIdentityOperationRepository | apply_core_effect | apply_core_effect(operation_id, expected_operation_version, fencing_context, uow) -> CoreIdentityEffectResult | Revalidates input EventHistory versions and operation ownership under the same transaction; serializes overlapping operations; applies only the approved identity projection; appends EventHistory and operation-history entries atomically. |
+| EventIdentityOperationRepository | apply_core_effect | apply_core_effect(operation_id, expected_operation_version, fencing_context, uow) -> CoreIdentityEffectResult | Validates the operation aggregate, complete allocations and operation ownership; records the core-effect result and operation-history transition atomically. It does not own or directly update Event current-state projections. |
 | EventIdentityOperationRepository | list_unresolved_for_events | list_unresolved_for_events(event_ids, query) -> Page<EventIdentityOperation> | Bounded lookup used to reject or serialize overlapping nonterminal identity operations. |
+| EventRepository | apply_identity_projection | apply_identity_projection(command, expected_event_history_versions, uow) -> IdentityProjectionResult | Under one UnitOfWork, locks/validates the complete affected Event set, applies only the approved canonical/successor projection and disposition changes, and returns the exact Event changes to be recorded by EventHistoryRepository. It never mutates ArticleEventLink. |
 | EventIdentityOperationHistoryRepository | append_action | append_action(operation_id, action, expected_version, uow) -> EventIdentityOperationHistory | Allocates sequence atomically; enforces unique sequence/idempotency key and legal state/effect transition; projection and history commit together. |
 | EventHistoryRepository | append_identity_change | append_identity_change(event_id, expected_history_version, change, uow) -> EventHistory | Appends one immutable event change using compare-and-swap; never rewrites prior history. |
 | EventMatchCaseRepository | list_affected_by_events | list_affected_by_events(event_ids, query) -> Page<EventMatchCase> | Finds cases whose effective candidate/decision/association scope intersects the affected identity set; deterministic and bounded. |
@@ -1282,7 +1283,7 @@ The EventIdentityOperation aggregate repository owns the operation and its input
 The workflow has four distinct phases:
 
 1. Prepare: authenticate actor; resolve exact authorization; load and validate policy version; validate input/output cardinality, roles, preassigned output Events, subject ownership, allocation completeness, evidence references and request fingerprint; check for conflicting active operations; then persist PENDING operation, links, initial history and idempotency result atomically. No Event identity projection changes in this phase.
-2. Claim and apply core effect: acquire the approved durable execution lease/fencing token; transition PENDING to IN_PROGRESS with history; within one UnitOfWork revalidate authorization/policy freshness and every expected EventHistory version, lock/serialize the complete input/output identity set, validate no conflicting operation has become active, apply the core identity projection, append each affected EventHistory record, persist operation effect state APPLIED, and create durable downstream reconciliation intent. If the transaction outcome is uncertain, do not repeat the effect; reconcile by operation ID and durable history.
+2. Claim and apply core effect: acquire the approved durable execution lease/fencing token; transition PENDING to IN_PROGRESS with history; within one UnitOfWork revalidate authorization/policy freshness and every expected EventHistory version, lock/serialize the complete input/output identity set, validate no conflicting operation has become active, coordinate EventRepository.apply_identity_projection, append each affected EventHistory record through EventHistoryRepository, persist operation effect state APPLIED through EventIdentityOperationRepository, and create durable downstream reconciliation intent. If the transaction outcome is uncertain, do not repeat the effect; reconcile by operation ID and durable history.
 3. Reconcile downstream: enumerate affected EventMatchCase, Analysis and exact Report versions. Re-evaluate cases only through Event Resolution Workflow; any changed association requires a new case-scoped EventMatchDecision and EventService application. Analyses remain immutable; create a successor analysis only when the approved analytical workflow determines it is required. For every affected report version, create exactly one EventIdentityOperationReportImpact and initial history action; ReportVersionService assesses it and assigns an owned remediation work item when correction is required. PublicationService and ReportDelivery are never invoked implicitly.
 4. Finalize: mark SUCCEEDED only when core effect is APPLIED, discovery is complete, every required downstream work item is durably represented, and every discovered report impact is ASSESSED, REMEDIATION_REQUIRED with a valid owned work-item reference, or RESOLVED. Otherwise remain RECONCILIATION_REQUIRED. FAILED/CANCELLED is permitted only when the core effect is definitively NOT_APPLIED.
 
@@ -1434,3 +1435,6 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 **Revision Note (v4.22):** Synchronizes active cross-document references with Documents 02 v1.57 and 03 v1.60 after the report-impact history subsection was placed under the correct Event Identity Operations section. No implementation gate is relaxed.
 
 **Revision Note (v4.23):** Adds a gated Event Identity Operation application-contract tranche covering typed command/result/query envelopes, aggregate repository methods, prepare/apply/reconcile/finalize phases, per-subject allocation validation, affected-case/analysis/report discovery, immutable report-impact persistence, idempotency, fencing, uncertain-outcome recovery, and acceptance tests. This closes the documentation-level command/repository/workflow definition gap but does not accept GENI-ADR-011/016, create production adapters, or enable merge/split execution.
+
+
+**Revision Note (v4.24):** Tightens Event Identity Operation command semantics by distinguishing the initial prepare envelope from subsequent apply/reconciliation commands and restores aggregate ownership boundaries: EventRepository owns Event current-state projection writes, EventHistoryRepository owns append-only EventHistory, and EventIdentityOperationRepository owns operation/allocation/effect state. All remain coordinated through one UnitOfWork; no execution capability is enabled.
