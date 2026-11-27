@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.26  
+**Version:** 4.27  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1247,8 +1247,24 @@ The command must not accept client-supplied status, identity_effect_state, seque
 
 #### 10.17.2 Typed results and queries
 
+The workflow commands after preparation are distinct from the initial request and must carry the common CommandMetadata, expected aggregate version, authenticated actor context, and current lease/fencing context where worker-owned execution is required.
+
+| Command | Required fields | Contract |
+|---|---|---|
+| ApplyEventIdentityOperationCommand | operation_id, expected_operation_version, lease_id, owner_id, fencing_token | Claims and applies the core effect only for the current operation version and current fenced worker. The application revalidates the stored authorization and policy references; callers cannot supply a success/effect state. |
+| ReconcileEventIdentityOperationCommand | operation_id, expected_operation_version, bounded reconciliation cursor or exact durable work-item references, lease/fencing context | Resumes discovery or one identified downstream unit after the core effect. It cannot reapply the core identity projection. Each work-item reference must be proven to belong to this operation. |
+| FinalizeEventIdentityOperationCommand | operation_id, expected_operation_version, lease/fencing context | Requests finalization; the application derives completion from durable core-effect, discovery, case/analysis reconciliation, and report-impact records. A caller-supplied completion flag or target status is forbidden. |
+
+The exact durable work-item entity/adapter and cursor serialization remain Gate A/B decisions. Until those are approved and persisted, the corresponding command cannot be enabled; in-memory queues or worker memory are not durable recovery evidence.
+
 - PrepareEventIdentityOperationResult: operation ID, current operation status, request fingerprint, created/replayed indicator, and current aggregate version. Preparation persists a PENDING operation and its ordered input/output/allocation records only after validation and authorization; it does not apply the identity effect.
 - ApplyEventIdentityOperationResult: operation ID, identity_effect_state, operation status, resulting `EventHistory` versions, durable reconciliation references, and whether the core effect was newly applied or already confirmed. It never returns guessed success after an unknown commit outcome.
+- ReconcileEventIdentityOperationResult: operation ID, confirmed core-effect state, reconciled work-item summary, remaining unresolved counts, and resulting operation status. It distinguishes confirmed NOT_APPLIED from APPLIED with outstanding downstream work.
+- ResolveEventIdentityQuery: historical Event ID plus optional exact EventMatchCase/evidence context. Result is exactly one of CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED, with complete operation lineage and the full successor set. The resolver never selects one successor from a split without case/evidence context and a new authorized EventMatchDecision.
+- GetEventIdentityOperationQuery: operation ID and optional history cursor; returns the operation projection, ordered input/output/allocation records, immutable operation history, and reconciliation summary under caller authorization.
+
+- PrepareEventIdentityOperationResult: operation ID, current operation status, request fingerprint, created/replayed indicator, and current aggregate version. Preparation persists a PENDING operation and its ordered input/output/allocation records only after validation and authorization; it does not apply the identity effect.
+- ApplyEventIdentityOperationResult: operation ID, identity_effect_state, operation status, resulting EventHistory versions, durable reconciliation references, and whether the core effect was newly applied or already confirmed. It never returns guessed success after an unknown commit outcome.
 - ReconcileEventIdentityOperationResult: operation ID, confirmed core-effect state, reconciled work-item summary, remaining unresolved counts, and resulting operation status. It distinguishes confirmed NOT_APPLIED from APPLIED with outstanding downstream work.
 - ResolveEventIdentityQuery: historical Event ID plus optional exact EventMatchCase/evidence context. Result is exactly one of CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED, with complete operation lineage and the full successor set. The resolver never selects one successor from a split without case/evidence context and a new authorized EventMatchDecision.
 - GetEventIdentityOperationQuery: operation ID and optional history cursor; returns the operation projection, ordered input/output/allocation records, immutable operation history, and reconciliation summary under caller authorization.
@@ -1444,3 +1460,6 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 
 
 **Revision Note (v4.26):** Corrects malformed inline-code boundaries in generic repository return types and restores the complete EventHistoryRepository, EventIdentityOperationHistoryRepository, and EventIdentityOperationReportImpactHistory identifiers. This is a Markdown/type-name presentation correction only; the contract and gates are unchanged.
+
+
+**Revision Note (v4.27):** Adds explicit apply, reconcile, and finalize command envelopes after preparation, including expected-version and fencing requirements. Clarifies that durable reconciliation-work storage/cursor contracts remain Gate A/B blockers and cannot be replaced by in-memory queues. No implementation or capability activation is implied.
