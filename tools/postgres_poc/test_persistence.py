@@ -99,7 +99,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.connection = await connect_to_schema(DATABASE_URL, self.schema)
         await apply_migrations(
             self.connection,
-            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql"),
+            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql"),
         )
         self.source_id = "source-test"
         self.article_id = uuid.uuid4()
@@ -481,7 +481,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             "SELECT version FROM schema_migrations ORDER BY version"
         )
         versions = [row[0] for row in await result.fetchall()]
-        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql"])
+        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql"])
         result = await self.connection.execute(
             """
             SELECT column_name FROM information_schema.columns
@@ -524,7 +524,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 (legacy_decision_id, legacy_case_id),
             )
             await connection.commit()
-            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql"))
+            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql"))
             result = await connection.execute(
                 """
                 SELECT external_identity, source_last_seen_at
@@ -794,6 +794,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                         "002_article_last_seen.sql",
                         "003_backup_payload.sql",
                         "004_domain_integrity.sql",
+                        "005_deferred_article_revision_owner_fk.sql",
                     ],
                 )
         finally:
@@ -1089,6 +1090,7 @@ asyncio.run(main())
                     "002_article_last_seen.sql",
                     "003_backup_payload.sql",
                     "004_domain_integrity.sql",
+                    "005_deferred_article_revision_owner_fk.sql",
                 ],
             )
             owner = await restored.execute(
@@ -1390,6 +1392,7 @@ asyncio.run(main())
             "002_article_last_seen.sql",
             "003_backup_payload.sql",
             "004_domain_integrity.sql",
+            "005_deferred_article_revision_owner_fk.sql",
         )
         before = await self.connection.execute(
             "SELECT version, applied_at FROM schema_migrations ORDER BY version"
@@ -1699,6 +1702,64 @@ asyncio.run(main())
             current_revision_id,
             {outcome[1] for outcome in outcomes if outcome[0] == "committed"},
         )
+
+
+    async def test_poc_30_new_article_revision_and_projection_commit_atomically(self) -> None:
+        article_id = uuid.uuid4()
+        revision_id = uuid.uuid4()
+
+        # The application service appends the revision before saving a new
+        # Article projection. The owner FK must therefore be deferred until
+        # the shared UnitOfWork commits.
+        async with self.connection.transaction():
+            await self.connection.execute(
+                """
+                INSERT INTO article_revisions
+                    (revision_id, article_id, revision_number, fingerprint)
+                VALUES (%s, %s, 1, 'new-article-fingerprint')
+                """,
+                (revision_id, article_id),
+            )
+            await self.connection.execute(
+                """
+                INSERT INTO articles
+                    (article_id, source_id, external_identity, current_revision_id)
+                VALUES (%s, %s, 'publisher:new-article', %s)
+                """,
+                (article_id, self.source_id, revision_id),
+            )
+
+        result = await self.connection.execute(
+            """
+            SELECT a.current_revision_id, r.revision_id
+            FROM articles a
+            JOIN article_revisions r
+              ON r.article_id = a.article_id
+             AND r.revision_id = a.current_revision_id
+            WHERE a.article_id = %s
+            """,
+            (article_id,),
+        )
+        self.assertEqual(await result.fetchone(), (revision_id, revision_id))
+
+        orphan_revision_id = uuid.uuid4()
+        missing_article_id = uuid.uuid4()
+        with self.assertRaises(ForeignKeyViolation):
+            async with self.connection.transaction():
+                await self.connection.execute(
+                    """
+                    INSERT INTO article_revisions
+                        (revision_id, article_id, revision_number, fingerprint)
+                    VALUES (%s, %s, 1, 'orphan-fingerprint')
+                    """,
+                    (orphan_revision_id, missing_article_id),
+                )
+
+        result = await self.connection.execute(
+            "SELECT 1 FROM article_revisions WHERE revision_id = %s",
+            (orphan_revision_id,),
+        )
+        self.assertIsNone(await result.fetchone())
 
 if __name__ == "__main__":
     unittest.main()
