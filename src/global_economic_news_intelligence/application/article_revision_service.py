@@ -15,7 +15,6 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Protocol
 
-
 from global_economic_news_intelligence.application.article_revision_commands import (
     PersistArticleRevisionCommand,
     PersistArticleRevisionResult,
