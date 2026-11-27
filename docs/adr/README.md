@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.38
+**Version:** 1.39
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -448,3 +448,6 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 
 
 **Revision Note (v1.38):** Records the Section 9 impact-structure and cross-reference normalization of GENI-ADR-002 v1.8 and GENI-ADR-020 v1.3. Both remain Proposed; the changes clarify affected components, data/interfaces, documents, and related ADRs without approving either proposal or authorizing gated capabilities.
+
+
+**Revision Note (v1.39):** Refines GENI-ADR-002 v1.9 to align its technical trade-off heading with the ADR template and to distinguish its direct dependency on ADR-011 from related review, persistence, evaluation, and language decisions. ADR-002 remains Proposed.
