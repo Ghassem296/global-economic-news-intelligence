@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 2.8  
+**Version:** 2.9  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -66,6 +66,14 @@ These Protocols are application ports, not PostgreSQL adapters. `ArticleRevision
 The pure domain package now includes `domain/content_rights_contracts.py` and unit tests. It defines the operation vocabulary and assessment states from GENI-ADR-013, immutable source/content-scope-specific RightsAssessment records, versioned retention-mode contracts, and a fail-closed persistence decision. Persistent content is eligible only when an ALLOWED assessment matches the exact source, SHA-256 content-scope fingerprint, PERSISTENT_STORAGE operation, effective time window, and retention-policy version. Missing, mismatched, future, expired, denied, revoked, unknown, or review-required assessments result in metadata-only handling. NO_PERSISTENT_CONTENT and TEMPORARY_PROCESSING_ONLY never authorize persistent storage.
 
 This is a bounded pure policy gate, not a legal determination or a complete rights-management subsystem. It does not verify license evidence, establish that an assessment is legally sufficient or freshly reviewed, calculate limited-retention deadlines, implement temporary buffers, persist assessments, evaluate other processing operations, propagate revocation, delete content, or authorize external LLM/provider egress. Those capabilities remain disabled and gated by the applicable ADRs and integration tests. The code must not be interpreted as production authorization.
+
+### 3.5 Source registry record and read-only repository port
+
+The domain package now includes `domain/source_contracts.py` with an immutable `SourceRecord`. It captures stable source identity, display name, adapter type as an open string, validated absolute HTTP(S) base URL, opaque configuration version, activation state, optional language/country/ownership/syndication context, non-secret collection configuration, and server-owned creation/update timestamps. Collection configuration is deeply frozen and restricted to JSON-compatible values; obvious credential-like property names and credential-bearing URL forms are rejected. Unknown contextual values remain null rather than being inferred.
+
+The application package exposes a read-only `SourceRepository.get_by_id` Protocol returning a `SourceRecord`. This is a retrieval port only. It does not enable source discovery, collection, configuration mutation, health monitoring, reliability scoring, or source-relationship decisions. The source adapter remains responsible for its exact configuration schema. URL validation here is structural only: DNS resolution, redirect revalidation, private/reserved-address blocking, egress policy, and operation-specific authorization must be enforced at the network-use boundary under Document 08 and the applicable ADRs. Credential-like key-name checks are defense in depth, not a general secret detector.
+
+The following remain intentionally unimplemented: `SourceCollectionQuery` filter/cursor semantics, `UpdateSourceConfiguration` patch serialization and change-set DTO, concrete SourceRepository persistence, SourceHealthRecord and SourceRelationship contracts, reliability-profile assessment/versioning, source-adapter schemas, and all source acquisition. In particular, `is_active` is an eligibility/configuration flag and never grants access, storage, processing, or distribution rights.
  
 ## 4. ProcessingRun lifecycle
 
@@ -288,3 +296,6 @@ The first executable baseline includes the Python package, validated configurati
 
 
 **Revision Note (v2.8):** Adds current-revision ownership verification and preserves immutable metadata when creating the Article projection. The service now rejects a repository result whose current ArticleRevision belongs to a different Article, and an empty metadata mapping remains immutable rather than being replaced by a mutable dictionary. Synthetic unit tests cover both invariants.
+
+
+**Revision Note (v2.9):** Adds the immutable SourceRecord domain contract and a read-only SourceRepository port. The record preserves unknown context, freezes non-secret JSON configuration, validates basic URL structure and trusted timestamps, and does not authorize collection or content use. Source collection queries, configuration mutation, adapter schemas, health/reliability/relationship contracts, persistence, SSRF/egress enforcement, and source acquisition remain gated.
