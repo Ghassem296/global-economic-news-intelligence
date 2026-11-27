@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-OPS-013  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-18
+**Last Updated:** 2026-11-27
 
 ---
 
@@ -48,6 +48,27 @@ Thresholds, windows, escalation, and on-call responsibilities derive from measur
 Preserve durable workflow state and GENI-ADR-016 idempotency/reconciliation. Define/test backup scope/frequency/encryption/access/retention; restore and integrity verification; interrupted workflow recovery; external-operation reconciliation; replay without duplicate side effects; migration recovery; and rights-driven restriction/deletion across storage, caches, indexes, queues, derived artifacts, and supported processors.
 
 Project Owner selects RPO/RTO after workload, data criticality, and cost are understood. Do not publish unsupported guarantees.
+
+### 7.1 Backup protection requirements
+
+A production backup procedure must define and verify all of the following before activation:
+
+- **Scope:** database contents, schema/migration history, required cluster-level roles and grants, tablespaces/configuration where applicable, and the separate evidence needed to reconstruct the service. A per-database logical dump does not by itself preserve cluster-global objects.
+- **Creation:** use a supported, repeatable backup mechanism with a consistent database snapshot. Record source database identity, server version, schema/migration version, source commit, start/end time, outcome, and artifact identifier without recording secrets or restricted row content.
+- **Confidentiality and integrity:** protect backup data with authenticated encryption using an approved key-management process. Verify integrity/authenticity before decryption or restore. Encryption keys must not be stored beside backups or in logs; define custody, access, rotation, revocation, and recovery of keys separately from backup retention.
+- **Access:** use dedicated least-privilege backup and restore identities. Restrict filesystem/object-store permissions, administrative access, download, and restore operations; audit access and denied attempts. Separate backup creation from approval to restore into an exposed environment.
+- **Retention and resilience:** define owner-approved frequency, retention, deletion, off-site/independent failure-domain copies, immutability where required, and disposal evidence. Do not invent retention periods or recovery objectives.
+- **Monitoring:** alert on missed, incomplete, unexpectedly small, unverifiable, or expired backups; record backup age, duration, size, integrity result, and restore-test status.
+
+### 7.2 Restore and recovery procedure
+
+A restore must first target an isolated environment with no production traffic or external side effects. Verify artifact identity and authenticated integrity before decryption. Restore database objects and required cluster-global objects using an explicitly reviewed ownership/privilege plan; do not silently discard or broaden grants. Apply only the migration path approved for the target release, then verify schema history, database constraints, application-level invariants, and representative reads/writes. Reconcile privacy deletion/restriction tombstones and external-operation ledgers before data is exposed or processing resumes. Quarantine any unresolved reconciliation result and require the authorized operator's recorded sign-off. Preserve the restore logs and verification evidence.
+
+A failed or interrupted restore must not be treated as successful because the database process is accepting connections. Define cleanup of partial targets, safe retry behavior, escalation, and rollback/forward recovery before operational use.
+
+### 7.3 Current PostgreSQL PoC evidence boundary
+
+The isolated PostgreSQL PoC currently exercises a full logical backup during concurrent database activity, restores it into a separate database, verifies migration history and application invariants, and checks private file permissions plus an experimental encrypted/authenticated backup envelope. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. They do not establish production backup encryption, KMS/HSM custody, key rotation, off-site storage, immutability, retention, restore authorization, cluster-global-object recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
 
 ## 8. Capacity and Cost
 
@@ -96,7 +117,7 @@ Runbook publication is not evidence of successful exercise. See Documents 02, 03
 ---
 
 **Document ID:** GENI-OPS-013  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Draft — Under Architecture Review  
 
 
