@@ -585,6 +585,8 @@ def test_available_content_requires_both_metadata_and_persistent_storage_rights(
     assert result.created
     assert len(rights.metadata_calls) == 1
     assert len(rights.calls) == 1
+    assert rights.calls[0][1] == rights.metadata_calls[0][1]
+    assert rights.calls[0][1] == datetime(2026, 11, 27, 9, 0, tzinfo=UTC)
     articles = deps["articles"]
     assert isinstance(articles, FakeArticleRepository)
     assert articles.items[result.article_id].content_availability is ContentAvailability.AVAILABLE
@@ -746,3 +748,19 @@ def test_non_semantic_url_and_external_id_changes_refresh_projection_without_rev
     assert saved.aggregate_version == "article-version-5"
     assert revisions.append_calls == 0
     assert articles.save_calls == 1
+
+
+def test_naive_trusted_clock_fails_before_transaction_start() -> None:
+    class NaiveClock:
+        def now(self) -> datetime:
+            return datetime(2026, 11, 27, 9, 0)
+
+    service, deps = build_service()
+    service._clock = NaiveClock()  # type: ignore[attr-defined]
+
+    with pytest.raises(ValueError, match="timezone-aware"):
+        service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items == []
