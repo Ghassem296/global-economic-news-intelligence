@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.28
+**Version:** 1.29
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -273,6 +273,9 @@ An earlier reproducible 32-test execution completed successfully on 2026-11-27 i
 
 
 
-The latest reproducible 33-test execution completed successfully on 2026-11-27 in GitHub Actions run `45983781671` against repository snapshot `4ce279e7786270475ae2618c484f2404c47b82a4`: all 33 test methods passed (29 PostgreSQL integration methods plus four standalone retention-policy unit tests). The uploaded machine-readable evidence artifact is `postgres-poc-4ce279e7786270475ae2618c484f2404c47b82a4` (artifact ID `15190297773`). The artifact records PostgreSQL 18.7, Psycopg 3.3.9, CPython 3.15.2, and the pinned linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`; it reports `successful: true`, with no failures or skipped tests. POC-30 verifies the PostgreSQL deferred ArticleRevision-owner FK candidate required by the current service write order: the first revision is inserted before the Article projection in one transaction, and a missing parent is rejected at commit. This remains PoC-only evidence; production migration strategy, workload profile/thresholds, production security/operations, and formal ADR-005 acceptance remain open.
+The latest reproducible 33-test execution completed successfully on 2026-11-27 in GitHub Actions run `45984540878` against exact current main snapshot `4cd09ad5203552d0b2df851ad0aa76f892779c20`: all 33 test methods passed (29 PostgreSQL integration methods plus four standalone retention-policy unit tests). The uploaded machine-readable evidence artifact is `postgres-poc-4cd09ad5203552d0b2df851ad0aa76f892779c20` (artifact ID `15191416174`). The artifact records PostgreSQL 18.7, Psycopg 3.3.9, CPython 3.15.2, and the pinned linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`; it reports `successful: true`, with no failures or skipped tests. POC-30 verifies the PostgreSQL deferred ArticleRevision-owner FK candidate required by the current service write order: the first revision is inserted before the Article projection in one transaction, and a missing parent is rejected at commit. This remains PoC-only evidence; production migration strategy, workload profile/thresholds, production security/operations, and formal ADR-005 acceptance remain open.
 
 **Revision Note (v1.28):** Adds POC-30 for atomic first-Article/ArticleRevision creation using a deferred owner foreign key, adds PostgreSQL migration 005, and refreshes the reproducible result to 33 methods (29 PostgreSQL integration plus four standalone retention-policy unit tests) on snapshot `4ce279e7786270475ae2618c484f2404c47b82a4`, run `45983781671`, artifact `15190297773`. This is isolated correctness evidence only; production qualification and formal ADR-005 acceptance remain open.
+
+
+**Revision Note (v1.29):** Re-runs the unchanged 33-method PostgreSQL correctness/recovery PoC against exact current `main` snapshot `4cd09ad5203552d0b2df851ad0aa76f892779c20` (GitHub Actions run `45984540878`, artifact `15191416174`). All 29 PostgreSQL integration methods and four standalone retention-policy unit tests passed. This is a freshness re-verification only; it adds no new PoC scope and closes no production qualification or formal ADR-005 acceptance gate.
