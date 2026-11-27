@@ -23,6 +23,7 @@ from global_economic_news_intelligence.domain.article_revision_contracts import 
 from global_economic_news_intelligence.domain.contracts import (
     CommandMetadata,
     CommitResult,
+    UnitOfWork,
 )
 from global_economic_news_intelligence.exceptions import ErrorCode, GeniError
 
@@ -104,7 +105,7 @@ class FakeArticleIds:
 class FakeAuthorization:
     def __init__(self, allowed: bool = True) -> None:
         self.allowed = allowed
-        self.calls: list[tuple[CommandMetadata, str, str]] = []
+        self.calls: list[tuple[CommandMetadata, str, str, UnitOfWork | None]] = []
 
     def is_authorized(
         self,
@@ -112,8 +113,9 @@ class FakeAuthorization:
         *,
         action: str,
         resource_reference: str,
+        uow: UnitOfWork | None = None,
     ) -> bool:
-        self.calls.append((metadata, action, resource_reference))
+        self.calls.append((metadata, action, resource_reference, uow))
         return self.allowed
 
 
@@ -125,16 +127,17 @@ class FakeContentRights:
     ) -> None:
         self.allowed = allowed
         self.metadata_allowed = metadata_allowed
-        self.calls: list[tuple[PersistArticleRevision, datetime]] = []
-        self.metadata_calls: list[tuple[PersistArticleRevision, datetime]] = []
+        self.calls: list[tuple[PersistArticleRevision, datetime, UnitOfWork | None]] = []
+        self.metadata_calls: list[tuple[PersistArticleRevision, datetime, UnitOfWork | None]] = []
 
     def permits_metadata_retention(
         self,
         revision: PersistArticleRevision,
         *,
         at: datetime,
+        uow: UnitOfWork | None = None,
     ) -> bool:
-        self.metadata_calls.append((revision, at))
+        self.metadata_calls.append((revision, at, uow))
         return self.metadata_allowed
 
     def permits_persistent_storage(
@@ -142,8 +145,9 @@ class FakeContentRights:
         revision: PersistArticleRevision,
         *,
         at: datetime,
+        uow: UnitOfWork | None = None,
     ) -> bool:
-        self.calls.append((revision, at))
+        self.calls.append((revision, at, uow))
         return self.allowed
 
 
@@ -512,6 +516,112 @@ def test_authorization_denial_prevents_transaction_start() -> None:
     assert factory.items == []
 
 
+def test_authorization_revocation_between_preflight_and_transaction_denies_write() -> None:
+    class RevokedAtTransaction(FakeAuthorization):
+        def is_authorized(
+            self,
+            metadata: CommandMetadata,
+            *,
+            action: str,
+            resource_reference: str,
+            uow: UnitOfWork | None = None,
+        ) -> bool:
+            super().is_authorized(
+                metadata,
+                action=action,
+                resource_reference=resource_reference,
+                uow=uow,
+            )
+            return uow is None
+
+    authorization = RevokedAtTransaction()
+    service, deps = build_service(authorization=authorization)
+    with pytest.raises(GeniError) as exc:
+        service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+
+    assert exc.value.code is ErrorCode.AUTHORIZATION_DENIED
+    articles = deps["articles"]
+    revisions = deps["revisions"]
+    factory = deps["uow_factory"]
+    assert isinstance(articles, FakeArticleRepository)
+    assert isinstance(revisions, FakeArticleRevisionRepository)
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert articles.items == {}
+    assert revisions.current == {}
+    assert factory.items[0].rolled_back
+    assert len(authorization.calls) == 2
+    assert authorization.calls[1][3] is factory.items[0]
+
+
+def test_content_rights_revocation_between_preflight_and_transaction_denies_write() -> None:
+    class RevokedAtTransaction(FakeContentRights):
+        def permits_metadata_retention(
+            self,
+            revision: PersistArticleRevision,
+            *,
+            at: datetime,
+            uow: UnitOfWork | None = None,
+        ) -> bool:
+            super().permits_metadata_retention(revision, at=at, uow=uow)
+            return uow is None
+
+    rights = RevokedAtTransaction()
+    service, deps = build_service(rights=rights)
+    with pytest.raises(GeniError) as exc:
+        service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+
+    assert exc.value.code is ErrorCode.RIGHTS_NOT_ALLOWED
+    articles = deps["articles"]
+    revisions = deps["revisions"]
+    factory = deps["uow_factory"]
+    assert isinstance(articles, FakeArticleRepository)
+    assert isinstance(revisions, FakeArticleRevisionRepository)
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert articles.items == {}
+    assert revisions.current == {}
+    assert factory.items[0].rolled_back
+    assert len(rights.metadata_calls) == 2
+    assert rights.metadata_calls[1][2] is factory.items[0]
+
+
+def test_idempotent_replay_is_denied_when_authority_is_revoked_in_replay_transaction() -> None:
+    class RevokedOnFourthTransactionalCheck(FakeAuthorization):
+        def is_authorized(
+            self,
+            metadata: CommandMetadata,
+            *,
+            action: str,
+            resource_reference: str,
+            uow: UnitOfWork | None = None,
+        ) -> bool:
+            super().is_authorized(
+                metadata,
+                action=action,
+                resource_reference=resource_reference,
+                uow=uow,
+            )
+            return not (uow is not None and len(self.calls) >= 4)
+
+    authorization = RevokedOnFourthTransactionalCheck()
+    service, deps = build_service(authorization=authorization)
+    command = PersistArticleRevisionCommand(make_metadata(), make_revision())
+    first = service.execute(command)
+    with pytest.raises(GeniError) as exc:
+        service.execute(command)
+
+    assert first.created
+    assert exc.value.code is ErrorCode.AUTHORIZATION_DENIED
+    articles = deps["articles"]
+    revisions = deps["revisions"]
+    factory = deps["uow_factory"]
+    assert isinstance(articles, FakeArticleRepository)
+    assert isinstance(revisions, FakeArticleRevisionRepository)
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert len(articles.items) == 1
+    assert len(revisions.current) == 1
+    assert factory.items[1].rolled_back
+
+
 def test_metadata_only_revision_checks_metadata_rights_not_full_text_rights() -> None:
     rights = FakeContentRights()
     service, _ = build_service(rights=rights)
@@ -639,8 +749,12 @@ def test_identical_retry_replays_result_after_rechecking_authorization_and_right
     assert first == second
     assert articles.save_calls == 1
     assert revisions.append_calls == 1
-    assert len(authorization.calls) == 2
-    assert len(rights.metadata_calls) == 2
+    assert len(authorization.calls) == 4
+    assert len(rights.metadata_calls) == 4
+    assert authorization.calls[0][3] is None
+    assert authorization.calls[1][3] is factory.items[0]
+    assert authorization.calls[2][3] is None
+    assert authorization.calls[3][3] is factory.items[1]
     assert factory.items[1].rolled_back
 
 
