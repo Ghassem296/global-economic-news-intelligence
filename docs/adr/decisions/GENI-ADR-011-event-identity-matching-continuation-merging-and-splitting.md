@@ -1028,6 +1028,12 @@ Such measurements must be obtained through a representative evaluation dataset b
 | 1.7 | 2026-11-18 | Proposed | Aligned the identity-operation specification with the component and data-model contracts; retained Proposed status. | AI Architecture Assistant |
 | 1.8 | 2026-11-18 | Proposed | Defined EventIdentityOperationHistory, merge-survivor cardinality, optimistic concurrency, core-effect state, durable reconciliation, compensating corrections, and removed model entities not present in Documents 02/03. | AI Architecture Assistant |
 | 1.9 | 2026-11-18 | Proposed | Removed lifecycle and relationship-taxonomy items already defined as normative baselines from the deferred-question list; retained approval gates and genuinely open domain decisions. | AI Architecture Assistant |
+| 1.10 | 2026-11-27 | Proposed | Adds explicit per-subject EventIdentityOperationAllocation records and aligns the operation entity inventory with the data model. | AI Architecture Assistant |
+| 1.11 | 2026-11-27 | Proposed | Adds EventIdentityOperationReportImpact and separates report correction, external publication replacement/withdrawal, and recipient correction. | AI Architecture Assistant |
+| 1.12 | 2026-11-27 | Proposed | Adds append-only EventIdentityOperationReportImpactHistory and requires durable accountable remediation work for remediation-required impacts. | AI Architecture Assistant |
+| 1.13 | 2026-11-27 | Proposed | Cross-references the gated application contract and ProcessingStep reconciliation mapping; clarifies repository ownership, downstream completion and ADR-014 review handoff. | AI Architecture Assistant |
+| 1.14 | 2026-11-27 | Proposed | Requires initial durable reconciliation work to be typed ProcessingStep records committed atomically with the core identity effect; removes the parallel outbox/queue implication. | AI Architecture Assistant |
+| 1.15 | 2026-11-27 | Proposed | Aligns SUCCEEDED with report-impact disposition and durable remediation ownership; prevents APPLIED identity effects from being failed or cancelled. | AI Architecture Assistant |
 
 ---
 
