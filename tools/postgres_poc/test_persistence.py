@@ -152,12 +152,13 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_poc_03_successor_chain_allows_only_one_direct_successor(self) -> None:
         predecessor_id = uuid.uuid4()
+        case_id = uuid.uuid4()
         await self.connection.execute(
             """
             INSERT INTO decision_records (decision_id, case_id, outcome)
             VALUES (%s, %s, 'OPEN')
             """,
-            (predecessor_id, uuid.uuid4()),
+            (predecessor_id, case_id),
         )
         await self.connection.commit()
 
@@ -495,7 +496,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             )
             await self.admin.commit()
 
-    async def test_poc_16_committed_operation_survives_new_connection(self) -> None:
+    async def test_poc_16_reconnect_reads_committed_operation(self) -> None:
         record_id = uuid.uuid4()
         connection = await connect_to_schema(DATABASE_URL, self.schema)
         await connection.execute(
