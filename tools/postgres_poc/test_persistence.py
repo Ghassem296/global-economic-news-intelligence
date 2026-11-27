@@ -1464,6 +1464,7 @@ asyncio.run(main())
                     "006_atomic_idempotency_claims.sql",
                     "007_external_outcome_reconciliation.sql",
                     "008_automatic_external_outcome_transitions.sql",
+                    "009_transaction_bound_authorization_and_rights.sql",
                 ],
             )
             owner = await restored.execute(
