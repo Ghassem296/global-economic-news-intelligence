@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.73
+**Version:** 10.74
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -416,7 +416,7 @@ A periodic review should verify that the registry matches:
 
 This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 02 v1.57, Document 03 v1.60, Document 15 v4.22, Document 16 v4.98, and Document 17 v3.4. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
-The inspected executable application/PoC source snapshot is `cb258297a4568e6eec2083a0803e36caf61198e1`. Application CI run `46001262517` passed all 302 tests with lock verification, Ruff and mypy; Documentation Validation run `46001262593` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `46001262732` passed all 41 methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15198735753`). POC-35–38 add isolated row-lock experiments for authorization/content-rights revocation ordering; this candidate pattern does not exercise production adapters or complete policy/profile locking. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005/016 remain Proposed. The inspected documentation snapshot is `de023a99bf0763ee715529f49bada8f621987192`; the executable application/PoC evidence remains tied only to source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1`. This registry refresh itself is a documentation-only follow-up.
+The inspected executable application/PoC source snapshot is `cb258297a4568e6eec2083a0803e36caf61198e1`. Application CI run `46001262517` passed all 302 tests with lock verification, Ruff and mypy; Documentation Validation run `46001262593` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `46001262732` passed all 41 methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15198735753`). POC-35–38 add isolated row-lock experiments for authorization/content-rights revocation ordering; this candidate pattern does not exercise production adapters or complete policy/profile locking. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005/016 remain Proposed. The inspected documentation snapshot is `9cbc40d39d959afe608cdf1c5e56c63db06dde35`; the executable application/PoC evidence remains tied only to source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1`. This registry refresh itself is a documentation-only follow-up.
 
 All twenty individual ADRs remain Proposed; none is recorded as Accepted. Publication, passing CI, and PoC evidence do not constitute formal architecture approval, legal permission, production readiness, or operational acceptance.
 
@@ -839,3 +839,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v10.73):** Refreshes the active repository-snapshot narrative to match the current controlled-document versions for Documents 02, 03, 15, 16, and 17. The executable capability boundary is unchanged; no source acquisition, production rights authorization, ADR acceptance, or production readiness is implied.
+
+
+**Revision Note (v10.74):** Advances the documentation inspection baseline to `9cbc40d39d959afe608cdf1c5e56c63db06dde35`, the main-branch snapshot containing GENI-READY-016 v4.98 and registry v10.72, before this registry-only refresh. No executable code or readiness evidence changed.
