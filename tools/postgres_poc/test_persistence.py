@@ -97,8 +97,8 @@ async def claim_idempotency(
     inserted = await connection.execute(
         """
         INSERT INTO idempotency_records
-            (operation_scope, idempotency_key, request_fingerprint, state)
-        VALUES (%s, %s, %s, 'CLAIMED')
+            (operation_scope, idempotency_key, request_fingerprint, state, completed_at)
+        VALUES (%s, %s, %s, 'CLAIMED', NULL)
         ON CONFLICT (operation_scope, idempotency_key) DO NOTHING
         RETURNING operation_scope
         """,
@@ -487,6 +487,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(await result.fetchone())
 
     async def test_poc_10_commit_before_lost_ack_replays_existing_result(self) -> None:
+        await self.connection.commit()
         key = f"ack-{uuid.uuid4()}"
         result_id = uuid.uuid4()
         revision_id = uuid.uuid4()
@@ -534,6 +535,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
 
 
     async def test_poc_31_concurrent_same_key_claims_create_one_domain_effect(self) -> None:
+        await self.connection.commit()
         key = f"concurrent-{uuid.uuid4()}"
         barrier = asyncio.Event()
         ready = 0
