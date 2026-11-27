@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.29  
+**Version:** 4.30  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1289,6 +1289,9 @@ The following are logical ports, not current executable adapters:
 | EventRelationshipRepository | append_identity_relationships | append_identity_relationships(operation_id, inputs, outputs, uow) -> `List<EventRelationship>` | Persists policy-defined identity lineage only where the accepted taxonomy requires it; no inferred relationship type or deletion is permitted. |
 | ProcessingStepRepository | create_or_get_identity_work_item | create_or_get_identity_work_item(run_id, step_name, typed_metadata, input_fingerprint, uow) -> `ProcessingStep` | Creates or returns exactly one durable reconciliation step for the operation/work-kind/typed-target fingerprint. Enforces the GENI-DATA-003 §13.2 step-kind and metadata contract; a same identity with a different fingerprint is a conflict or successor step under approved reprocessing policy. | 
 | ProcessingStepRepository | append_attempt | append_attempt(step_id, attempt, expected_version, fencing_context, uow) -> `ProcessingStepAttempt` | Atomically allocates attempt number and appends immutable attempt evidence; validates current fencing token. Retry never overwrites an earlier attempt. |
+| ProcessingStepRepository | acquire_step_lease | acquire_step_lease(step_id, worker_id, expected_lease_version, trusted_now, configured_lease_policy, uow) -> `ExecutionLease` | Atomically claims an eligible step, increments its fencing token, and records exclusive ownership. Expiry/heartbeat values come from validated deployment policy and a trusted clock, not arbitrary caller values. | 
+| ProcessingStepRepository | renew_step_lease | renew_step_lease(lease_id, owner_id, fencing_token, trusted_now, configured_lease_policy, uow) -> `ExecutionLease` | Renews only the current active lease for the exact owner/token; stale or expired ownership is rejected. | 
+| ProcessingStepRepository | release_step_lease | release_step_lease(lease_id, owner_id, fencing_token, trusted_now, uow) -> `ExecutionLease` | Releases only the current active lease for the exact owner/token and records the terminal lease action. |
 | ProcessingStepRepository | list_identity_work_items | list_identity_work_items(operation_id, work_kind?, query) -> `Page<ProcessingStep>` | Returns bounded deterministic work items for one operation, filtered by the typed operation/work-kind metadata; it does not treat worker memory as durable state. |
 
 The EventIdentityOperation aggregate repository owns the operation and its input/output/allocation child records. `EventIdentityOperationHistory` and `EventHistory` remain separate append-only aggregates but participate in the same UnitOfWork as the core identity effect. Report-impact records and their history are owned by ReportRepository as a report-impact aggregate. Private persistence adapters may combine physical tables but must preserve logical ownership and transaction boundaries.
@@ -1468,3 +1471,6 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 
 
 **Revision Note (v4.29):** Aligns the Event Identity application contract with GENI-DATA-003 v1.61 by defining durable reconciliation work items as typed ProcessingStep records, and adds the ProcessingStepRepository create/replay, immutable attempt, and bounded lookup methods. The separate queue/entity design is no longer an open choice; durable adapters, fencing and cursor serialization remain gated.
+
+
+**Revision Note (v4.30):** Completes the ProcessingStepRepository contract for identity reconciliation by adding atomic step-lease acquisition, renewal, and release methods with trusted-time, configured-policy and fencing-token requirements. Numeric lease/heartbeat settings remain deployment decisions; no lease adapter or runtime capability is enabled.
