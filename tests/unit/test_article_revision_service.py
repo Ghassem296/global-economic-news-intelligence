@@ -877,3 +877,24 @@ def test_naive_trusted_clock_fails_before_transaction_start() -> None:
     factory = deps["uow_factory"]
     assert isinstance(factory, FakeUnitOfWorkFactory)
     assert factory.items == []
+
+def test_source_identity_authorization_reference_is_unambiguous() -> None:
+    first_revision = replace(
+        make_revision(),
+        source_id="a:b",
+        source_article_identity=SourceArticleIdentity("d", "c"),
+    )
+    second_revision = replace(
+        make_revision(),
+        source_id="a",
+        source_article_identity=SourceArticleIdentity("d", "b:c"),
+    )
+    first = PersistArticleRevisionCommand(make_metadata(), first_revision)
+    second = PersistArticleRevisionCommand(make_metadata(), second_revision)
+
+    first_reference = ArticleRevisionService._resource_reference(first)
+    second_reference = ArticleRevisionService._resource_reference(second)
+
+    assert first_reference == 'source-article:v1:["a:b","c","d"]'
+    assert second_reference == 'source-article:v1:["a","b:c","d"]'
+    assert first_reference != second_reference
