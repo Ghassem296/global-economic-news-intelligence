@@ -8,9 +8,9 @@ from typing import Any
 from unittest.mock import Mock
 
 import psycopg
-from psycopg import sql
 
 from postgres_poc_uow import PostgreSQLUnitOfWork, PostgreSQLUnitOfWorkFactory
+from psycopg import sql
 
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
 POSTGRES_CONTAINER_ID = os.environ.get("GENI_POC_POSTGRES_CONTAINER_ID", "")
