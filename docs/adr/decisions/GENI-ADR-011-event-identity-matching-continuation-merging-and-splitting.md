@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.11  
+**Version:** 1.12  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -819,6 +819,7 @@ Proposed domain entities include:
 - `EventIdentityOperationOutput`
 - `EventIdentityOperationAllocation`
 - `EventIdentityOperationReportImpact`
+- `EventIdentityOperationReportImpactHistory`
 - `EventIdentityOperationHistory`
 
 The proposed logical model uses EventHistory and explicit EventIdentityOperation input/output/allocation/report-impact/history records; report-impact records preserve a durable assessment for each affected immutable Report version without rewriting report provenance, publication, or delivery history; allocation records map each affected Article, Claim, Evidence, or MarketObservation to one successor Event or preserve it as unresolved. They use type-specific repository validation rather than unchecked polymorphic references. The model does not require a separate EventVersion, EventIdentityAlias, or EventReviewRecord entity. Historical identity resolution is derived from the EventIdentityOperation graph, while human review uses the shared ReviewRecord defined by ADR-014. The exact physical schema and repository boundaries are defined provisionally in Documents 02 and 03 and remain subject to formal ADR approval.
@@ -1034,3 +1035,6 @@ Such measurements must be obtained through a representative evaluation dataset b
 
 
 **Revision Note (v1.11):** Adds EventIdentityOperationReportImpact to the proposed logical entity inventory and records the required separation between report-version correction, external publication replacement/withdrawal, and recipient correction. ADR-011 remains Proposed; no implementation or capability is approved.
+
+
+**Revision Note (v1.12):** Adds EventIdentityOperationReportImpactHistory to the proposed entity inventory and clarifies that remediation-required report impacts need a durable accountable work item and append-only resolution history. ADR-011 remains Proposed.
