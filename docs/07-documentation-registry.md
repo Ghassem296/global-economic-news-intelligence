@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.36
+**Version:** 10.37
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -414,7 +414,7 @@ A periodic review should verify that the registry matches:
 **Reference Branch:** `main`  
 **Baseline Commit Inspected:** `4cd09ad5203552d0b2df851ad0aa76f892779c20`
 
-This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.10, Document 16 v4.67, and Document 17 v3.1. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
+This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.11, Document 16 v4.73, and Document 17 v3.2. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
 The inspected source-code repository snapshot is `4cd09ad5203552d0b2df851ad0aa76f892779c20`. Application CI run `45984540841` passed all 297 tests with Ruff and mypy successful; Documentation Validation run `45984540777` passed all 23 validator tests and repository-wide documentation checks; PostgreSQL 18.7 / Python 3.15 PoC run `45984540878` passed all 33 test methods (29 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15191416174`). The PoC artifact confirms success with no failures or skipped tests. The code snapshot includes the versioned fixed-order JSON tuple for source-scoped authorization references, strict JSON logging for non-finite numeric metadata, and the deferred ArticleRevision-owner FK candidate. POC-29 confirms one-winner optimistic concurrency and rollback of the losing ArticleRevision insert; POC-30 confirms atomic new-Article creation order and orphan rejection at commit. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
 
