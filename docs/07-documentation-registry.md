@@ -730,3 +730,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v10.36):** Synchronizes Document 16 v4.73, GENI-ADR-005 v3.6, and PoC-001 v1.29 with exact source-code snapshot `4cd09ad5203552d0b2df851ad0aa76f892779c20`: Application CI run `45984540841` passed 297 tests with Ruff and mypy; Documentation Validation run `45984540777` passed 23 validator tests and repository-wide checks; PostgreSQL PoC run `45984540878` passed 33 methods (artifact `15191416174`). This is an exact-snapshot freshness re-verification only. PostgreSQL qualification, formal ADR-005 acceptance, and production activation remain open.
+
+
+**Revision Note (v10.37):** Corrects the registry's current snapshot description to the actual controlled versions: Document 15 v4.11, Document 16 v4.73, and Document 17 v3.2. This is a metadata reconciliation only; no architecture or production approval changes.
