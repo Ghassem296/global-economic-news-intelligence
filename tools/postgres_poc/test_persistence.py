@@ -561,8 +561,6 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     "--no-owner",
                     "--no-acl",
                     "--exit-on-error",
-                    "-n",
-                    self.schema,
                     remote_backup,
                 )
                 restored_url = DATABASE_URL.rsplit("/", 1)[0] + f"/{restore_database}"
