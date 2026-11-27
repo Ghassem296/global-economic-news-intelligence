@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.8  
+**Version:** 4.9  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -968,7 +968,7 @@ The following remain open and block the corresponding implementation detail:
 
 #### 10.12.6 Executable SourceRecord baseline
 
-The current executable foundation implements an immutable `SourceRecord` and a read-only `SourceRepository.get_by_id` port. The record represents source identity, descriptive/configuration metadata, an opaque configuration version, activation state, optional context, non-secret JSON collection configuration, and server-owned timestamps. Its basic HTTP(S) URL checks are structural only and do not replace Document 08's DNS/redirect/SSRF/egress controls. Obvious credential-like configuration keys are rejected as defense in depth, but adapter schemas and trusted secret-reference handling remain separate responsibilities.
+The current executable foundation implements an immutable `SourceRecord` and a read-only `SourceRepository.get_by_id` port. The record represents source identity, descriptive/configuration metadata, an opaque configuration version, activation state, optional context, non-secret JSON collection configuration, and server-owned timestamps. Its basic HTTP(S) URL checks reject embedded credentials, fragments, invalid ports, credential-like query parameters, whitespace, control characters, and backslashes. These checks are structural only and do not replace Document 08's DNS/redirect/SSRF/egress controls. Obvious credential-like configuration keys are rejected as defense in depth, but adapter schemas and trusted secret-reference handling remain separate responsibilities.
 
 This implementation does not close the open items above. In particular, no `UpdateSourceConfiguration` change-set or `SourceCollectionQuery` cursor/filter contract is inferred; no concrete persistence adapter or source acquisition path is enabled. The SourceRepository port is deliberately read-only until the field-level command/query DTOs, authorization policy, and use-time network controls are approved and testable.
 
@@ -1269,3 +1269,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.8):** Records the initial executable SourceRecord and read-only SourceRepository retrieval port. The implementation intentionally does not resolve the still-open SourceCollectionQuery and UpdateSourceConfiguration DTO semantics, adapter schemas, SSRF/egress policy, secret management, or production collection authorization.
+
+
+**Revision Note (v4.9):** Tightens SourceRecord's structural URL validation to reject whitespace, control characters and backslashes before URL parsing, with unit-test coverage. This is input hygiene only; DNS resolution, redirect validation, SSRF prevention and egress authorization remain separate mandatory controls.
