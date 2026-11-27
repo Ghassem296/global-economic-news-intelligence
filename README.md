@@ -56,7 +56,7 @@ uv run --locked python -m global_economic_news_intelligence version
 
 ## Persistence status
 
-No database engine or migration tool is configured yet. GENI-ADR-005 remains Proposed; a relational persistence proof-of-concept and explicit decision are required before choosing the production persistence adapter. The current foundation intentionally avoids creating a misleading in-memory or SQLite production implementation.
+PostgreSQL is the Project Owner-selected target relational database. No production database adapter, driver, ORM/query layer, or migration tool is configured yet. GENI-ADR-005 remains Proposed; the PostgreSQL proof-of-concept, workload/correctness/recovery qualification, and formal ADR acceptance are required before production persistence activation. The current foundation intentionally avoids creating a misleading in-memory or SQLite production implementation.
 
 ## License and content
 
