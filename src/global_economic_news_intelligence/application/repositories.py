@@ -88,6 +88,7 @@ class ArticleRevisionRepository(Protocol):
         article_id: str,
         revision_fingerprint: str,
         schema_version: str,
+        uow: UnitOfWork,
     ) -> ArticleRevisionRecord | None:
         """Return the current revision only when its fingerprint/version match."""
         ...
