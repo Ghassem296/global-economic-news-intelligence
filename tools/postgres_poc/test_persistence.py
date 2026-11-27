@@ -1518,5 +1518,81 @@ asyncio.run(main())
         self.assertIn("UNIQUE", indexes[0][1].upper())
         self.assertNotEqual(indexes[0][0], "articles_source_identity_idx")
 
+    async def test_poc_28_legacy_article_revision_backfill_is_atomic(self) -> None:
+        legacy_article_id = uuid.uuid4()
+        await self.connection.execute(
+            """
+            INSERT INTO articles (article_id, source_id, external_identity)
+            VALUES (%s, %s, 'publisher:legacy-article')
+            """,
+            (legacy_article_id, self.source_id),
+        )
+        await self.connection.commit()
+
+        legacy = await self.connection.execute(
+            "SELECT current_revision_id FROM articles WHERE article_id = %s",
+            (legacy_article_id,),
+        )
+        self.assertIsNone((await legacy.fetchone())[0])
+
+        revision_id = uuid.uuid4()
+        invalid_pointer = uuid.uuid4()
+        with self.assertRaises(ForeignKeyViolation):
+            async with self.connection.transaction():
+                await self.connection.execute(
+                    """
+                    INSERT INTO article_revisions
+                        (revision_id, article_id, revision_number, fingerprint)
+                    VALUES (%s, %s, 1, 'legacy-backfill-fingerprint')
+                    """,
+                    (revision_id, legacy_article_id),
+                )
+                await self.connection.execute(
+                    "UPDATE articles SET current_revision_id = %s WHERE article_id = %s",
+                    (invalid_pointer, legacy_article_id),
+                )
+
+        after_failure = await self.connection.execute(
+            """
+            SELECT a.current_revision_id,
+                   (SELECT COUNT(*) FROM article_revisions r
+                    WHERE r.revision_id = %s AND r.article_id = a.article_id)
+            FROM articles a
+            WHERE a.article_id = %s
+            """,
+            (revision_id, legacy_article_id),
+        )
+        current_revision_id, revision_count = await after_failure.fetchone()
+        self.assertIsNone(current_revision_id)
+        self.assertEqual(revision_count, 0)
+
+        async with self.connection.transaction():
+            await self.connection.execute(
+                """
+                INSERT INTO article_revisions
+                    (revision_id, article_id, revision_number, fingerprint)
+                VALUES (%s, %s, 1, 'legacy-backfill-fingerprint')
+                """,
+                (revision_id, legacy_article_id),
+            )
+            updated = await self.connection.execute(
+                "UPDATE articles SET current_revision_id = %s WHERE article_id = %s",
+                (revision_id, legacy_article_id),
+            )
+            self.assertEqual(updated.rowcount, 1)
+
+        completed = await self.connection.execute(
+            """
+            SELECT a.current_revision_id, r.revision_number
+            FROM articles a
+            JOIN article_revisions r
+              ON r.article_id = a.article_id
+             AND r.revision_id = a.current_revision_id
+            WHERE a.article_id = %s
+            """,
+            (legacy_article_id,),
+        )
+        self.assertEqual(await completed.fetchone(), (revision_id, 1))
+
 if __name__ == "__main__":
     unittest.main()
