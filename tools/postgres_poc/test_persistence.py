@@ -20,6 +20,7 @@ from psycopg.errors import (
     CheckViolation,
     ForeignKeyViolation,
     InsufficientPrivilege,
+    LockNotAvailable,
     QueryCanceled,
     UndefinedTable,
     UniqueViolation,
@@ -164,7 +165,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.connection = await connect_to_schema(DATABASE_URL, self.schema)
         await apply_migrations(
             self.connection,
-            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql"),
+            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql", "009_transaction_bound_authorization_and_rights.sql"),
         )
         self.source_id = "source-test"
         self.article_id = uuid.uuid4()
@@ -2140,6 +2141,165 @@ asyncio.run(main())
             (orphan_revision_id,),
         )
         self.assertIsNone(await result.fetchone())
+
+
+    async def test_poc_38_authorization_revocation_serializes_after_protected_commit(self) -> None:
+        now = "2026-11-27T12:00:00+00:00"
+        await self.connection.execute(
+            "INSERT INTO poc_authorization_grants
+             (grant_reference, actor_reference, action, resource_reference, status, effective_from)
+             VALUES ('grant-1', 'service:collector', 'article.revision.persist',
+                    'source:source-test', 'ACTIVE', %s)",
+            (now,),
+        )
+        await self.connection.commit()
+        checker = await connect_to_schema(DATABASE_URL, self.schema)
+        revoker = await connect_to_schema(DATABASE_URL, self.schema)
+        try:
+            await revoker.execute("SET lock_timeout = '100ms'")
+            await revoker.commit()
+            async with checker.transaction():
+                grant = await checker.execute(
+                    "SELECT status, version FROM poc_authorization_grants
+                     WHERE grant_reference = 'grant-1'
+                       AND actor_reference = 'service:collector'
+                       AND action = 'article.revision.persist'
+                       AND resource_reference = 'source:source-test'
+                       AND effective_from <= %s FOR SHARE",
+                    (now,),
+                )
+                self.assertEqual(await grant.fetchone(), ("ACTIVE", 1))
+                await checker.execute(
+                    "INSERT INTO protected_state (resource_id, fencing_token, value)
+                     VALUES ('authorization-protected-write', 1, 'committed-before-revoke')"
+                )
+                with self.assertRaises(LockNotAvailable):
+                    async with revoker.transaction():
+                        await revoker.execute(
+                            "UPDATE poc_authorization_grants
+                             SET status = 'REVOKED', version = version + 1
+                             WHERE grant_reference = 'grant-1'"
+                        )
+            async with revoker.transaction():
+                await revoker.execute(
+                    "UPDATE poc_authorization_grants
+                     SET status = 'REVOKED', version = version + 1
+                     WHERE grant_reference = 'grant-1'"
+                )
+            persisted = await self.connection.execute(
+                "SELECT value FROM protected_state WHERE resource_id = 'authorization-protected-write'"
+            )
+            self.assertEqual((await persisted.fetchone())[0], "committed-before-revoke")
+            revoked = await self.connection.execute(
+                "SELECT status, version FROM poc_authorization_grants WHERE grant_reference = 'grant-1'"
+            )
+            self.assertEqual(await revoked.fetchone(), ("REVOKED", 2))
+        finally:
+            await checker.close()
+            await revoker.close()
+
+    async def test_poc_39_authorization_revocation_committed_before_check_is_denied(self) -> None:
+        now = "2026-11-27T12:00:00+00:00"
+        await self.connection.execute(
+            "INSERT INTO poc_authorization_grants
+             (grant_reference, actor_reference, action, resource_reference, status, effective_from)
+             VALUES ('grant-2', 'service:collector', 'article.revision.persist',
+                    'source:source-test', 'ACTIVE', %s)",
+            (now,),
+        )
+        await self.connection.commit()
+        await self.connection.execute(
+            "UPDATE poc_authorization_grants SET status = 'REVOKED', version = version + 1
+             WHERE grant_reference = 'grant-2'"
+        )
+        await self.connection.commit()
+        async with self.connection.transaction():
+            result = await self.connection.execute(
+                "SELECT status, version FROM poc_authorization_grants
+                 WHERE grant_reference = 'grant-2' FOR SHARE"
+            )
+            self.assertEqual(await result.fetchone(), ("REVOKED", 2))
+
+    async def test_poc_40_content_rights_revocation_serializes_after_protected_commit(self) -> None:
+        now = "2026-11-27T12:00:00+00:00"
+        fingerprint = "a" * 64
+        await self.connection.execute(
+            "INSERT INTO poc_content_rights_assessments
+             (assessment_reference, source_id, content_scope_fingerprint, operation,
+              policy_version, rights_profile_reference, status, effective_from)
+             VALUES ('rights-1', %s, %s, 'PERSISTENT_STORAGE', 'policy-v1',
+                     'profile-v1', 'ALLOWED', %s)",
+            (self.source_id, fingerprint, now),
+        )
+        await self.connection.commit()
+        checker = await connect_to_schema(DATABASE_URL, self.schema)
+        revoker = await connect_to_schema(DATABASE_URL, self.schema)
+        try:
+            await revoker.execute("SET lock_timeout = '100ms'")
+            await revoker.commit()
+            async with checker.transaction():
+                assessment = await checker.execute(
+                    "SELECT status, policy_version, version
+                     FROM poc_content_rights_assessments
+                     WHERE assessment_reference = 'rights-1' AND source_id = %s
+                       AND content_scope_fingerprint = %s
+                       AND operation = 'PERSISTENT_STORAGE' AND effective_from <= %s
+                     FOR SHARE",
+                    (self.source_id, fingerprint, now),
+                )
+                self.assertEqual(await assessment.fetchone(), ("ALLOWED", "policy-v1", 1))
+                await checker.execute(
+                    "INSERT INTO protected_state (resource_id, fencing_token, value)
+                     VALUES ('rights-protected-write', 1, 'stored-before-revocation')"
+                )
+                with self.assertRaises(LockNotAvailable):
+                    async with revoker.transaction():
+                        await revoker.execute(
+                            "UPDATE poc_content_rights_assessments
+                             SET status = 'REVOKED', version = version + 1
+                             WHERE assessment_reference = 'rights-1'"
+                        )
+            async with revoker.transaction():
+                await revoker.execute(
+                    "UPDATE poc_content_rights_assessments
+                     SET status = 'REVOKED', version = version + 1
+                     WHERE assessment_reference = 'rights-1'"
+                )
+            persisted = await self.connection.execute(
+                "SELECT value FROM protected_state WHERE resource_id = 'rights-protected-write'"
+            )
+            self.assertEqual((await persisted.fetchone())[0], "stored-before-revocation")
+            revoked = await self.connection.execute(
+                "SELECT status, version FROM poc_content_rights_assessments
+                 WHERE assessment_reference = 'rights-1'"
+            )
+            self.assertEqual(await revoked.fetchone(), ("REVOKED", 2))
+        finally:
+            await checker.close()
+            await revoker.close()
+
+    async def test_poc_41_content_rights_revocation_committed_before_check_is_denied(self) -> None:
+        now = "2026-11-27T12:00:00+00:00"
+        await self.connection.execute(
+            "INSERT INTO poc_content_rights_assessments
+             (assessment_reference, source_id, content_scope_fingerprint, operation,
+              policy_version, rights_profile_reference, status, effective_from)
+             VALUES ('rights-2', %s, %s, 'PERSISTENT_STORAGE', 'policy-v1',
+                     'profile-v1', 'ALLOWED', %s)",
+            (self.source_id, "b" * 64, now),
+        )
+        await self.connection.commit()
+        await self.connection.execute(
+            "UPDATE poc_content_rights_assessments SET status = 'REVOKED', version = version + 1
+             WHERE assessment_reference = 'rights-2'"
+        )
+        await self.connection.commit()
+        async with self.connection.transaction():
+            result = await self.connection.execute(
+                "SELECT status, version FROM poc_content_rights_assessments
+                 WHERE assessment_reference = 'rights-2' FOR SHARE"
+            )
+            self.assertEqual(await result.fetchone(), ("REVOKED", 2))
 
 if __name__ == "__main__":
     unittest.main()
