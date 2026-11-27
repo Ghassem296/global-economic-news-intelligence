@@ -1111,3 +1111,24 @@ def test_source_identity_authorization_reference_is_unambiguous() -> None:
     assert first_reference == 'source-article:v1:["a:b","c","d"]'
     assert second_reference == 'source-article:v1:["a","b:c","d"]'
     assert first_reference != second_reference
+
+def test_original_commit_error_is_not_masked_by_rollback_failure() -> None:
+    class BrokenUnitOfWork(FakeUnitOfWork):
+        def commit(self) -> CommitResult:
+            raise RuntimeError("original commit failure")
+
+        def rollback(self) -> None:
+            raise OSError("secondary rollback failure")
+
+    class BrokenUnitOfWorkFactory:
+        def begin(self) -> BrokenUnitOfWork:
+            return BrokenUnitOfWork()
+
+    service, _ = build_service()
+    service._uow_factory = BrokenUnitOfWorkFactory()  # type: ignore[assignment]
+
+    with pytest.raises(RuntimeError, match="original commit failure"):
+        service.execute(
+            PersistArticleRevisionCommand(make_metadata(), make_revision())
+        )
+
