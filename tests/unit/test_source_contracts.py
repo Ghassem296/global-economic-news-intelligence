@@ -65,6 +65,9 @@ def test_source_record_defaults_to_empty_immutable_configuration() -> None:
         "https://example.com/feed#fragment",
         "https://example.com:invalid/feed",
         "https://example.com/feed?api_key=secret",
+        "https://example.com/feed path",
+        "https://example.com/feed\\path",
+        "https://example.com/feed\npath",
     ],
 )
 def test_source_record_rejects_invalid_or_credential_bearing_urls(base_url: str) -> None:
