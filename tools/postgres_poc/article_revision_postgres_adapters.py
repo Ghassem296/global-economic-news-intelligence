@@ -273,13 +273,19 @@ class PostgreSQLArticleRepository:
         if identity.canonical_url is not None:
             collision = connection.execute(
                 """
-                SELECT article_id FROM articles
+                SELECT canonical_source_identifier, identity_normalization_version
+                FROM articles
                 WHERE source_id = %s AND canonical_url = %s AND article_id <> %s
                 LIMIT 1
                 """,
                 (article.source_id, identity.canonical_url, UUID(article.article_id)),
             ).fetchone()
             if collision is not None:
+                if collision == (
+                    identity.canonical_source_identifier,
+                    identity.normalization_version,
+                ):
+                    raise _raise_duplicate_identity()
                 raise GeniError(
                     ErrorCode.CONFLICT,
                     "Canonical URL is already associated with another Article identity.",
