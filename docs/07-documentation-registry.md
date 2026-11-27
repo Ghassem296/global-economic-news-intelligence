@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.89
+**Version:** 10.90
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -157,7 +157,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | Document ID | Title | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.25 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
-| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.59 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
+| GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.60 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.62 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.41 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.8 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
@@ -168,7 +168,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-EVAL-012 | Testing and Evaluation Strategy | `docs/12-testing-and-evaluation-strategy.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.31 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.32 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 5.8 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 3.4 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
@@ -203,7 +203,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | `docs/adr/decisions/GENI-ADR-009-near-real-time-news-acquisition-strategy.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-010 | Phased Text, Audio, and Video Delivery | `docs/adr/decisions/GENI-ADR-010-phased-text-audio-and-video-delivery.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.13 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.14 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `docs/adr/decisions/GENI-ADR-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.7 | Proposed — owner-selected Alternative C; formal acceptance pending | Published | Project Owner | 2026-11-26 | Owner direction recorded; formal ADR approval pending |
 | GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/GENI-ADR-014-human-review-corrections-and-withdrawals.md` | 1.6 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
@@ -416,7 +416,7 @@ A periodic review should verify that the registry matches:
 
 This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 02 v1.59, Document 03 v1.62, Document 04 v1.41, Document 15 v4.31, Document 16 v5.8, Document 17 v3.4, and GENI-ADR-011 v1.13. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
-The inspected executable application/PoC source snapshot is `cb258297a4568e6eec2083a0803e36caf61198e1`. Application CI run `46001262517` passed all 302 tests with lock verification, Ruff and mypy; Documentation Validation run `46001262593` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `46001262732` passed all 41 methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15198735753`). POC-35–38 add isolated row-lock experiments for authorization/content-rights revocation ordering; this candidate pattern does not exercise production adapters or complete policy/profile locking. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005/016 remain Proposed. The inspected documentation snapshot is `c064782a88c429d50bc88f8ba34b4db5fa8a994b`; the executable application/PoC evidence remains tied only to source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1`. This registry refresh itself is a documentation-only follow-up.
+The inspected executable application/PoC source snapshot is `cb258297a4568e6eec2083a0803e36caf61198e1`. Application CI run `46001262517` passed all 302 tests with lock verification, Ruff and mypy; Documentation Validation run `46001262593` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `46001262732` passed all 41 methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15198735753`). POC-35–38 add isolated row-lock experiments for authorization/content-rights revocation ordering; this candidate pattern does not exercise production adapters or complete policy/profile locking. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005/016 remain Proposed. The inspected documentation snapshot is `62343c3acefbf6880a5502885b6d56035cfbe368`; the executable application/PoC evidence remains tied only to source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1`. This registry refresh itself is a documentation-only follow-up.
 
 All twenty individual ADRs remain Proposed; none is recorded as Accepted. Publication, passing CI, and PoC evidence do not constitute formal architecture approval, legal permission, production readiness, or operational acceptance.
 
@@ -514,6 +514,8 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v5.0):** Refreshes the controlled-document inventory for Document 16 v4.4 and the inspected `main` baseline. Records the corrected distinction between the owner-selected PostgreSQL target and pending production qualification/formal ADR-005 acceptance. No ADR status or production authorization is changed.
 
 **Revision Note (v10.89):** Synchronizes GENI-SEC-008 to v1.10 after adding explicit gated permissions for Event Identity Operation commands.
+
+**Revision Note (v10.90):** Synchronizes GENI-ARCH-002 v1.60, GENI-IMPL-015 v4.32 and GENI-ADR-011 v1.14 after aligning the core identity transaction with authoritative typed ProcessingStep persistence; retains GENI-SEC-008 v1.10 and its gated operation permissions. The inspected documentation snapshot is `62343c3acefbf6880a5502885b6d56035cfbe368`. No runtime capability or ADR approval is implied.
 
 **End of Document**
 
