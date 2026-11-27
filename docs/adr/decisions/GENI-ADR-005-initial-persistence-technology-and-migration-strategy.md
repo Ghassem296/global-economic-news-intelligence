@@ -338,5 +338,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | 1.5 | 2026-11-26 | Proposed | Records the Project Owner-selected PostgreSQL target and PostgreSQL-specific qualification gate; production acceptance remains pending reproducible evidence. | AI Architecture Assistant |
 | 1.6 | 2026-11-27 | Proposed | Removes stale SQLite-selection language and aligns consequences, implementation sequence, verification, and acceptance criteria with the owner-selected PostgreSQL target and its remaining qualification gates. | AI Architecture Assistant |
 | 1.7 | 2026-11-27 | Proposed | References the explicit owner-approved workload-profile template in PoC-001 §3.2; numeric values and thresholds remain unset until Project Owner approval. | AI Architecture Assistant |
+| 1.8 | 2026-11-27 | Proposed | Removes the PoC/production tooling-selection deadlock by allowing explicitly provisional, isolated PoC-only candidates while keeping production dependencies and architecture gated by formal ADR acceptance. | AI Architecture Assistant |
 
 **End of ADR**
