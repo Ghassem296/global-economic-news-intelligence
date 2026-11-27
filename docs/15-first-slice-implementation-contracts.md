@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.30  
+**Version:** 4.31  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1303,7 +1303,7 @@ The workflow has four distinct phases:
 1. Prepare: authenticate actor; resolve exact authorization; load and validate policy version; validate input/output cardinality, roles, preassigned output Events, subject ownership, allocation completeness, evidence references and request fingerprint; check for conflicting active operations; then persist PENDING operation, links, initial history and idempotency result atomically. No Event identity projection changes in this phase.
 2. Claim and apply core effect: acquire the approved durable execution lease/fencing token; transition PENDING to IN_PROGRESS with history; within one UnitOfWork revalidate authorization/policy freshness and every expected `EventHistory` version, lock/serialize the complete input/output identity set, validate no conflicting operation has become active, coordinate EventRepository.apply_identity_projection, append each affected `EventHistory` record through EventHistoryRepository, persist operation effect state APPLIED through EventIdentityOperationRepository, and create durable downstream reconciliation intent. If the transaction outcome is uncertain, do not repeat the effect; reconcile by operation ID and durable history.
 3. Reconcile downstream: enumerate affected EventMatchCase, Analysis and exact Report versions. Re-evaluate cases only through Event Resolution Workflow; any changed association requires a new case-scoped EventMatchDecision and EventService application. Analyses remain immutable; create a successor analysis only when the approved analytical workflow determines it is required. For every affected report version, create exactly one `EventIdentityOperationReportImpact` and initial history action; ReportVersionService assesses it and assigns an owned remediation work item when correction is required. PublicationService and ReportDelivery are never invoked implicitly.
-4. Finalize: mark SUCCEEDED only when core effect is APPLIED, discovery is complete, every required downstream work item is durably represented, and every discovered report impact is ASSESSED, REMEDIATION_REQUIRED with a valid owned work-item reference, or RESOLVED. Otherwise remain RECONCILIATION_REQUIRED. FAILED/CANCELLED is permitted only when the core effect is definitively NOT_APPLIED.
+4. Finalize: mark SUCCEEDED only when core effect is APPLIED, discovery is complete, every required case/analysis reconciliation step is complete, and every discovered report impact is ASSESSED, REMEDIATION_REQUIRED with a valid owned work-item reference, or RESOLVED. A case-reconciliation step is complete only after a successor EventMatchDecision is applied, an explicit unresolved/no-link disposition is permitted by the approved policy, or a required human review is handed to a durable, correctly scoped and assigned ReviewRecord under GENI-ADR-014. An analysis-reconciliation step is complete only after a documented no-change assessment or an immutable successor Analysis is persisted. A merely queued/in-memory task, open case without an accountable review task, or pending analysis step is not completion. Otherwise remain RECONCILIATION_REQUIRED. FAILED/CANCELLED is permitted only when the core effect is definitively NOT_APPLIED.
 
 The core identity transaction must not call network services, LLMs, publication targets, or recipient channels. External work is never hidden inside the identity UnitOfWork. A post-commit worker failure cannot roll back an already applied identity effect; it leaves durable reconciliation work outstanding.
 
@@ -1339,7 +1339,7 @@ The request fingerprint binds the complete ordered command and policy/evidence c
 Before this tranche can be implemented or enabled, all of the following are required:
 
 - GENI-ADR-011 is formally Accepted; GENI-ADR-016 is accepted for durable lease, fencing, idempotency and recovery mechanisms used by the workflow.
-- Project Owner-approved survivor-selection, identity-correction cardinality, allocation, authorization, evidence sufficiency, and human-review policies are versioned and testable.
+- Project Owner-approved survivor-selection, identity-correction cardinality, allocation, authorization, evidence sufficiency, and human-review policies are versioned and testable. Any required human-review handoff must satisfy GENI-ADR-014 and its approved ReviewRecord lifecycle, assignment, authorization and typed-subject contracts.
 - ProcessingStep, ProcessingStepAttempt, ExecutionLease and IdempotencyRecord persistence ports/adapters are specified and transactionally qualified; each reconciliation unit has a deterministic typed reference to its operation and target aggregate.
 - Concrete EventRepository, EventHistoryRepository, EventIdentityOperationRepository, EventIdentityOperationHistoryRepository, EventMatchCase/Decision/ArticleEventLink repositories, ReportRepository impact aggregate, and UnitOfWork adapters exist.
 - PostgreSQL concurrency tests cover overlapping operations, stale `EventHistory` versions, competing survivor selection, allocation uniqueness, transaction rollback, fencing, and concurrent idempotent retries.
@@ -1474,3 +1474,6 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 
 
 **Revision Note (v4.30):** Completes the ProcessingStepRepository contract for identity reconciliation by adding atomic step-lease acquisition, renewal, and release methods with trusted-time, configured-policy and fencing-token requirements. Numeric lease/heartbeat settings remain deployment decisions; no lease adapter or runtime capability is enabled.
+
+
+**Revision Note (v4.31):** Tightens Event Identity operation finalization so durable existence of downstream work alone cannot be mistaken for completed reconciliation. Defines completion criteria for affected EventMatchCases and immutable Analyses, requires accountable ReviewRecord handoff when human review is necessary, and adds GENI-ADR-014 as a dependency for that handoff. The operation remains disabled until the relevant review and persistence gates pass.
