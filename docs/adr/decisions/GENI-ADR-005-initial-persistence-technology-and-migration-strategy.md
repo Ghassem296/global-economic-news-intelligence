@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 3.2  
+**Version:** 3.3  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -322,7 +322,7 @@ The references below are internal project documents used to establish the curren
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines relational entities, integrity constraints, and transactions. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Records PostgreSQL as the owner-selected target, subject to qualification and formal ADR acceptance. |
 | `GENI-ADR-016` | Internal | Defines persistence and recovery behaviors that constrain engine selection. |
-| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | GENI-ADR-005-POC-001 v1.25 defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records 32 passing PoC test methods on run `45980652401` / commit `fd30de42a32c577ca8745055355583e8b0baa30a` (artifact `15189785653`), including POC-24 through POC-29 migration, domain-integrity, legacy-revision-backfill, and concurrent ArticleRevision compare-and-swap checks, but not full production qualification. |
+| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | GENI-ADR-005-POC-001 v1.26 defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records 32 passing PoC test methods on current main commit `1a02755f8356aa2263246c9c08ab13bfdd41bc70` (run `45981896934`, artifact `15189922078`), including POC-24 through POC-29 migration, domain-integrity, legacy-revision-backfill, and concurrent ArticleRevision compare-and-swap checks, but not full production qualification. |
 
 External legal review, provider measurements, market-data coverage measurements, and model-quality benchmarks remain outstanding wherever relevant.
 
@@ -352,6 +352,7 @@ External legal review, provider measurements, market-data coverage measurements,
 | 2.9 | 2026-11-27 | Proposed | Updates the evidence register to the latest 30-test PoC run and POC-24 through POC-27; records the exact run, commit, artifact, and digest. The ADR remains Proposed and production qualification remains incomplete. | AI Architecture Assistant |
 | 3.0 | 2026-11-27 | Proposed | Records the 31-test PoC run and POC-28's atomic synthetic legacy Article revision backfill candidate. | AI Architecture Assistant |
 | 3.1 | 2026-11-27 | Proposed | Refreshes the evidence register to the reproducible 32-test run `45963235373` / artifact `15182595241`; adds POC-29 concurrent ArticleRevision append/current-pointer compare-and-swap evidence. Production qualification and formal ADR acceptance remain open. | AI Architecture Assistant |
-| 3.2 | 2026-11-27 | Proposed | Synchronizes the evidence reference with GENI-ADR-005-POC-001 v1.25 and the latest successful 32-test PostgreSQL 18.7 / Python 3.15 run `45980652401` on commit `fd30de42a32c577ca8745055355583e8b0baa30a` (artifact `15189785653`). Production qualification, workload thresholds, security/operations, and formal ADR acceptance remain open. | AI Architecture Assistant |
+| 3.2 | 2026-11-27 | Proposed | Synchronizes the evidence reference with GENI-ADR-005-POC-001 v1.25 and the successful 32-test PostgreSQL 18.7 / Python 3.15 run `45980652401` on commit `fd30de42a32c577ca8745055355583e8b0baa30a` (artifact `15189785653`). Production qualification, workload thresholds, security/operations, and formal ADR acceptance remain open. | AI Architecture Assistant |
+| 3.3 | 2026-11-27 | Proposed | Refreshes the PoC evidence reference to protocol v1.26 and the successful exact-current-main run `45981896934` on commit `1a02755f8356aa2263246c9c08ab13bfdd41bc70` (32 test methods; artifact `15189922078`). The rerun verifies the current code snapshot only; production qualification, workload thresholds, security/operations, and formal ADR acceptance remain open. | AI Architecture Assistant |
 
 **End of ADR**
