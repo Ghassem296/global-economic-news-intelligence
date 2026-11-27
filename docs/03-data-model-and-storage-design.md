@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.60
+**Version:** 1.61
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -2227,6 +2227,8 @@ A step with an expired lease may be considered for recovery only after the appli
 
 Each execution attempt must be represented by an immutable ProcessingStepAttempt record containing at minimum: attempt ID, processing step ID, attempt number, input fingerprint, worker identity, fencing token, start/completion timestamps, outcome, safe error category, output reference, and idempotency reference. The attempt number is allocated atomically. A retry appends a new attempt; it never overwrites the prior attempt. The current ProcessingStep status is a projection over the logical step and its latest valid attempt, subject to GENI-FOUNDATION-017.
 
+**Event Identity reconciliation work-item mapping:** An Event Identity Operation is represented by a ProcessingRun whose target_type is EVENT_IDENTITY_OPERATION and whose target_id is the exact operation ID. Each independently recoverable downstream unit is a ProcessingStep in that run; no in-memory queue entry is authoritative. The supported step_name vocabulary for this workflow is EVENT_IDENTITY_CASE_REEVALUATION, EVENT_IDENTITY_ANALYSIS_RECONCILIATION, EVENT_IDENTITY_REPORT_IMPACT_DISCOVERY, EVENT_IDENTITY_REPORT_IMPACT_ASSESSMENT, and EVENT_IDENTITY_FINALIZATION. A step's metadata must contain typed, validated operation_id, work_kind, target_type, target_id (nullable only for a bounded discovery/finalization cursor), target_version where applicable, and the exact policy/version references needed to repeat the work. The step input_fingerprint is a server-derived canonical digest over operation ID, step kind, typed target, target version, cursor/partition identity, and relevant policy/input fingerprints; callers cannot supply it. output_reference must identify the durable result or aggregate reference. ProcessingStepAttempt records every worker attempt immutably, while ExecutionLease and its fencing token establish exclusive ownership. Report-impact status and its append-only history remain authoritative in EventIdentityOperationReportImpact and EventIdentityOperationReportImpactHistory; the ProcessingStep tracks orchestration progress only. A completed step is reusable only for the same fingerprint. Changed target state or policy requires a successor logical step or run under the approved reprocessing policy; it must not rewrite a completed attempt.
+
 `heartbeat_at` and `lease_expires_at` on ProcessingRun/ProcessingStep are query projections only. The authoritative owner, lease status, expiry, and fencing token are stored in ExecutionLease. A worker must present the current fencing token for every state-changing write; stale tokens are rejected even if the old worker is still running.
 
 ### 13.2.1 ExecutionLease
@@ -2677,7 +2679,7 @@ Where applicable, enforce:
 - Source and checkpoint type uniqueness.
 - SourceRelationship version uniqueness within its directed source pair and relationship type; only symmetric relationship types may canonicalize the pair.
 - ArticleOriginRelationship version uniqueness within its subject revision, target origin, relationship type, and assessment lineage.
-- Processing step identity within a run.
+- Processing step identity within a run; for Event Identity reconciliation, enforce uniqueness by (processing_run_id, step_name, input_fingerprint), where the server-derived fingerprint binds operation ID, work kind, typed target and target version/cursor.
 - At most one active ExecutionLease per resource and strictly increasing fencing tokens per resource.
 - IdempotencyRecord uniqueness by `(operation_scope, idempotency_key)`.
 - ProcessingRun idempotency-key uniqueness within its documented run-type scope.
@@ -3386,3 +3388,5 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.60):** Places EventIdentityOperationReportImpactHistory under the Event Identity Operations section (§7.5), before EventRelationship (§7.6), correcting its structural placement without changing the lifecycle contract.
+
+**Revision Note (v1.61):** Defines a durable Event Identity reconciliation work-item mapping over the existing ProcessingRun/ProcessingStep/ProcessingStepAttempt/ExecutionLease model, including typed target metadata, deterministic input fingerprints, supported step kinds, retry/fencing semantics, and a uniqueness rule. This avoids introducing a parallel queue entity; persistence adapters and method-level contracts remain required, and no Event Identity capability is enabled.
