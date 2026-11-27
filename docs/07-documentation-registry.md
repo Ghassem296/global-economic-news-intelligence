@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 5.5
+**Version:** 5.6
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-26 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.7 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.8 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 2.3 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-26 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -179,9 +179,9 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 5.5 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 5.6 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.22 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.23 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
 
@@ -197,7 +197,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-26 | PostgreSQL target direction recorded; qualification and formal acceptance pending |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 1.8 | Proposed | Published | Project Owner | 2026-11-26 | PostgreSQL target direction recorded; qualification and formal acceptance pending |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -208,7 +208,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.7 | Proposed — owner-selected Alternative C; formal acceptance pending | Published | Project Owner | 2026-11-26 | Owner direction recorded; formal ADR approval pending |
 | GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/GENI-ADR-014-human-review-corrections-and-withdrawals.md` | 1.6 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
 | GENI-ADR-015 | Market Data Integration and Economic Impact Classification | `docs/adr/decisions/GENI-ADR-015-market-data-integration-and-economic-impact-classification.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | `docs/adr/decisions/GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-016 | Persistence, Async Execution, Idempotency, and Recovery | `docs/adr/decisions/GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `docs/adr/decisions/GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | `docs/adr/decisions/GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | `docs/adr/decisions/GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -245,7 +245,7 @@ They are not automatically binding project specifications.
 | Agent Template Reference Guide | `docs/references/agent-template/README.md` | Reference | Published |
 | Agent Template Architecture | `docs/references/agent-template/agent-template-architecture.md` | Reference | Published |
 | Agent Template Implementation Specification | `docs/references/agent-template/agent-template-implementation-specification.md` | Reference | Published |
-| GENI-ADR-005 Persistence Proof-of-Concept Protocol | `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Proposed evidence protocol; not test results or an approved decision | Published |
+| GENI-ADR-005 Persistence Proof-of-Concept Protocol | `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | v1.6 Proposed protocol; isolated PoC-only candidate stack, not production approval | Published |
 
 Reference material may inform project design, but product-specific requirements and accepted decisions must be documented in the appropriate authoritative project documents.
 
@@ -412,7 +412,7 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-27  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `355d3f2e57d0359c6a78a453a992310b10e820c5`
+**Baseline Commit Inspected:** `f703112d4cf570fc01ba064bfe9a17f01f5af7cd`
 **Registry Refresh:** This audit inspected the published `main` branch at the baseline commit above. This registry revision follows that inspected commit and records the resulting document versions and paths. The refreshed snapshot includes the executable Python foundation and lifecycle contracts; first-slice source, pairwise article-deduplication, event-matching, evidence, analysis, report and publication-decision contracts; explicit aggregate ownership for evidence locations, analysis inputs/evidence links and report provenance links; deny-by-default authorization boundaries; and privacy/rights provenance gates before provider egress. Document 02 v1.54 includes duplicate repositories in the first-slice test baseline. Document 03 v1.46 and Document 15 v3.3 require exact actor/authorization provenance for duplicate evaluation and decision records. Document 04 v1.35 and Document 16 v3.0 agree that the first executable slice is fixture-driven, while provider-backed analysis is deferred to Stage 8 and remains gated by accepted ADRs and exact rights/privacy/transfer authorization. Document 16 v3.0 records successful Python 3.15 application CI (run 45465238823) and the unresolved dependency reproducibility gap: no lockfile exists, CI still installs via pip from declared version ranges, and the package-manager decision remains pending. GENI-ADR-005 v1.5 records the Project Owner's explicit selection of PostgreSQL as the target relational database. GENI-ADR-005-POC-001 v1.3 is now a PostgreSQL-specific qualification protocol covering approved workload definition, correctness/failure, concurrency, migrations, backup/restore and recovery. It is a test plan, not test evidence or production authorization; ADR-005 remains Proposed until qualification evidence is reviewed and formal acceptance is recorded. ADR-016 remains Proposed. The runtime policy is now CPython 3.15 only; `.python-version`, package metadata, Ruff/mypy targets, and application CI are aligned to that target. The Python 3.12/3.13 CI matrix is historical and has been superseded. The snapshot is repository-only; it does not claim local Working Tree inspection. The successful Python 3.15 application CI run is explicitly recorded as run 45465238823; this does not imply full product or operational readiness. Publication and validator presence do not constitute formal architecture approval, implementation, legal compliance, or operational verification.
 
 This refresh was performed directly against the published GitHub `main` branch. Document 17 v1.4 now records the Python 3.15-only runtime, uv 0.13.9, committed `uv.lock`, and setuptools 84.2.1. Document 04 v1.36 and Document 16 v3.2 record the same selected package-management baseline and locked CI process, and explicitly distinguish selected project tooling from pending architecture decisions. The PostgreSQL target direction is owner-selected, while production qualification, exact driver/ORM/migration/async choices, and other capability-dependent architecture decisions remain pending their ADR and evidence gates. The local Working Tree was not inspected; local-only changes are outside this registry snapshot.
@@ -524,3 +524,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v5.5):** Synchronizes the controlled inventory with Document 16 v4.7, refreshes its inspected `main` baseline to `b2e8ac5`, and records the latest successful Application CI and Documentation validation runs. No ADR is accepted and no production capability is authorized.
+
+
+**Revision Note (v5.6):** Synchronizes Document 16 v4.8, ADR-005 v1.8, PoC-001 v1.6, ADR-016 v1.2, and ADR Registry v1.23. Records the isolated PoC-only candidate-tooling boundary without implying that an experimental stack has been selected, implemented, tested, or promoted to production. The inspected baseline is `f703112d4cf570fc01ba064bfe9a17f01f5af7cd`; fresh CI validation is required.
