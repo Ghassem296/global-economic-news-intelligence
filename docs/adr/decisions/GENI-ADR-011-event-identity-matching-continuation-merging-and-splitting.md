@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.12  
+**Version:** 1.13  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -839,6 +839,8 @@ Proposed application operations include:
 
 These are logical operations, not finalized implementation signatures.
 
+The provisional method-level application contract is recorded in GENI-IMPL-015 §10.17. It separates preparation, core-effect application, downstream reconciliation, and finalization; assigns Event projection writes to EventRepository, append-only history to EventHistoryRepository, and operation/allocation/effect state to EventIdentityOperationRepository. Durable downstream reconciliation is represented by typed ProcessingStep records within a ProcessingRun as specified by GENI-DATA-003 §13.2, not by an in-memory queue or a new parallel work-item entity. The operation cannot be marked SUCCEEDED while required case/analysis reconciliation is pending or while an affected report lacks its durable impact record and required disposition. A case requiring human review must be handed to an accountable, correctly scoped ReviewRecord under GENI-ADR-014. These are proposed implementation contracts and acceptance gates only; they do not approve execution, survivor-selection policy, authorization grants, or physical persistence choices. GENI-ADR-011 remains Proposed.
+
 ### 9.3 Affected Documents
 
 - `docs/01-product-and-system-architecture.md`
@@ -1038,3 +1040,6 @@ Such measurements must be obtained through a representative evaluation dataset b
 
 
 **Revision Note (v1.12):** Adds EventIdentityOperationReportImpactHistory to the proposed entity inventory and clarifies that remediation-required report impacts need a durable accountable work item and append-only resolution history. ADR-011 remains Proposed.
+
+
+**Revision Note (v1.13):** Cross-references the gated GENI-IMPL-015 §10.17 application contract and GENI-DATA-003 §13.2 ProcessingStep reconciliation mapping. Clarifies Event/EventHistory/operation repository ownership, downstream completion requirements, and the GENI-ADR-014 review-handoff dependency. ADR status remains Proposed; no merge/split execution or production authorization is implied.
