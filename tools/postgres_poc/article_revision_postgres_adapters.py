@@ -7,7 +7,6 @@ or infer authorization or content-retention permission.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import UTC, datetime
@@ -15,8 +14,6 @@ from types import MappingProxyType
 from typing import Any
 from uuid import UUID, uuid4
 
-import psycopg
-from psycopg import sql
 from psycopg.errors import UniqueViolation
 from psycopg.types.json import Jsonb
 
