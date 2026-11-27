@@ -916,11 +916,11 @@ asyncio.run(main())
                 # The destination cluster already bootstraps its postgres
                 # administrator. Keep that destination-owned identity and
                 # restore all other cluster-global roles and memberships.
-                restore_sql = "\\n".join(
+                restore_sql = "\n".join(
                     line for line in dump.stdout.splitlines()
                     if line != "CREATE ROLE postgres;"
                     and not line.startswith("ALTER ROLE postgres ")
-                ) + "\\n"
+                ) + "\n"
                 globals_dump.write_text(restore_sql, encoding="utf-8")
                 os.chmod(globals_dump, 0o600)
                 self.assertGreater(globals_dump.stat().st_size, 0)
