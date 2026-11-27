@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.54  
+**Version:** 4.55  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -147,9 +147,9 @@ Lifecycle mechanics are specified, but material review actions, publication poli
 
 Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevision through deduplication, event matching, evidence, analysis, and Report version. Verify exact provenance, idempotency, concurrency, rollback, recovery, and absence of unauthorized external effects. PublicationDecision and publication eligibility are explicitly outside this slice until GENI-ADR-004 and dependent gates are accepted.
 
-### 5.1 Review findings recorded on 2026-11-27
+### 5.7 Review findings recorded on 2026-11-27
 
-A full review of the published `main` snapshot at `8b486f3` produced the initial findings below. Their status has been refreshed against subsequent commits: items 1 and 5 are resolved at the application-contract level, item 2 is corrected in the isolated PoC but awaits execution evidence, and items 3, 4 and 6 remain open. Resolved application/PoC findings retain their production qualification gates.
+A full review of the published `main` snapshot at `8b486f3` produced the initial findings below. Their status is reconciled with the subsequent application and PostgreSQL PoC evidence: (1) rights-evaluation time is resolved at the application-contract level; a production Clock adapter and integration evidence remain open; (2) the isolated PoC migration runner correction is exercised by POC-24 in the successful 32-test run, but the runner remains experimental and is not an approved production migration tool; (3) the migration 004 schema-integrity corrections are exercised by POC-25 through POC-27, while the production legacy-revision backfill/non-null policy remains open; (4) the PostgreSQL PoC image and GitHub Actions are pinned, with routine supply-chain refresh retained as maintenance; (5) ArticleRevision identity and projection refresh are resolved at the application-service level, while concrete repository lookup and database race/integration tests remain open; and (6) the bounded Ruff/mypy scope is an intentional, documented validation-harness boundary, not an unresolved application-quality failure. PoC evidence does not remove production qualification gates.
 
 1. **Rights-evaluation time:** Resolved in the reviewed application service: a validated Clock supplies one trusted evaluation instant for metadata and persistent-storage rights checks. The source-provided `observed_at` remains provenance only. A production Clock adapter and integration evidence remain open.
 2. **PoC migration runner hardening:** Corrected in the isolated PoC runner. It acquires a schema-scoped transaction advisory lock before checking migration history and executes each SQL file whole. POC-24 now tests concurrent runners and PL/pgSQL bodies containing internal semicolons; execution evidence is pending. This remains an experimental runner, not an approved production migration tool.
@@ -246,7 +246,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.54
+**Version:** 4.55
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -412,3 +412,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.53):** Corrects the paragraph boundary after the PostgreSQL qualification gate and completes the R1 evidence coverage through POC-29. No readiness verdict or approval status changes.
 
 **Revision Note (v4.54):** Aligns the controlled footer version with the v4.54 header. No readiness verdict, test result, or approval status changes.
+
+**Revision Note (v4.55):** Reconciles the 2026-11-27 review-finding summary with the recorded POC-24 through POC-29 evidence, distinguishes experimental PoC completion from production qualification, and corrects the duplicate subsection number. No ADR approval or production authorization is implied.
