@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 5.11  
+**Version:** 5.12  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -570,3 +570,6 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v5.10):** Synchronizes readiness with GENI-IMPL-015 v4.33, which now defines the Event Identity operation's linked IdempotencyRecord lifecycle and guards against false FAILED/COMPLETED outcomes. Durable idempotency and ProcessingStep adapters, atomicity tests and all ADR approvals remain outstanding; the not-ready verdict is unchanged.
 
 **Revision Note (v5.11):** Synchronizes readiness with GENI-IMPL-015 v4.34, which establishes IdempotencyRecordRepository as the single canonical owner of Event Identity idempotency claims and removes duplicate claim ownership from EventIdentityOperationRepository. Durable adapters and transactional qualification remain open; readiness is unchanged.
+
+
+**Revision Note (v5.12):** Synchronizes the PostgreSQL evidence reference with GENI-ADR-005-POC-001 v1.36 and GENI-ADR-005 v4.1. The exact-main 41-method rerun remains tied to source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` (run `46001262732`, artifact `15198735753`); readiness remains Not Ready for production because workload, security/operations, production adapters, and formal ADR acceptance gates remain open.
