@@ -233,7 +233,7 @@ class ArticleRevisionService:
                 uow.rollback()
                 return replay
 
-            article, current = self._resolve_article(command)
+            article, current = self._resolve_article(command, uow)
             if (
                 article is not None
                 and current is not None
@@ -349,6 +349,7 @@ class ArticleRevisionService:
     def _resolve_article(
         self,
         command: PersistArticleRevisionCommand,
+        uow: UnitOfWork,
     ) -> tuple[ArticleProjection | None, ArticleRevisionRecord | None]:
         """Resolve the target Article and its verified current revision, if any.
 
@@ -358,7 +359,7 @@ class ArticleRevisionService:
         """
         metadata = command.metadata
         if command.article_id is not None:
-            article = self._articles.get_by_id(command.article_id)
+            article = self._articles.get_by_id(command.article_id, uow)
             if article is None:
                 raise self._error(ErrorCode.NOT_FOUND, "Article was not found.", metadata)
             if not self._same_identity(article, command.revision):
@@ -371,6 +372,7 @@ class ArticleRevisionService:
             article = self._articles.find_by_source_identity(
                 command.revision.source_id,
                 command.revision.source_article_identity,
+                uow,
             )
             if article is None:
                 return None, None
@@ -396,7 +398,7 @@ class ArticleRevisionService:
                 "Article version is stale.",
                 metadata,
             )
-        current = self._revisions.get_current_for_article(article.article_id)
+        current = self._revisions.get_current_for_article(article.article_id, uow)
         if (
             current is None
             or current.article_id != article.article_id
