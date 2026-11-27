@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from contextlib import suppress
 from datetime import UTC, datetime
 from types import MappingProxyType
 from typing import Any
@@ -475,7 +476,8 @@ class PostgreSQLArticleRevisionRepository:
         try:
             record = self._get_by_id(revision_id, uow)
         except BaseException:
-            uow.rollback()
+            with suppress(BaseException):
+                uow.rollback()
             raise
         uow.rollback()
         return record
