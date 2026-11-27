@@ -114,9 +114,24 @@ class FakeAuthorization:
 
 
 class FakeContentRights:
-    def __init__(self, allowed: bool = True) -> None:
+    def __init__(
+        self,
+        allowed: bool = True,
+        metadata_allowed: bool = True,
+    ) -> None:
         self.allowed = allowed
+        self.metadata_allowed = metadata_allowed
         self.calls: list[tuple[PersistArticleRevision, datetime]] = []
+        self.metadata_calls: list[tuple[PersistArticleRevision, datetime]] = []
+
+    def permits_metadata_retention(
+        self,
+        revision: PersistArticleRevision,
+        *,
+        at: datetime,
+    ) -> bool:
+        self.metadata_calls.append((revision, at))
+        return self.metadata_allowed
 
     def permits_persistent_storage(
         self,
@@ -374,11 +389,12 @@ def test_authorization_denial_prevents_transaction_start() -> None:
     assert factory.items == []
 
 
-def test_metadata_only_revision_does_not_request_full_text_storage_rights() -> None:
+def test_metadata_only_revision_checks_metadata_rights_not_full_text_rights() -> None:
     rights = FakeContentRights()
     service, _ = build_service(rights=rights)
     service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
     assert rights.calls == []
+    assert len(rights.metadata_calls) == 1
 
 
 def test_changed_source_identity_requires_explicit_versioned_update() -> None:
@@ -464,3 +480,16 @@ def test_persistent_content_is_denied_when_rights_verifier_fails() -> None:
     assert isinstance(factory, FakeUnitOfWorkFactory)
     assert factory.items == []
     assert rights.calls[0][1] == NOW
+
+
+def test_metadata_rights_denial_prevents_metadata_only_persistence() -> None:
+    rights = FakeContentRights(metadata_allowed=False)
+    service, deps = build_service(rights=rights)
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+
+    assert exc.value.code is ErrorCode.RIGHTS_NOT_ALLOWED
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items == []
