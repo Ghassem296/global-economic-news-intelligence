@@ -3,6 +3,10 @@ CREATE TABLE decision_cases (
     created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
 );
 
+INSERT INTO decision_cases (case_id)
+SELECT DISTINCT case_id FROM decision_records
+ON CONFLICT (case_id) DO NOTHING;
+
 ALTER TABLE decision_records
     ADD CONSTRAINT decision_records_case_fk
     FOREIGN KEY (case_id) REFERENCES decision_cases(case_id);
