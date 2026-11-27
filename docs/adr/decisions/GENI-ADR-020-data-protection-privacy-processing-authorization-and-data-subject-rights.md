@@ -4,8 +4,8 @@
 **ADR ID:** GENI-ADR-020  
 **Title:** Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture  
 **Status:** Proposed  
-**Version:** 1.2  
-**Date:** 2026-11-18  
+**Version:** 1.3  
+**Date:** 2026-11-27  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
 **Approved By:** Not yet approved
@@ -110,6 +110,20 @@ This separation prevents publisher licensing from being mistaken for permission 
 - Provider deletion and backup reconciliation may be technically unavailable or asynchronous.
 - Identity verification and legal exceptions require human governance and jurisdiction-specific procedures.
 
+### 8.3 Technical Trade-Offs
+
+The proposal deliberately keeps content-rights authorization and privacy-processing authorization as separate, conjunctive controls. This adds policy and audit complexity but prevents one permission from being mistaken for the other.
+
+Personal-data lineage and opaque subject-linkage tokens improve discoverability while requiring additional access-control, minimization, and retention discipline. Derived-data deletion may be asynchronous or unverifiable when a provider does not expose a reliable deletion capability.
+
+### 8.4 Operational Consequences
+
+The design requires an operational workflow for identity/authority verification, request triage, legal-hold and exception review, execution, verification, and response evidence. Provider deletion, backup restoration, and transfer posture require explicit runbooks, reconciliation, monitoring, and escalation rather than assuming a single synchronous delete operation.
+
+### 8.5 Product and Business Consequences
+
+The proposal enables auditable handling of data-subject requests and more defensible provider/transfer decisions, but it does not select a public API, user interface, support channel, identity mechanism, or jurisdiction-specific legal policy. Affected production personal-data processing remains disabled until qualified legal/privacy review and implementation evidence satisfy the applicable gates.
+
 ### 8.6 Risks and Mitigations
 
 | Risk | Mitigation |
@@ -123,15 +137,47 @@ This separation prevents publisher licensing from being mistaken for permission 
 
 ## 9. Impact on Architecture and Documentation
 
-- Document 02: PrivacyManagementService, authorization policy interface, workflows and repository ownership.
-- Document 03: logical privacy records, Personal Data Lineage, retention/deletion and persistence boundaries.
-- Document 04: privacy implementation stages and production gates.
-- Document 08: privacy threat controls and independent provider authorization.
-- Document 09: internal privacy commands, queries, authorization and idempotency contracts.
-- Document 12: privacy unit, integration, security, provider and restore tests.
-- Document 13: DSAR, provider deletion, transfer and restore runbooks.
-- Document 14: authoritative privacy policy requirements and unresolved legal decisions.
-- Document 07 and ADR Registry: inventory and dependency updates.
+### 9.1 Affected Components
+
+- PrivacyManagementService for data-subject request lifecycle and execution coordination.
+- PrivacyProcessingAuthorization and its policy-evaluation boundary.
+- ContentRightsService as the independent content-rights authorization gate.
+- Personal Data Lineage and the restricted subject-linkage mechanism.
+- Processor and international-transfer register.
+- Provider egress controls, deletion orchestration, audit evidence, and post-restore reconciliation.
+
+### 9.2 Affected Data Models and Interfaces
+
+The proposed logical records and contracts include:
+
+- PersonalDataInventory and ProcessingPurpose.
+- PrivacyProcessingBasis and PrivacyAuthorizationDecision.
+- DataSubjectReference, DataSubjectRequest, and DataSubjectRequestAction.
+- PrivacyDeletionRecord and Personal Data Lineage relationships.
+- ProcessorRegister, InternationalTransferAssessment, and PrivacyImpactAssessment.
+- Internal privacy commands, queries, authorization decisions, and idempotent workflow contracts.
+
+These remain logical proposals; physical persistence and exact field-level contracts are governed by the relevant data and API specifications.
+
+### 9.3 Affected Documents
+
+- `docs/02-component-architecture-and-interfaces.md`: PrivacyManagementService, authorization policy interface, workflows, and repository ownership.
+- `docs/03-data-model-and-storage-design.md`: logical privacy records, Personal Data Lineage, retention/deletion, and persistence boundaries.
+- `docs/04-implementation-plan-and-roadmap.md`: privacy implementation stages and production gates.
+- `docs/08-security-architecture-and-threat-model.md`: privacy threat controls and independent provider authorization.
+- `docs/09-api-and-integration-contracts.md`: internal privacy commands, queries, authorization, and idempotency contracts.
+- `docs/12-testing-and-evaluation-strategy.md`: privacy unit, integration, security, provider, and restore tests.
+- `docs/13-deployment-operations-and-observability.md`: data-subject request, provider deletion, transfer, and restore runbooks.
+- `docs/14-data-protection-and-privacy-specification.md`: authoritative privacy policy requirements and unresolved legal decisions.
+- `docs/07-documentation-registry.md` and `docs/adr/README.md`: inventory and dependency updates.
+
+### 9.4 Related ADRs
+
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-013 | Related to | Defines the separate content-rights boundary for source access, retention, external processing, and republication. Privacy authorization remains independent and must also authorize applicable personal-data processing. |
+
+A cross-reference does not accept GENI-ADR-013 or this ADR, and does not authorize production processing.
 
 ## 10. Implementation Implications
 
@@ -172,5 +218,6 @@ Reconsider if legal review changes the applicable roles/rights, provider capabil
 | 1.0 | 2026-11-18 | Proposed | Initial privacy execution architecture proposal | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Added immutable scoped privacy authorization decision and repository contract | AI Architecture Assistant |
 | 1.2 | 2026-11-24 | Proposed | Aligned section structure with the standard ADR template; added explicit alternative evaluation and a separate pending Final Decision gate without authorizing production processing. | AI Architecture Assistant |
+| 1.3 | 2026-11-27 | Proposed | Completes the standard consequences and impact subsections, separates related ADRs from affected documents, and records explicit component/data-contract impacts without authorizing production processing. | AI Architecture Assistant |
 
 **End of ADR**
