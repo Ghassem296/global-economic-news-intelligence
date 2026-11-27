@@ -39,6 +39,8 @@ uv run --locked --no-sync mypy
 uv run --locked --no-sync pytest
 ```
 
+Ruff checks `src`, `tests`, `scripts` and `tools` (including import order); mypy strict mode checks the application package.
+
 Or run the CLI without installing the console script:
 
 ```powershell

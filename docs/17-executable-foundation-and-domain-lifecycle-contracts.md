@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 2.3  
+**Version:** 2.4  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-26
+**Last Updated:** 2026-11-27
 
 ---
 
@@ -40,6 +40,8 @@ The initial package root is src/global_economic_news_intelligence.
 - Integration and end-to-end tests must use controlled fixtures and must not access production sources by default.
 
 The initial code creates the package, CLI, validated configuration, safe error primitives, scalar-allowlisted structured logging, pure workflow lifecycle policies, and an automated test that prevents infrastructure/provider dependencies from entering the domain layer. Directories for future capabilities are created when an implemented use case requires them.
+
+Payload contracts share dependency-free field validators (`require_text`, `require_aware_instant`, `require_optional_finite_decimal`) from `domain/validation.py`, so identical invalid fields report identical errors. Contract-specific checks (for example the Unicode and JCS-safe-integer rules of the ArticleRevision payload) remain local to their contract.
 
 ### 3.1 ArticleRevision payload contract
 
@@ -272,3 +274,5 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v2.3):** Tightens the LIMITED_RETENTION contract to require an explicit positive maximum duration. Expiry scheduling, deadline calculation, and deletion execution remain outside this pure domain policy.
 
 **End of Document**
+
+**Revision Note (v2.4):** Documents the shared domain field-validation module introduced when the duplicated private helpers of the processing, duplicate and event-match payload contracts were consolidated. Lifecycle transition rules are unchanged; run-status aggregation and terminal-run retry (a successor run) remain as specified in §4.

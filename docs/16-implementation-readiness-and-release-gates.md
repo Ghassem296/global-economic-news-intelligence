@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.23  
+**Version:** 4.24  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -48,7 +48,7 @@ The following remain absent or incomplete:
 
 - PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 26 test methods (22 PostgreSQL integration methods and four standalone retention-policy unit tests) on commit `49a7690e40dbac2c5e0a1afd0cf8229e78a10ed6` (GitHub Actions run `45948260054`). POC-15 verified a concurrent-write logical backup/isolated restore, mode `0600` for backup files, and an experimental AES-256-CBC/PBKDF2 plus HMAC-SHA256 envelope with wrong-key/tamper detection. POC-16 verified process-restart/reconnect; POC-17 verified a least-privilege read-only role. The test key was ephemeral and does not implement production key custody. KMS/HSM integration, key rotation, retention, off-site/immutable protection, restore authorization, cluster-global-object recovery, formal security review, approved workload values, and performance thresholds remain outstanding. Query-plan capture is not a performance result. This is partial evidence, not PostgreSQL qualification; production toolchain, migrations, and activation remain gated, and GENI-ADR-005 remains Proposed.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
-- Document 15 v4.5 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
+- Document 15 v4.6 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
 - A pure, fail-closed content-rights persistence gate now exists for exact source/content scope and PERSISTENT_STORAGE assessments. Rights evidence verification, freshness policy, limited-retention deadlines, temporary-content lifecycle, persistence, revocation propagation, deletion, and operation-specific external-processing enforcement remain unimplemented.
 - No source acquisition, rights adapter, LLM execution adapter, economic analysis workflow, report generator, publication client, or delivery client.
@@ -113,7 +113,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 ### 5.1 Field-level DTO and command schemas
 
 Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.52 now requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope.
-For every actual provider request, Document 15 v4.5 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
+For every actual provider request, Document 15 v4.6 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
 Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5, 10.15.4 and 10.16.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, duplicate-pair canonicalization and score/decision calibration, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
@@ -143,6 +143,17 @@ Lifecycle mechanics are specified, but material review actions, publication poli
 ### 5.6 End-to-end verification
 
 Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevision through deduplication, event matching, evidence, analysis, and Report version. Verify exact provenance, idempotency, concurrency, rollback, recovery, and absence of unauthorized external effects. PublicationDecision and publication eligibility are explicitly outside this slice until GENI-ADR-004 and dependent gates are accepted.
+
+### 5.1 Review findings recorded on 2026-11-27
+
+A full review of the published `main` snapshot at `8b486f3` produced the findings below. None changes the readiness verdict; each must be resolved or explicitly deferred before the dependent capability is enabled.
+
+1. **Rights-evaluation time is caller-supplied.** See the hardening requirement in Document 15 v4.6 §4.3. Open; needs a trusted-clock port.
+2. **PoC migration runner is not production-grade.** The PoC splits migration files on `;` (unsafe for functions, `DO` blocks and quoted semicolons) and checks migration history before opening the transaction without an advisory lock, so two concurrent runners can both apply a migration. A production migration tool with locking is required by GENI-ADR-005.
+3. **PoC schema is a correctness experiment, not the production schema.** It has no Article current-revision pointer (required by `ArticleProjection.current_revision_id`), no foreign key from `decision_records.case_id`, no `CHECK` on decision outcome, and a redundant `articles_source_identity_idx` that duplicates the `UNIQUE (source_id, external_identity)` index. The recorded 26-test evidence is deliberately not altered by this review.
+4. **Supply-chain pinning is incomplete.** Only `astral-sh/setup-uv` is pinned to a commit SHA; the other GitHub Actions and the `postgres:18.7` service image are pinned by tag. Pin them by SHA/digest.
+5. **Revision identity ignores some source fields.** The semantic fingerprint excludes `original_url`, `external_id` and `canonical_url` by design (Document 15 §4.3), so a change confined to those fields reuses the current revision and does not update the Article projection. Decide whether such changes need an explicit non-revision update path.
+6. **Quality tooling scope.** Ruff now covers `scripts` and `tools`; mypy strict mode still covers only the application package. Extend it when those directories become product code.
 
 ## 6. Cross-document consistency rules
 
@@ -179,7 +190,7 @@ Passing an earlier gate does not imply that a later gate has passed. A gate may 
 The repository now has two independent CI workflows:
 
 - Documentation validation: .github/workflows/docs-validation.yml runs documentation validator unit tests and checks controlled document versions and ADR inventory.
-- Application CI: .github/workflows/ci.yml installs the package and development tools on Python 3.15 only, then runs Ruff, mypy, and pytest.
+- Application CI: .github/workflows/ci.yml installs the package and development tools on Python 3.15 only, then runs Ruff, mypy, and pytest. Ruff covers `src`, `tests`, `scripts` and `tools` with import-order checking enabled; mypy strict mode covers the application package only.
 
 Passing application CI proves package quality checks and unit tests for the implemented foundation only. It does not prove database transactions, migrations, concurrency, provider contracts, source rights, LLM quality, or end-to-end product behavior. Those require separate integration and release evidence.
 
@@ -232,7 +243,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.23
+**Version:** 4.24
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -308,3 +319,5 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.23):** Updates active Document 15 references to v4.5 after requiring at least one applicable rights-assessment reference for every persisted ArticleRevision. Missing rights evidence now fails closed before transaction startup; production rights adapters and source-specific policy approval remain required.
+
+**Revision Note (v4.24):** Records the 2026-11-27 full-repository review findings (§5.1), the widened Ruff scope, and the Document 15 v4.6 / Document 17 v2.4 alignment. The readiness verdict is unchanged.

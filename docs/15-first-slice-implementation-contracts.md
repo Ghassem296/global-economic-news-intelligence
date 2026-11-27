@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.5  
+**Version:** 4.6  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-26
+**Last Updated:** 2026-11-27
 
 ---
 
@@ -201,13 +201,15 @@ The executable application contract is `ArticleRevisionService.execute(PersistAr
 3. For `available` or `partial` content, re-evaluate the supplied immutable rights-assessment references at `revision.observed_at`. The verifier must establish an effective `PERSISTENT_STORAGE` ALLOW for the exact source and content scope, with the applicable policy version and expiry/revocation checks. Retrieval, temporary processing, or internal-analysis permission is insufficient. A denied or unverifiable check raises `RIGHTS_NOT_ALLOWED` and performs no persistence.
 4. Every revision must pass a separate metadata-rights check using the exact rights references and source/content scope. This check enforces `METADATA_ACCESS` and the applicable source-specific metadata-preservation rule. `available`/`partial` revisions must additionally pass `PERSISTENT_STORAGE`; absence of full-text permission must never be interpreted as metadata permission, and metadata permission must never authorize full-text retention.
 
+**Hardening requirement (not yet enforced by the service):** `revision.observed_at` is part of the caller-supplied payload and is the evaluation time for rights verification. The authenticated collector or a trusted clock must assign or validate it; a value later than the trusted server time, or older than the collector's permitted skew, must be rejected, so that a caller cannot select an evaluation time that falls inside a rights window. Until a trusted-clock port exists, this remains an open blocker for production collection.
+
 The application service does not decide whether a license is legally sufficient. The concrete verifier must use the authoritative rights-assessment records and the approved rights policy; it must not trust a caller-supplied status or a content hash as permission. An empty rights-assessment reference set is always denied for a persisted revision; the service must fail closed before opening a write transaction. The current rights vocabulary has `METADATA_ACCESS` but no independent `METADATA_RETENTION` operation; the metadata-preservation rule must therefore be resolved by the source-specific rights profile/policy and must not be invented as a new operation identifier.
 
 #### Command idempotency contract
 
 `IdempotencyRepository.claim(scope, key, request_fingerprint, uow)` must atomically reserve the scoped key or return the previously completed result for the same request. A key reused with a different request fingerprint raises `IDEMPOTENCY_KEY_REUSE_CONFLICT`. Concurrent claims must be serialized by a unique constraint/locking strategy. `complete(..., result, uow)` stores the result in the same UnitOfWork as the Article and ArticleRevision writes. The idempotency record and business writes therefore commit or roll back together.
 
-The deterministic request fingerprint binds command schema, actor and authorization references, expected aggregate version, optional Article ID, source-scoped identity, semantic revision fingerprint, storage reference, observation/change metadata, and rights-assessment references. Authorization and rights are revalidated before an idempotent replay is returned; a prior successful result must not bypass a later revocation or authorization expiry.
+The deterministic request fingerprint binds command schema, actor and authorization references, expected aggregate version, optional Article ID, source-scoped identity (including its optional canonical URL), semantic revision fingerprint, storage reference, observation/change metadata, and rights-assessment references. Authorization and rights are revalidated before an idempotent replay is returned; a prior successful result must not bypass a later revocation or authorization expiry.
 
 #### Append/reuse and concurrency behavior
 
@@ -216,7 +218,8 @@ The deterministic request fingerprint binds command schema, actor and authorizat
 - Compare only the current revision fingerprint and schema version. An exact match reuses the current revision and does not rewrite the Article projection. A different fingerprint appends the next immutable revision and advances the current projection.
 - A create-by-source-identity request that resolves to an existing Article may be replayed only when its current fingerprint matches. A changed revision must use an explicit Article ID and expected aggregate version; it must not silently update an existing Article.
 - Verify that the revision repository returned the requested Article ID and fingerprint, and that the saved Article projection points to that exact revision and has a server-returned aggregate version.
-- Repositories never commit or roll back the supplied UnitOfWork. The application service owns commit on success and rollback on failure. All local writes, including idempotency completion, are atomic.
+- Whether the Article is addressed by ID or resolved by source identity, the service verifies, in this order, that the Article exists, that its source identity matches, that it carries an aggregate version, and that its current-revision pointer equals the repository's current revision. Any inconsistency raises `INVARIANT_VIOLATION`; the Article is never silently repaired. A create-by-identity request additionally requires the current fingerprint to match (previous bullet).
+- Repositories never commit or roll back the supplied UnitOfWork. The application service owns commit on success and rollback on failure, including failure signalled by cancellation or interruption (`BaseException`), so that no transaction is left open. All local writes, including idempotency completion, are atomic.
 
 The current application implementation is covered by unit tests using synthetic in-memory adapters only. It does not supply production authorization, rights, idempotency, ID-generation, or PostgreSQL repository adapters. Those adapters and their integration/recovery tests remain mandatory before production collection or persistent content retention is enabled.
 
@@ -1216,9 +1219,9 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.5  
+**Version:** 4.6  
 **Status:** Proposed — Pending Project Owner Approval  
-**Last Updated:** 2026-11-26
+**Last Updated:** 2026-11-27
 
 **Revision Note (v2.8):** Tightened provider-backed analysis provenance by requiring each provider request to create an LLMUsageRecord linked to the exact Analysis/ProcessingRun and to preserve privacy, purpose, data-category, region, transfer and content-rights decision references. Added the explicit privacy-processing authorization permission to the PersistAnalysis crosswalk. No provider egress is authorized by this contract.
 
@@ -1252,3 +1255,5 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.5):** Makes the absence of rights-assessment references an explicit fail-closed condition for every persisted ArticleRevision, including metadata-only and unavailable revisions. No write transaction may begin without at least one applicable rights-evidence reference.
+
+**Revision Note (v4.6):** Aligns the ArticleRevisionService contract with the reviewed implementation: the request fingerprint now binds the optional canonical URL; Article/aggregate-version/current-revision invariants are verified identically for ID-addressed and identity-addressed commands; rollback covers cancellation and interruption; and the untrusted `observed_at` rights-evaluation time is recorded as an open hardening requirement. No ADR approval is implied.
