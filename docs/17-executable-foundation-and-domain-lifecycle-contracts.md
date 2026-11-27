@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 3.2  
+**Version:** 3.3  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -59,7 +59,7 @@ The command is consumed by the executable `application/article_revision_service.
 
 The domain package now includes the immutable `ArticleRevisionRecord`, which binds server-owned revision identity/number/timestamp to the immutable payload and verifies that the persisted fingerprint and schema version match the recomputed payload fingerprint. The application package includes technology-neutral `ArticleRepository` and `ArticleRevisionRepository` Protocols. They resolve Articles by ID/source identity, read the current revision, compare only the current fingerprint, and append/update through a caller-owned UnitOfWork; repositories must not commit that UnitOfWork.
 
-These Protocols are application ports, not PostgreSQL adapters. `ArticleRevisionService` is implemented as deterministic orchestration over these ports and injected authorization, rights, idempotency, ID-generation, clock, and UnitOfWork dependencies. The service has unit tests for authorization denial, metadata versus full-text rights checks, current-revision reuse, projection refresh, idempotency behavior, and transaction outcomes. It does not provide durable storage, a concrete rights/authorization decision engine, a PostgreSQL adapter, or proof of database-level race handling; those remain unimplemented and gated.
+These Protocols are application ports, not PostgreSQL adapters. Reads of the Article projection and its current ArticleRevision now require the active UnitOfWork explicitly, so the service's identity/current-pointer resolution cannot be implemented as an unbound repository read. `ArticleRevisionService` is implemented as deterministic orchestration over these ports and injected authorization, rights, idempotency, ID-generation, clock, and UnitOfWork dependencies. The service has unit tests for authorization denial, metadata versus full-text rights checks, current-revision reuse, projection refresh, idempotency behavior, and transaction outcomes. It does not provide durable storage, a concrete rights/authorization decision engine, a PostgreSQL adapter, or proof of database-level race handling; those remain unimplemented and gated.
 
 ### 3.4 Content-rights assessment and persistence gate
 
@@ -306,3 +306,6 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v3.1):** Extends the shared URL hygiene rule to reject Unicode whitespace and Unicode control/format characters, closing invisible-character variants of the same ambiguous-input risk. Network-time DNS, redirect, SSRF and egress controls remain separate.
 
 **Revision Note (v3.2):** Hardens structured logging against non-finite numeric metadata: NaN and positive/negative infinity are omitted from allowlisted fields, and JSON serialization runs with non-standard numeric values disabled. Regression tests cover all three values. No new logging fields or production capability is enabled.
+
+
+**Revision Note (v3.3):** Aligns the ArticleRepository and ArticleRevisionRepository read ports with ArticleRevisionService's transaction boundary by requiring the active UnitOfWork for Article identity/current-projection reads and current-revision resolution. This closes an adapter ambiguity; no concrete persistence adapter or production capability is implied.
