@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.13  
+**Version:** 1.14  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -576,7 +576,7 @@ ArticleEventLink records must never be directly repointed or deleted by an ident
 
 The operation workflow has a durable preparation phase, one atomic core identity-application transaction, and separately recoverable downstream reconciliation. Preparation validates reviewer/system authority, the versioned identity policy, all input Event identifiers and expected EventHistory versions, operation cardinality, and the absence of conflicting unresolved operations over the same Event identities. It then creates the EventIdentityOperation, ordered input/output links, and initial PENDING EventIdentityOperationHistory entry in one transaction.
 
-The core identity transaction uses compare-and-swap/optimistic concurrency over the recorded input versions. It applies the canonical identity disposition, writes the corresponding EventHistory records for every affected Event, sets identity_effect_state to APPLIED, records the operation-history transition, and creates durable reconciliation/outbox work atomically. If the database commit outcome cannot be established, identity_effect_state is UNKNOWN and the operation remains RECONCILIATION_REQUIRED until a read-after-failure reconciliation establishes whether the core effect committed.
+The core identity transaction uses compare-and-swap/optimistic concurrency over the recorded input versions. It applies the canonical identity disposition, writes the corresponding EventHistory records for every affected Event, sets identity_effect_state to APPLIED, records the operation-history transition, and creates the initial bounded downstream-discovery/finalization work as typed ProcessingStep records within the operation's ProcessingRun in that same UnitOfWork. Those ProcessingStep records are the authoritative durable work state; no separate outbox/queue entity is introduced. A future broker notification may only be a recoverable wake-up hint and cannot replace or own work state. If the database commit outcome cannot be established, identity_effect_state is UNKNOWN and the operation remains RECONCILIATION_REQUIRED until a read-after-failure reconciliation establishes whether the core effect committed.
 
 Downstream work re-evaluates every affected EventMatchCase. Any ArticleEventLink deactivation or replacement must be authorized by a successor EventMatchDecision in that same case and applied by EventService. Reports and analyses are never rewritten; they are versioned, explicitly marked stale, or reconciled through a controlled workflow. The operation reaches SUCCEEDED only when all required downstream tasks are confirmed complete. If the core identity transaction is definitively not applied, the operation may be FAILED or cancelled before application. Once the core effect is APPLIED, the operation must not be marked FAILED or CANCELLED and must not be rolled back by mutating history; a corrective action is a new authorized IDENTITY_CORRECTION operation.
 
@@ -1043,3 +1043,5 @@ Such measurements must be obtained through a representative evaluation dataset b
 
 
 **Revision Note (v1.13):** Cross-references the gated GENI-IMPL-015 §10.17 application contract and GENI-DATA-003 §13.2 ProcessingStep reconciliation mapping. Clarifies Event/EventHistory/operation repository ownership, downstream completion requirements, and the GENI-ADR-014 review-handoff dependency. ADR status remains Proposed; no merge/split execution or production authorization is implied.
+
+**Revision Note (v1.14):** Aligns the core identity transaction with GENI-DATA-003 §13.2 and GENI-IMPL-015 §10.17 by requiring initial durable reconciliation work to be typed ProcessingStep records committed in the same UnitOfWork; removes the ambiguous parallel outbox/work-queue implication. ADR status remains Proposed; no merge/split execution or production authorization is implied.
