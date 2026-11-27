@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 import uuid
@@ -529,8 +530,6 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     "postgres",
                     "-d",
                     "geni_poc",
-                    "-n",
-                    self.schema,
                     "-Fc",
                     "-f",
                     remote_backup,
@@ -642,15 +641,41 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 )
                 await self.admin.commit()
 
-    async def test_poc_16_reconnect_reads_committed_operation(self) -> None:
+    async def test_poc_16_new_process_observes_committed_operation_after_restart(self) -> None:
         record_id = uuid.uuid4()
-        connection = await connect_to_schema(DATABASE_URL, self.schema)
-        await connection.execute(
-            "INSERT INTO decision_records (decision_id, case_id, outcome) VALUES (%s, %s, 'OPEN')",
-            (record_id, uuid.uuid4()),
+        child_environment = os.environ.copy()
+        child_environment["GENI_POC_SCHEMA"] = self.schema
+        child_environment["GENI_POC_RECORD_ID"] = str(record_id)
+        child_script = """
+import asyncio
+import os
+import uuid
+import psycopg
+
+async def main():
+    connection = await psycopg.AsyncConnection.connect(
+        os.environ["GENI_POC_DATABASE_URL"]
+    )
+    schema = os.environ["GENI_POC_SCHEMA"]
+    await connection.execute(f'SET search_path TO "{schema}"')
+    await connection.execute(
+        "INSERT INTO decision_records (decision_id, case_id, outcome) "
+        "VALUES (%s, %s, 'OPEN')",
+        (uuid.UUID(os.environ["GENI_POC_RECORD_ID"]), uuid.uuid4()),
+    )
+    await connection.commit()
+    await connection.close()
+
+asyncio.run(main())
+"""
+        await asyncio.to_thread(
+            subprocess.run,
+            [sys.executable, "-c", child_script],
+            check=True,
+            capture_output=True,
+            text=True,
+            env=child_environment,
         )
-        await connection.commit()
-        await connection.close()
 
         recovered = await connect_to_schema(DATABASE_URL, self.schema)
         try:
