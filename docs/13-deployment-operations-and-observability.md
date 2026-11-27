@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-OPS-013  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -57,7 +57,7 @@ A production backup procedure must define and verify all of the following before
 - **Creation:** use a supported, repeatable backup mechanism with a consistent database snapshot. Record source database identity, server version, schema/migration version, source commit, start/end time, outcome, and artifact identifier without recording secrets or restricted row content.
 - **Confidentiality and integrity:** protect backup data with authenticated encryption using an approved key-management process. Verify integrity/authenticity before decryption or restore. Encryption keys must not be stored beside backups or in logs; define custody, access, rotation, revocation, and recovery of keys separately from backup retention.
 - **Access:** use dedicated least-privilege backup and restore identities. Restrict filesystem/object-store permissions, administrative access, download, and restore operations; audit access and denied attempts. Separate backup creation from approval to restore into an exposed environment.
-- **Retention and resilience:** define owner-approved frequency, retention, deletion, off-site/independent failure-domain copies, immutability where required, and disposal evidence. Do not invent retention periods or recovery objectives.
+- **Retention and resilience:** define owner-approved frequency, retention, deletion, off-site/independent failure-domain copies, immutability where required, and disposal evidence. Do not invent retention periods or recovery objectives. Retention automation must fail closed when policy is absent or invalid, preserve legal holds and active immutability windows, and maintain the approved minimum number of verified copies. A candidate planner is not deletion authorization; every deletion must be separately authorized and auditable.
 - **Monitoring:** alert on missed, incomplete, unexpectedly small, unverifiable, or expired backups; record backup age, duration, size, integrity result, and restore-test status.
 
 ### 7.2 Restore and recovery procedure
@@ -68,7 +68,7 @@ A failed or interrupted restore must not be treated as successful because the da
 
 ### 7.3 Current PostgreSQL PoC evidence boundary
 
-The isolated PostgreSQL PoC exercises a full logical database backup during concurrent activity, isolated database restore, migration-history/application-invariant verification, private file permissions, and an experimental encrypted/authenticated envelope. POC-19 additionally restores user-defined roles and role membership from `pg_dumpall --globals-only --no-role-passwords` into a clean PostgreSQL 18.7 instance, retaining the destination bootstrap administrator and verifying role attributes and membership. POC-20 verifies two distinct identities: a dedicated backup login inheriting `pg_read_all_data` can create a full logical database dump with file mode `0600` but cannot write application rows; a separate restore login owns only the isolated target database, restores the dump there, and is denied writes to the source database. Both identities lack superuser, CREATEDB, and CREATEROLE privileges. The restore verifies synthetic application rows and migration history. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. The tests do not establish production backup encryption, KMS/HSM custody, production credential provisioning/rotation/revocation, separate restore authorization, off-site storage, immutability, retention enforcement, separate restore-identity authorization, tablespace/configuration recovery, full cluster recovery, role-password/secret recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
+The isolated PostgreSQL PoC exercises a full logical database backup during concurrent activity, isolated database restore, migration-history/application-invariant verification, private file permissions, and an experimental encrypted/authenticated envelope. POC-19 additionally restores user-defined roles and role membership from `pg_dumpall --globals-only --no-role-passwords` into a clean PostgreSQL 18.7 instance, retaining the destination bootstrap administrator and verifying role attributes and membership. POC-20 verifies two distinct identities: a dedicated backup login inheriting `pg_read_all_data` can create a full logical database dump with file mode `0600` but cannot write application rows; a separate restore login owns only the isolated target database, restores the dump there, and is denied writes to the source database. Both identities lack superuser, CREATEDB, and CREATEROLE privileges. The restore verifies synthetic application rows and migration history. POC-21 also exercises a pure retention planner using synthetic fixtures: it requires an explicit policy, preserves the minimum verified-copy count, legal holds, and active immutability windows, excludes unverified artifacts from automatic deletion, and returns oldest-first candidates. It does not delete, schedule, or enforce retention; its example values are not production policy. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. The tests do not establish production backup encryption, KMS/HSM custody, production credential provisioning/rotation/revocation, separate restore authorization, off-site storage, immutability, retention enforcement, separate restore-identity authorization, tablespace/configuration recovery, full cluster recovery, role-password/secret recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
 
 ## 8. Capacity and Cost
 
@@ -117,7 +117,7 @@ Runbook publication is not evidence of successful exercise. See Documents 02, 03
 ---
 
 **Document ID:** GENI-OPS-013  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Draft — Under Architecture Review  
 
 
@@ -126,5 +126,7 @@ Runbook publication is not evidence of successful exercise. See Documents 02, 03
 **Revision Note (v1.4):** Records POC-20's synthetic-data evidence for a read-only `pg_read_all_data` backup identity and clarifies that production credential lifecycle, retention enforcement, restore identity separation, and full cluster recovery remain untested.
 
 **Revision Note (v1.5):** Clarifies the tested separation between the read-only backup identity and the target-scoped restore identity. The test does not approve production credential provisioning, rotation/revocation, restore authorization, or full cluster recovery.
+
+**Revision Note (v1.6):** Adds the POC-21 retention-planning evidence boundary and fail-closed operational requirements. The planner does not delete backups, schedule work, or define production retention values; owner-approved retention and enforcement remain release gates.
 
 **End of Document**
