@@ -2449,5 +2449,54 @@ asyncio.run(main())
         )
         self.assertIsNone(await identity_conflict.fetchone())
 
+    async def test_poc_40_idempotency_result_payload_round_trips_exact_service_result(self) -> None:
+        result_id = uuid.uuid4()
+        result_payload = {
+            "article_id": str(uuid.uuid4()),
+            "revision_id": str(result_id),
+            "created": True,
+            "article_version": "2",
+        }
+        async with self.connection.transaction():
+            await self.connection.execute(
+                """
+                INSERT INTO idempotency_records
+                    (operation_scope, idempotency_key, request_fingerprint,
+                     result_id, state, completed_at)
+                VALUES (%s, %s, %s, NULL, 'CLAIMED', NULL)
+                """,
+                ("article.revision.persist", "payload-key", "f" * 64),
+            )
+            await self.connection.execute(
+                """
+                UPDATE idempotency_records
+                SET result_id = %s,
+                    result_payload = %s::jsonb,
+                    state = 'COMPLETED',
+                    completed_at = clock_timestamp()
+                WHERE operation_scope = %s AND idempotency_key = %s
+                  AND state = 'CLAIMED'
+                """,
+                (
+                    result_id,
+                    json.dumps(result_payload),
+                    "article.revision.persist",
+                    "payload-key",
+                ),
+            )
+
+        stored = await self.connection.execute(
+            """
+            SELECT result_id, result_payload, state
+            FROM idempotency_records
+            WHERE operation_scope = %s AND idempotency_key = %s
+            """,
+            ("article.revision.persist", "payload-key"),
+        )
+        stored_id, stored_payload, state = await stored.fetchone()
+        self.assertEqual(stored_id, result_id)
+        self.assertEqual(stored_payload, result_payload)
+        self.assertEqual(state, "COMPLETED")
+
 if __name__ == "__main__":
     unittest.main()
