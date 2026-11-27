@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.95  
+**Version:** 4.96  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -526,3 +526,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.95):** Adds append-only report-impact lifecycle history, explicit resolution semantics, and durable remediation assignment to the EventIdentityOperation readiness blockers. Aligns with Documents 02 v1.56, 03 v1.59, and 15 v4.21. Merge/split remains disabled.
+
+
+**Revision Note (v4.96):** Synchronizes readiness references with Documents 02 v1.57, 03 v1.60, and 15 v4.22 after correcting the structural placement of EventIdentityOperationReportImpactHistory. All implementation and ADR gates remain unchanged.
