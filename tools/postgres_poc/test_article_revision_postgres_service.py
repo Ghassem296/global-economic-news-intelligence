@@ -8,6 +8,13 @@ from pathlib import Path
 from typing import Any
 
 import psycopg
+from article_revision_postgres_adapters import (
+    PostgreSQLArticleRepository,
+    PostgreSQLArticleRevisionRepository,
+    PostgreSQLIdempotencyRepository,
+    UUIDArticleIdGenerator,
+)
+from postgres_poc_uow import PostgreSQLUnitOfWorkFactory
 from psycopg import sql
 
 from global_economic_news_intelligence.application.article_revision_commands import (
@@ -24,14 +31,6 @@ from global_economic_news_intelligence.domain.article_revision_contracts import 
 )
 from global_economic_news_intelligence.domain.contracts import CommandMetadata, UnitOfWork
 from global_economic_news_intelligence.exceptions import ErrorCode, GeniError
-
-from article_revision_postgres_adapters import (
-    PostgreSQLArticleRepository,
-    PostgreSQLArticleRevisionRepository,
-    PostgreSQLIdempotencyRepository,
-    UUIDArticleIdGenerator,
-)
-from postgres_poc_uow import PostgreSQLUnitOfWorkFactory
 
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
 POSTGRES_CONTAINER_ID = os.environ.get("GENI_POC_POSTGRES_CONTAINER_ID", "")
