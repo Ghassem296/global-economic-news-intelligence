@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.55
+**Version:** 1.56
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -827,7 +827,7 @@ Each candidate record represents one versioned evaluation of one candidate Event
 
 Candidate status describes candidate-evaluation processing only (for example `GENERATED`, `EVALUATED`, or `INELIGIBLE`). `ACCEPTED`, `REJECTED`, and `SUPERSEDED` are not candidate statuses: acceptance/rejection are case-level decisions, and supersession is represented by a new immutable candidate record referencing the prior evaluation. After reaching `EVALUATED` or `INELIGIBLE`, a candidate evaluation is immutable.
 
-The examples above are illustrative and do not close the complete candidate-status enum or define a mutable status-transition graph. The precise creation/evaluation boundary, eligibility guards, and treatment of interrupted candidate generation remain to be specified. Once an evaluation is persisted as `EVALUATED` or `INELIGIBLE`, it is immutable; changed inputs or policy create a successor evaluation record rather than mutating the evaluated record.
+The complete candidate-status enum and mutable status-transition graph are intentionally not represented as a mutable lifecycle: candidate records are created as `GENERATED`, then evaluation produces one immutable `EVALUATED` or `INELIGIBLE` record. The creation/evaluation boundary, eligibility guards, and interrupted-generation behavior are defined by Document 17, Section 7. Candidate generation interrupted before persistence creates no record; interrupted evaluation leaves the persisted candidate `GENERATED` and may be resumed idempotently. Changed inputs or policy create a successor evaluation record rather than mutating an evaluated record.
 
 Every candidate score is nullable when its signal was not evaluated; a missing signal must remain null and must never be defaulted to zero. Every non-null score must use the scale, direction, normalization, and comparability rules defined by its recorded matching-policy/model version. `semantic_similarity` must remain null when semantic retrieval is disabled. Scores from different model or policy versions must not be compared as though they shared a calibrated scale. A candidate score is not a decision confidence and must not be interpreted as one.
 
@@ -3277,3 +3277,6 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.55):** Replaces the stale statement that EventMatchCase lifecycle rules are undefined with the canonical lifecycle reference in Document 17, Section 6. The data model now aligns with the implemented pure state machine and its tests while preserving ADR, authorization, persistence, and production-activation gates.
+
+
+**Revision Note (v1.56):** Aligns EventMatchCandidate creation, evaluation, and interruption semantics with the executable lifecycle in Document 17, Section 7. The data model no longer describes those already-specified rules as undefined; candidate evaluation remains immutable and policy-versioned.
