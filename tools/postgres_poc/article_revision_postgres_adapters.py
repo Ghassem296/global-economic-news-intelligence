@@ -7,6 +7,8 @@ or infer authorization or content-retention permission.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import UTC, datetime
@@ -200,6 +202,27 @@ def _projection_from_row(row: tuple[Any, ...]) -> ArticleProjection:
     )
 
 
+def _lock_canonical_url(
+    connection: Any,
+    source_id: str,
+    canonical_url: str,
+) -> None:
+    """Serialize claims for one source/canonical URL, including the no-row case."""
+    lock_material = json.dumps(
+        [source_id, canonical_url],
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    # A 64-bit digest collision only serializes unrelated claims; it cannot
+    # permit two different identities to claim the same canonical URL.
+    lock_key = int.from_bytes(
+        hashlib.sha256(lock_material).digest()[:8],
+        byteorder="big",
+        signed=True,
+    )
+    connection.execute("SELECT pg_advisory_xact_lock(%s)", (lock_key,))
+
+
 def _raise_duplicate_identity() -> GeniError:
     return GeniError(
         ErrorCode.DUPLICATE_IDENTITY,
@@ -230,6 +253,12 @@ class PostgreSQLArticleRepository:
         uow: UnitOfWork,
     ) -> ArticleProjection | None:
         connection = _require_uow(uow).connection
+        if external_identity.canonical_url is not None:
+            _lock_canonical_url(
+                connection,
+                source_id,
+                external_identity.canonical_url,
+            )
         row = connection.execute(
             f"""
             SELECT {_ARTICLE_COLUMNS}
@@ -271,6 +300,11 @@ class PostgreSQLArticleRepository:
         connection = _require_uow(uow).connection
         identity = article.source_article_identity
         if identity.canonical_url is not None:
+            _lock_canonical_url(
+                connection,
+                article.source_id,
+                identity.canonical_url,
+            )
             collision = connection.execute(
                 """
                 SELECT canonical_source_identifier, identity_normalization_version
