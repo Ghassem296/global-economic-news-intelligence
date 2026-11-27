@@ -1,11 +1,11 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.53
+**Version:** 1.54
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
-**Last Updated:** 2026-11-26
+**Last Updated:** 2026-11-27
 
 ---
 
@@ -286,12 +286,14 @@ Fields:
 | reliability_profile_version | string/null | Version of the source reliability profile and its evaluation criteria |
 | collection_config | JSON | Non-secret source configuration |
 | is_active | boolean | Whether collection is enabled |
+| version | opaque version | Configuration aggregate version used for optimistic concurrency; concrete representation is implementation-defined |
 | created_at | timestamp | Creation time |
 | updated_at | timestamp | Last modification |
 
 Constraints:
 
 - Source identifiers must be stable.
+- `version` is server-managed and participates in optimistic concurrency for configuration changes; callers must supply the expected current version, and a stale version must fail with `CONFLICT`/`STALE_VERSION`. Its concrete encoding and comparison mechanism remain implementation choices.
 - Source URL validation is mandatory.
 - Credentials and secrets must not be stored in ordinary configuration fields.
 - Reliability information must have documented semantics, a version, an evidence basis, and explicit unknown values.
@@ -3269,3 +3271,6 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 **Revision Note (v1.52):** Clarifies that Article.rights_status is a non-authoritative summary projection only. Every restricted operation must consult the current operation- and content-scope-specific RightsAssessment; the summary field cannot grant permission.
 
 **Revision Note (v1.53):** Removes stale pre-ADR SQLite assumptions from backup/recovery guidance and distinguishes the owner-selected PostgreSQL target from the still-gated production configuration and activation.
+
+
+**Revision Note (v1.54):** Makes the Source configuration aggregate version explicit in the logical Source field inventory. This aligns the data model with the immutable SourceRecord version and the optimistic-concurrency contract for configuration updates; it does not define a version encoding or authorize configuration mutation.
