@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.11  
+**Version:** 4.12  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -200,6 +200,8 @@ The executable application contract is `ArticleRevisionService.execute(PersistAr
 2. Resolve the trusted authorization reference for action `article.revision.persist`. A missing, invalid, expired, or denied authorization must fail closed before any write transaction begins.
 3. For `available` or `partial` content, re-evaluate the supplied immutable rights-assessment references at one trusted, timezone-aware `Clock.now()` instant captured by the application service. The verifier must establish an effective `PERSISTENT_STORAGE` ALLOW for the exact source and content scope, with the applicable policy version and expiry/revocation checks. Retrieval, temporary processing, or internal-analysis permission is insufficient. A denied or unverifiable check raises `RIGHTS_NOT_ALLOWED` and performs no persistence.
 4. Every revision must pass a separate metadata-rights check using the exact rights references and source/content scope. This check enforces `METADATA_ACCESS` and the applicable source-specific metadata-preservation rule. `available`/`partial` revisions must additionally pass `PERSISTENT_STORAGE`; absence of full-text permission must never be interpreted as metadata permission, and metadata permission must never authorize full-text retention.
+
+5. **Transaction-bound revalidation is mandatory.** After opening the UnitOfWork and before idempotency claim/replay or any business read/write that can lead to persistence, the application service must re-evaluate the exact authorization decision and all applicable metadata/content rights using that same UnitOfWork. The transaction-aware verifier must lock or otherwise serialize the authoritative grant, policy and RightsAssessment versions until the UnitOfWork commits or rolls back; a concurrent revocation, expiry or superseding assessment must either serialize after the write or cause the write to fail closed. A preflight check with `uow=None` is only an early rejection optimization and is never sufficient to authorize commit. The transaction-bound check is also mandatory before returning an idempotent replay. The current ArticleRevisionService now passes its active UnitOfWork to these verifier calls; concrete database adapters must implement and integration-test the locking/serialization guarantee.
 
 **Trusted evaluation time:** The service now requires a `Clock` port and captures one timezone-aware application instant per rights evaluation. That same instant is supplied to metadata-preservation and, when applicable, persistent-storage verification. A naive or invalid clock value fails before transaction startup. `revision.observed_at` remains source-observation provenance and is never used to select the rights-evaluation window. A production Clock adapter and integration tests remain required.
 
@@ -1279,3 +1281,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.11):** Clarifies the PostgreSQL persistence candidate's deferred ArticleRevision-owner foreign key requirement, derived from the implemented service write order (revision append before initial Article projection insert). PoC migration 005 and POC-30 verify atomic creation and rejection of an orphan revision at commit. This is experimental evidence only; production migration strategy and ADR-005 acceptance remain open.
+
+
+**Revision Note (v4.12):** Adds transaction-bound revalidation of application authorization and source-content rights before idempotency replay or ArticleRevision persistence. Requires the verifier to bind authoritative grant/policy/RightsAssessment versions to the same UnitOfWork and hold them stable through commit/rollback. The application service passes the active UnitOfWork; concrete database locking/serialization adapters and integration tests remain unimplemented and mandatory. No source-content authorization or production readiness is implied.
