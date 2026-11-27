@@ -108,6 +108,11 @@ def test_metadata_only_or_unavailable_rejects_persistent_content_reference() -> 
         )
 
 
+def test_persisted_content_requires_rights_assessment_provenance() -> None:
+    with pytest.raises(ValueError, match="requires at least one rights_assessment_reference"):
+        revision(rights_assessment_references=())
+
+
 def test_content_hash_must_be_lowercase_sha256_hex() -> None:
     with pytest.raises(ValueError, match="64-character lowercase SHA-256"):
         revision(content_hash="sha256:fingerprint")
