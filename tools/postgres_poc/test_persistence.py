@@ -17,6 +17,7 @@ from typing import Any
 import psycopg
 from psycopg import sql
 from psycopg.errors import (
+    CheckViolation,
     ForeignKeyViolation,
     InsufficientPrivilege,
     QueryCanceled,
@@ -1419,6 +1420,61 @@ asyncio.run(main())
             self.assertEqual((await history.fetchone())[0], 1)
         finally:
             await second.close()
+
+
+    async def test_poc_25_article_current_revision_must_belong_to_same_article(self) -> None:
+        revision_id = uuid.uuid4()
+        await self.connection.execute(
+            """
+            INSERT INTO article_revisions
+                (revision_id, article_id, revision_number, fingerprint)
+            VALUES (%s, %s, 1, 'fingerprint-1')
+            """,
+            (revision_id, self.article_id),
+        )
+        other_article_id = uuid.uuid4()
+        await self.connection.execute(
+            """
+            INSERT INTO articles (article_id, source_id, external_identity)
+            VALUES (%s, %s, 'publisher:article-2')
+            """,
+            (other_article_id, self.source_id),
+        )
+        await self.connection.commit()
+
+        with self.assertRaises(ForeignKeyViolation):
+            await self.connection.execute(
+                "UPDATE articles SET current_revision_id = %s WHERE article_id = %s",
+                (revision_id, other_article_id),
+            )
+        await self.connection.rollback()
+
+        result = await self.connection.execute(
+            "SELECT current_revision_id FROM articles WHERE article_id = %s",
+            (other_article_id,),
+        )
+        self.assertIsNone((await result.fetchone())[0])
+
+    async def test_poc_26_decision_case_and_outcome_are_constrained(self) -> None:
+        with self.assertRaises(ForeignKeyViolation):
+            await self.connection.execute(
+                """
+                INSERT INTO decision_records (decision_id, case_id, outcome)
+                VALUES (%s, %s, 'OPEN')
+                """,
+                (uuid.uuid4(), uuid.uuid4()),
+            )
+        await self.connection.rollback()
+
+        with self.assertRaises(CheckViolation):
+            await self.connection.execute(
+                """
+                INSERT INTO decision_records (decision_id, case_id, outcome)
+                VALUES (%s, %s, 'MAYBE')
+                """,
+                (uuid.uuid4(), self.case_id),
+            )
+        await self.connection.rollback()
 
 if __name__ == "__main__":
     unittest.main()
