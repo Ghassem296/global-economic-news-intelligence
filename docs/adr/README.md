@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.48
+**Version:** 1.49
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -472,4 +472,4 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **Revision Note (v1.47):** Synchronizes GENI-ADR-011 v1.12 after adding the proposed EventIdentityOperationReportImpactHistory entity and explicit durable remediation tracking. ADR-011 remains Proposed.
 
 
-**Revision Note (v1.48):** Synchronizes GENI-ADR-005 v4.1 and GENI-ADR-005-POC-001 v1.36 with the exact-main 41-method PostgreSQL PoC rerun on source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` (run `46001262732`, artifact `15198735753`). Both remain Proposed; production qualification and formal acceptance remain open.
+**Revision Note (v1.49):** Synchronizes GENI-ADR-005-POC-001 v1.37 with the exact-main 49-method PostgreSQL PoC rerun on source snapshot `2ac253d7f93a04d06ff9861d809d4cfdc6840070` (run `46030736547`, artifact `15214322401`). The added payload-schema and UnitOfWork lifecycle checks remain isolated PoC evidence; no production adapters or ArticleRevisionService PostgreSQL integration are implied. GENI-ADR-005 and GENI-ADR-016 remain Proposed; production qualification and formal acceptance remain open.
