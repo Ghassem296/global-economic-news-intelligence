@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.31
+**Version:** 1.32
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -432,3 +432,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **Revision Note (v1.30):** Synchronizes GENI-ADR-005 v2.2 and PoC-001 v1.12 with the successful 20-test run. POC-20 verifies a dedicated read-only `pg_read_all_data` backup identity can dump and restore synthetic database contents without write, superuser, CREATEDB, or CREATEROLE privileges. Production credential lifecycle, retention enforcement, restore authorization, full cluster recovery, workload/performance qualification, and formal ADR acceptance remain open.
 
 **Revision Note (v1.31):** Synchronizes GENI-ADR-005 v2.3 and PoC-001 v1.13 with the successful 20-test rerun using distinct backup and restore identities. The restore identity owns only the isolated target database and cannot write to the source database. Production credential lifecycle, retention enforcement, restore authorization, off-site protection, full cluster recovery, workload/performance qualification, and formal ADR acceptance remain open.
+
+**Revision Note (v1.32):** Synchronizes GENI-ADR-005 v2.4 and PoC-001 v1.14 with the successful 21-test PostgreSQL run. POC-21 adds a fail-closed retention planner that requires explicit policy, preserves the minimum verified-copy count, legal holds, and immutability windows, and produces deterministic candidates without deleting or scheduling backups. Production retention values/enforcement, credential lifecycle, off-site protection, restore authorization, full cluster recovery, workload/performance qualification, and formal ADR acceptance remain open.
