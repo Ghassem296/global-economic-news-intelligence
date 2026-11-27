@@ -24,6 +24,8 @@ class FakeArticleRepository:
             "source_id": "source-1",
             "current_revision_id": "revision-1",
         }
+        self.saved_expected_version: str | None = None
+        self.saved_uow: UnitOfWork | None = None
 
     def get_by_id(self, article_id: str) -> dict[str, Any] | None:
         return self.article if article_id == self.article["id"] else None
@@ -46,7 +48,8 @@ class FakeArticleRepository:
         expected_version: str | None,
         uow: UnitOfWork,
     ) -> dict[str, Any]:
-        assert uow is not None
+        self.saved_expected_version = expected_version
+        self.saved_uow = uow
         self.article = article
         return self.article
 
@@ -69,18 +72,27 @@ def test_article_repository_resolves_source_scoped_identity() -> None:
     assert repository.find_by_source_identity("source-2", identity) is None
 
 
-def test_article_repository_projection_write_accepts_caller_unit_of_work() -> None:
+@pytest.mark.parametrize(
+    "expected_version",
+    ["article-version-1", None],
+)
+def test_article_repository_projection_write_preserves_version_and_caller_unit_of_work(
+    expected_version: str | None,
+) -> None:
     repository = FakeArticleRepository()
     article = {
         "id": "article-1",
         "source_id": "source-1",
         "current_revision_id": "revision-2",
     }
+    uow = FakeUnitOfWork()
 
     saved = repository.save_projection(
         article,
-        expected_version="article-version-1",
-        uow=FakeUnitOfWork(),
+        expected_version=expected_version,
+        uow=uow,
     )
 
     assert saved["current_revision_id"] == "revision-2"
+    assert repository.saved_expected_version == expected_version
+    assert repository.saved_uow is uow
