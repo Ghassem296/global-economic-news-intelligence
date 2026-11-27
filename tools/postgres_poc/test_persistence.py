@@ -889,7 +889,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 (legacy_decision_id, legacy_case_id),
             )
             await connection.commit()
-            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql"))
+            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql"))
             result = await connection.execute(
                 """
                 SELECT external_identity, source_last_seen_at
