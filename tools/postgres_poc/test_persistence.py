@@ -699,8 +699,8 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         )
         current = await self.connection.execute(
             """
-            UPDATE protected_state SET value = 'new-state'
-            WHERE resource_id = %s AND fencing_token = 2
+            UPDATE protected_state SET fencing_token = 2, value = 'new-state'
+            WHERE resource_id = %s AND fencing_token < 2
               AND EXISTS (
                   SELECT 1 FROM execution_leases
                   WHERE resource_id = %s
