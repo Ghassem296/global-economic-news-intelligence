@@ -858,6 +858,153 @@ asyncio.run(main())
             await recovered.close()
 
 
+
+    async def test_poc_20_least_privilege_backup_role_can_dump_without_write_access(self) -> None:
+        role_name = f"poc_backup_{uuid.uuid4().hex[:12]}"
+        restore_database = f"restore_backup_{uuid.uuid4().hex[:12]}"
+        remote_backup = f"/tmp/{restore_database}.dump"
+        password = secrets.token_urlsafe(32)
+        role = sql.Identifier(role_name)
+        admin_url = DATABASE_URL.rsplit("/", 1)[0] + "/postgres"
+        admin = await psycopg.AsyncConnection.connect(admin_url, autocommit=True)
+        backup_connection: psycopg.AsyncConnection[Any] | None = None
+        restored: psycopg.AsyncConnection[Any] | None = None
+        role_created = False
+        database_created = False
+
+        async def docker(*arguments: str) -> subprocess.CompletedProcess[str]:
+            return await asyncio.to_thread(
+                subprocess.run,
+                ["docker", *arguments],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+        try:
+            await self.admin.execute(
+                sql.SQL("CREATE ROLE {} LOGIN INHERIT PASSWORD %s").format(role),
+                (password,),
+            )
+            await self.admin.execute(
+                sql.SQL("GRANT pg_read_all_data TO {}").format(role)
+            )
+            await self.admin.commit()
+            role_created = True
+
+            backup_connection = await psycopg.AsyncConnection.connect(
+                DATABASE_URL,
+                user=role_name,
+                password=password,
+            )
+            await backup_connection.execute(
+                sql.SQL("SET search_path TO {}").format(sql.Identifier(self.schema))
+            )
+            with self.assertRaises(InsufficientPrivilege):
+                await backup_connection.execute(
+                    """
+                    INSERT INTO articles (article_id, source_id, external_identity)
+                    VALUES (%s, %s, 'backup-role-must-not-write')
+                    """,
+                    (uuid.uuid4(), self.source_id),
+                )
+            await backup_connection.rollback()
+            await backup_connection.close()
+            backup_connection = None
+
+            role_attributes = await self.admin.execute(
+                """
+                SELECT rolsuper, rolcreatedb, rolcreaterole, rolcanlogin
+                FROM pg_roles WHERE rolname = %s
+                """,
+                (role_name,),
+            )
+            self.assertEqual(
+                await role_attributes.fetchone(),
+                (False, False, False, True),
+            )
+
+            await docker(
+                "exec",
+                "-e",
+                f"PGPASSWORD={password}",
+                POSTGRES_CONTAINER_ID,
+                "sh",
+                "-c",
+                'umask 077 && exec pg_dump -h 127.0.0.1 -U "$1" -d geni_poc -Fc -f "$2"',
+                "sh",
+                role_name,
+                remote_backup,
+            )
+            backup_mode = await docker(
+                "exec", POSTGRES_CONTAINER_ID, "stat", "-c", "%a", remote_backup
+            )
+            self.assertEqual(backup_mode.stdout.strip(), "600")
+
+            await admin.execute(
+                sql.SQL("CREATE DATABASE {}").format(
+                    sql.Identifier(restore_database)
+                )
+            )
+            database_created = True
+            await docker(
+                "exec",
+                POSTGRES_CONTAINER_ID,
+                "pg_restore",
+                "-U",
+                "postgres",
+                "-d",
+                restore_database,
+                "--no-owner",
+                "--no-acl",
+                "--exit-on-error",
+                remote_backup,
+            )
+            restored_url = DATABASE_URL.rsplit("/", 1)[0] + f"/{restore_database}"
+            restored = await connect_to_schema(restored_url, self.schema)
+            result = await restored.execute(
+                "SELECT count(*) FROM articles WHERE article_id = %s",
+                (self.article_id,),
+            )
+            self.assertEqual((await result.fetchone())[0], 1)
+            result = await restored.execute(
+                "SELECT version FROM schema_migrations ORDER BY version"
+            )
+            self.assertEqual(
+                [row[0] for row in await result.fetchall()],
+                [
+                    "001_initial.sql",
+                    "002_article_last_seen.sql",
+                    "003_backup_payload.sql",
+                ],
+            )
+        finally:
+            if backup_connection is not None:
+                await backup_connection.close()
+            if restored is not None:
+                await restored.close()
+            if database_created:
+                await admin.execute(
+                    sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(
+                        sql.Identifier(restore_database)
+                    )
+                )
+            if role_created:
+                await admin.execute(
+                    sql.SQL("REVOKE pg_read_all_data FROM {}").format(role)
+                )
+                await admin.execute(
+                    sql.SQL("DROP ROLE IF EXISTS {}").format(role)
+                )
+            await admin.close()
+            await asyncio.to_thread(
+                subprocess.run,
+                ["docker", "exec", POSTGRES_CONTAINER_ID, "rm", "-f", remote_backup],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
     async def test_poc_19_cluster_global_roles_restore_into_clean_instance(self) -> None:
         image_digest = os.environ.get("GENI_POC_POSTGRES_IMAGE_DIGEST", "")
         self.assertIn(
