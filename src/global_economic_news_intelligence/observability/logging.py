@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from datetime import UTC, datetime
 
 _ALLOWED_FIELDS = (
@@ -32,9 +33,16 @@ class SafeJsonFormatter(logging.Formatter):
         }
         for field in _ALLOWED_FIELDS:
             value = getattr(record, field, None)
+            if isinstance(value, float) and not math.isfinite(value):
+                continue
             if isinstance(value, (str, int, float, bool)):
                 payload[field] = value
-        return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        return json.dumps(
+            payload,
+            ensure_ascii=False,
+            allow_nan=False,
+            separators=(",", ":"),
+        )
 
 
 def configure_logging(level: str = "INFO") -> None:
