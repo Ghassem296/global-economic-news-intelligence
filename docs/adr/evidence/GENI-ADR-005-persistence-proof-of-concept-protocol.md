@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.6
+**Version:** 1.7
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -94,6 +94,8 @@ The PoC must execute against a real, isolated PostgreSQL instance; a design-only
 
 Before a run, record the exact candidate versions, source, rationale, configuration, lockfile or immutable image digest, and any known limitations. Keep the candidate stack in a dedicated PoC dependency group/environment and isolated test infrastructure. Do not add it to the production runtime dependency set, expose its types through domain/application ports, create production migrations, connect to production systems, or use production data/secrets. A candidate may be changed between PoC revisions only with a recorded reason and a new run identity; results from different stacks must not be merged as if they were one run.
 
+**First experimental candidate run (2026-11-27):** PostgreSQL 18.7 (`postgres:18.7`, image digest `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`), CPython 3.15.2, Psycopg 3.3.9 with its binary extra, native `AsyncConnection`, direct SQL (no ORM), and a small versioned SQL migration runner. The immutable image digest and exact Python/package versions were captured in GitHub Actions run `45940666045` for commit `218bdac2e7c0c0c923fa20e2b7ab86c830bd2373`. This is a provisional PoC stack only; it is not the selected production toolchain.
+
 The PoC may report correctness and operational-feasibility evidence for its exact experimental stack. It may report capacity/performance compliance only against an approved workload profile and thresholds. No experimental result automatically approves the candidate for production. Production promotion requires completed evidence review and formal acceptance of GENI-ADR-005; ADR-016 remains independently Proposed unless separately accepted.
 
 ## 5. Mandatory correctness and failure matrix
@@ -171,17 +173,17 @@ The completed PoC package must include:
 
 | Field | PostgreSQL |
 |---|---|
-| Exact version/configuration | Not run |
-| Workload profile ID | Not established |
-| Correctness matrix | Not run |
-| Migration/upgrade | Not run |
-| Backup/restore | Not run |
-| Concurrency and async | Not run |
-| Performance results | Not measured |
-| Operational assessment | Not assessed |
-| Mandatory gates | Not evaluated |
+| Exact version/configuration | PostgreSQL 18.7; image `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`; CPython 3.15.2; Psycopg 3.3.9; direct SQL; native async connection; versioned SQL migration runner (PoC-only) |
+| Workload profile ID | Not established; no capacity claim permitted |
+| Correctness matrix | 16 test methods passed for POC-01–14, a POC-16 reconnect smoke test, and POC-18 query-plan capture; POC-15 and POC-17 not run; full POC-16 process-restart exercise remains pending |
+| Migration/upgrade | POC-13 clean install and POC-14 data-preserving schema upgrade passed |
+| Backup/restore | Not run (POC-15 pending) |
+| Concurrency and async | POC-03, POC-07, POC-08, POC-11, and POC-12 passed in the isolated test run |
+| Performance results | Not measured; workload profile and thresholds remain unset; POC-18 captured a query plan only |
+| Operational assessment | Not assessed; POC-17 security/backup-control review pending |
+| Mandatory gates | Partial correctness evidence only; PostgreSQL not qualified; ADR-005 remains Proposed |
 
-This register must be updated only from actual retained evidence. Production qualification has not yet passed. “Not run” must never be rewritten as “pass” based on design review or documentation.
+The first run completed successfully in GitHub Actions run `45940666045` (commit `218bdac2e7c0c0c923fa20e2b7ab86c830bd2373`). The machine-readable artifact `postgres-poc-218bdac2e7c0c0c923fa20e2b7ab86c830bd2373` was uploaded with archive SHA-256 `faaa2560cde47b80af85998bff06edfb6816401aa4500336a4a086ef9763a707`. The 16 passing test methods establish only the scenarios explicitly listed above. In particular, a new-connection read is not a process-crash/restart exercise; backup/restore and the security/backup-control review remain unrun. Workload values and performance thresholds remain unset. PostgreSQL is not production-qualified and ADR-005 remains Proposed. “Not run” must never be rewritten as “pass” based on design review or documentation.
 
 ## 9. Approval and implementation boundary
 
@@ -210,5 +212,6 @@ After qualification and formal acceptance, review the experimental evidence and 
 | 1.4 | 2026-11-27 | Proposed | Clarifies that PostgreSQL is already the owner-selected target but is not production-qualified by virtue of its concurrency capabilities; qualification remains evidence-based. |
 | 1.5 | 2026-11-27 | Proposed | Adds an explicit owner-approved workload-profile template with unset values, evidence provenance, and a prohibition on inventing or retrofitting numeric thresholds. |
 | 1.6 | 2026-11-27 | Proposed | Defines provisional, isolated PoC-only technology candidates and explicitly separates experimental evidence from production tool/dependency approval. |
+| 1.7 | 2026-11-27 | Proposed | Records the first reproducible PostgreSQL 18.7/Psycopg 3.3.9 PoC run and its 16 passing test methods, while explicitly retaining backup/restore, security review, full restart, workload, performance, and production-acceptance gates as open. |
 
 **End of Evidence Protocol**
