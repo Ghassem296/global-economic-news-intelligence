@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.55  
+**Version:** 4.56  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -113,7 +113,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 
 ### 5.1 Field-level DTO and command schemas
 
-Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.53 now requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope.
+Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.54 requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope; v1.54 also makes the Source configuration aggregate version explicit. Neither change approves the proposed contracts or enables production persistence.
 For every actual provider request, Document 15 v4.9 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
 Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5, 10.15.4 and 10.16.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, duplicate-pair canonicalization and score/decision calibration, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
@@ -246,7 +246,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.55
+**Version:** 4.56
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -414,3 +414,6 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.54):** Aligns the controlled footer version with the v4.54 header. No readiness verdict, test result, or approval status changes.
 
 **Revision Note (v4.55):** Reconciles the 2026-11-27 review-finding summary with the recorded POC-24 through POC-29 evidence, distinguishes experimental PoC completion from production qualification, and corrects the duplicate subsection number. No ADR approval or production authorization is implied.
+
+
+**Revision Note (v4.56):** Updates the active Document 03 cross-reference from v1.53 to v1.54 and records the Source configuration aggregate-version addition without implying approval of the proposed data model or production persistence. No readiness verdict or production authorization changes.
