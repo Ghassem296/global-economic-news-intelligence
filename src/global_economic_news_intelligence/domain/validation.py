@@ -23,7 +23,6 @@ def require_aware_instant(value: object, field_name: str) -> None:
         raise ValueError(f"{field_name} must be a timezone-aware datetime.")
 
 
-
 _URL_SENSITIVE_KEY_PARTS = (
     "secret",
     "password",
@@ -78,6 +77,7 @@ def require_http_url(value: object, field_name: str) -> None:
             raise ValueError(
                 f"{field_name} query must not contain credential-like parameters."
             )
+
 
 def require_optional_finite_decimal(value: object, field_name: str) -> None:
     """Allow ``None`` or a finite ``Decimal``; reject floats, NaN and infinities."""
