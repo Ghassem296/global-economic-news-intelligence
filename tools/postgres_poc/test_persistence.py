@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import os
+import subprocess
+import tempfile
 import unittest
 import uuid
 from pathlib import Path
@@ -9,9 +11,10 @@ from typing import Any
 
 import psycopg
 from psycopg import sql
-from psycopg.errors import ForeignKeyViolation, QueryCanceled, UniqueViolation
+from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege, QueryCanceled, UniqueViolation
 
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
+POSTGRES_CONTAINER_ID = os.environ.get("GENI_POC_POSTGRES_CONTAINER_ID", "")
 MIGRATIONS = Path(__file__).parent / "migrations"
 
 
@@ -52,7 +55,10 @@ async def apply_migrations(
             )
 
 
-@unittest.skipUnless(DATABASE_URL, "GENI_POC_DATABASE_URL is not configured")
+@unittest.skipUnless(
+    DATABASE_URL and POSTGRES_CONTAINER_ID,
+    "PostgreSQL PoC database/container environment is not configured",
+)
 class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.schema = f"poc_{uuid.uuid4().hex}"
@@ -493,6 +499,141 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(
                     sql.Identifier(upgrade_schema)
                 )
+            )
+            await self.admin.commit()
+
+    async def test_poc_15_backup_restores_schema_and_application_rows(self) -> None:
+        restore_database = f"restore_{uuid.uuid4().hex[:12]}"
+        admin_url = DATABASE_URL.rsplit("/", 1)[0] + "/postgres"
+        admin = await psycopg.AsyncConnection.connect(admin_url, autocommit=True)
+        restored: psycopg.AsyncConnection[Any] | None = None
+        remote_backup = f"/tmp/{restore_database}.dump"
+
+        async def docker(*arguments: str) -> subprocess.CompletedProcess[str]:
+            return await asyncio.to_thread(
+                subprocess.run,
+                ["docker", *arguments],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+        try:
+            with tempfile.TemporaryDirectory() as temporary_directory:
+                local_backup = Path(temporary_directory) / "geni-poc.dump"
+                await docker(
+                    "exec",
+                    POSTGRES_CONTAINER_ID,
+                    "pg_dump",
+                    "-U",
+                    "postgres",
+                    "-d",
+                    "geni_poc",
+                    "-Fc",
+                    "-f",
+                    remote_backup,
+                )
+                await docker(
+                    "cp",
+                    f"{POSTGRES_CONTAINER_ID}:{remote_backup}",
+                    str(local_backup),
+                )
+                await admin.execute(
+                    sql.SQL("CREATE DATABASE {}").format(
+                        sql.Identifier(restore_database)
+                    )
+                )
+                await docker(
+                    "cp",
+                    str(local_backup),
+                    f"{POSTGRES_CONTAINER_ID}:{remote_backup}",
+                )
+                await docker(
+                    "exec",
+                    POSTGRES_CONTAINER_ID,
+                    "pg_restore",
+                    "-U",
+                    "postgres",
+                    "-d",
+                    restore_database,
+                    "--no-owner",
+                    "--no-acl",
+                    "--exit-on-error",
+                    remote_backup,
+                )
+                restored_url = DATABASE_URL.rsplit("/", 1)[0] + f"/{restore_database}"
+                restored = await connect_to_schema(restored_url, self.schema)
+                result = await restored.execute(
+                    "SELECT count(*) FROM articles WHERE article_id = %s",
+                    (self.article_id,),
+                )
+                self.assertEqual((await result.fetchone())[0], 1)
+                result = await restored.execute(
+                    "SELECT version FROM schema_migrations ORDER BY version"
+                )
+                self.assertEqual(
+                    [row[0] for row in await result.fetchall()],
+                    ["001_initial.sql", "002_article_last_seen.sql"],
+                )
+        finally:
+            if restored is not None:
+                await restored.close()
+            await admin.execute(
+                sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(
+                    sql.Identifier(restore_database)
+                )
+            )
+            await admin.close()
+            await docker("exec", POSTGRES_CONTAINER_ID, "rm", "-f", remote_backup)
+
+    async def test_poc_17_least_privilege_role_cannot_write(self) -> None:
+        role_name = f"poc_reader_{uuid.uuid4().hex[:12]}"
+        role = sql.Identifier(role_name)
+        try:
+            await self.admin.execute(
+                sql.SQL("CREATE ROLE {} NOLOGIN").format(role)
+            )
+            await self.admin.execute(
+                sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(
+                    sql.Identifier(self.schema), role
+                )
+            )
+            await self.admin.execute(
+                sql.SQL("GRANT SELECT ON TABLE {}.articles TO {}").format(
+                    sql.Identifier(self.schema), role
+                )
+            )
+            await self.admin.commit()
+
+            await self.connection.execute(sql.SQL("SET ROLE {}").format(role))
+            result = await self.connection.execute(
+                "SELECT article_id FROM articles WHERE article_id = %s",
+                (self.article_id,),
+            )
+            self.assertEqual((await result.fetchone())[0], self.article_id)
+
+            with self.assertRaises(InsufficientPrivilege):
+                await self.connection.execute(
+                    """
+                    INSERT INTO articles (article_id, source_id, external_identity)
+                    VALUES (%s, %s, 'poc-reader-must-not-write')
+                    """,
+                    (uuid.uuid4(), self.source_id),
+                )
+            await self.connection.rollback()
+        finally:
+            await self.admin.execute(
+                sql.SQL("REVOKE ALL ON TABLE {}.articles FROM {}").format(
+                    sql.Identifier(self.schema), role
+                )
+            )
+            await self.admin.execute(
+                sql.SQL("REVOKE ALL ON SCHEMA {} FROM {}").format(
+                    sql.Identifier(self.schema), role
+                )
+            )
+            await self.admin.execute(
+                sql.SQL("DROP ROLE IF EXISTS {}").format(role)
             )
             await self.admin.commit()
 
