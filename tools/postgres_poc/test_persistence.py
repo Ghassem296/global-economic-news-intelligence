@@ -503,6 +503,8 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             await apply_migrations(connection, ("001_initial.sql",))
             source_id = "upgrade-source"
             article_id = uuid.uuid4()
+            legacy_case_id = uuid.uuid4()
+            legacy_decision_id = uuid.uuid4()
             await connection.execute(
                 "INSERT INTO sources (source_id) VALUES (%s)",
                 (source_id,),
@@ -513,6 +515,13 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 VALUES (%s, %s, 'legacy-article')
                 """,
                 (article_id, source_id),
+            )
+            await connection.execute(
+                """
+                INSERT INTO decision_records (decision_id, case_id, outcome)
+                VALUES (%s, %s, 'OPEN')
+                """,
+                (legacy_decision_id, legacy_case_id),
             )
             await connection.commit()
             await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql"))
@@ -531,6 +540,16 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 (article_id,),
             )
             self.assertIsNone((await result.fetchone())[0])
+            result = await connection.execute(
+                "SELECT case_id FROM decision_cases WHERE case_id = %s",
+                (legacy_case_id,),
+            )
+            self.assertEqual((await result.fetchone())[0], legacy_case_id)
+            result = await connection.execute(
+                "SELECT case_id FROM decision_records WHERE decision_id = %s",
+                (legacy_decision_id,),
+            )
+            self.assertEqual((await result.fetchone())[0], legacy_case_id)
         finally:
             await connection.close()
             await self.admin.execute(
