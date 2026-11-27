@@ -1267,9 +1267,14 @@ asyncio.run(main())
                         "ON_ERROR_STOP=1",
                     ],
                     input=globals_dump.read_text(encoding="utf-8"),
-                    check=True,
+                    check=False,
                     capture_output=True,
                     text=True,
+                )
+                self.assertEqual(
+                    restore.returncode,
+                    0,
+                    f"Cluster-global role restore failed: {restore.stderr}",
                 )
                 self.assertNotIn("ERROR", restore.stderr.upper())
 
