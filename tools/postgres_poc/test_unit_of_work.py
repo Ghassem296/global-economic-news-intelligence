@@ -8,7 +8,6 @@ from typing import Any
 from unittest.mock import Mock
 
 import psycopg
-
 from postgres_poc_uow import PostgreSQLUnitOfWork, PostgreSQLUnitOfWorkFactory
 from psycopg import sql
 
