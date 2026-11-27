@@ -1216,7 +1216,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.2  
+**Version:** 4.3  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
