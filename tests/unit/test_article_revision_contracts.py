@@ -330,10 +330,10 @@ def test_canonical_url_requires_absolute_http_url(canonical_url: str) -> None:
         "https://example.com/article?api_key=secret",
         "https://example.com/article?access_token=secret",
         "https://example.com/article path",
-        "https://example.com/article\\u00a0path",
-        "https://example.com/article\\u200bpath",
+        "https://example.com/article\u00a0path",
+        "https://example.com/article\u200bpath",
         "https://example.com/article\\\\path",
-        "https://example.com/article\\npath",
+        "https://example.com/article\npath",
     ],
 )
 def test_original_url_rejects_credentials_and_ambiguous_url_forms(url: str) -> None:
@@ -349,10 +349,10 @@ def test_original_url_rejects_credentials_and_ambiguous_url_forms(url: str) -> N
         "https://example.com:invalid/canonical",
         "https://example.com/canonical?api_key=secret",
         "https://example.com/canonical path",
-        "https://example.com/canonical\\u00a0path",
-        "https://example.com/canonical\\u200bpath",
+        "https://example.com/canonical\u00a0path",
+        "https://example.com/canonical\u200bpath",
         "https://example.com/canonical\\\\path",
-        "https://example.com/canonical\\npath",
+        "https://example.com/canonical\npath",
     ],
 )
 def test_canonical_url_rejects_credentials_and_ambiguous_url_forms(url: str) -> None:
