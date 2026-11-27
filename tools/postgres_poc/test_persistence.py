@@ -43,28 +43,35 @@ async def apply_migration_sql(
     migration_name: str,
     migration_sql: str,
 ) -> bool:
-    bootstrap = await connection.execute(
-        "SELECT to_regclass('schema_migrations')"
-    )
-    migration_table = await bootstrap.fetchone()
-    if migration_table is not None and migration_table[0] is not None:
-        applied = await connection.execute(
-            "SELECT 1 FROM schema_migrations WHERE version = %s",
-            (migration_name,),
-        )
-        if await applied.fetchone():
-            return False
+    """Apply one migration atomically under a schema-scoped transaction lock.
 
+    The lock is acquired before checking migration history, so concurrent runners
+    cannot both decide that the same migration is pending. The complete SQL file
+    is sent through psycopg's simple-query path; splitting on semicolons is unsafe
+    for PL/pgSQL bodies and quoted literals.
+    """
     async with connection.transaction():
-        for statement in migration_sql.split(";"):
-            if statement.strip():
-                await connection.execute(statement, prepare=False)
+        await connection.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(current_schema(), 0))"
+        )
+        bootstrap = await connection.execute(
+            "SELECT to_regclass('schema_migrations')"
+        )
+        migration_table = await bootstrap.fetchone()
+        if migration_table is not None and migration_table[0] is not None:
+            applied = await connection.execute(
+                "SELECT 1 FROM schema_migrations WHERE version = %s",
+                (migration_name,),
+            )
+            if await applied.fetchone():
+                return False
+
+        await connection.execute(migration_sql, prepare=False)
         await connection.execute(
             "INSERT INTO schema_migrations (version) VALUES (%s)",
             (migration_name,),
         )
     return True
-
 
 async def apply_migrations(
     connection: psycopg.AsyncConnection[Any],
@@ -1365,6 +1372,44 @@ asyncio.run(main())
         self.assertEqual(after_rows, before_rows)
         self.assertEqual(len(after_rows), len(migration_names))
         await self.connection.commit()
+
+
+
+    async def test_poc_24_concurrent_migration_runners_serialize_and_execute_full_sql(self) -> None:
+        migration_name = "poc_24_concurrent_runner.sql"
+        migration_sql = """
+        CREATE FUNCTION migration_runner_probe() RETURNS integer
+        LANGUAGE plpgsql
+        AS $migration$
+        BEGIN
+            RETURN 1;
+        END;
+        $migration$;
+
+        CREATE TABLE migration_runner_probe_table (id INTEGER PRIMARY KEY);
+        """
+        second = await connect_to_schema(DATABASE_URL, self.schema)
+        try:
+            results = await asyncio.gather(
+                apply_migration_sql(self.connection, migration_name, migration_sql),
+                apply_migration_sql(second, migration_name, migration_sql),
+            )
+            self.assertCountEqual(results, [True, False])
+            function = await self.connection.execute(
+                "SELECT migration_runner_probe()"
+            )
+            self.assertEqual((await function.fetchone())[0], 1)
+            table = await self.connection.execute(
+                "SELECT to_regclass('migration_runner_probe_table')"
+            )
+            self.assertIsNotNone((await table.fetchone())[0])
+            history = await self.connection.execute(
+                "SELECT count(*) FROM schema_migrations WHERE version = %s",
+                (migration_name,),
+            )
+            self.assertEqual((await history.fetchone())[0], 1)
+        finally:
+            await second.close()
 
 if __name__ == "__main__":
     unittest.main()
