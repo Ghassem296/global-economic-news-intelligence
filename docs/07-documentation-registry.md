@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.94
+**Version:** 10.95
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.94 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.95 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.47 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -412,11 +412,11 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-27  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `b65bb915b682e6026029de409d58a003839d3085`
+**Baseline Commit Inspected:** `cac66b1a2b2ff97a923146e47b74945c03dc72b0`
 
 This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 02 v1.60, Document 03 v1.63, Document 04 v1.41, Document 08 v1.10, Document 15 v4.32, Document 16 v5.9, Document 17 v3.4, and GENI-ADR-011 v1.15. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
-The inspected executable application/PoC source snapshot is `cb258297a4568e6eec2083a0803e36caf61198e1`. Application CI run `46001262517` passed all 302 tests with lock verification, Ruff and mypy; Documentation Validation run `46001262593` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `46001262732` passed all 41 methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15198735753`). POC-35–38 add isolated row-lock experiments for authorization/content-rights revocation ordering; this candidate pattern does not exercise production adapters or complete policy/profile locking. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005/016 remain Proposed. The inspected documentation snapshot is `b65bb915b682e6026029de409d58a003839d3085`; the executable application/PoC evidence remains tied only to source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1`. This registry refresh itself is a documentation-only follow-up.
+The inspected executable application/PoC source snapshot is `cb258297a4568e6eec2083a0803e36caf61198e1`. Application CI run `46001262517` passed all 302 tests with lock verification, Ruff and mypy; Documentation Validation run `46001262593` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `46001262732` passed all 41 methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15198735753`). POC-35–38 add isolated row-lock experiments for authorization/content-rights revocation ordering; this candidate pattern does not exercise production adapters or complete policy/profile locking. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005/016 remain Proposed. The inspected documentation snapshot is `cac66b1a2b2ff97a923146e47b74945c03dc72b0`; the executable application/PoC evidence remains tied only to source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1`. This registry refresh itself is a documentation-only follow-up.
 
 All twenty individual ADRs remain Proposed; none is recorded as Accepted. Publication, passing CI, and PoC evidence do not constitute formal architecture approval, legal permission, production readiness, or operational acceptance.
 
@@ -524,6 +524,8 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.93):** Corrects the authoritative Baseline Commit Inspected field to the exact documentation snapshot already identified in §12.1 and refreshes that section's controlled-document version inventory. The executable evidence remains pinned to `cb258297a4568e6eec2083a0803e36caf61198e1`; no new CI result or production qualification is implied.
 
 **Revision Note (v10.94):** Synchronizes the ADR Registry index inventory to its current published v1.47 file version. No ADR decision status or architecture approval is changed.
+
+**Revision Note (v10.95):** Refreshes the inspected documentation baseline after synchronizing GENI-SEC-008 footer metadata with its v1.10 header. The inspected documentation snapshot is `cac66b1a2b2ff97a923146e47b74945c03dc72b0`; executable application/PoC evidence remains tied to its separately recorded source snapshot.
 
 **End of Document**
 
