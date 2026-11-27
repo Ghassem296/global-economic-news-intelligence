@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.8
+**Version:** 10.9
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -179,9 +179,9 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.8 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.9 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.38 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.39 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
 
@@ -194,7 +194,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | ADR ID | Title | Repository Path | Actual Version | Decision Status | Publication State | Decision Owner | Proposal / Revision Date | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.4 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.8 | Proposed | Published | Project Owner | 2026-11-27 | Not yet approved |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.9 | Proposed | Published | Project Owner | 2026-11-27 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 3.1 | Proposed | Published | Project Owner | 2026-11-27 | PostgreSQL target direction recorded; partial 32-test PoC evidence: 28 PostgreSQL integration methods plus four standalone retention-policy unit tests, including POC-24 through POC-29; qualification and formal acceptance pending |
@@ -669,3 +669,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v10.8):** Synchronizes the central inventory with GENI-ADR-002 v1.8, GENI-ADR-020 v1.3, and ADR Registry v1.38 after the ADR structure and cross-reference review. Both decision proposals remain Proposed; no approval or production authorization is implied.
+
+
+**Revision Note (v10.9):** Synchronizes the controlled inventory with GENI-ADR-002 v1.9 and ADR Registry v1.39 after refining ADR template alignment and relationship semantics. ADR-002 remains Proposed; no approval or production authorization is implied.
