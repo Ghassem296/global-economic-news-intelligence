@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.3  
+**Version:** 4.4  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-26  
+**Last Updated:** 2026-11-27  
 **Baseline:** Published `main` snapshot reviewed on 2026-11-26
 
 ---
@@ -31,7 +31,7 @@ A published file, passing documentation check, or merged change is not by itself
 
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is now verified by the successful main-branch Application CI run 45465238823 (commit 80ad85993bbfaa5073df4123d7dcc1bf5d42a0fd), which completed Ruff, mypy, and pytest successfully.
+The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45810109462 (commit 05bbfd6b430711f54b03038fe47645786d55e9f0), which completed lockfile verification, locked dependency installation, Ruff, mypy, and pytest successfully.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
@@ -46,7 +46,7 @@ The project package-management choice is now uv 0.13.9, pinned by `[tool.uv].req
 
 The following remain absent or incomplete:
 
-- No selected physical database, driver, ORM, or migration mechanism; GENI-ADR-005 remains Proposed.
+- PostgreSQL is the Project Owner-selected target relational engine. Production qualification, exact PostgreSQL version/deployment profile, driver, ORM/query layer, and migration mechanism remain unresolved; GENI-ADR-005 remains Proposed pending POC evidence review and formal acceptance.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
 - Document 15 v4.0 now defines the first source and article-to-report command/query DTO tranches and a proposed command-to-permission crosswalk; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
@@ -79,7 +79,7 @@ Do not require all 20 ADRs to be accepted before any work begins. Accept or expl
 The following decisions affect the architecture or invariants of the first slice and must be resolved before dependent application code treats their recommendations as policy:
 
 - **GENI-ADR-001 and 002:** event-centric architecture and the separation of article deduplication from event matching.
-- **GENI-ADR-005:** persistence technology and migration strategy, after the workload/backup/concurrency proof-of-concept.
+- **GENI-ADR-005:** production qualification and activation of the owner-selected PostgreSQL target, including exact version and migration strategy, after the workload/backup/concurrency proof-of-concept and formal ADR acceptance.
 - **GENI-ADR-007:** deterministic workflow boundaries. GENI-ADR-006 is capability-dependent because the first slice makes no provider or LLM call.
 - **GENI-ADR-008:** evidence provenance and uncertainty representation.
 - **GENI-ADR-011:** event identity and matching lifecycle.
@@ -261,5 +261,7 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.2):** Adds the pure, fail-closed content-rights persistence gate for exact source/content scope and PERSISTENT_STORAGE operation. This is not legal validation or complete rights management: assessment evidence verification, freshness, retention deadlines, temporary-content lifecycle, persistence, revocation propagation, deletion, and external-provider enforcement remain gated.
 
 **Revision Note (v4.3):** Records that LIMITED_RETENTION now requires an explicit positive maximum duration in the pure domain contract; expiry scheduling and deletion execution remain unimplemented.
+
+**Revision Note (v4.4):** Corrects the persistence readiness statement to distinguish the Project Owner-selected PostgreSQL target from its still-pending production qualification, exact implementation choices, and formal ADR-005 acceptance. Refreshes the Python 3.15 CI evidence to the successful run for the current inspected `main` commit. No production authorization or ADR acceptance is implied.
 
 **End of Document**
