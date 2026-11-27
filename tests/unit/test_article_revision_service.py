@@ -328,6 +328,8 @@ def test_new_article_append_and_projection_share_one_unit_of_work() -> None:
     )
     assert articles.items["article-1"].current_revision_id == "revision-1"
     assert articles.items["article-1"].created_at == FakeClock().now()
+    with pytest.raises(TypeError):
+        articles.items["article-1"].metadata["mutate"] = "not allowed"
     assert revisions.current["article-1"].revision_number == 1
     assert uow_factory.items[0].committed
     assert not uow_factory.items[0].rolled_back
@@ -438,6 +440,60 @@ def test_explicit_article_update_rejects_stale_version_even_when_revision_is_cur
     assert exc.value.code is ErrorCode.STALE_VERSION
     assert articles.save_calls == 0
     assert revisions.append_calls == 0
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items[0].rolled_back
+
+
+
+def test_current_revision_must_belong_to_the_addressed_article() -> None:
+    articles = FakeArticleRepository()
+    revisions = FakeArticleRevisionRepository()
+    revision = make_revision()
+    record = ArticleRevisionRecord(
+        revision_id="revision-existing",
+        article_id="another-article",
+        revision_number=1,
+        payload=revision,
+        revision_fingerprint=revision.revision_fingerprint,
+        revision_fingerprint_schema_version=ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION,
+        created_at=NOW,
+    )
+    revisions.current["article-existing"] = record
+    articles.items["article-existing"] = ArticleProjection(
+        article_id="article-existing",
+        source_id=revision.source_id,
+        source_article_identity=revision.source_article_identity,
+        url=revision.original_url,
+        canonical_url=revision.source_article_identity.canonical_url,
+        external_id=revision.external_id,
+        title=revision.normalized_title,
+        content_availability=revision.content_availability,
+        content_reference=revision.content_reference,
+        content_hash=revision.content_hash,
+        content_normalization_version=revision.content_normalization_version,
+        summary=revision.summary,
+        author=revision.author,
+        language=revision.language,
+        published_at=revision.published_at,
+        current_revision_id=record.revision_id,
+        metadata={},
+        aggregate_version="article-version-4",
+        created_at=NOW,
+        updated_at=NOW,
+    )
+    service, deps = build_service(articles=articles, revisions=revisions)
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(
+            PersistArticleRevisionCommand(
+                make_metadata("article-version-4"),
+                revision,
+                article_id="article-existing",
+            )
+        )
+
+    assert exc.value.code is ErrorCode.INVARIANT_VIOLATION
     factory = deps["uow_factory"]
     assert isinstance(factory, FakeUnitOfWorkFactory)
     assert factory.items[0].rolled_back
