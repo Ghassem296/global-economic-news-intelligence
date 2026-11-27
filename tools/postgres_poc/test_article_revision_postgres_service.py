@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 import uuid
+from threading import Barrier
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -330,3 +334,119 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
             self.service.execute(command)
 
         self.assertEqual(self._counts(), (0, 0, 0))
+
+    def test_available_content_is_persisted_only_after_both_rights_checks(self) -> None:
+        body = b"Synthetic full text for the PostgreSQL PoC."
+        revision = replace(
+            make_revision(),
+            content_availability=ContentAvailability.AVAILABLE,
+            content_reference="content://synthetic/article-123",
+            content_hash=hashlib.sha256(body).hexdigest(),
+            content_normalization_version="content-normalization-v1",
+            rights_assessment_references=(
+                "metadata-rights-1",
+                "persistent-storage-rights-1",
+            ),
+        )
+
+        result = self.service.execute(
+            PersistArticleRevisionCommand(make_metadata(), revision)
+        )
+
+        self.assertTrue(result.created)
+        self.assertEqual(len(self.rights.metadata_calls), 2)
+        self.assertEqual(len(self.rights.storage_calls), 2)
+        self.assertEqual(self._counts(), (1, 1, 1))
+        restored = self.revisions.get_by_id(result.revision_id)
+        self.assertEqual(restored.payload.content_hash, revision.content_hash)
+        self.assertEqual(
+            restored.payload.content_reference,
+            revision.content_reference,
+        )
+
+    def test_concurrent_same_key_requests_create_one_service_effect(self) -> None:
+        command = PersistArticleRevisionCommand(make_metadata(), make_revision())
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(self.service.execute, command)
+                for _ in range(2)
+            ]
+            results = [future.result(timeout=15) for future in futures]
+
+        self.assertEqual(results[0], results[1])
+        self.assertTrue(results[0].created)
+        self.assertEqual(self._counts(), (1, 1, 1))
+
+    def test_canonical_url_collision_does_not_merge_distinct_source_identities(self) -> None:
+        first = PersistArticleRevisionCommand(make_metadata(), make_revision())
+        self.service.execute(first)
+        other_identity = SourceArticleIdentity(
+            "publisher:another-article",
+            "identity-v1",
+            "https://example.test/articles/123",
+        )
+        conflicting_revision = replace(
+            make_revision("A different article"),
+            source_article_identity=other_identity,
+            original_url="https://example.test/articles/another",
+            external_id="another-article",
+        )
+
+        with self.assertRaises(GeniError) as exc:
+            self.service.execute(
+                PersistArticleRevisionCommand(
+                    make_metadata(key="request-2"),
+                    conflicting_revision,
+                )
+            )
+
+        self.assertIs(exc.exception.code, ErrorCode.CONFLICT)
+        self.assertEqual(self._counts(), (1, 1, 1))
+
+    def test_concurrent_new_articles_with_same_source_identity_have_one_winner(self) -> None:
+        barrier = Barrier(2)
+
+        class RacingArticleRepository(PostgreSQLArticleRepository):
+            def find_by_source_identity(
+                self,
+                source_id: str,
+                external_identity: SourceArticleIdentity,
+                uow: UnitOfWork,
+            ):
+                result = super().find_by_source_identity(
+                    source_id,
+                    external_identity,
+                    uow,
+                )
+                if result is None:
+                    barrier.wait(timeout=10)
+                return result
+
+        self.service._articles = RacingArticleRepository()
+        commands = [
+            PersistArticleRevisionCommand(
+                make_metadata(key=f"race-{index}"),
+                make_revision(),
+            )
+            for index in range(2)
+        ]
+
+        successes = []
+        conflicts = []
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(self.service.execute, command)
+                for command in commands
+            ]
+            for future in futures:
+                try:
+                    successes.append(future.result(timeout=20))
+                except GeniError as exc:
+                    conflicts.append(exc)
+
+        self.assertEqual(len(successes), 1)
+        self.assertEqual(len(conflicts), 1)
+        self.assertIs(conflicts[0].code, ErrorCode.DUPLICATE_IDENTITY)
+        self.assertEqual(self._counts(), (1, 1, 1))
+
