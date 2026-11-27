@@ -67,8 +67,16 @@ def _validate_source_url(value: object) -> None:
     if not isinstance(value, str):
         raise ValueError("base_url must be a non-empty string.")
     require_text(value, "base_url")
-    if any(ord(character) <= 0x20 or ord(character) == 0x7F or character == "\\" for character in value):
-        raise ValueError("base_url must not contain whitespace, control characters, or backslashes.")
+    has_ambiguous_characters = any(
+        ord(character) <= 0x20
+        or ord(character) == 0x7F
+        or character == "\\"
+        for character in value
+    )
+    if has_ambiguous_characters:
+        raise ValueError(
+            "base_url must not contain whitespace, control characters, or backslashes."
+        )
     parsed = urlsplit(value)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         raise ValueError("base_url must be an absolute HTTP(S) URL.")
