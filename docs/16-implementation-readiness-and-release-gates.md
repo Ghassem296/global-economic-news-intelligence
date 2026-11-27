@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.33  
+**Version:** 4.34  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `03e34f5d5ed5e9889bb833b46955503540a91e11`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `6a32089fcf1fb584ad936a4088abfe36b852f331`
 
 ---
 
@@ -153,7 +153,7 @@ A full review of the published `main` snapshot at `8b486f3` produced the initial
 3. **PoC schema integrity corrections verified.** Migration 004 adds `articles.current_revision_id` with a composite FK that prevents cross-Article revision pointers, adds/backfills `decision_cases` before constraining `decision_records.case_id`, adds a CHECK for the exercised `OPEN`/`MATCH`/`NO_MATCH` outcome vocabulary, and removes the redundant `articles_source_identity_idx`. POC-25 through POC-27 passed in the 30-test run. The pointer remains nullable for legacy rows; a production backfill/non-null policy is still open.
 4. **Supply-chain pinning:** The PostgreSQL PoC service image is pinned to the linux/amd64 manifest digest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3` for `postgres:18.7`, and that image was successfully used by the 30-test run. GitHub Actions are pinned to commit SHAs; continue scheduled Dependabot/manual refresh and review.
 5. **Revision identity and projection refresh:** Resolved at the application-service level. The semantic fingerprint continues to exclude `original_url`, `external_id` and `canonical_url`; those fields are treated as mutable source-routing attributes. An unchanged semantic fingerprint now triggers an optimistic-concurrency projection refresh without appending a new ArticleRevision. The source identity key is the tuple `(source_id, canonical_source_identifier, normalization_version)`. Concrete repository lookup semantics and PostgreSQL race/integration tests remain open.
-6. **Quality tooling scope.** Ruff now covers `scripts` and `tools`; mypy strict mode still covers only the application package. Extend it when those directories become product code.
+6. **Quality tooling scope — intentionally bounded.** Ruff covers the repository's Python files, while strict mypy is applied to the shipped application package. `scripts`, `tests`, and `tools/postgres_poc` are validation/development harnesses, not runtime product modules; they are not promoted into the strict application typing target. If any of these directories becomes shipped runtime code, strict typing and corresponding CI coverage become a pre-merge requirement. This is a documented scope decision, not an unresolved application-quality failure.
 
 ## 6. Cross-document consistency rules
 
@@ -243,7 +243,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.33
+**Version:** 4.34
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -347,3 +347,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.33):** Synchronizes the R1 technology gate with the latest successful 30-test PostgreSQL PoC evidence (26 PostgreSQL integration methods plus four standalone retention-policy tests), the four-migration schema, POC-24–27, immutable PostgreSQL image digest, and machine-readable artifact. The test run demonstrates PoC correctness only; production security/operations, workload approval, non-null legacy Article revision backfill, formal ADR-005 acceptance, and production toolchain selection remain gated.
+
+
+**Revision Note (v4.34):** Clarifies that strict mypy is intentionally scoped to the shipped application package; repository scripts, tests, and the isolated PostgreSQL PoC remain development/validation tooling. Their promotion into runtime product code requires strict typing before merge. Refreshes the reviewed baseline to the successful 30-test PoC and green CI snapshot; no production authorization or ADR status changes.
