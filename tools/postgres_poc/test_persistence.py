@@ -82,6 +82,71 @@ async def apply_migrations(
         migration_sql = (MIGRATIONS / migration_name).read_text(encoding="utf-8")
         await apply_migration_sql(connection, migration_name, migration_sql)
 
+async def claim_idempotency(
+    connection: psycopg.AsyncConnection[Any],
+    *,
+    operation_scope: str,
+    idempotency_key: str,
+    request_fingerprint: str,
+) -> tuple[str, uuid.UUID | None]:
+    """Claim a key in the current transaction or return its durable outcome.
+
+    A concurrent insert on the same key is serialized by the primary key. The
+    caller must complete a newly claimed record in this same transaction.
+    """
+    inserted = await connection.execute(
+        """
+        INSERT INTO idempotency_records
+            (operation_scope, idempotency_key, request_fingerprint, state)
+        VALUES (%s, %s, %s, 'CLAIMED')
+        ON CONFLICT (operation_scope, idempotency_key) DO NOTHING
+        RETURNING operation_scope
+        """,
+        (operation_scope, idempotency_key, request_fingerprint),
+    )
+    if await inserted.fetchone() is not None:
+        return "claimed", None
+
+    existing = await connection.execute(
+        """
+        SELECT request_fingerprint, state, result_id
+        FROM idempotency_records
+        WHERE operation_scope = %s AND idempotency_key = %s
+        FOR UPDATE
+        """,
+        (operation_scope, idempotency_key),
+    )
+    row = await existing.fetchone()
+    if row is None:
+        raise AssertionError("Conflicting idempotency row disappeared.")
+    stored_fingerprint, state, result_id = row
+    if stored_fingerprint != request_fingerprint:
+        return "conflict", None
+    if state != "COMPLETED" or result_id is None:
+        return "in_progress", None
+    return "replay", result_id
+
+
+async def complete_idempotency(
+    connection: psycopg.AsyncConnection[Any],
+    *,
+    operation_scope: str,
+    idempotency_key: str,
+    request_fingerprint: str,
+    result_id: uuid.UUID,
+) -> None:
+    updated = await connection.execute(
+        """
+        UPDATE idempotency_records
+        SET state = 'COMPLETED', result_id = %s, completed_at = clock_timestamp()
+        WHERE operation_scope = %s AND idempotency_key = %s
+          AND request_fingerprint = %s AND state = 'CLAIMED'
+        """,
+        (result_id, operation_scope, idempotency_key, request_fingerprint),
+    )
+    if updated.rowcount != 1:
+        raise AssertionError("Idempotency completion must update exactly one claimed row.")
+
 
 @unittest.skipUnless(
     DATABASE_URL and POSTGRES_CONTAINER_ID,
@@ -99,7 +164,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.connection = await connect_to_schema(DATABASE_URL, self.schema)
         await apply_migrations(
             self.connection,
-            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql"),
+            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql"),
         )
         self.source_id = "source-test"
         self.article_id = uuid.uuid4()
@@ -164,30 +229,41 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_poc_02_idempotency_replay_and_fingerprint_conflict(self) -> None:
         result_id = uuid.uuid4()
-        await self.connection.execute(
-            """
-            INSERT INTO idempotency_records
-                (operation_scope, idempotency_key, request_fingerprint, result_id)
-            VALUES ('article.persist', 'key-1', 'fingerprint-a', %s)
-            """,
-            (result_id,),
-        )
-        await self.connection.commit()
+        async with self.connection.transaction():
+            state, existing_result = await claim_idempotency(
+                self.connection,
+                operation_scope="article.persist",
+                idempotency_key="key-1",
+                request_fingerprint="fingerprint-a",
+            )
+            self.assertEqual(state, "claimed")
+            self.assertIsNone(existing_result)
+            await complete_idempotency(
+                self.connection,
+                operation_scope="article.persist",
+                idempotency_key="key-1",
+                request_fingerprint="fingerprint-a",
+                result_id=result_id,
+            )
 
-        replay = await self.connection.execute(
-            """
-            SELECT request_fingerprint, result_id
-            FROM idempotency_records
-            WHERE operation_scope = 'article.persist' AND idempotency_key = 'key-1'
-            """
-        )
-        fingerprint, replayed_result = await replay.fetchone()
-        self.assertEqual(fingerprint, "fingerprint-a")
+        async with self.connection.transaction():
+            replay_state, replayed_result = await claim_idempotency(
+                self.connection,
+                operation_scope="article.persist",
+                idempotency_key="key-1",
+                request_fingerprint="fingerprint-a",
+            )
+            conflict_state, conflict_result = await claim_idempotency(
+                self.connection,
+                operation_scope="article.persist",
+                idempotency_key="key-1",
+                request_fingerprint="fingerprint-b",
+            )
+
+        self.assertEqual(replay_state, "replay")
         self.assertEqual(replayed_result, result_id)
-
-        with self.assertRaises(ValueError):
-            if fingerprint != "fingerprint-b":
-                raise ValueError("idempotency key reused with a different fingerprint")
+        self.assertEqual(conflict_state, "conflict")
+        self.assertIsNone(conflict_result)
 
     async def test_poc_03_successor_chain_allows_only_one_direct_successor(self) -> None:
         predecessor_id = uuid.uuid4()
@@ -413,28 +489,109 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
     async def test_poc_10_commit_before_lost_ack_replays_existing_result(self) -> None:
         key = f"ack-{uuid.uuid4()}"
         result_id = uuid.uuid4()
+        revision_id = uuid.uuid4()
         connection = await connect_to_schema(DATABASE_URL, self.schema)
-        await connection.execute(
-            """
-            INSERT INTO idempotency_records
-                (operation_scope, idempotency_key, request_fingerprint, result_id)
-            VALUES ('article.persist', %s, 'same-request', %s)
-            """,
-            (key, result_id),
-        )
-        await connection.commit()
+        async with connection.transaction():
+            state, existing = await claim_idempotency(
+                connection,
+                operation_scope="article.persist",
+                idempotency_key=key,
+                request_fingerprint="same-request",
+            )
+            self.assertEqual(state, "claimed")
+            self.assertIsNone(existing)
+            await connection.execute(
+                """
+                INSERT INTO article_revisions
+                    (revision_id, article_id, revision_number, fingerprint)
+                VALUES (%s, %s, 1, 'lost-ack-fingerprint')
+                """,
+                (revision_id, self.article_id),
+            )
+            await complete_idempotency(
+                connection,
+                operation_scope="article.persist",
+                idempotency_key=key,
+                request_fingerprint="same-request",
+                result_id=result_id,
+            )
         await connection.close()
 
-        replay = await self.connection.execute(
+        async with self.connection.transaction():
+            replay_state, replayed_id = await claim_idempotency(
+                self.connection,
+                operation_scope="article.persist",
+                idempotency_key=key,
+                request_fingerprint="same-request",
+            )
+        self.assertEqual(replay_state, "replay")
+        self.assertEqual(replayed_id, result_id)
+        count = await self.connection.execute(
+            "SELECT count(*) FROM article_revisions WHERE article_id = %s AND revision_number = 1",
+            (self.article_id,),
+        )
+        self.assertEqual((await count.fetchone())[0], 1)
+
+
+    async def test_poc_31_concurrent_same_key_claims_create_one_domain_effect(self) -> None:
+        key = f"concurrent-{uuid.uuid4()}"
+        barrier = asyncio.Event()
+        ready = 0
+        ready_lock = asyncio.Lock()
+
+        async def execute_once() -> tuple[str, uuid.UUID | None]:
+            nonlocal ready
+            connection = await connect_to_schema(DATABASE_URL, self.schema)
+            try:
+                async with ready_lock:
+                    ready += 1
+                    if ready == 2:
+                        barrier.set()
+                await barrier.wait()
+                async with connection.transaction():
+                    state, result_id = await claim_idempotency(
+                        connection,
+                        operation_scope="article.persist",
+                        idempotency_key=key,
+                        request_fingerprint="identical-request",
+                    )
+                    if state == "claimed":
+                        result_id = uuid.uuid4()
+                        await connection.execute(
+                            "UPDATE counters SET value = value + 1 WHERE counter_name = 'writes'"
+                        )
+                        await complete_idempotency(
+                            connection,
+                            operation_scope="article.persist",
+                            idempotency_key=key,
+                            request_fingerprint="identical-request",
+                            result_id=result_id,
+                        )
+                    return state, result_id
+            finally:
+                await connection.close()
+
+        outcomes = await asyncio.gather(execute_once(), execute_once())
+        self.assertCountEqual([state for state, _ in outcomes], ["claimed", "replay"])
+        result_ids = {result_id for _, result_id in outcomes}
+        self.assertEqual(len(result_ids), 1)
+        self.assertIsNotNone(next(iter(result_ids)))
+        count = await self.connection.execute(
+            "SELECT value FROM counters WHERE counter_name = 'writes'"
+        )
+        self.assertEqual((await count.fetchone())[0], 1)
+        record = await self.connection.execute(
             """
-            SELECT result_id, request_fingerprint FROM idempotency_records
+            SELECT state, request_fingerprint, result_id
+            FROM idempotency_records
             WHERE operation_scope = 'article.persist' AND idempotency_key = %s
             """,
             (key,),
         )
-        replayed_id, fingerprint = await replay.fetchone()
-        self.assertEqual(replayed_id, result_id)
-        self.assertEqual(fingerprint, "same-request")
+        state, fingerprint, result_id = await record.fetchone()
+        self.assertEqual(state, "COMPLETED")
+        self.assertEqual(fingerprint, "identical-request")
+        self.assertEqual(result_id, next(iter(result_ids)))
 
     async def test_poc_11_concurrent_atomic_updates_have_no_lost_increments(self) -> None:
         async def increment() -> None:
@@ -481,7 +638,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             "SELECT version FROM schema_migrations ORDER BY version"
         )
         versions = [row[0] for row in await result.fetchall()]
-        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql"])
+        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql"])
         result = await self.connection.execute(
             """
             SELECT column_name FROM information_schema.columns
