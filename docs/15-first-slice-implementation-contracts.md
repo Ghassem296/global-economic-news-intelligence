@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.12  
+**Version:** 4.13  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -136,8 +136,8 @@ The signatures below are logical signatures. Request and result structures named
 
 | Method | Signature | Contract |
 |---|---|---|
-| `get_by_id` | `get_by_id(article_id: ID<Article>) -> Optional<Article>` | Returns the current Article projection, including its current revision reference. |
-| `find_by_source_identity` | `find_by_source_identity(source_id: ID<Source>, external_identity: SourceArticleIdentity) -> Optional<Article>` | Resolves an Article using the source-scoped canonical external identity. A URL alone is not assumed globally unique. |
+| `get_by_id` | `get_by_id(article_id: ID<Article>, uow: UnitOfWork) -> Optional<Article>` | Reads the current projection through the caller's active UnitOfWork. |
+| `find_by_source_identity` | `find_by_source_identity(source_id: ID<Source>, external_identity: SourceArticleIdentity, uow: UnitOfWork) -> Optional<Article>` | Resolves the source-scoped canonical external identity using the caller's active UnitOfWork. A URL alone is not assumed globally unique. |
 | `save_projection` | `save_projection(article: Article, expected_version: Optional<Version>, uow: UnitOfWork) -> Article` | Used only by ArticleRevisionService in the same UnitOfWork as revision creation/reuse. The projection must point to the latest valid persisted revision. |
 
 `SourceArticleIdentity` contains the source-scoped canonical identifier selected by normalization and may include a canonical URL as a secondary lookup signal. Identity normalization rules must be deterministic and versioned; collision handling returns `CONFLICT`, never silent merge.
@@ -147,7 +147,7 @@ The signatures below are logical signatures. Request and result structures named
 | Method | Signature | Contract |
 |---|---|---|
 | `get_by_id` | `get_by_id(revision_id: ID<ArticleRevision>) -> Optional<ArticleRevisionRecord>` | Returns an immutable, fingerprint-verified persistence record. |
-| `get_current_for_article` | `get_current_for_article(article_id: ID<Article>) -> Optional<ArticleRevisionRecord>` | Resolves the exact revision record referenced by the Article projection. |
+| `get_current_for_article` | `get_current_for_article(article_id: ID<Article>, uow: UnitOfWork) -> Optional<ArticleRevisionRecord>` | Resolves the exact revision record referenced by the Article projection through the caller's active UnitOfWork. |
 | `find_current_by_revision_fingerprint` | `find_current_by_revision_fingerprint(article_id: ID<Article>, revision_fingerprint: Fingerprint, schema_version: Version) -> Optional<ArticleRevisionRecord>` | Matches only the current revision of the same Article. It must not search all historical revisions or impose global uniqueness on fingerprints. |
 | `append_revision` | `append_revision(article_id: ID<Article>, revision: PersistArticleRevision, expected_article_version: Optional<Version>, uow: UnitOfWork) -> ArticleRevisionRecord` | Appends one immutable revision inside the caller's UnitOfWork. ArticleRevisionService coordinates the Article projection update through ArticleRepository in that same UnitOfWork. Enforces unique `(article_id, revision_number)`; repeated current fingerprint is reused before append. The repository must not commit the UnitOfWork. |
 
@@ -1284,3 +1284,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.12):** Adds transaction-bound revalidation of application authorization and source-content rights before idempotency replay or ArticleRevision persistence. Requires the verifier to bind authoritative grant/policy/RightsAssessment versions to the same UnitOfWork and hold them stable through commit/rollback. The application service passes the active UnitOfWork; concrete database locking/serialization adapters and integration tests remain unimplemented and mandatory. No source-content authorization or production readiness is implied.
+
+
+**Revision Note (v4.13):** Makes Article and current-ArticleRevision reads explicitly participate in the active UnitOfWork used by ArticleRevisionService. This prevents repository adapters from silently performing pre-transaction or independently scoped reads while the service assumes transaction consistency. It is a port-contract correction only; concrete PostgreSQL adapters and race/integration qualification remain unimplemented.
