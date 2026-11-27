@@ -54,8 +54,17 @@ class PostgreSQLUnitOfWork:
         self._require_active_owner()
         try:
             self._connection.rollback()
-        finally:
-            # The transaction is no longer usable even if rollback/close fails.
+        except BaseException:
+            # Rollback is terminal even when the driver reports a failure.
+            # Preserve that primary failure if closing the broken connection
+            # also fails; cleanup must not replace the transaction error.
+            self._state = "ROLLED_BACK"
+            try:
+                self._connection.close()
+            except BaseException:
+                pass
+            raise
+        else:
             self._state = "ROLLED_BACK"
             self._connection.close()
 
