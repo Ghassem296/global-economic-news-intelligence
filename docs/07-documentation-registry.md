@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.3
+**Version:** 10.4
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -181,7 +181,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
 | GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.37 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.37 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
 
@@ -655,3 +655,5 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.2):** Historical registry synchronization with GENI-READY-016 v4.51 and the then-inspected baseline `0edc235b621d7fa0220c5266a5818ed49db39dcc`.
 
 **Revision Note (v10.3):** Synchronizes GENI-READY-016 v4.52, GENI-ADR-005 v3.1, and ADR Registry v1.37. Reconciles the central inventory with the latest 32-test POC-29 evidence (28 PostgreSQL integration methods plus four standalone retention-policy unit tests) while preserving the Proposed status and all production qualification gates.
+
+**Revision Note (v10.4):** Updates the ADR Registry's last-updated metadata to 2026-11-27 and synchronizes the readiness document to v4.53. No architectural decision, test result, or approval status changes.
