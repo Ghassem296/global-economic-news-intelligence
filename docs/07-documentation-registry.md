@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.5
+**Version:** 10.6
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.9 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.51 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.54 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 2.9 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -414,7 +414,7 @@ A periodic review should verify that the registry matches:
 **Reference Branch:** `main`  
 **Baseline Commit Inspected:** `b154650c9cda341c71c7e25fe0e8c7825c6edb06`
 
-This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.9, Document 16 v4.51, and Document 17 v2.9. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
+This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.9, Document 16 v4.54, and Document 17 v2.9. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
 The inspected main baseline is `b154650c9cda341c71c7e25fe0e8c7825c6edb06`. The latest code-and-PoC verification on source commit `5c9e34af98a97326c22ac756f306225493f91e29` passed Application CI run `45963235364` (275 tests, Ruff and mypy), Documentation Validation run `45963235243`, and PostgreSQL 18.7 / Python 3.15 PoC run `45963235373` (32 test methods; artifact `15182595241`, archive SHA-256 `5eac19ecfcb8c73cd40af1b54187f0eea28001371fd0e9bb11198df0eaf553b5`). POC-29 confirms one-winner optimistic concurrency and rollback of the losing ArticleRevision insert. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
 
@@ -660,3 +660,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v10.5):** Synchronizes the readiness document's controlled version to v4.54. No registry inventory values, test results, or approval status changes.
+
+
+**Revision Note (v10.6):** Synchronizes the controlled inventory and snapshot description with GENI-READY-016 v4.54. No readiness verdict, test result, or approval status changes.
