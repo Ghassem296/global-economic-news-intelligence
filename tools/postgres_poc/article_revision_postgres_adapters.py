@@ -334,7 +334,7 @@ class PostgreSQLArticleRepository:
                         identity.canonical_source_identifier,
                         identity.canonical_source_identifier,
                         identity.normalization_version,
-                        *values[3:],
+                        *values[3:17],
                         article.created_at,
                         article.updated_at,
                     ),
@@ -344,12 +344,26 @@ class PostgreSQLArticleRepository:
             if row is None:
                 raise RuntimeError("Article insert returned no row.")
             return ArticleProjection(
-                **{
-                    **article.__dict__,
-                    "aggregate_version": _version_token(row[0]),
-                    "created_at": row[1],
-                    "updated_at": row[2],
-                }
+                article_id=article.article_id,
+                source_id=article.source_id,
+                source_article_identity=article.source_article_identity,
+                url=article.url,
+                canonical_url=article.canonical_url,
+                external_id=article.external_id,
+                title=article.title,
+                content_availability=article.content_availability,
+                content_reference=article.content_reference,
+                content_hash=article.content_hash,
+                content_normalization_version=article.content_normalization_version,
+                summary=article.summary,
+                author=article.author,
+                language=article.language,
+                published_at=article.published_at,
+                current_revision_id=article.current_revision_id,
+                metadata=article.metadata,
+                aggregate_version=_version_token(row[0]),
+                created_at=row[1],
+                updated_at=row[2],
             )
 
         expected_number = _aggregate_version(expected_version)
