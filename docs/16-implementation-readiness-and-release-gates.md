@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.41  
+**Version:** 4.42  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `c381be23c6481bc70b57eda3d7f2d4f83c1f8882`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `098b3c15c039142de2437f1a9ae5cf51b6bdd255`
 
 ---
 
@@ -49,7 +49,7 @@ The following remain absent or incomplete:
 
 - PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 31 test methods (27 PostgreSQL integration methods and four standalone retention-policy unit tests) on commit `c381be23c6481bc70b57eda3d7f2d4f83c1f8882` (GitHub Actions run `45959463464`, evidence artifact `15180470998`, archive SHA-256 `f8769336423e21f589c0edf497b3124ff95d73dc2e257e6503955ef7c836961c`). POC-24 through POC-27 verify concurrent migration execution, same-Article current-revision integrity, decision-case/outcome constraints, and source-identity index integrity. POC-28 verifies an atomic synthetic legacy Article revision backfill candidate, including rollback on an invalid deferred pointer and commit of a valid same-Article revision/pointer pair. This is partial PoC evidence, not production qualification or approval of the legacy backfill policy. Production KMS/HSM integration, key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, approved workload values, and performance thresholds remain outstanding. GENI-ADR-005 remains Proposed.
 - The ArticleRevisionService and technology-neutral ArticleRepository/ArticleRevisionRepository ports are implemented, but no durable repository or UnitOfWork adapter, transactional idempotency store, concrete authorization/rights adapter, production migrations, lease/fencing persistence, or ProcessingStepAttempt adapter exists.
-- Document 15 v4.7 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
+- Document 15 v4.8 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
 - A pure, fail-closed content-rights persistence gate now exists for exact source/content scope and PERSISTENT_STORAGE assessments. Rights evidence verification, freshness policy, limited-retention deadlines, temporary-content lifecycle, persistence, revocation propagation, deletion, and operation-specific external-processing enforcement remain unimplemented.
 - No source acquisition, rights adapter, LLM execution adapter, economic analysis workflow, report generator, publication client, or delivery client.
@@ -113,8 +113,8 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 
 ### 5.1 Field-level DTO and command schemas
 
-Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.52 now requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope.
-For every actual provider request, Document 15 v4.7 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
+Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.53 now requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope.
+For every actual provider request, Document 15 v4.8 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
 Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5, 10.15.4 and 10.16.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, duplicate-pair canonicalization and score/decision calibration, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
@@ -244,7 +244,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.41
+**Version:** 4.42
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -372,3 +372,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.41):** Records ArticleRevisionService hardening for expected aggregate versions, trusted Article creation timestamps, current-revision ownership, and immutable projection metadata. The latest Application CI run `45959463469` passes 248 tests, Ruff, and mypy; Documentation validation `45959463453` passes; PostgreSQL PoC `45959463464` passes 31 test methods with artifact `15180470998`. No ADR acceptance, production rights authorization, or PostgreSQL production qualification is implied.
+
+
+**Revision Note (v4.42):** Aligns active references with Document 15 v4.8 and Document 03 v1.53. Records the initial immutable SourceRecord and read-only SourceRepository port from Document 17 v2.9. This is a configuration-record/read-only retrieval foundation only: source discovery, collection, configuration mutation, concrete persistence, health/reliability/relationship assessment, SSRF/egress enforcement, and production rights authorization remain unimplemented and gated. The overall readiness verdict and ADR/production gates are unchanged.
