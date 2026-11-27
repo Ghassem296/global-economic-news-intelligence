@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.7
+**Version:** 1.8
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -839,21 +839,48 @@ This is preferable to silently deleting source records, merging unrelated events
 
 ## 9. Impact on Architecture and Documentation
 
-| Reference | Relationship |
-|---|---|
-| GENI-ADR-001 | Establishes the event-centric intelligence architecture that requires separate article and event identities. |
-| GENI-ADR-008 | Defines evidence provenance and uncertainty representation used by both operations. |
-| GENI-ADR-011 | Defines event identity, matching, continuation, merging, and splitting rules. |
-| GENI-ADR-012 | Defines semantic retrieval, similarity calculation, and embedding storage options. |
-| GENI-ADR-016 | Defines persistence, asynchronous execution, idempotency, and recovery. |
-| GENI-ADR-017 | Defines LLM budgets, usage tracking, and evaluation strategy. |
-| GENI-ADR-014 | Defines human review and authorized correction of ambiguous or incorrect event associations. |
-| GENI-ADR-018 | Defines language and translation constraints relevant to multilingual duplicate detection and event matching. |
-| Document 02 | Defines the component and interface contracts that must preserve the separation. |
-| Document 03 | Defines the logical data model and persistence implications. |
-| Document 04 | Defines implementation sequencing and delivery priorities. |
+### 9.1 Affected Components
 
-### 9.1 Scope Boundaries
+- Article Deduplication Workflow and its candidate-generation/evaluation stages.
+- Event Matching Workflow and its case/candidate/decision stages.
+- Shared normalization, fingerprinting, and candidate-retrieval services that must not acquire decision authority.
+- EventService, which applies only an effective authorized MATCH decision to an ArticleEventLink.
+- Evaluation and review workflows that preserve separate duplicate and event-matching outcomes.
+
+### 9.2 Affected Data Models and Interfaces
+
+- Article and immutable ArticleRevision identity and provenance.
+- DuplicateCandidate and immutable DuplicateDecision, including canonical pair identity and successor-decision history.
+- EventMatchCase, EventMatchCandidate, and immutable EventMatchDecision.
+- ArticleEventLink and its exact authorizing EventMatchDecision reference.
+- Repository and workflow contracts for independent candidate generation, evaluation, decisions, idempotency, and reprocessing.
+
+The physical schema, uniqueness constraints, and repository contracts remain defined by Documents 02 and 03 and are subject to the relevant ADR approval gates.
+
+### 9.3 Affected Documents
+
+- `docs/02-component-architecture-and-interfaces.md`: separate workflow responsibilities, service boundaries, and repository contracts.
+- `docs/03-data-model-and-storage-design.md`: pairwise duplicate evidence, immutable decision chains, event-match cases, and decision-authorized ArticleEventLink constraints.
+- `docs/04-implementation-plan-and-roadmap.md`: implementation order and capability dependencies.
+- `docs/08-security-architecture-and-threat-model.md`: untrusted article content, prompt-injection boundaries, and resource-exhaustion controls.
+- `docs/12-testing-and-evaluation-strategy.md`: independent datasets, metrics, and failure cases for duplicate detection and event matching.
+
+### 9.4 Related ADRs
+
+| ADR ID | Relationship | Explanation |
+|---|---|---|
+| GENI-ADR-001 | Related to | Establishes the event-centric intelligence architecture and the distinction between article and event identity. |
+| GENI-ADR-008 | Related to | Defines evidence provenance and uncertainty representation used by both operations. |
+| GENI-ADR-011 | Depends on / Related to | Defines event identity, matching, continuation, merging, splitting, and the event-association lifecycle. |
+| GENI-ADR-012 | Related to | Defines semantic retrieval and similarity capabilities without making similarity a duplicate or event decision. |
+| GENI-ADR-014 | Depends on / Related to | Governs authorized human review and successor decisions for ambiguous or incorrect associations. |
+| GENI-ADR-016 | Depends on / Related to | Defines persistence, asynchronous execution, idempotency, and recovery requirements. |
+| GENI-ADR-017 | Related to | Defines LLM budgets, usage tracking, and evaluation controls where model-assisted processing is enabled. |
+| GENI-ADR-018 | Related to | Defines language and translation constraints relevant to multilingual duplicate detection and event matching. |
+
+A cross-reference does not accept a Proposed ADR or authorize a dependent capability.
+
+### 9.5 Decision Scope Boundaries
 
 This ADR does not decide:
 
@@ -967,5 +994,6 @@ The proposal is based on the internal architecture and domain requirements liste
 | 1.6 | 2026-11-18 | Proposed | Defined non-transitive near-duplicate grouping and conservative complete-link semantics. | AI Architecture Assistant |
 
 | 1.7 | 2026-11-24 | Proposed | Reorganized the ADR to the standard 14-section template while preserving detailed design as subsections; added qualitative option evaluation and explicit acceptance criteria. | AI Architecture Assistant |
+| 1.8 | 2026-11-27 | Proposed | Completes the Section 9 impact structure, separates affected documents from related ADRs, and makes dependency relationships explicit without implying approval. | AI Architecture Assistant |
 
 **End of ADR-002**
