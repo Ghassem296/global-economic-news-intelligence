@@ -11,11 +11,10 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Protocol
 
-from dataclasses import replace
 
 from global_economic_news_intelligence.application.article_revision_commands import (
     PersistArticleRevisionCommand,
@@ -487,7 +486,7 @@ class ArticleRevisionService:
             return
         if not self._content_rights.permits_persistent_storage(
             revision,
-            at=revision.observed_at,
+            at=self._clock.now(),
         ):
             raise self._error(
                 ErrorCode.RIGHTS_NOT_ALLOWED,
