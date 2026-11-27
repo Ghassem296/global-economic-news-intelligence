@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.16  
+**Version:** 4.17  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -457,6 +457,8 @@ Before a first-slice milestone is declared complete:
 
 ## 9. Unresolved items intentionally not decided here
 
+**Event identity operation boundary:** Document 03 §7.5 and GENI-ADR-011 define the logical MERGE/SPLIT/IDENTITY_CORRECTION records, cardinality, immutable history, expected EventHistory versions, core-effect state, and reconciliation semantics. The current first-slice application contract does not expose an EventIdentityOperation command, repository, or service and the executable foundation does not implement these operations. They remain disabled; no ArticleEventLink may be directly repointed by a merge/split. Before enablement, a dedicated application contract must define operation preparation/validation, event-scoped concurrency/overlap serialization, atomic input/output/history/EventHistory writes, identity resolution for historical IDs, downstream case re-resolution through successor EventMatchDecision records, and durable reconciliation/failure-injection tests. GENI-ADR-011 must be formally accepted and all Document 16 gates satisfied first.
+
 The following remain open and must not be guessed by implementers:
 
 - Concrete programming-language types, ID encoding and serialization.
@@ -495,7 +497,7 @@ This section records only fields explicitly supported by Documents 02/03 and the
 | `scope_description` | `string` | Required | Describes the independently identified development. Exact length/normalization constraints TBD. | Document 03 §7.1 |
 | `metadata` | `JSON/object` | Optional | Must not duplicate authoritative fields or contain secrets/restricted source content by default. Schema TBD. | Document 03 §7.1 |
 
-Server-owned fields: case ID, initial case status, effective-decision pointer, created/closed timestamps, and aggregate version. The exact initial case status and who may create/reopen/cancel a case are not defined as a complete command contract.
+Server-owned fields: case ID, initial case status, effective-decision pointer, created/closed timestamps, and aggregate version. The canonical initial status is `OPEN`; the decision-to-case projection and allowed state transitions are defined by Document 17, Section 6. Case creation and state changes must use dedicated authorized application commands; callers cannot supply status or effective pointers. The authorization matrix and production command enablement remain subject to the relevant ADR approval and release gates.
 
 ### 10.3 EventMatchCandidate evaluation record
 
@@ -1298,3 +1300,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.16):** Aligns the EventMatchCase repository/application contract with the canonical initial-state, decision projection, and transition policy in Document 17, Section 6. It requires atomic status, effective-decision, supersession, and ArticleEventLink reconciliation under expected-version concurrency, without implying ADR-002/011 acceptance or production enablement.
+
+
+**Revision Note (v4.17):** Aligns CreateEventMatchCase DTO authority with the canonical `OPEN` initial state and Document 17 §6 transitions; aligns candidate interruption semantics through Document 17 §7; and explicitly marks EventIdentityOperation execution as outside the current first slice until dedicated commands, persistence contracts, concurrency/reconciliation tests, ADR-011 acceptance, and release gates are satisfied.
