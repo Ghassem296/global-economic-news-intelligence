@@ -258,7 +258,9 @@ class FakeArticleRevisionRepository:
         article_id: str,
         revision_fingerprint: str,
         schema_version: str,
+        uow: FakeUnitOfWork,
     ) -> ArticleRevisionRecord | None:
+        self.last_read_uow = uow
         item = self.current.get(article_id)
         if (
             item is not None
