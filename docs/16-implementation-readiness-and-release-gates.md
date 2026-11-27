@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.25  
+**Version:** 4.26  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `883ebeb985777d5e2edfd760271d5161ea88806c`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `fddedd1fe9a70631994fa900c49b45d2ff14ce1b`
 
 ---
 
@@ -113,7 +113,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 ### 5.1 Field-level DTO and command schemas
 
 Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.52 now requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope.
-For every actual provider request, Document 15 v4.6 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
+For every actual provider request, Document 15 v4.7 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
 Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5, 10.15.4 and 10.16.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, duplicate-pair canonicalization and score/decision calibration, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
@@ -148,11 +148,11 @@ Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevis
 
 A full review of the published `main` snapshot at `8b486f3` produced the findings below. None changes the readiness verdict; each must be resolved or explicitly deferred before the dependent capability is enabled.
 
-1. **Rights-evaluation time is caller-supplied.** See the hardening requirement in Document 15 v4.6 §4.3. Open; needs a trusted-clock port.
+1. **Rights-evaluation time:** Resolved in the reviewed application service: a validated Clock supplies one trusted evaluation instant for metadata and persistent-storage rights checks. The source-provided `observed_at` remains provenance only. A production Clock adapter and integration evidence remain open.
 2. **PoC migration runner is not production-grade.** The PoC splits migration files on `;` (unsafe for functions, `DO` blocks and quoted semicolons) and checks migration history before opening the transaction without an advisory lock, so two concurrent runners can both apply a migration. A production migration tool with locking is required by GENI-ADR-005.
 3. **PoC schema is a correctness experiment, not the production schema.** It has no Article current-revision pointer (required by `ArticleProjection.current_revision_id`), no foreign key from `decision_records.case_id`, no `CHECK` on decision outcome, and a redundant `articles_source_identity_idx` that duplicates the `UNIQUE (source_id, external_identity)` index. The recorded 26-test evidence is deliberately not altered by this review.
 4. **Supply-chain pinning is partly resolved.** All GitHub Actions are now pinned to commit SHAs (the tag is kept in a comment; Dependabot or a manual review must refresh them). The `postgres:18.7` service image is still pinned by tag only; pin it by digest.
-5. **Revision identity ignores some source fields.** The semantic fingerprint excludes `original_url`, `external_id` and `canonical_url` by design (Document 15 §4.3), so a change confined to those fields reuses the current revision and does not update the Article projection. Decide whether such changes need an explicit non-revision update path.
+5. **Revision identity and projection refresh:** Resolved at the application-service level. The semantic fingerprint continues to exclude `original_url`, `external_id` and `canonical_url`; those fields are treated as mutable source-routing attributes. An unchanged semantic fingerprint now triggers an optimistic-concurrency projection refresh without appending a new ArticleRevision. The source identity key is the tuple `(source_id, canonical_source_identifier, normalization_version)`. Concrete repository lookup semantics and PostgreSQL race/integration tests remain open.
 6. **Quality tooling scope.** Ruff now covers `scripts` and `tools`; mypy strict mode still covers only the application package. Extend it when those directories become product code.
 
 ## 6. Cross-document consistency rules
@@ -323,3 +323,6 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.24):** Records the 2026-11-27 full-repository review findings (§5.1), the widened Ruff scope, and the Document 15 v4.6 / Document 17 v2.4 alignment. The readiness verdict is unchanged.
 
 **Revision Note (v4.25):** Records that all GitHub Actions in the three workflows are pinned to commit SHAs; the PostgreSQL service image digest pin remains open (§5.1 item 4).
+
+
+**Revision Note (v4.26):** Refreshes the readiness review after resolving the two ArticleRevisionService findings: rights are checked against a trusted application Clock, and non-semantic source URL/external-ID changes refresh the current Article projection without creating a content revision. The production Clock/repository adapters, transaction race tests, PostgreSQL qualification, and all formal ADR gates remain open.
