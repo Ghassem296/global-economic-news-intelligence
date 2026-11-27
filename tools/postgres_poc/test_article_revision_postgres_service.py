@@ -13,9 +13,9 @@ from typing import Any
 
 import psycopg
 from article_revision_postgres_adapters import (
-    PostgreSQLAuthorizationVerifier,
     PostgreSQLArticleRepository,
     PostgreSQLArticleRevisionRepository,
+    PostgreSQLAuthorizationVerifier,
     PostgreSQLIdempotencyRepository,
     UUIDArticleIdGenerator,
 )
