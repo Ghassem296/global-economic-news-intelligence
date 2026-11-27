@@ -105,12 +105,16 @@ class AuthorizationVerifier(Protocol):
 
 
 class ContentRightsVerifier(Protocol):
-    """Revalidates all exact rights references for persistent content storage.
+    """Revalidates metadata and content rights for the exact source/content scope."""
 
-    Implementations must verify PERSISTENT_STORAGE, source identity, exact content
-    scope, ALLOWED status, effective time, expiry/revocation, and applicable policy.
-    A retrieval, temporary-processing, or analysis permission is insufficient.
-    """
+    def permits_metadata_retention(
+        self,
+        revision: PersistArticleRevision,
+        *,
+        at: datetime,
+    ) -> bool:
+        """Verify METADATA_ACCESS plus the applicable metadata-preservation rule."""
+        ...
 
     def permits_persistent_storage(
         self,
@@ -413,6 +417,15 @@ class ArticleRevisionService:
         revision: PersistArticleRevision,
         metadata: CommandMetadata,
     ) -> None:
+        if not self._content_rights.permits_metadata_retention(
+            revision,
+            at=revision.observed_at,
+        ):
+            raise self._error(
+                ErrorCode.RIGHTS_NOT_ALLOWED,
+                "Metadata access or preservation is not authorized for this source scope.",
+                metadata,
+            )
         if revision.content_availability not in {
             ContentAvailability.AVAILABLE,
             ContentAvailability.PARTIAL,
