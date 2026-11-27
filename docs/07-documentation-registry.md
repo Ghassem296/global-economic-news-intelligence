@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 7.9
+**Version:** 8.0
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -583,3 +583,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v7.9):** Synchronizes GENI-READY-016 v4.29 after correcting the isolated PostgreSQL PoC migration runner and adding POC-24 coverage for concurrent runners and complete SQL-file execution. The new PoC test result remains pending.
+
+
+**Revision Note (v8.0):** Clarifies the current status of the 2026-11-27 review findings: trusted-time and projection-refresh issues are resolved at application level; the isolated PoC migration runner is corrected but awaits POC-24 execution evidence; remaining schema, image-digest and quality-tooling findings stay open.
