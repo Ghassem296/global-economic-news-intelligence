@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 1.5  
+**Version:** 1.6  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -177,14 +177,14 @@ A recommendation/owner direction is not production authorization. Formal ADR acc
 ## 8. Consequences and Trade-Offs
 
 ### 8.1 Positive Consequences
-- Avoids premature commitment to a physical database.
-- Clarifies transactional and repository boundaries.
-- Makes migration and recovery testable.
+- Establishes PostgreSQL as the single target for persistence implementation and removes ambiguity about a parallel SQLite path.
+- Clarifies transactional and repository boundaries while keeping database-specific behavior inside infrastructure adapters.
+- Makes migration, concurrency, backup, restore, and recovery qualification explicit and testable.
 
 ### 8.2 Negative Consequences
-- Requires an explicit proof-of-concept before implementation can be finalized.
-- Some database behavior cannot be abstracted away.
-- Multiple test backends can increase CI effort.
+- PostgreSQL introduces database-service operations, access control, monitoring, backup, restore, upgrade, and maintenance responsibilities that are heavier than an embedded database.
+- Production readiness cannot be claimed until the PostgreSQL-specific PoC and formal ADR acceptance are complete.
+- Exact driver, query/ORM layer, migration tool, async strategy, and transaction/locking configuration remain open and must be selected from reproducible evidence.
 
 ### 8.3 Technical Trade-Offs
 The recommendation favors deliberate portability of logical contracts, not lowest-common-denominator SQL. Database-specific features may be used behind infrastructure boundaries when justified and tested. Switching engines later remains a planned migration project, not an automatic consequence of repository abstraction.
@@ -199,7 +199,7 @@ Database choice should not change user-facing domain semantics or the traceabili
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | False portability | Medium | High | Run repository contract tests and document engine-specific behavior. |
-| Premature SQLite selection | Medium | High | Prove expected concurrent write workload before selection. |
+| Unqualified PostgreSQL activation | Medium | Critical | Keep production activation blocked until the PostgreSQL PoC passes its correctness, workload, recovery, security, and operational gates and this ADR is formally accepted. |
 | Operationally premature PostgreSQL | Low to Medium | Medium | Compare operational capacity and deployment constraints. |
 | Migration drift | Medium | High | Version migrations, review schema changes, and test clean installs. |
 
@@ -251,7 +251,7 @@ The evidence package must include raw results and failed runs, exact versions/co
 - Execute every applicable correctness/failure case in PoC-001 before considering performance results.
 - Measure operation-class throughput/latency, lock contention, async behavior, resource use, migration, backup/restore, crash recovery, and operational effort under controlled and recorded configurations.
 - Retain raw outputs, failed runs, exact environment/configuration, commit SHA, and a reproducible analysis; do not report unrun tests as passing.
-- Document engine-specific constraints and migration implications before final selection.
+- Document PostgreSQL-specific constraints and migration implications; PostgreSQL is the owner-selected target, while qualification and production acceptance remain pending.
 - Keep the production database dependency, ORM/driver, migration tool, and async strategy unselected until the ADR is formally Accepted.
 
 ### 10.2 Migration or Compatibility Requirements
@@ -263,33 +263,33 @@ Existing data and implementation choices must be inspected before migration is d
 - GENI-ADR-002 — Deduplication and event matching require reliable unique constraints and transactions.
 
 ### 10.4 Implementation Sequence
-1. Define critical aggregates and transaction boundaries.
-2. Define repository and migration interfaces.
-3. Build a small persistence proof-of-concept for the expected workload.
-4. Measure concurrency, latency, locking, recovery, and operational effort.
-5. Record the selected engine and exact versions in a follow-up decision or approved revision.
-6. Run migrations and backup/restore tests in CI.
+1. Define critical aggregates, write sets, and transaction boundaries from the approved domain contracts.
+2. Approve the PostgreSQL workload profile and predeclare mandatory thresholds before measurement.
+3. Build an isolated, synthetic-data PostgreSQL proof-of-concept without enabling production use.
+4. Execute the correctness/failure matrix first; stop performance qualification if a hard correctness gate fails.
+5. Measure concurrency, latency, locking, async behavior, recovery, and operational effort against the approved workload profile.
+6. Retain reproducible artifacts and submit the results for formal ADR-005 acceptance; only then select and record exact production tooling and configuration.
 
 ### 10.5 Verification Requirements
-- Test all foreign keys, unique constraints, and transactional invariants against the selected engine.
-- Simulate concurrent ingestion, matching, and workflow updates.
-- Test crash recovery, backup consistency, and restore.
-- Run migration from an empty database and from the prior schema version.
-- Verify repository contract tests on every supported engine.
+- Test foreign keys, unique constraints, and transactional invariants against PostgreSQL.
+- Simulate concurrent aggregate updates and workflow ownership using synthetic fixtures.
+- Test crash recovery, backup consistency, restore, stale-worker fencing, and idempotent replay.
+- Run migrations from an empty PostgreSQL database and from every supported prior schema.
+- Verify repository contract behavior against the single supported PostgreSQL target; do not imply multi-engine support.
 
 Implementation verification remains deferred until this ADR is accepted and the corresponding capability is implemented.
 
 ## 11. Acceptance Criteria
 | ID | Acceptance Criterion | Verification Method |
 |---|---|---|
-| AC-01 | The initial database engine is selected using a documented workload and operational comparison. | Architecture decision review |
+| AC-01 | PostgreSQL is qualified against an approved workload profile and documented operational requirements before production activation. | Review of GENI-ADR-005 PoC-001 evidence |
 | AC-02 | Domain and application layers do not expose database-specific types. | Code review and dependency tests |
 | AC-03 | Critical state transitions have explicit transaction boundaries. | Repository integration tests |
 | AC-04 | Migrations are versioned and tested from empty and prior schemas. | CI migration tests |
 | AC-05 | Backup and restore procedures are tested. | Recovery exercise |
 | AC-06 | Portability claims are limited to behavior proven by repository contract tests. | Architecture review |
 | AC-07 | The PostgreSQL qualification PoC is executed with an approved workload profile, predeclared thresholds, raw reproducible evidence, and all mandatory correctness gates. | Review of GENI-ADR-005 PoC-001 artifacts |
-| AC-08 | The selected engine, exact versions, driver, migration/async strategy, transaction model, and operational procedures are explicitly recorded only after formal ADR acceptance. | Accepted ADR and synchronized implementation baseline |
+| AC-08 | The exact PostgreSQL version, driver, query/ORM layer, migration/async strategy, transaction model, and operational procedures are explicitly recorded only after formal ADR acceptance. | Accepted ADR and synchronized implementation baseline |
 
 Any quantitative threshold must be grounded in representative datasets, operational measurements, contractual requirements, or formal policy review.
 
@@ -334,5 +334,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | 1.3 | 2026-11-24 | Proposed | Added reproducible PoC protocol, predeclared workload/threshold requirements, correctness gates, and evidence-artifact criteria; database selection remains pending. | AI Architecture Assistant |
 | 1.4 | 2026-11-24 | Proposed | Added the stable GENI-ADR-005-POC-001 identifier to the ADR evidence reference. | AI Architecture Assistant |
 | 1.5 | 2026-11-26 | Proposed | Records the Project Owner-selected PostgreSQL target and PostgreSQL-specific qualification gate; production acceptance remains pending reproducible evidence. | AI Architecture Assistant |
+| 1.6 | 2026-11-27 | Proposed | Removes stale SQLite-selection language and aligns consequences, implementation sequence, verification, and acceptance criteria with the owner-selected PostgreSQL target and its remaining qualification gates. | AI Architecture Assistant |
 
 **End of ADR**
