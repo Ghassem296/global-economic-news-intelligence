@@ -847,7 +847,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             "SELECT version FROM schema_migrations ORDER BY version"
         )
         versions = [row[0] for row in await result.fetchall()]
-        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql"])
+        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql", "009_transaction_bound_authorization_and_rights.sql"])
         result = await self.connection.execute(
             """
             SELECT column_name FROM information_schema.columns
@@ -890,7 +890,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 (legacy_decision_id, legacy_case_id),
             )
             await connection.commit()
-            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql"))
+            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql", "009_transaction_bound_authorization_and_rights.sql"))
             result = await connection.execute(
                 """
                 SELECT external_identity, source_last_seen_at
@@ -1164,6 +1164,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                         "006_atomic_idempotency_claims.sql",
                         "007_external_outcome_reconciliation.sql",
                         "008_automatic_external_outcome_transitions.sql",
+                        "009_transaction_bound_authorization_and_rights.sql",
                     ],
                 )
         finally:
@@ -1773,6 +1774,7 @@ asyncio.run(main())
             "006_atomic_idempotency_claims.sql",
             "007_external_outcome_reconciliation.sql",
             "008_automatic_external_outcome_transitions.sql",
+            "009_transaction_bound_authorization_and_rights.sql",
         )
         before = await self.connection.execute(
             "SELECT version, applied_at FROM schema_migrations ORDER BY version"
