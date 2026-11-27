@@ -285,6 +285,7 @@ def build_service(
     authorization: FakeAuthorization | None = None,
     rights: FakeContentRights | None = None,
     idempotency: FakeIdempotency | None = None,
+    clock: object | None = None,
 ) -> tuple[ArticleRevisionService, dict[str, object]]:
     dependencies: dict[str, object] = {
         "articles": articles or FakeArticleRepository(),
@@ -294,7 +295,7 @@ def build_service(
         "idempotency": idempotency or FakeIdempotency(),
         "uow_factory": FakeUnitOfWorkFactory(),
         "ids": FakeArticleIds(),
-        "clock": FakeClock(),
+        "clock": clock or FakeClock(),
     }
     service = ArticleRevisionService(
         articles=dependencies["articles"],  # type: ignore[arg-type]
@@ -755,8 +756,7 @@ def test_naive_trusted_clock_fails_before_transaction_start() -> None:
         def now(self) -> datetime:
             return datetime(2026, 11, 27, 9, 0)
 
-    service, deps = build_service()
-    service._clock = NaiveClock()  # type: ignore[attr-defined]
+    service, deps = build_service(clock=NaiveClock())
 
     with pytest.raises(ValueError, match="timezone-aware"):
         service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
