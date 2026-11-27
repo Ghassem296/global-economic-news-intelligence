@@ -49,7 +49,9 @@ def _freeze_config(value: object, field_name: str = "collection_config") -> Froz
         frozen: dict[str, FrozenJson] = {}
         for key, item in value.items():
             require_text(key, f"{field_name} key")
-            normalized_key = "".join(character for character in key.casefold() if character.isalnum())
+            normalized_key = "".join(
+                character for character in key.casefold() if character.isalnum()
+            )
             if any(part in normalized_key for part in _SENSITIVE_KEY_PARTS):
                 raise ValueError(
                     f"{field_name} must not contain credentials or secret-like fields."
@@ -71,7 +73,7 @@ def _validate_source_url(value: object) -> None:
     if parsed.fragment:
         raise ValueError("base_url must not contain a fragment.")
     try:
-        parsed.port
+        _port = parsed.port
     except ValueError as exc:
         raise ValueError("base_url contains an invalid port.") from exc
     for key, _ in parse_qsl(parsed.query, keep_blank_values=True):
