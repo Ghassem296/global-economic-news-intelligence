@@ -633,7 +633,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     authentication_key, ciphertext, hashlib.sha256
                 ).hexdigest()
                 tag_file = encrypted_backup.with_suffix(".hmac")
-                tag_file.write_text(authentication_tag + "\\n", encoding="ascii")
+                tag_file.write_text(authentication_tag, encoding="ascii")
                 os.chmod(tag_file, 0o600)
                 self.assertEqual(stat.S_IMODE(encrypted_backup.stat().st_mode), 0o600)
                 self.assertEqual(stat.S_IMODE(tag_file.stat().st_mode), 0o600)
@@ -662,7 +662,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 verified_tag = hmac.new(
                     authentication_key, ciphertext, hashlib.sha256
                 ).hexdigest()
-                stored_tag = tag_file.read_text(encoding="ascii").strip()
+                stored_tag = tag_file.read_text(encoding="ascii")
                 self.assertTrue(hmac.compare_digest(stored_tag, verified_tag))
                 subprocess.run(
                     [
