@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.5  
+**Version:** 4.6  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-26
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `b869cf9cf77dd1305ea1ae71aedb900df8caaafc`
 
 ---
 
@@ -31,7 +31,7 @@ A published file, passing documentation check, or merged change is not by itself
 
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45810109462 (commit 05bbfd6b430711f54b03038fe47645786d55e9f0), which completed lockfile verification, locked dependency installation, Ruff, mypy, and pytest successfully.
+The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45939259661 for commit b869cf9cf77dd1305ea1ae71aedb900df8caaafc. It completed locked dependency installation, Ruff, mypy, and pytest; 211 tests passed.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
@@ -267,3 +267,5 @@ If new evidence changes readiness, update this document and the affected source-
 **End of Document**
 
 **Revision Note (v4.5):** Synchronizes current Document 15 references to v4.2 and preserves older version references only in historical revision notes. Aligns readiness evidence with the PostgreSQL target qualification gate.
+
+**Revision Note (v4.6):** Refreshes the inspected `main` baseline and Python 3.15 CI evidence to commit `b869cf9cf77dd1305ea1ae71aedb900df8caaafc` and successful Application CI run 45939259661 (211 tests passed). This verifies the code-quality baseline only; it does not establish product or production readiness.
