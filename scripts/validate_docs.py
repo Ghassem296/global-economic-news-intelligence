@@ -261,7 +261,8 @@ def validate_persistence_poc_alignment() -> None:
 
     if "**Status:** Proposed" not in adr or "**Decision Status:** Proposed" not in adr:
         fail("GENI-ADR-005 must remain Proposed until explicit Project Owner acceptance")
-    if "**Status:** Proposed" not in read_text(ADR_DIR / "GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md"):
+    adr_016 = read_text(ADR_DIR / "GENI-ADR-016-persistence-async-execution-idempotency-and-recovery.md")
+    if "**Status:** Proposed" not in adr_016:
         fail("The persistence PoC must not implicitly accept GENI-ADR-016")
 
     required_protocol = (
@@ -282,10 +283,26 @@ def validate_persistence_poc_alignment() -> None:
         "Workload-profile record template",
         "UNSET — Project Owner input required",
         "The workload profile must be approved before benchmark results are collected or examined.",
+        "Provisional PoC-only toolchain boundary",
+        "These are experimental candidates, not approved production selections.",
+        "dedicated PoC dependency group/environment",
+        "Production promotion requires completed evidence review and formal acceptance of GENI-ADR-005",
     )
     missing = [item for item in required_protocol if item.casefold() not in protocol.casefold()]
     if missing:
         fail(f"Persistence PoC protocol is incomplete: {missing}")
+
+    required_adr_boundary = (
+        "PoC-only",
+        "not approve those tools for the product",
+        "only an Accepted ADR may promote a candidate stack",
+    )
+    missing = [item for item in required_adr_boundary if item.casefold() not in adr.casefold()]
+    if missing:
+        fail(f"GENI-ADR-005 PoC/production boundary is incomplete: {missing}")
+
+    if "does not accept ADR-016" not in adr_016:
+        fail("GENI-ADR-016 must remain independently gated from the ADR-005 PoC")
 
     for name, document in (
         ("GENI-ADR-005", adr),
