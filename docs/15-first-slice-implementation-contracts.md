@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.9  
+**Version:** 4.10  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -192,7 +192,7 @@ The executable application contract is `ArticleRevisionService.execute(PersistAr
 - `IdempotencyRepository`, which claims and completes the command key in the same UnitOfWork;
 - `ArticleIdGenerator`, which supplies a server-owned Article ID for a new source identity.
 
-`ArticleProjection` is a typed current-state projection containing the Article ID, source ID and source-scoped identity, original/canonical URL, external ID, current title and permitted summary/author/language/publication metadata, current content-availability/reference/hash/normalization fields, current revision ID, aggregate version, and creation/update timestamps. It does not introduce a second independently editable content history. The immutable ArticleRevision remains authoritative for each historical snapshot. Source identity is the tuple `(source_id, canonical_source_identifier, normalization_version)`; `canonical_url` is a mutable secondary routing hint, not part of identity equality.
+`ArticleProjection` is a typed current-state projection containing the Article ID, source ID and source-scoped identity, original/canonical URL, external ID, current title and permitted summary/author/language/publication metadata, current content-availability/reference/hash/normalization fields, current revision ID, aggregate version, and creation/update timestamps. It does not introduce a second independently editable content history. The immutable ArticleRevision remains authoritative for each historical snapshot. Source identity is the tuple `(source_id, canonical_source_identifier, normalization_version)`; `canonical_url` is a mutable secondary routing hint, not part of identity equality. The authorization resource reference for this tuple must use a versioned, unambiguous structured serialization with fixed field order; delimiter-concatenated identifiers are prohibited because tuple components may contain the delimiter.
 
 #### Authorization and content-rights order
 
@@ -1225,7 +1225,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.9  
+**Version:** 4.10  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-27
 
@@ -1272,3 +1272,5 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.9):** Tightens SourceRecord's structural URL validation to reject whitespace, control characters and backslashes before URL parsing, with unit-test coverage. This is input hygiene only; DNS resolution, redirect validation, SSRF prevention and egress authorization remain separate mandatory controls.
+
+**Revision Note (v4.10):** Requires a versioned, unambiguous structured serialization for source-scoped authorization resource references, preventing delimiter-collision ambiguity when source identity components contain punctuation. The ArticleRevisionService uses a fixed-order JSON tuple and includes regression coverage; this does not authorize any source collection or production persistence.
