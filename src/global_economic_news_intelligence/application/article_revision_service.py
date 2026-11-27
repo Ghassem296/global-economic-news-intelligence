@@ -369,6 +369,15 @@ class ArticleRevisionService:
                 "Persisted Article is missing its aggregate version.",
                 metadata,
             )
+        if (
+            command.article_id is not None
+            and metadata.expected_aggregate_version != article.aggregate_version
+        ):
+            raise self._error(
+                ErrorCode.STALE_VERSION,
+                "Article version is stale.",
+                metadata,
+            )
         current = self._revisions.get_current_for_article(article.article_id)
         if current is None or current.revision_id != article.current_revision_id:
             raise self._error(
@@ -418,7 +427,7 @@ class ArticleRevisionService:
         previous: ArticleProjection | None,
         now: datetime,
     ) -> ArticleProjection:
-        created_at = previous.created_at if previous is not None else revision.observed_at
+        created_at = previous.created_at if previous is not None else now
         return ArticleProjection(
             article_id=article_id,
             source_id=revision.source_id,
