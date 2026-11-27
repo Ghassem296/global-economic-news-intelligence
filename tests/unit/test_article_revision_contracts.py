@@ -12,7 +12,6 @@ from global_economic_news_intelligence.domain.article_revision_contracts import 
     SourceArticleIdentity,
 )
 
-
 NOW = datetime(2026, 11, 26, 10, 0, tzinfo=UTC)
 CONTENT_HASH = "a" * 64
 

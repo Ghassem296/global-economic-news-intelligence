@@ -5,17 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from global_economic_news_intelligence.domain.validation import (
+    require_aware_instant,
+    require_text,
+)
 from global_economic_news_intelligence.domain.workflows.lifecycle import ProcessingRunStatus
-
-
-def _required_text(value: object, field_name: str) -> None:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field_name} must be a non-empty string.")
-
-
-def _aware_instant(value: object, field_name: str) -> None:
-    if not isinstance(value, datetime) or value.utcoffset() is None:
-        raise ValueError(f"{field_name} must be a timezone-aware datetime.")
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,7 +30,7 @@ class CreateProcessingRun:
             "idempotency_key",
             "input_fingerprint",
         ):
-            _required_text(getattr(self, field_name), field_name)
+            require_text(getattr(self, field_name), field_name)
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,16 +51,16 @@ class TransitionProcessingRun:
             "expected_version",
             "actor_reference",
         ):
-            _required_text(getattr(self, field_name), field_name)
+            require_text(getattr(self, field_name), field_name)
         if not isinstance(self.new_status, ProcessingRunStatus):
             raise ValueError("new_status must be a ProcessingRunStatus.")
-        _aware_instant(self.occurred_at, "occurred_at")
+        require_aware_instant(self.occurred_at, "occurred_at")
         if self.fencing_token is not None and (
             isinstance(self.fencing_token, bool) or not isinstance(self.fencing_token, int)
         ):
             raise ValueError("fencing_token must be an integer when supplied.")
         if self.reason_or_error_category is not None:
-            _required_text(self.reason_or_error_category, "reason_or_error_category")
+            require_text(self.reason_or_error_category, "reason_or_error_category")
         if (
             self.new_status in {ProcessingRunStatus.FAILED, ProcessingRunStatus.CANCELLED}
             and self.reason_or_error_category is None

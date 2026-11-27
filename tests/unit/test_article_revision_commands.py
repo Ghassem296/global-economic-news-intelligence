@@ -15,7 +15,6 @@ from global_economic_news_intelligence.domain.article_revision_contracts import 
 )
 from global_economic_news_intelligence.domain.contracts import CommandMetadata
 
-
 NOW = datetime(2026, 11, 26, 10, 0, tzinfo=UTC)
 
 

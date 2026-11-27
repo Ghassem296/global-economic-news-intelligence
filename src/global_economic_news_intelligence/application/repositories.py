@@ -15,7 +15,6 @@ from global_economic_news_intelligence.domain.article_revision_contracts import 
 )
 from global_economic_news_intelligence.domain.contracts import UnitOfWork
 
-
 ArticleT = TypeVar("ArticleT")
 
 

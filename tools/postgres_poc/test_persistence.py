@@ -16,7 +16,13 @@ from typing import Any
 
 import psycopg
 from psycopg import sql
-from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege, QueryCanceled, UndefinedTable, UniqueViolation
+from psycopg.errors import (
+    ForeignKeyViolation,
+    InsufficientPrivilege,
+    QueryCanceled,
+    UndefinedTable,
+    UniqueViolation,
+)
 
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
 POSTGRES_CONTAINER_ID = os.environ.get("GENI_POC_POSTGRES_CONTAINER_ID", "")

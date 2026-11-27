@@ -6,31 +6,17 @@ remain outside these transport-neutral domain payloads.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime
 from decimal import Decimal
-import math
 from types import MappingProxyType
 
+from global_economic_news_intelligence.domain.validation import (
+    require_optional_finite_decimal,
+    require_text,
+)
 from global_economic_news_intelligence.domain.workflows.lifecycle import EventMatchOutcome
-
-
-def _required_text(value: object, field_name: str) -> None:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field_name} must be a non-empty string.")
-
-
-def _optional_score(value: object, field_name: str) -> None:
-    if value is None:
-        return
-    if not isinstance(value, Decimal) or not value.is_finite():
-        raise ValueError(f"{field_name} must be a finite Decimal or None.")
-
-
-def _aware_instant(value: object, field_name: str) -> None:
-    if not isinstance(value, datetime) or value.utcoffset() is None:
-        raise ValueError(f"{field_name} must be a timezone-aware datetime.")
 
 
 def _freeze_json(value: object, field_name: str) -> object:
@@ -43,7 +29,7 @@ def _freeze_json(value: object, field_name: str) -> object:
     if isinstance(value, Mapping):
         frozen: dict[str, object] = {}
         for key, item in value.items():
-            _required_text(key, f"{field_name} key")
+            require_text(key, f"{field_name} key")
             frozen[key] = _freeze_json(item, field_name)
         return MappingProxyType(frozen)
     if isinstance(value, (list, tuple)):
@@ -71,7 +57,7 @@ class CreateEventMatchCase:
 
     def __post_init__(self) -> None:
         for field_name in ("article_revision_id", "development_key", "scope_description"):
-            _required_text(getattr(self, field_name), field_name)
+            require_text(getattr(self, field_name), field_name)
         object.__setattr__(self, "metadata", _metadata(self.metadata))
 
 
@@ -101,7 +87,7 @@ class EvaluateEventMatchCandidate:
             "candidate_input_fingerprint",
             "evaluation_reason",
         ):
-            _required_text(getattr(self, field_name), field_name)
+            require_text(getattr(self, field_name), field_name)
         for field_name in (
             "lexical_similarity",
             "semantic_similarity",
@@ -110,7 +96,7 @@ class EvaluateEventMatchCandidate:
             "geographic_compatibility_score",
             "overall_score",
         ):
-            _optional_score(getattr(self, field_name), field_name)
+            require_optional_finite_decimal(getattr(self, field_name), field_name)
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,15 +120,15 @@ class AppendEventMatchDecision:
             "decision_rationale",
             "matching_policy_version",
         ):
-            _required_text(getattr(self, field_name), field_name)
+            require_text(getattr(self, field_name), field_name)
         if not isinstance(self.outcome, EventMatchOutcome):
             raise ValueError("outcome must be an EventMatchOutcome.")
         if self.outcome is EventMatchOutcome.MATCH:
-            _required_text(self.selected_candidate_id, "selected_candidate_id")
+            require_text(self.selected_candidate_id, "selected_candidate_id")
             if self.proposed_event_reference is not None:
                 raise ValueError("MATCH cannot include proposed_event_reference.")
         elif self.outcome is EventMatchOutcome.NEW_EVENT_CANDIDATE:
-            _required_text(self.proposed_event_reference, "proposed_event_reference")
+            require_text(self.proposed_event_reference, "proposed_event_reference")
             if self.selected_candidate_id is not None:
                 raise ValueError("NEW_EVENT_CANDIDATE cannot select a candidate.")
         elif (
@@ -153,8 +139,8 @@ class AppendEventMatchDecision:
                 "Non-MATCH outcomes cannot select a candidate or propose an Event."
             )
         if self.supersedes_decision_id is not None:
-            _required_text(self.supersedes_decision_id, "supersedes_decision_id")
-        _optional_score(self.decision_confidence, "decision_confidence")
+            require_text(self.supersedes_decision_id, "supersedes_decision_id")
+        require_optional_finite_decimal(self.decision_confidence, "decision_confidence")
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,8 +160,8 @@ class ActivateArticleEventLink:
             "expected_case_version",
             "relationship_type",
         ):
-            _required_text(getattr(self, field_name), field_name)
-        _optional_score(self.association_confidence, "association_confidence")
+            require_text(getattr(self, field_name), field_name)
+        require_optional_finite_decimal(self.association_confidence, "association_confidence")
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,4 +180,4 @@ class DeactivateArticleEventLink:
             "successor_decision_id",
             "expected_case_version",
         ):
-            _required_text(getattr(self, field_name), field_name)
+            require_text(getattr(self, field_name), field_name)

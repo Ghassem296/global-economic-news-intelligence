@@ -4,7 +4,6 @@ import ast
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 DOMAIN_ROOT = ROOT / "src/global_economic_news_intelligence/domain"
 DOMAIN_PACKAGE = "global_economic_news_intelligence.domain"

@@ -6,7 +6,6 @@ import json
 import logging
 from datetime import UTC, datetime
 
-
 _ALLOWED_FIELDS = (
     "event_name",
     "correlation_id",

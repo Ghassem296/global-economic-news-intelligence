@@ -10,7 +10,6 @@ from global_economic_news_intelligence.domain.processing_contracts import (
 )
 from global_economic_news_intelligence.domain.workflows.lifecycle import ProcessingRunStatus
 
-
 NOW = datetime(2026, 11, 26, 10, 0, tzinfo=UTC)
 
 

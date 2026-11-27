@@ -15,6 +15,12 @@ from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
 
+from global_economic_news_intelligence.domain.validation import (
+    require_aware_instant,
+    require_optional_finite_decimal,
+    require_text,
+)
+
 type JsonScalar = str | int | float | bool | None
 type FrozenJson = JsonScalar | tuple[FrozenJson, ...] | Mapping[str, FrozenJson]
 
@@ -27,23 +33,6 @@ class DuplicateDecisionOutcome(StrEnum):
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
 
 
-def _required_text(value: object, field_name: str) -> None:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{field_name} must be a non-empty string.")
-
-
-def _optional_decimal(value: object, field_name: str) -> None:
-    if value is None:
-        return
-    if not isinstance(value, Decimal) or not value.is_finite():
-        raise ValueError(f"{field_name} must be a finite Decimal or None.")
-
-
-def _trusted_instant(value: object, field_name: str) -> None:
-    if not isinstance(value, datetime) or value.utcoffset() is None:
-        raise ValueError(f"{field_name} must be a timezone-aware datetime.")
-
-
 def _freeze_json(value: object, field_name: str) -> FrozenJson:
     if value is None or isinstance(value, (str, bool, int)):
         return value
@@ -54,7 +43,7 @@ def _freeze_json(value: object, field_name: str) -> FrozenJson:
     if isinstance(value, Mapping):
         frozen: dict[str, FrozenJson] = {}
         for key, item in value.items():
-            _required_text(key, f"{field_name} key")
+            require_text(key, f"{field_name} key")
             frozen[key] = _freeze_json(item, field_name)
         return MappingProxyType(frozen)
     if isinstance(value, (list, tuple)):
@@ -104,11 +93,11 @@ class AppendDuplicateCandidate:
             "actor_reference",
             "authorization_reference",
         ):
-            _required_text(getattr(self, field_name), field_name)
+            require_text(getattr(self, field_name), field_name)
         if self.article_revision_id_a == self.article_revision_id_b:
             raise ValueError("A revision cannot be compared with itself.")
-        _optional_decimal(self.similarity_score, "similarity_score")
-        _trusted_instant(self.evaluated_at, "evaluated_at")
+        require_optional_finite_decimal(self.similarity_score, "similarity_score")
+        require_aware_instant(self.evaluated_at, "evaluated_at")
         object.__setattr__(self, "metadata", _freeze_metadata(self.metadata))
 
 
@@ -137,11 +126,11 @@ class AppendDuplicateDecision:
             "actor_reference",
             "authorization_reference",
         ):
-            _required_text(getattr(self, field_name), field_name)
+            require_text(getattr(self, field_name), field_name)
         if not isinstance(self.outcome, DuplicateDecisionOutcome):
             raise ValueError("outcome must be a DuplicateDecisionOutcome.")
         if self.supersedes_decision_id is not None:
-            _required_text(self.supersedes_decision_id, "supersedes_decision_id")
-        _optional_decimal(self.decision_confidence, "decision_confidence")
-        _trusted_instant(self.decided_at, "decided_at")
+            require_text(self.supersedes_decision_id, "supersedes_decision_id")
+        require_optional_finite_decimal(self.decision_confidence, "decision_confidence")
+        require_aware_instant(self.decided_at, "decided_at")
         object.__setattr__(self, "metadata", _freeze_metadata(self.metadata))

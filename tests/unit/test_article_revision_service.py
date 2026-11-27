@@ -26,7 +26,6 @@ from global_economic_news_intelligence.domain.contracts import (
 )
 from global_economic_news_intelligence.exceptions import ErrorCode, GeniError
 
-
 NOW = datetime(2026, 11, 27, 8, 0, tzinfo=UTC)
 IDENTITY = SourceArticleIdentity("publisher:123", "source-id-v1")
 
@@ -592,3 +591,68 @@ def test_revision_without_rights_assessment_references_is_denied() -> None:
     factory = deps["uow_factory"]
     assert isinstance(factory, FakeUnitOfWorkFactory)
     assert factory.items == []
+
+
+def test_idempotency_key_reuse_with_changed_canonical_url_is_rejected() -> None:
+    service, _ = build_service()
+    first = make_revision()
+    second = replace(
+        first,
+        source_article_identity=SourceArticleIdentity(
+            IDENTITY.canonical_source_identifier,
+            IDENTITY.normalization_version,
+            canonical_url="https://example.com/canonical/123",
+        ),
+    )
+    service.execute(PersistArticleRevisionCommand(make_metadata(), first))
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(PersistArticleRevisionCommand(make_metadata(), second))
+
+    assert exc.value.code is ErrorCode.IDEMPOTENCY_KEY_REUSE_CONFLICT
+
+
+def test_interrupt_during_append_rolls_back_the_unit_of_work() -> None:
+    class InterruptedRevisions(FakeArticleRevisionRepository):
+        def append_revision(
+            self,
+            article_id: str,
+            revision: PersistArticleRevision,
+            expected_article_version: str | None,
+            uow: FakeUnitOfWork,
+        ) -> ArticleRevisionRecord:
+            raise KeyboardInterrupt
+
+    service, deps = build_service(revisions=InterruptedRevisions())
+
+    with pytest.raises(KeyboardInterrupt):
+        service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items[0].rolled_back
+    assert not factory.items[0].committed
+
+
+def test_addressed_article_without_aggregate_version_is_an_invariant_violation() -> None:
+    articles = FakeArticleRepository()
+    revisions = FakeArticleRevisionRepository()
+    service, _ = build_service(articles=articles, revisions=revisions)
+    created = service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
+    articles.items[created.article_id] = replace(
+        articles.items[created.article_id], aggregate_version=None
+    )
+    changed = make_revision("Central bank cuts rates")
+    metadata = replace(
+        make_metadata(created.article_version),
+        command_id="command-2",
+        idempotency_key="request-2",
+    )
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(
+            PersistArticleRevisionCommand(metadata, changed, article_id=created.article_id)
+        )
+
+    assert exc.value.code is ErrorCode.INVARIANT_VIOLATION
+    assert revisions.append_calls == 1

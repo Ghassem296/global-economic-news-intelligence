@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import ast
 import re
-import sys
 import subprocess
+import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -612,7 +612,6 @@ def validate_document_footer_metadata() -> None:
 
 def validate_adr_history_versions() -> None:
     """The latest ADR decision-history row must match current header/footer metadata."""
-    tick = chr(96)
     for path in sorted(ADR_DIR.glob("GENI-ADR-*.md")):
         text = markdown_content_without_fences(read_text(path))
         adr_id_match = re.search(

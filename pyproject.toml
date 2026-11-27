@@ -26,12 +26,23 @@ where = ["src"]
 
 [tool.ruff]
 target-version = "py315"
-include = ["src/**/*.py", "tests/unit/**/*.py"]
+include = [
+  "src/**/*.py",
+  "tests/**/*.py",
+  "scripts/**/*.py",
+  "tools/**/*.py",
+]
 line-length = 100
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "UP", "B", "SIM"]
+select = ["E", "F", "UP", "B", "SIM", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# Documentation validator and PoC evidence tools embed long literal strings.
+"scripts/**/*.py" = ["E501"]
+"tools/**/*.py" = ["E501"]
+"tests/test_validate_docs.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.15"

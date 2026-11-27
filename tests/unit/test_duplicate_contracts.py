@@ -11,7 +11,6 @@ from global_economic_news_intelligence.domain.duplicate_contracts import (
     DuplicateDecisionOutcome,
 )
 
-
 NOW = datetime(2026, 11, 26, 10, 0, tzinfo=UTC)
 
 

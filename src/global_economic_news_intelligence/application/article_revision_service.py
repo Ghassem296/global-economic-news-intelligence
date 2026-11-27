@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
@@ -206,30 +206,22 @@ class ArticleRevisionService:
                 uow.rollback()
                 return replay
 
-            article = self._resolve_article(command)
-            if article is not None:
-                current = self._revisions.get_current_for_article(article.article_id)
-                if current is None or current.revision_id != article.current_revision_id:
-                    raise self._error(
-                        ErrorCode.INVARIANT_VIOLATION,
-                        "Article current revision pointer is inconsistent.",
-                        metadata,
-                    )
-                if (
-                    current.revision_fingerprint == revision.revision_fingerprint
-                    and current.revision_fingerprint_schema_version
-                    == ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION
-                ):
-                    result = self._result(article, current, created=False)
-                    self._idempotency.complete(
-                        scope=metadata.idempotency_scope,
-                        key=metadata.idempotency_key,
-                        request_fingerprint=request_fingerprint,
-                        result=result,
-                        uow=uow,
-                    )
-                    uow.commit()
-                    return result
+            article, current = self._resolve_article(command)
+            if (
+                article is not None
+                and current is not None
+                and self._matches_current(current, revision)
+            ):
+                result = self._result(article, current, created=False)
+                self._idempotency.complete(
+                    scope=metadata.idempotency_scope,
+                    key=metadata.idempotency_key,
+                    request_fingerprint=request_fingerprint,
+                    result=result,
+                    uow=uow,
+                )
+                uow.commit()
+                return result
 
             article_id = (
                 article.article_id if article is not None else self._article_ids.new_article_id()
@@ -292,67 +284,78 @@ class ArticleRevisionService:
             )
             uow.commit()
             return result
-        except Exception:
+        except BaseException:
+            # BaseException: a cancellation or interrupt must not leave the transaction open.
             uow.rollback()
             raise
 
     def _resolve_article(
         self,
         command: PersistArticleRevisionCommand,
-    ) -> ArticleProjection | None:
+    ) -> tuple[ArticleProjection | None, ArticleRevisionRecord | None]:
+        """Resolve the target Article and its verified current revision, if any.
+
+        An Article addressed only by source identity may be reused when the supplied
+        revision is already current; otherwise the caller must address it by ID and
+        expected version so that a silent overwrite is impossible.
+        """
+        metadata = command.metadata
         if command.article_id is not None:
             article = self._articles.get_by_id(command.article_id)
             if article is None:
-                raise self._error(
-                    ErrorCode.NOT_FOUND,
-                    "Article was not found.",
-                    command.metadata,
-                )
+                raise self._error(ErrorCode.NOT_FOUND, "Article was not found.", metadata)
             if not self._same_identity(article, command.revision):
                 raise self._error(
                     ErrorCode.CONFLICT,
                     "Article source identity does not match the command.",
-                    command.metadata,
+                    metadata,
                 )
-            return article
-
-        article = self._articles.find_by_source_identity(
-            command.revision.source_id,
-            command.revision.source_article_identity,
-        )
-        if article is not None and not self._same_identity(article, command.revision):
-            raise self._error(
-                ErrorCode.CONFLICT,
-                "Source identity resolved to a conflicting Article.",
-                command.metadata,
+        else:
+            article = self._articles.find_by_source_identity(
+                command.revision.source_id,
+                command.revision.source_article_identity,
             )
-        if article is not None and article.aggregate_version is None:
+            if article is None:
+                return None, None
+            if not self._same_identity(article, command.revision):
+                raise self._error(
+                    ErrorCode.CONFLICT,
+                    "Source identity resolved to a conflicting Article.",
+                    metadata,
+                )
+
+        if article.aggregate_version is None:
             raise self._error(
                 ErrorCode.INVARIANT_VIOLATION,
                 "Persisted Article is missing its aggregate version.",
-                command.metadata,
+                metadata,
             )
-        if article is not None and command.article_id is None:
-            current = self._revisions.get_current_for_article(article.article_id)
-            if current is None or current.revision_id != article.current_revision_id:
-                raise self._error(
-                    ErrorCode.INVARIANT_VIOLATION,
-                    "Article current revision pointer is inconsistent.",
-                    command.metadata,
-                )
-            if (
-                current.revision_fingerprint
-                != command.revision.revision_fingerprint
-                or current.revision_fingerprint_schema_version
-                != ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION
-            ):
-                raise self._error(
-                    ErrorCode.CONFLICT,
-                    "Source identity already exists; update requires an Article ID "
-                    "and expected version.",
-                    command.metadata,
-                )
-        return article
+        current = self._revisions.get_current_for_article(article.article_id)
+        if current is None or current.revision_id != article.current_revision_id:
+            raise self._error(
+                ErrorCode.INVARIANT_VIOLATION,
+                "Article current revision pointer is inconsistent.",
+                metadata,
+            )
+        if command.article_id is None and not self._matches_current(current, command.revision):
+            raise self._error(
+                ErrorCode.CONFLICT,
+                "Source identity already exists; update requires an Article ID "
+                "and expected version.",
+                metadata,
+            )
+        return article, current
+
+    @staticmethod
+    def _matches_current(
+        current: ArticleRevisionRecord,
+        revision: PersistArticleRevision,
+    ) -> bool:
+        return (
+            current.revision_fingerprint == revision.revision_fingerprint
+            and current.revision_fingerprint_schema_version
+            == ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION
+        )
 
     @staticmethod
     def _same_identity(
@@ -473,6 +476,7 @@ class ArticleRevisionService:
             "source_identity_normalization_version": (
                 revision.source_article_identity.normalization_version
             ),
+            "canonical_url": revision.source_article_identity.canonical_url,
             "original_url": revision.original_url,
             "external_id": revision.external_id,
             "revision_fingerprint": revision.revision_fingerprint,

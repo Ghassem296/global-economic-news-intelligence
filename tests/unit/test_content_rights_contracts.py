@@ -15,7 +15,6 @@ from global_economic_news_intelligence.domain.content_rights_contracts import (
     is_rights_assessment_effective,
 )
 
-
 NOW = datetime(2026, 11, 26, 12, 0, tzinfo=UTC)
 SCOPE = "a" * 64
 
