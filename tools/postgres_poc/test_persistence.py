@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import hmac
 import os
 import secrets
@@ -2347,6 +2348,106 @@ asyncio.run(main())
                 """
             )
             self.assertEqual(await result.fetchone(), ("REVOKED", 2))
+
+    async def test_poc_39_article_revision_payload_schema_preserves_typed_json(self) -> None:
+        article_id = uuid.uuid4()
+        revision_id = uuid.uuid4()
+        payload = {
+            "source_id": self.source_id,
+            "source_article_identity": {
+                "canonical_source_identifier": "publisher:payload-1",
+                "normalization_version": "identity-v1",
+                "canonical_url": "https://example.test/article/1",
+            },
+            "original_url": "https://example.test/original/1",
+            "external_id": "external-1",
+            "normalized_title": "Synthetic economic report",
+            "content_availability": "metadata-only",
+            "content_reference": None,
+            "content_hash": None,
+            "content_normalization_version": None,
+            "summary": "Synthetic summary",
+            "author": "Test Author",
+            "language": "en",
+            "published_at": "2026-11-27T12:00:00.000Z",
+            "observed_at": "2026-11-27T12:01:00.000Z",
+            "change_reason": "INITIAL_INGESTION",
+            "rights_assessment_references": ["rights-test-1"],
+            "metadata": {"publisher": "Example", "tags": ["economics", "policy"]},
+        }
+        async with self.connection.transaction():
+            await self.connection.execute(
+                """
+                INSERT INTO articles
+                    (article_id, source_id, external_identity,
+                     canonical_source_identifier, identity_normalization_version,
+                     canonical_url, original_url, title, content_availability,
+                     article_metadata)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                """,
+                (
+                    article_id,
+                    self.source_id,
+                    "publisher:payload-1",
+                    "publisher:payload-1",
+                    "identity-v1",
+                    "https://example.test/article/1",
+                    "https://example.test/original/1",
+                    "Synthetic economic report",
+                    "metadata-only",
+                    json.dumps(payload["metadata"]),
+                ),
+            )
+            await self.connection.execute(
+                """
+                INSERT INTO article_revisions
+                    (revision_id, article_id, revision_number, fingerprint,
+                     revision_payload, revision_fingerprint_schema_version)
+                VALUES (%s, %s, 1, %s, %s::jsonb, %s)
+                """,
+                (
+                    revision_id,
+                    article_id,
+                    "a" * 64,
+                    json.dumps(payload),
+                    "article-revision-fingerprint-v1",
+                ),
+            )
+            await self.connection.execute(
+                "UPDATE articles SET current_revision_id = %s WHERE article_id = %s",
+                (revision_id, article_id),
+            )
+
+        stored = await self.connection.execute(
+            """
+            SELECT revision_payload, revision_fingerprint_schema_version
+            FROM article_revisions WHERE revision_id = %s
+            """,
+            (revision_id,),
+        )
+        stored_payload, stored_schema = await stored.fetchone()
+        self.assertEqual(stored_payload, payload)
+        self.assertEqual(stored_schema, "article-revision-fingerprint-v1")
+
+        identity_conflict = await self.connection.execute(
+            """
+            INSERT INTO articles
+                (article_id, source_id, external_identity,
+                 canonical_source_identifier, identity_normalization_version)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (source_id, canonical_source_identifier,
+                         identity_normalization_version) DO NOTHING
+            RETURNING article_id
+            """,
+            (
+                uuid.uuid4(),
+                self.source_id,
+                "publisher:payload-1",
+                "publisher:payload-1",
+                "identity-v1",
+            ),
+        )
+        self.assertIsNone(await identity_conflict.fetchone())
 
 if __name__ == "__main__":
     unittest.main()
