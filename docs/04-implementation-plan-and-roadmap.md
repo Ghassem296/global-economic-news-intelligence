@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.40
+**Version:** 1.41
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-27
 **Project:** Global Economic News Intelligence  
@@ -919,10 +919,14 @@ This is the core product capability.
 10. Implement ReviewService routing and successor-decision handling for ambiguous or corrected cases.
 11. Implement the canonical EventLifecyclePolicy transition matrix, guard validation, and append-only EventHistory linkage.
 12. Implement EventRelationship using the canonical eight-type vocabulary and its direction/cycle rules.
-13. Implement EventIdentityOperation and EventIdentityOperationHistory persistence with actor/authorization, explicit core-effect state, status transitions, idempotency, expected input versions, ordered input/output links, and exact EventHistory operation references.
-14. Implement deterministic historical identity resolution returning CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED; never choose an arbitrary split successor.
-15. Keep automated merge/split execution disabled while GENI-ADR-011 is Proposed. After acceptance, enable it only when operation-state/history transitions, expected-version concurrency checks, idempotent recovery, UNKNOWN-effect reconciliation, and successor ArticleEventLink reconciliation have passing tests.
-16. Implement event matching evaluation datasets.
+13. Complete the gated EventIdentityOperation application contract in GENI-IMPL-015 §10.17 and obtain formal acceptance of GENI-ADR-011; GENI-ADR-016 is required for durable idempotency, leases, fencing and recovery, and GENI-ADR-014 is required for any human-review handoff.
+14. Implement EventIdentityOperation aggregate persistence for ordered inputs/outputs, type-validated per-subject allocations, immutable operation history, and atomic Event/EventHistory/core-effect writes through one UnitOfWork. Preserve EventRepository, EventHistoryRepository and EventIdentityOperationRepository ownership.
+15. Implement prepare/apply/reconcile/finalize orchestration. Represent every independently recoverable downstream unit as a typed ProcessingStep in the operation's ProcessingRun, with immutable ProcessingStepAttempt records, step-scoped ExecutionLease/fencing, deterministic input fingerprints and idempotent replay; in-memory queues are not durable recovery.
+16. Reconcile affected EventMatchCase records only through successor EventMatchDecision records and EventService; preserve unresolved cases and create an accountable ReviewRecord when policy requires human review. Reconcile affected immutable Analyses through explicit no-change assessment or successor Analysis creation.
+17. Discover every affected immutable Report version through both primary Event references and ReportEventLink; persist one idempotent EventIdentityOperationReportImpact plus append-only history per exact report version. ReportVersionService owns assessment and accountable remediation; publication replacement/withdrawal and recipient correction remain separate authorized workflows.
+18. Implement deterministic historical identity resolution returning CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED; return the complete successor set after split and never choose an arbitrary successor.
+19. Add PostgreSQL concurrency, failure-injection, replay, fencing, uncertain-commit and downstream-reconciliation tests for the complete workflow.
+20. Implement event matching evaluation datasets.
 
 ### Event Identity Policy
 
@@ -972,15 +976,16 @@ Event IDs must remain stable. Merge/split disposition is identity state, not Eve
 
 Merge and split operations must preserve historical references and record:
 
-- Source and resulting event IDs.
-- Reason.
-- Method.
-- Confidence or assessment.
-- Affected article associations.
-- Decision time.
-- Policy version.
+- Ordered source and resulting event IDs, including the selected merge survivor.
+- Expected EventHistory versions and the exact identity-policy version.
+- Reason, decision method, supporting evidence, actor and immutable authorization reference.
+- Explicit allocation for every affected Article association, Claim, Evidence and MarketObservation; unresolved allocations remain explicitly unassigned.
+- Core identity-effect state separately from downstream reconciliation status.
+- Append-only EventIdentityOperationHistory and EventHistory records.
+- Durable ProcessingStep work items, immutable attempts, lease/fencing evidence and idempotency provenance.
+- Every affected immutable Report version discovered through both primary Event references and ReportEventLink, with one EventIdentityOperationReportImpact and append-only impact history per report version.
 
-Historical event records must not be silently deleted or rewritten.
+Historical event records, ArticleEventLink records, report versions and their provenance, publication decisions/records/attempts, and delivery records must not be silently deleted, rewritten, repointed, or automatically replaced/withdrawn.
 
 ### Deliverables
 
@@ -990,7 +995,7 @@ Historical event records must not be silently deleted or rewritten.
 - Human review and association correction workflow.
 - Event creation and updates.
 - Event history and relationships.
-- Controlled event merge and split operations, enabled only after GENI-ADR-011 acceptance and the operation-recovery/reconciliation gates.
+- Controlled event merge and split operations with durable operation/allocation/history records, ProcessingStep-based recovery, complete case/analysis/report reconciliation, and no implicit publication or delivery side effects; enabled only after GENI-ADR-011/014/016 acceptance and all implementation/release gates.
 
 ### Exit Criteria
 
@@ -1003,8 +1008,14 @@ Historical event records must not be silently deleted or rewritten.
 - Every active ArticleEventLink references its EventMatchCase and effective MATCH decision.
 - Human corrections create successor decisions and preserve prior link history.
 - Merge inputs include the selected survivor and the single output is that same survivor; split operations create at least two distinct successor outputs.
-- Operation status/effect history is append-only. `RECONCILIATION_REQUIRED` is the explicit operation status while the core identity effect is unknown or downstream reconciliation remains incomplete; an applied identity change remains in this state until all required downstream work completes.
+- Operation status/effect history is append-only. `RECONCILIATION_REQUIRED` is required while the core effect is unknown or any required downstream reconciliation is pending; an applied identity change cannot be marked SUCCEEDED merely because work was queued.
+- Every affected subject has one validated output allocation or an explicit UNRESOLVED allocation; unresolved subjects never receive guessed successors.
+- Every affected EventMatchCase is re-resolved through a successor EventMatchDecision, explicitly left unresolved under approved policy, or handed to an accountable ReviewRecord when human review is required.
+- Every affected Analysis has an explicit no-change assessment or a persisted immutable successor Analysis.
+- Every affected Report version discovered through both primary Event references and ReportEventLink has one durable impact record and append-only history; required correction has an owned remediation work item.
+- ProcessingStep work items, attempts and fenced leases prove recovery after worker interruption; retries do not duplicate core effects or downstream records.
 - No identity operation directly repoints/deletes ArticleEventLink; every replacement link is authorized by a successor EventMatchDecision.
+- No automatic publication replacement/withdrawal or recipient correction is triggered by identity operations.
 - False merges and event fragmentation are measured.
 
 ---
@@ -1858,3 +1869,5 @@ Exit criteria require executable tests and operational evidence, not document pr
 **Revision Note (v1.39):** Reconciles the Stage 1 foundation note with the executable capabilities already present in GENI-FOUNDATION-017 and GENI-READY-016, while retaining persistence, migrations, durable adapters, end-to-end verification, and unverified security-tooling tasks as outstanding. No architecture approval or production readiness is implied.
 
 **Revision Note (v1.40):** Corrects the Last Updated metadata to 2026-11-27 for the v1.39 foundation-status reconciliation. No additional scope, architecture decision, or readiness verdict changes.
+
+**Revision Note (v1.41):** Expands Stage 7 to use the gated GENI-IMPL-015 §10.17 application contract and GENI-DATA-003 ProcessingStep reconciliation mapping. Adds per-subject allocation, immutable report-impact discovery/history, case/analysis reconciliation, accountable review handoff, fenced recovery and explicit no-publication/no-delivery side-effect criteria. Merge/split remain disabled pending ADR-011/014/016 acceptance and verification gates.
