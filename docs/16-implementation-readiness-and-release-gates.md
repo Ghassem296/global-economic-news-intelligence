@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.82  
+**Version:** 4.83  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Executable application and PoC source snapshot reviewed through 2026-11-27 commit `dd7d69e2b97cbf89c3ab1eda656964283a3aca9e`. Application CI, Documentation Validation, and PostgreSQL 18.7 PoC all passed on that exact source snapshot; subsequent commits for this assessment update controlled documentation only.
+**Baseline:** Executable application, tests, and PostgreSQL PoC reviewed on 2026-11-27 commit `e81a3012385d7dbb2bb2913d10629e66409a382f`. Application CI run `45996786853`, Documentation Validation run `45996786754`, and PostgreSQL 18.7 / Python 3.15 PoC run `45996786778` all completed successfully on this exact commit.
 
 ---
 
@@ -34,6 +34,8 @@ The repository is no longer documentation-only. It now contains an installable P
 The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. On source snapshot `dd7d69e2b97cbf89c3ab1eda656964283a3aca9e`, Application CI run `45993074751` completed locked dependency installation, Ruff, mypy, and pytest with all 297 tests passing. Documentation Validation run `45993074538` passed all 23 validator tests and repository-wide documentation checks. PostgreSQL 18.7 / Python 3.15 PoC run `45993074511` passed all 37 test methods (33 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15195155946`). POC-34 verifies the database automatically transitions an unknown external execution outcome to RECONCILIATION_REQUIRED, blocks another EXECUTE attempt, and advances a confirmed reconciliation to SUCCEEDED. PoC-only migrations 007 and 008 add the operation/attempt guard and automatic state-transition trigger; no production publication or delivery adapter is implemented.
 
 The current-code CI and PostgreSQL evidence above applies to the exact reviewed executable source snapshot. The PostgreSQL run remains an isolated correctness PoC, not production qualification or authorization.
+
+The latest exact-commit verification supersedes the historical `dd7d69e` snapshot figures above: on `e81a3012385d7dbb2bb2913d10629e66409a382f`, Application CI run `45996786853` passed all 302 tests (Python 3.15.2, plus Ruff and mypy); Documentation Validation run `45996786754` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `45996786778` passed all 37 methods (33 PostgreSQL integration methods and four standalone retention-policy unit tests; 8.855 seconds). These are successful checks of the exact current `main` commit, not production qualification. The latest application change adds transaction-bound revalidation at the application port boundary; it does not add a PostgreSQL authorization/rights adapter or prove database serialization of revocation against commit.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
@@ -122,6 +124,8 @@ Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.
 ### 5.2 Persistence and transaction implementation
 
 The latest verified PostgreSQL 18.7 / Python 3.15 correctness PoC passed 37 test methods (33 PostgreSQL integration methods plus four standalone retention-policy unit tests) on source snapshot `dd7d69e2b97cbf89c3ab1eda656964283a3aca9e` (GitHub Actions run `45993074511`, evidence artifact `15195155946`). POC-29 verifies concurrent ArticleRevision append/current-pointer compare-and-swap: one writer commits and the stale writer's revision insert rolls back. POC-30 verifies deferred ArticleRevision ownership for the create path; POC-31 and POC-32 verify transactional idempotency claim/replay and rollback after interrupted claims; POC-33 verifies lease takeover with fencing; and POC-34 verifies database-managed transition of unknown external outcomes to RECONCILIATION_REQUIRED, rejection of blind EXECUTE retries, and transition to SUCCEEDED only after confirmed reconciliation. POC-22 through POC-28 cover migration rollback/reapplication and concurrency, same-Article current-revision integrity, decision-case/outcome constraints, source-identity index integrity, and an atomic synthetic legacy-revision backfill candidate. These results remain partial PoC evidence, not production qualification or approval of a production backfill policy. Remaining qualification work includes production key custody/rotation, off-site/immutable backup storage, retention enforcement, restore authorization, tablespace/configuration and full cluster-global recovery, privacy-ledger reconciliation, monitoring, alerting, and operator procedures. Obtain an approved workload profile and predeclared thresholds before making capacity claims; retain raw results, failed runs, exact experimental versions/configuration, commit SHA, migration and backup/restore evidence. Correctness and operational-feasibility experiments may be recorded while numeric workload targets remain unset, but no capacity or final production-readiness claim is permitted. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all applicable PostgreSQL qualification gates must pass, before production dependencies, production migrations, or production activation.
+
+The latest exact-commit PoC rerun on `e81a3012385d7dbb2bb2913d10629e66409a382f` is run `45996786778` (37 methods: 33 PostgreSQL integration and four retention-policy unit tests). This confirms the isolated PoC still passes after the application-layer verifier contract change. It does not exercise a concrete authorization/rights adapter, revoke-versus-commit database race, or production ArticleRepository/UnitOfWork; those remain unimplemented.
 
 Then implement:
 - Concrete database adapters, migrations, durable repository implementations, and UnitOfWork behind the existing application ports.
@@ -482,3 +486,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.82):** Records the application-level implementation of transaction-bound authorization and rights revalidation, plus deterministic in-memory race tests for revocation before write and replay. Explicitly distinguishes this orchestration evidence from the still-missing PostgreSQL-backed locking/serialization adapters and integration race tests. No production authorization, ADR acceptance or readiness upgrade is implied.
+
+
+**Revision Note (v4.83):** Refreshes the inspected baseline to exact `main` commit `e81a3012385d7dbb2bb2913d10629e66409a382f` and records successful exact-commit verification: Application CI run `45996786853` (302 tests, Ruff and mypy), Documentation Validation run `45996786754` (23 validator tests and repository-wide checks), and PostgreSQL 18.7 / Python 3.15 PoC run `45996786778` (37 methods: 33 PostgreSQL integration and four retention-policy unit tests). Clarifies that application-level transaction-bound authorization/rights revalidation is not database-level serialization or production adapter evidence. The readiness verdict and ADR/production gates remain unchanged.
