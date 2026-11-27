@@ -1,0 +1,2 @@
+# Isolated PoC-only dependency set. Never install into the GENI production runtime.
+psycopg[binary]==3.3.9
