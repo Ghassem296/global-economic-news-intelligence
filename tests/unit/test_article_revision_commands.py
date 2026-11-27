@@ -6,6 +6,7 @@ import pytest
 
 from global_economic_news_intelligence.application.article_revision_commands import (
     PersistArticleRevisionCommand,
+    PersistArticleRevisionResult,
 )
 from global_economic_news_intelligence.domain.article_revision_contracts import (
     ContentAvailability,
@@ -99,4 +100,40 @@ def test_command_rejects_blank_article_id() -> None:
             metadata=metadata("article-version-7"),
             revision=revision(),
             article_id=" ",
+        )
+
+@pytest.mark.parametrize("created", [True, False])
+def test_revision_result_reports_append_or_reuse(created: bool) -> None:
+    result = PersistArticleRevisionResult(
+        article_id="article-1",
+        revision_id="revision-4",
+        created=created,
+        article_version="article-version-8",
+    )
+    assert result.article_id == "article-1"
+    assert result.revision_id == "revision-4"
+    assert result.created is created
+    assert result.article_version == "article-version-8"
+
+
+@pytest.mark.parametrize("field_name", ["article_id", "revision_id", "article_version"])
+def test_revision_result_rejects_missing_identifiers(field_name: str) -> None:
+    values: dict[str, object] = {
+        "article_id": "article-1",
+        "revision_id": "revision-1",
+        "created": True,
+        "article_version": "article-version-1",
+    }
+    values[field_name] = " "
+    with pytest.raises(ValueError, match=field_name):
+        PersistArticleRevisionResult(**values)  # type: ignore[arg-type]
+
+
+def test_revision_result_requires_boolean_created_flag() -> None:
+    with pytest.raises(TypeError, match="created must be a bool"):
+        PersistArticleRevisionResult(
+            article_id="article-1",
+            revision_id="revision-1",
+            created=1,  # type: ignore[arg-type]
+            article_version="article-version-1",
         )
