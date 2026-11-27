@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.23
+**Version:** 10.24
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.9 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.62 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.63 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 3.1 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.23 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.24 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.40 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -701,3 +701,5 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.22):** Synchronizes GENI-READY-016 v4.61 and advances the inspected code/test baseline to `d511108cfdb48873ec8fe98e0fa403fba86db259` after correcting URL regression fixtures to exercise actual Unicode whitespace, format-control and newline characters. Current-main CI validation remains pending.
 
 **Revision Note (v10.23):** Synchronizes GENI-READY-016 v4.62 and advances the inspected code/test baseline to `c75f6e7ed81e60c7330e739181a252723c098b59` after normalizing the URL regression fixtures to use a single literal backslash. Current-main CI validation remains pending.
+
+**Revision Note (v10.24):** Synchronizes GENI-READY-016 v4.63 after clarifying that current-main CI workflow results were not available for verification; no unverified test success is claimed.
