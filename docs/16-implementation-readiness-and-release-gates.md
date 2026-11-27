@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.44  
+**Version:** 4.45  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `5cb1c67d6bdcea911b10c62da4e1e6f17f18eaf2`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `1317bd65cd4d0ce098234e5d36fcebe27df28ca9`
 
 ---
 
@@ -31,14 +31,14 @@ A published file, passing documentation check, or merged change is not by itself
 
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45959463469 for commit c381be23c6481bc70b57eda3d7f2d4f83c1f8882. It completed locked dependency installation, Ruff, mypy, and pytest. The current run's test step passed; no test count is asserted here.
+The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45961222822 for commit `1317bd65cd4d0ce098234e5d36fcebe27df28ca9`. It completed locked dependency installation, Ruff, mypy, and pytest; all 275 tests passed.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
 - An executable ArticleRevisionService with technology-neutral ArticleRepository and ArticleRevisionRepository ports. It coordinates authorization, fail-closed rights checks, command idempotency, immutable revision append/reuse, and Article projection updates through one injected UnitOfWork; current tests are unit-level and do not qualify durable adapters or database concurrency.
 - A CLI that reports package version and disabled capability boundaries, using validated settings and safe logging initialization.
 - Unit tests for transition guards, aggregation, successor-decision linearity, review projection, external-outcome reconciliation, validated configuration, safe errors/logging, and domain dependency boundaries.
-- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the current main-branch run passed (45959463469).
+- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the current main-branch run passed all 275 tests (45961222822).
 - Existing documentation CI and registry validation remain separate and are preserved.
 
 The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
@@ -47,7 +47,7 @@ The project package-management choice is now uv 0.13.9, pinned by `[tool.uv].req
 
 The following remain absent or incomplete:
 
-- PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 31 test methods (27 PostgreSQL integration methods and four standalone retention-policy unit tests) on commit `c381be23c6481bc70b57eda3d7f2d4f83c1f8882` (GitHub Actions run `45959463464`, evidence artifact `15180470998`, archive SHA-256 `f8769336423e21f589c0edf497b3124ff95d73dc2e257e6503955ef7c836961c`). POC-24 through POC-27 verify concurrent migration execution, same-Article current-revision integrity, decision-case/outcome constraints, and source-identity index integrity. POC-28 verifies an atomic synthetic legacy Article revision backfill candidate, including rollback on an invalid deferred pointer and commit of a valid same-Article revision/pointer pair. This is partial PoC evidence, not production qualification or approval of the legacy backfill policy. Production KMS/HSM integration, key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, approved workload values, and performance thresholds remain outstanding. GENI-ADR-005 remains Proposed.
+- PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 31 test methods (27 PostgreSQL integration methods and four standalone retention-policy unit tests) on commit `1317bd65cd4d0ce098234e5d36fcebe27df28ca9` (GitHub Actions run `45961222866`, evidence artifact `15180438438`, archive SHA-256 `f8f56ccfb6e7f70045121806265b8030601e08627885d5e4b78e94fe8fd039ff`). POC-24 through POC-27 verify concurrent migration execution, same-Article current-revision integrity, decision-case/outcome constraints, and source-identity index integrity. POC-28 verifies an atomic synthetic legacy Article revision backfill candidate, including rollback on an invalid deferred pointer and commit of a valid same-Article revision/pointer pair. This is partial PoC evidence, not production qualification or approval of the legacy backfill policy. Production KMS/HSM integration, key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, approved workload values, and performance thresholds remain outstanding. GENI-ADR-005 remains Proposed.
 - The ArticleRevisionService and technology-neutral ArticleRepository/ArticleRevisionRepository ports are implemented, but no durable repository or UnitOfWork adapter, transactional idempotency store, concrete authorization/rights adapter, production migrations, lease/fencing persistence, or ProcessingStepAttempt adapter exists.
 - Document 15 v4.9 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
@@ -244,7 +244,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.44
+**Version:** 4.45
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -381,3 +381,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.44):** Aligns the active Document 15 references with v4.9 after documenting and testing stricter structural URL input validation for SourceRecord. The change does not alter source acquisition, SSRF/egress, rights, persistence, ADR acceptance, or production-readiness gates.
+
+
+**Revision Note (v4.45):** Refreshes the inspected `main` baseline to `1317bd65cd4d0ce098234e5d36fcebe27df28ca9` and synchronizes the readiness evidence with Application CI run `45961222822` (275 tests, Ruff and mypy successful), Documentation Validation run `45961222872`, and PostgreSQL 18.7 / Python 3.15 PoC run `45961222866` (31 tests; evidence artifact `15180438438`). All three workflows succeeded. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed, production qualification and all applicable authorization/rights/security/operational gates remain open, and the overall readiness verdict is unchanged.
