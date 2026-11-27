@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.6
+**Version:** 10.7
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.6 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.7 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.37 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -194,7 +194,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | ADR ID | Title | Repository Path | Actual Version | Decision Status | Publication State | Decision Owner | Proposal / Revision Date | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ADR-001 | Event-Centric Intelligence Architecture | `docs/adr/decisions/GENI-ADR-001-event-centric-intelligence-architecture.md` | 1.4 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
+| GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.8 | Proposed | Published | Project Owner | 2026-11-27 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 3.1 | Proposed | Published | Project Owner | 2026-11-27 | PostgreSQL target direction recorded; partial 32-test PoC evidence: 28 PostgreSQL integration methods plus four standalone retention-policy unit tests, including POC-24 through POC-29; qualification and formal acceptance pending |
@@ -212,7 +212,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-017 | LLM Budgets, Usage Tracking, and Evaluation Strategy | `docs/adr/decisions/GENI-ADR-017-llm-budgets-usage-tracking-and-evaluation-strategy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-018 | Multilingual Source Processing, Translation, and Language Policy | `docs/adr/decisions/GENI-ADR-018-multilingual-source-processing-translation-and-language-policy.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-019 | Event Importance, Economic Relevance, and Economic Impact Assessment Methodology | `docs/adr/decisions/GENI-ADR-019-event-importance-economic-relevance-and-economic-impact-assessment-methodology.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-020 | Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture | `docs/adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
+| GENI-ADR-020 | Data Protection, Privacy Processing Authorization, and Data Subject Rights Architecture | `docs/adr/decisions/GENI-ADR-020-data-protection-privacy-processing-authorization-and-data-subject-rights.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-27 | Not yet approved |
 
 ### 6.1 ADR Publication and Availability
 
@@ -663,3 +663,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v10.6):** Synchronizes the controlled inventory and snapshot description with GENI-READY-016 v4.54. No readiness verdict, test result, or approval status changes.
+
+
+**Revision Note (v10.7):** Synchronizes the ADR inventory with GENI-ADR-002 v1.8 and GENI-ADR-020 v1.3 after their Section 9 and consequences-structure reviews. Both ADRs remain Proposed; no approval or production authorization is implied.
