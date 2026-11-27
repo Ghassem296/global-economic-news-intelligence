@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.20
+**Version:** 1.21
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -206,7 +206,7 @@ The cluster-global role restore run completed successfully in GitHub Actions run
 The latest reproducible 30-test execution completed successfully on 2026-11-27 in GitHub Actions run `45955820635` against commit `fe0975033b81227c95c75d6564897a9beafe70fc`: 26 PostgreSQL integration methods plus four standalone retention-policy unit tests. The uploaded machine-readable evidence artifact is `postgres-poc-fe0975033b81227c95c75d6564897a9beafe70fc` (artifact ID `15178617050`, archive SHA-256 `e403f15e2d4bd49d7261d0831a706d5f47a7caa179925e1ac4ea67d84139d7f9`). The run used PostgreSQL 18.7, Psycopg 3.3.9, CPython 3.15.2, and the pinned linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`. POC-24 through POC-27 are included. This is a successful correctness PoC run only; it does not satisfy the outstanding production security, workload, operational, formal ADR-005 acceptance, or legacy current-revision backfill gates.
 
 
-The latest reproducible 31-test execution completed successfully on 2026-11-27 in GitHub Actions run `45961720585` against commit `7e124789d02a95992c28fb559a625155bbf43a96`: 27 PostgreSQL integration methods plus four standalone retention-policy unit tests. POC-28 verifies an atomic legacy Article revision backfill candidate using synthetic data, including rollback on an invalid deferred current-revision pointer. The uploaded machine-readable evidence artifact is `postgres-poc-7e124789d02a95992c28fb559a625155bbf43a96` (artifact ID `15180963314`, archive SHA-256 `438cfa4d5a698a454de53e1cf87503e16f055ea14941aee9642642f084546ac3`). The run used PostgreSQL 18.7, Psycopg 3.3.9, CPython 3.15.2, and the pinned linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`. This remains PoC-only correctness evidence; it does not select or approve the production legacy-data backfill policy, make current_revision_id non-null, or satisfy production qualification and formal ADR-005 acceptance.
+The latest reproducible 31-test execution completed successfully on 2026-11-27 in GitHub Actions run `45961988925` against commit `428e6b6d3ea142175373246bba209476c50cd5c6`: 27 PostgreSQL integration methods plus four standalone retention-policy unit tests. POC-28 verifies an atomic legacy Article revision backfill candidate using synthetic data, including rollback on an invalid deferred current-revision pointer. The uploaded machine-readable evidence artifact is `postgres-poc-428e6b6d3ea142175373246bba209476c50cd5c6` (artifact ID `15180889132`, archive SHA-256 `c306b10267d9bd46988c5bf8cf15b2af0ddcb7add4bf191ab8edfbb98f7d9fe0`). The run used PostgreSQL 18.7, Psycopg 3.3.9, CPython 3.15.2, and the pinned linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`. This remains PoC-only correctness evidence; it does not select or approve the production legacy-data backfill policy, make current_revision_id non-null, or satisfy production qualification and formal ADR-005 acceptance.
 
 ## 9. Approval and implementation boundary
 
@@ -248,6 +248,7 @@ After qualification and formal acceptance, review the experimental evidence and 
 | 1.18 | 2026-11-27 | Proposed | Refreshes the results register to the latest successful 30-test run on commit `fe0975033b81227c95c75d6564897a9beafe70fc`; adds POC-24 through POC-27 and records the pinned PostgreSQL image digest and artifact evidence. Production qualification and formal ADR acceptance remain open. |
 | 1.19 | 2026-11-27 | Proposed | Records the latest successful 31-test run and POC-28's atomic legacy Article revision backfill candidate test. The test is synthetic PoC evidence only; production backfill policy, non-null enforcement, security, workload, and formal ADR-005 acceptance remain open. |
 | 1.20 | 2026-11-27 | Proposed | Refreshes the latest reproducible 31-test PostgreSQL 18.7 / Python 3.15 PoC evidence to run `45961720585` on commit `7e124789d02a95992c28fb559a625155bbf43a96`, artifact `15180963314`. All 31 tests pass; POC-28 remains synthetic candidate evidence only, and production qualification, workload thresholds, security/operations, and formal ADR-005 acceptance remain open. |
+| 1.21 | 2026-11-27 | Proposed | Refreshes the latest reproducible 31-test PostgreSQL 18.7 / Python 3.15 PoC evidence to run `45961988925` on commit `428e6b6d3ea142175373246bba209476c50cd5c6`, artifact `15180889132`. All 31 tests pass; POC-28 remains synthetic candidate evidence only, and production qualification, workload thresholds, security/operations, and formal ADR-005 acceptance remain open. |
 
 
 **End of Evidence Protocol**
