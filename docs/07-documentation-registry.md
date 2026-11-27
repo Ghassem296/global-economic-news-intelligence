@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.93
+**Version:** 10.94
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -179,9 +179,9 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.93 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.94 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.44 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.47 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
 
@@ -522,6 +522,8 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.92):** Synchronizes GENI-DATA-003 v1.63, GENI-READY-016 v5.9 and GENI-ADR-011 v1.15; corrects the registry's self-inventory version and records the synchronized readiness/security/ProcessingStep contracts. The inspected documentation snapshot is `b65bb915b682e6026029de409d58a003839d3085`. No ADR approval or runtime capability activation is implied.
 
 **Revision Note (v10.93):** Corrects the authoritative Baseline Commit Inspected field to the exact documentation snapshot already identified in §12.1 and refreshes that section's controlled-document version inventory. The executable evidence remains pinned to `cb258297a4568e6eec2083a0803e36caf61198e1`; no new CI result or production qualification is implied.
+
+**Revision Note (v10.94):** Synchronizes the ADR Registry index inventory to its current published v1.47 file version. No ADR decision status or architecture approval is changed.
 
 **End of Document**
 
