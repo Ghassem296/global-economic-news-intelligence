@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.7  
+**Version:** 4.8  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -46,7 +46,7 @@ The project package-management choice is now uv 0.13.9, pinned by `[tool.uv].req
 
 The following remain absent or incomplete:
 
-- PostgreSQL is the Project Owner-selected target relational engine. Production qualification, exact PostgreSQL version/deployment profile, driver, ORM/query layer, and migration mechanism remain unresolved; GENI-ADR-005 remains Proposed pending POC evidence review and formal acceptance.
+- PostgreSQL is the Project Owner-selected target relational engine. A disposable PoC may provisionally select and pin candidate PostgreSQL/driver/query/migration/async tools for experimental runs only; these choices are not production selections or runtime dependencies. Production qualification, production toolchain, and deployment profile remain unresolved; GENI-ADR-005 remains Proposed pending PoC evidence review and formal acceptance.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
 - Document 15 v4.2 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
@@ -118,7 +118,7 @@ Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.
 
 ### 5.2 Persistence and transaction implementation
 
-Complete the PostgreSQL qualification in GENI-ADR-005-POC-001 using an approved workload profile and predeclared thresholds; retain raw results, failed runs, environment/configuration, commit SHA, migration and backup/restore evidence. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all PostgreSQL qualification gates must pass, before production activation. Then implement:
+Complete the PostgreSQL qualification in GENI-ADR-005-POC-001 using a disposable PoC-only candidate toolchain, synthetic data, and an approved workload profile with predeclared thresholds for any capacity claim; retain raw results, failed runs, exact experimental versions/configuration, commit SHA, migration and backup/restore evidence. Correctness and operational-feasibility experiments may be recorded while numeric workload targets remain unset, but no capacity or final production-readiness claim is permitted. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all applicable PostgreSQL qualification gates must pass, before production dependencies, production migrations, or production activation. Then implement:
 - Database adapter, migrations, repository implementations, and UnitOfWork.
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
@@ -148,7 +148,7 @@ Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevis
 
 The following rules apply across Documents 01–17 and all ADRs:
 
-1. **Selected project tooling is distinct from unresolved architecture candidates.** Document 04 §4.1 records CPython 3.15, uv 0.13.9, setuptools 84.2.1, pytest, Ruff, and mypy as the bounded development toolchain. Pydantic, LiteLLM, SQLAlchemy, Alembic, exact PostgreSQL driver/version, source-acquisition mechanisms, and deployment choices remain candidates or pending decisions; they must not be treated as approved application architecture until their relevant ADR and evidence gates pass. PostgreSQL itself is the owner-selected target, subject to its qualification and production-activation gate.
+1. **Selected project tooling is distinct from unresolved architecture candidates.** Document 04 §4.1 records CPython 3.15, uv 0.13.9, setuptools 84.2.1, pytest, Ruff, and mypy as the bounded development toolchain. Pydantic, LiteLLM, SQLAlchemy, Alembic, exact PostgreSQL driver/version, source-acquisition mechanisms, and deployment choices remain candidates or pending decisions; they must not be treated as approved application architecture until their relevant ADR and evidence gates pass. A candidate may be pinned in an isolated PoC-only environment for reproducible testing without becoming a production selection. PostgreSQL itself is the owner-selected target, subject to its qualification and production-activation gate.
 2. **Language-neutral contracts remain language-neutral until approval.** Document 15's `ID<T>`, `Version`, `Instant`, `Fingerprint`, and DTO notation must not be silently translated into a concrete representation before the runtime/serialization decision.
 3. **Domain decisions remain distinct from workflow state.** Candidate evaluation, case resolution, review tasks, publication eligibility, external publication attempts, and delivery attempts are separate concepts.
 4. **Unknown is not failure, zero, denial, or absence.** Unknown external outcomes require reconciliation; unknown rights/authorization context fails closed.
@@ -164,7 +164,7 @@ A first-slice implementation may start only when all applicable gates below have
 | Gate | Required evidence | Pass condition |
 |---|---|---|
 | R0 — Product and architecture baseline | Scope statement, accepted foundational ADRs, reconciled architecture/data/component documents | No unresolved contradiction affecting the selected slice; deferred capabilities are explicitly disabled |
-| R1 — Technology baseline | Accepted ADR-005 backed by completed PostgreSQL qualification in GENI-ADR-005-POC-001; approved workload profile and predeclared thresholds; raw correctness, concurrency, migration, backup/restore and recovery evidence; exact language/runtime, package manager, PostgreSQL version/driver, migration, async, transaction and connection-lifecycle choices | Every mandatory correctness and workload gate passes; reproducible evidence and operational feasibility are reviewed; selected engine and exact implementation choices are recorded in the Accepted ADR |
+| R1 — Technology baseline | Completed PostgreSQL PoC evidence using an isolated, version-pinned experimental candidate stack; approved workload profile and predeclared thresholds for capacity claims; raw correctness, concurrency, migration, backup/restore and recovery evidence; then formal ADR-005 acceptance and explicit production-toolchain selection | Every mandatory correctness and approved workload gate passes; reproducible evidence and operational feasibility are reviewed; production engine/tooling/configuration are explicitly recorded in the Accepted ADR. PoC-only candidates do not satisfy production selection by themselves |
 | R2 — Contract baseline | Approved Document 15; complete DTO schemas and transition matrices for every enabled workflow | No enabled workflow depends on an unresolved state, field, authorization, or concurrency rule |
 | R3 — Security, rights, and privacy | Threat-model controls, operation-specific rights decisions, privacy authorization boundaries, secret handling | Deny/unknown/expired/revoked/scope-mismatch cases fail closed; test-source permissions are documented |
 | R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, safe errors, structured logging, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
@@ -272,3 +272,5 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.7):** Refreshes the inspected main-branch baseline to `b2e8ac5` and records the latest successful Python 3.15 Application CI run 45939388122 and Documentation validation run 45939388133. No ADR status, first-slice approval, or production authorization is changed.
+
+**Revision Note (v4.8):** Resolves the ADR-005 PoC/production-tooling sequencing deadlock by permitting isolated, pinned PoC-only candidate stacks while retaining formal ADR acceptance and all production dependency/migration/activation gates. Numeric workload and capacity thresholds remain owner-approved inputs.
