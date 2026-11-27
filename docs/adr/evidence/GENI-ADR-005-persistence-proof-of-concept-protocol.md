@@ -174,7 +174,7 @@ The completed PoC package must include:
 - Approved workload profile and target thresholds, with owners and sources.
 - Reproducible setup instructions and exact PostgreSQL version/configuration.
 - Synthetic dataset generator, seed, and dataset summary.
-- Correctness/failure test results for every currently defined POC-01 through POC-30 case.
+- Correctness/failure test results for every currently defined POC-01 through POC-31 case.
 - Raw benchmark output and machine-readable summary (CSV or JSON).
 - Backup/restore and migration logs, including integrity-check output.
 - Deviations, failed runs, fixes, and retest links.
