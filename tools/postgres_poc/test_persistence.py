@@ -542,13 +542,10 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     "-e",
                     "PGAPPNAME=geni_poc_backup",
                     POSTGRES_CONTAINER_ID,
-                    "pg_dump",
-                    "-U",
-                    "postgres",
-                    "-d",
-                    "geni_poc",
-                    "-Fc",
-                    "-f",
+                    "sh",
+                    "-c",
+                    'umask 077 && exec pg_dump -U postgres -d geni_poc -Fc -f "$1"',
+                    "sh",
                     remote_backup,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -595,6 +592,10 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     0,
                     backup_stderr.decode(errors="replace"),
                 )
+                remote_mode = await docker(
+                    "exec", POSTGRES_CONTAINER_ID, "stat", "-c", "%a", remote_backup
+                )
+                self.assertEqual(remote_mode.stdout.strip(), "600")
                 await docker(
                     "cp",
                     f"{POSTGRES_CONTAINER_ID}:{remote_backup}",
@@ -661,7 +662,8 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 verified_tag = hmac.new(
                     authentication_key, ciphertext, hashlib.sha256
                 ).hexdigest()
-                self.assertTrue(hmac.compare_digest(authentication_tag, verified_tag))
+                stored_tag = tag_file.read_text(encoding="ascii").strip()
+                self.assertTrue(hmac.compare_digest(stored_tag, verified_tag))
                 subprocess.run(
                     [
                         "openssl", "enc", "-d", "-aes-256-cbc", "-pbkdf2",
