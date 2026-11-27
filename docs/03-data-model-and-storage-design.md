@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.62
+**Version:** 1.63
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -1067,7 +1067,7 @@ Fields:
 
 Operation-history records are append-only. `(operation_id, sequence)` must be unique, and a non-null idempotency key must be unique within the operation. EventIdentityOperation.status and identity_effect_state are current projections that must be rebuildable from this history. A status transition and its history row must be written in the same transaction.
 
-The permitted operation-status transitions are `PENDING` to `IN_PROGRESS` or `CANCELLED`; `IN_PROGRESS` to `SUCCEEDED`, `FAILED`, or `RECONCILIATION_REQUIRED`; and `RECONCILIATION_REQUIRED` to `IN_PROGRESS`, `SUCCEEDED`, or `FAILED` only after reconciliation determines whether the core effect was applied. `SUCCEEDED`, `FAILED`, and `CANCELLED` are terminal. The core identity effect state moves only from `NOT_APPLIED` to `APPLIED` or `UNKNOWN`, and from `UNKNOWN` to the reconciled `APPLIED` or `NOT_APPLIED` result; it must never revert from `APPLIED` to `NOT_APPLIED`.
+The permitted operation-status transitions are `PENDING` to `IN_PROGRESS` or `CANCELLED`; `IN_PROGRESS` to `SUCCEEDED`, `FAILED`, or `RECONCILIATION_REQUIRED`; and `RECONCILIATION_REQUIRED` to `IN_PROGRESS`, `SUCCEEDED`, or `FAILED` only after reconciliation determines whether the core effect was applied. `SUCCEEDED`, `FAILED`, and `CANCELLED` are terminal. `FAILED` is permitted only when reconciliation proves that the core identity effect is definitively `NOT_APPLIED`; `CANCELLED` is permitted only before the core effect is applied. Once the effect is `APPLIED`, the operation must never transition to `FAILED` or `CANCELLED`; incomplete downstream work remains `RECONCILIATION_REQUIRED`, and a correction requires a new authorized identity operation. The core identity effect state moves only from `NOT_APPLIED` to `APPLIED` or `UNKNOWN`, and from `UNKNOWN` to the reconciled `APPLIED` or `NOT_APPLIED` result; it must never revert from `APPLIED` to `NOT_APPLIED`.
 
 Identity resolution is a read contract as well as a storage concern. Resolving a historical identifier must return one of: `CANONICAL` (one current canonical event), `MULTIPLE_SUCCESSORS` (two or more candidate successor events after a split), or `UNRESOLVED` (no safe deterministic resolution). A merge may resolve to one survivor with its operation lineage. A split must return the complete successor set and relevant operation references; the resolver must never select an arbitrary successor. A core identity effect with state `APPLIED` is authoritative even while downstream work remains `RECONCILIATION_REQUIRED`. If the effect is `UNKNOWN`, the resolver must return `UNRESOLVED` until reconciliation determines the durable state. Callers must supply case/evidence context to choose among multiple successors, and unresolved associations remain unlinked.
 
@@ -3394,3 +3394,5 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.62):** Clarifies that Event Identity reconciliation may create multiple ProcessingSteps with the same step_name only when each server-derived input fingerprint identifies a distinct operation/work-kind/target/version unit, and adds immutable attempt-number/idempotency uniqueness. This prevents an ambiguous generic step-identity rule from collapsing distinct reconciliation targets or duplicating retries.
+
+**Revision Note (v1.63):** Tightens EventIdentityOperation terminal-state guards: FAILED requires proven NOT_APPLIED, CANCELLED is pre-effect only, and an APPLIED core effect cannot be relabeled as failed/cancelled while downstream reconciliation remains open.
