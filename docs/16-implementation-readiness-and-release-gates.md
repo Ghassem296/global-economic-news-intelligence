@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.79  
+**Version:** 4.80  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -136,6 +136,8 @@ Then implement:
 ### 5.3 Security, source rights, and privacy
 
 Implement and test fail-closed authorization at each operation boundary using the proposed deny-by-default baseline in Document 08 §5 and the first-slice crosswalk in Document 15 §10.13. Final role grants, identity/session lifecycle, policy decision point, grant administration, separation-of-duties exceptions and break-glass controls remain open. GENI-ADR-013 must govern real source-content access/retention/transmission; GENI-ADR-020 and Document 14 govern personal-data processing and provider/region authorization. Unknown, expired, revoked, or mismatched authorization must deny the operation.
+
+**Additional ArticleRevision rights race gate:** The current `ArticleRevisionService` evaluates metadata/content rights before opening its write UnitOfWork, then performs idempotency claim/replay and revision/projection writes. Rechecking authorization and rights before replay is necessary but does not, by itself, prevent a rights assessment from being revoked, expired, or superseded after verification and before commit. No concrete rights adapter or durable repository currently exists, so this is an unresolved implementation risk rather than a demonstrated production exploit. Before any real source content is persisted, the accepted rights/persistence design must define and test a concurrency-safe authorization point that binds the exact immutable RightsAssessment identity/version, source, content-scope fingerprint, operation, policy/profile version, and validity interval to the committed write. The implementation must prevent a concurrent revocation/expiry/update from making a write commit under stale permission (for example through a transactionally validated version/epoch with appropriate locking or an equivalent proven serialization protocol); merely repeating a pre-transaction check is insufficient. The same rule applies to idempotent replay and metadata preservation. Add deterministic race tests in which revocation/expiry competes with both a new write and an identical replay, proving that no operation succeeds on stale permission. Rights changes after a successful commit must trigger the GENI-ADR-013 dependency invalidation, restriction/deletion, and downstream reauthorization workflow; they must not rewrite immutable historical decisions. Until this gate is implemented and verified, ArticleRevision persistence of real source-derived content remains disabled.
 
 ### 5.4 LLM and analysis execution
 
@@ -471,3 +473,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.79):** Corrects §5.2, which still described the superseded 33-method PostgreSQL PoC as the latest result. It now reconciles POC-29 through POC-34 and the 37-method result with the exact source snapshot, workflow run, and evidence artifact already recorded in §§2 and R1. No new test result, ADR acceptance, production qualification, or capability authorization is claimed.
+
+
+**Revision Note (v4.80):** Adds an explicit concurrency gate for ArticleRevision content-rights verification: pre-transaction checks and replay revalidation alone do not prevent a concurrent rights revocation/expiry before commit. Requires immutable assessment-version binding, a proven serialization/locking protocol, deterministic write/replay race tests, and downstream invalidation handling. No implementation, ADR acceptance, source-content authorization, or production readiness is claimed.
