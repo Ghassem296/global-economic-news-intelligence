@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-016  
 **Title:** Persistence, Async Execution, Idempotency, and Recovery  
 **Status:** Proposed  
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -170,6 +170,7 @@ A recommendation is not an approval. The Project Owner must explicitly accept or
 - Maintain Proposed status until explicit approval is recorded.
 - Do not treat deferred questions or example values as settled implementation details.
 - Any temporary implementation assumption must be reversible and documented with a review trigger.
+- GENI-ADR-005 may validate candidate PostgreSQL lease/idempotency/transaction behavior in an isolated PoC-only environment; this does not accept ADR-016, authorize production durable execution, or permit production dependencies.
 
 ## 8. Consequences and Trade-Offs
 
@@ -322,5 +323,6 @@ External legal, provider, and empirical evidence must be added during formal rev
 |---|---|---|---|---|
 | 1.0 | 2026-11-18 | Proposed | Expanded ADR proposal prepared for architecture review | AI Architecture Assistant |
 | 1.1 | 2026-11-18 | Proposed | Defined logical ExecutionLease fencing and scoped IdempotencyRecord contracts and aligned the data model with recovery requirements. | AI Architecture Assistant |
+| 1.2 | 2026-11-27 | Proposed | Clarifies that ADR-005 may validate the proposed persistence semantics in an isolated PoC without accepting ADR-016 or authorizing production durable execution. | AI Architecture Assistant |
 
 **End of ADR**
