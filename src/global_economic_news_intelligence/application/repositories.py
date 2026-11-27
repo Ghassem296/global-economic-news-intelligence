@@ -6,13 +6,47 @@ without selecting a database, ORM, driver, or migration system.
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, TypeVar, runtime_checkable
 
 from global_economic_news_intelligence.domain.article_revision_contracts import (
     ArticleRevisionRecord,
     PersistArticleRevision,
+    SourceArticleIdentity,
 )
 from global_economic_news_intelligence.domain.contracts import UnitOfWork
+
+
+ArticleT = TypeVar("ArticleT")
+
+
+@runtime_checkable
+class ArticleRepository(Protocol[ArticleT]):
+    """Current Article projection port used by ArticleRevisionService.
+
+    The Article domain record remains defined by the approved domain model;
+    this generic port does not invent its fields or a concrete persistence type.
+    """
+
+    def get_by_id(self, article_id: str) -> ArticleT | None:
+        """Return the current projection, including its current revision reference."""
+        ...
+
+    def find_by_source_identity(
+        self,
+        source_id: str,
+        external_identity: SourceArticleIdentity,
+    ) -> ArticleT | None:
+        """Resolve only the source-scoped canonical identity; never merge collisions."""
+        ...
+
+    def save_projection(
+        self,
+        article: ArticleT,
+        expected_version: str | None,
+        uow: UnitOfWork,
+    ) -> ArticleT:
+        """Save the projection in the caller's revision transaction; never commit."""
+        ...
 
 
 class ArticleRevisionRepository(Protocol):
