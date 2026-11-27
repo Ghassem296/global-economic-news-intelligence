@@ -811,7 +811,7 @@ def test_available_content_requires_both_metadata_and_persistent_storage_rights(
     )
 
     assert result.created
-    assert len(rights.metadata_calls) == 1
+    assert len(rights.metadata_calls) == 2
     assert len(rights.calls) == 2
     assert rights.calls[0][1] == rights.metadata_calls[0][1]
     assert rights.calls[0][1] == datetime(2026, 11, 27, 9, 0, tzinfo=UTC)
