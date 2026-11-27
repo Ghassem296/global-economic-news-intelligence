@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.42  
+**Version:** 4.43  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `098b3c15c039142de2437f1a9ae5cf51b6bdd255`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `5cb1c67d6bdcea911b10c62da4e1e6f17f18eaf2`
 
 ---
 
@@ -244,7 +244,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.42
+**Version:** 4.43
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -375,3 +375,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.42):** Aligns active references with Document 15 v4.8 and Document 03 v1.53. Records the initial immutable SourceRecord and read-only SourceRepository port from Document 17 v2.9. This is a configuration-record/read-only retrieval foundation only: source discovery, collection, configuration mutation, concrete persistence, health/reliability/relationship assessment, SSRF/egress enforcement, and production rights authorization remain unimplemented and gated. The overall readiness verdict and ADR/production gates are unchanged.
+
+
+**Revision Note (v4.43):** Refreshes the inspected main baseline to `5cb1c67d6bdcea911b10c62da4e1e6f17f18eaf2` after the SourceRecord URL-type validation correction. Document 15 v4.8 and Document 17 v2.9 remain the active source-contract references; source collection and production authorization remain gated.
