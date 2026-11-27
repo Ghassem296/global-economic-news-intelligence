@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-002  
 **Title:** Article Deduplication and Event Matching Separation  
 **Status:** Proposed  
-**Version:** 1.8
+**Version:** 1.9
 **Date:** 2026-11-18
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -829,7 +829,7 @@ Upon acceptance:
 - Some articles may remain unresolved until additional evidence becomes available.
 - Candidate retrieval and decision processing require observability and operational monitoring.
 
-### 8.3 Trade-Offs
+### 8.3 Technical Trade-Offs
 
 The proposed design deliberately favors traceability and correct domain semantics over minimizing the number of processing components.
 
@@ -871,10 +871,10 @@ The physical schema, uniqueness constraints, and repository contracts remain def
 |---|---|---|
 | GENI-ADR-001 | Related to | Establishes the event-centric intelligence architecture and the distinction between article and event identity. |
 | GENI-ADR-008 | Related to | Defines evidence provenance and uncertainty representation used by both operations. |
-| GENI-ADR-011 | Depends on / Related to | Defines event identity, matching, continuation, merging, splitting, and the event-association lifecycle. |
+| GENI-ADR-011 | Depends on | Defines event identity, matching, continuation, merging, splitting, and the event-association lifecycle. |
 | GENI-ADR-012 | Related to | Defines semantic retrieval and similarity capabilities without making similarity a duplicate or event decision. |
-| GENI-ADR-014 | Depends on / Related to | Governs authorized human review and successor decisions for ambiguous or incorrect associations. |
-| GENI-ADR-016 | Depends on / Related to | Defines persistence, asynchronous execution, idempotency, and recovery requirements. |
+| GENI-ADR-014 | Related to | Governs authorized human review and successor decisions for ambiguous or incorrect associations. |
+| GENI-ADR-016 | Related to | Defines persistence, asynchronous execution, idempotency, and recovery requirements. |
 | GENI-ADR-017 | Related to | Defines LLM budgets, usage tracking, and evaluation controls where model-assisted processing is enabled. |
 | GENI-ADR-018 | Related to | Defines language and translation constraints relevant to multilingual duplicate detection and event matching. |
 
@@ -995,5 +995,6 @@ The proposal is based on the internal architecture and domain requirements liste
 
 | 1.7 | 2026-11-24 | Proposed | Reorganized the ADR to the standard 14-section template while preserving detailed design as subsections; added qualitative option evaluation and explicit acceptance criteria. | AI Architecture Assistant |
 | 1.8 | 2026-11-27 | Proposed | Completes the Section 9 impact structure, separates affected documents from related ADRs, and makes dependency relationships explicit without implying approval. | AI Architecture Assistant |
+| 1.9 | 2026-11-27 | Proposed | Aligns the Section 8.3 heading with the ADR template and uses singular, semantically precise relationship types in the Related ADRs table. | AI Architecture Assistant |
 
 **End of ADR-002**
