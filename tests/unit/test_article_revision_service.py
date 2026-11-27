@@ -493,3 +493,89 @@ def test_metadata_rights_denial_prevents_metadata_only_persistence() -> None:
     factory = deps["uow_factory"]
     assert isinstance(factory, FakeUnitOfWorkFactory)
     assert factory.items == []
+
+
+
+def test_identical_retry_replays_result_after_rechecking_authorization_and_rights() -> None:
+    service, deps = build_service()
+    command = PersistArticleRevisionCommand(make_metadata(), make_revision())
+
+    first = service.execute(command)
+    second = service.execute(command)
+
+    articles = deps["articles"]
+    revisions = deps["revisions"]
+    rights = deps["rights"]
+    authorization = deps["authorization"]
+    factory = deps["uow_factory"]
+    assert isinstance(articles, FakeArticleRepository)
+    assert isinstance(revisions, FakeArticleRevisionRepository)
+    assert isinstance(rights, FakeContentRights)
+    assert isinstance(authorization, FakeAuthorization)
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert first == second
+    assert articles.save_calls == 1
+    assert revisions.append_calls == 1
+    assert len(authorization.calls) == 2
+    assert len(rights.metadata_calls) == 2
+    assert factory.items[1].rolled_back
+
+
+def test_reusing_idempotency_key_for_changed_request_is_rejected() -> None:
+    service, deps = build_service()
+    service.execute(
+        PersistArticleRevisionCommand(make_metadata(), make_revision())
+    )
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(
+            PersistArticleRevisionCommand(
+                make_metadata(),
+                make_revision("Central bank changes rates"),
+            )
+        )
+
+    assert exc.value.code is ErrorCode.IDEMPOTENCY_KEY_REUSE_CONFLICT
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items[1].rolled_back
+
+
+def test_available_content_requires_both_metadata_and_persistent_storage_rights() -> None:
+    import hashlib
+
+    body = "Synthetic article text used only in this test."
+    revision = PersistArticleRevision(
+        source_id="source-1",
+        source_article_identity=IDENTITY,
+        original_url="https://example.com/article/123",
+        external_id="123",
+        normalized_title="Central bank holds rates",
+        content_availability=ContentAvailability.AVAILABLE,
+        content_reference="content://synthetic/article-123",
+        content_hash=hashlib.sha256(body.encode("utf-8")).hexdigest(),
+        content_normalization_version="normalization-v1",
+        summary="Policy decision summary",
+        author="A. Writer",
+        language="en",
+        published_at=None,
+        observed_at=NOW,
+        change_reason="INITIAL_COLLECTION",
+        rights_assessment_references=(
+            "metadata-assessment-1",
+            "storage-assessment-1",
+        ),
+    )
+    rights = FakeContentRights()
+    service, deps = build_service(rights=rights)
+
+    result = service.execute(
+        PersistArticleRevisionCommand(make_metadata(), revision)
+    )
+
+    assert result.created
+    assert len(rights.metadata_calls) == 1
+    assert len(rights.calls) == 1
+    articles = deps["articles"]
+    assert isinstance(articles, FakeArticleRepository)
+    assert articles.items[result.article_id].content_availability is ContentAvailability.AVAILABLE
