@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.88  
+**Version:** 4.89  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -254,7 +254,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.88  
+**Version:** 4.89  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -504,3 +504,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.88):** Refreshes the exact inspected code baseline to `cb258297a4568e6eec2083a0803e36caf61198e1`. Exact-commit verification passed 302 Application CI tests, 23 documentation validator tests, and all 41 isolated PostgreSQL PoC methods. The additional regression assertion covers source-identity lookup inside the same active UnitOfWork. No production adapter or ADR approval is implied.
+
+
+**Revision Note (v4.89):** Closes a remaining application-port inconsistency by requiring `find_current_by_revision_fingerprint` to receive the caller's active UnitOfWork, consistent with the transaction-bound current-revision read rule. The change updates the protocol, test fake, and Documents 15/17. It is not yet covered by a verified exact-commit Application CI run; durable adapters, database-level locking, and production qualification remain open.
