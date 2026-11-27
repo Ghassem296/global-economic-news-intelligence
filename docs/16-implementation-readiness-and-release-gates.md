@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.61  
+**Version:** 4.62  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `d511108cfdb48873ec8fe98e0fa403fba86db259`; ArticleRevision URL-validation hardening, including Unicode whitespace/control rejection, is included, but fresh Application CI is pending
+**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `c75f6e7ed81e60c7330e739181a252723c098b59`; ArticleRevision URL-validation hardening, including Unicode whitespace/control rejection, is included, but fresh Application CI is pending
 
 ---
 
@@ -429,3 +429,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.60):** Advances the inspected code/test snapshot to `bb7681854d197ccf5e916362b6b1b5cbd3a763eb` after a non-functional standard-library import-order cleanup in the shared URL validator. Current-main Application CI and Documentation Validation remain pending.
 
 **Revision Note (v4.61):** Advances the reviewed code/test snapshot to `d511108cfdb48873ec8fe98e0fa403fba86db259` after correcting the new regression fixtures to contain actual Unicode whitespace, format-control, and newline characters rather than escaped backslash sequences. Current-main Application CI and Documentation Validation remain pending.
+
+**Revision Note (v4.62):** Advances the reviewed code/test snapshot to `c75f6e7ed81e60c7330e739181a252723c098b59` after normalizing the regression fixtures to test a single literal backslash. Current-main Application CI and Documentation Validation remain pending.
