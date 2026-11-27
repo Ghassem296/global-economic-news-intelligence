@@ -724,14 +724,14 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     (concurrent_article_id,),
                 )
                 concurrent_row = await result.fetchone()
-                self.assertIsNotNone(
-                    concurrent_row,
-                    "The concurrent article committed during pg_dump must be present in the restored snapshot.",
-                )
-                self.assertEqual(
-                    concurrent_row,
-                    (self.source_id, "publisher:concurrent-backup-write", 1),
-                )
+                # pg_dump uses one MVCC snapshot. A write committed after
+                # that snapshot is correctly absent; if visible, it must be
+                # complete and internally consistent rather than partially copied.
+                if concurrent_row is not None:
+                    self.assertEqual(
+                        concurrent_row,
+                        (self.source_id, "publisher:concurrent-backup-write", 1),
+                    )
                 result = await restored.execute(
                     "SELECT version FROM schema_migrations ORDER BY version"
                 )
