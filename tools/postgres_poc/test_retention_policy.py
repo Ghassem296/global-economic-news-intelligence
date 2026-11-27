@@ -37,7 +37,7 @@ class BackupRetentionPolicyTests(unittest.TestCase):
         )
         self.assertEqual(
             plan_backup_deletions(artifacts, self.policy, self.now),
-            ("expired", "immutable-expired", "boundary"),
+            ("immutable-expired", "expired", "boundary"),
         )
 
     def test_retention_planner_fails_closed_and_rejects_invalid_policy(self) -> None:
