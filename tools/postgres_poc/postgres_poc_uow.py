@@ -44,8 +44,10 @@ class PostgreSQLUnitOfWork:
         # If commit raises, retain ACTIVE so the service's exception handler can
         # explicitly roll back and close the connection without masking the error.
         self._connection.commit()
-        self._connection.close()
+        # The database commit is the point of no return. Record it before
+        # closing so a close failure can never make rollback appear possible.
         self._state = "COMMITTED"
+        self._connection.close()
         return CommitResult()
 
     def rollback(self) -> None:
@@ -53,8 +55,9 @@ class PostgreSQLUnitOfWork:
         try:
             self._connection.rollback()
         finally:
-            self._connection.close()
+            # The transaction is no longer usable even if rollback/close fails.
             self._state = "ROLLED_BACK"
+            self._connection.close()
 
 
 class PostgreSQLUnitOfWorkFactory:
@@ -74,8 +77,8 @@ class PostgreSQLUnitOfWorkFactory:
             connection.execute(
                 sql.SQL("SET search_path TO {}").format(sql.Identifier(self._schema))
             )
-            connection.commit()
-            connection.execute("BEGIN")
+            # psycopg starts the next transaction on the first statement after
+            # commit; issuing an explicit BEGIN here would nest redundantly.
             return PostgreSQLUnitOfWork(connection)
         except BaseException:
             connection.close()
