@@ -284,3 +284,40 @@ def test_revision_rejects_non_jcs_metadata_values() -> None:
         revision(metadata={"floating": 1.25})
     with pytest.raises(ValueError, match="safe range"):
         revision(metadata={"large_integer": 2**54})
+
+def test_canonical_url_is_optional_secondary_source_identity_signal() -> None:
+    identity = SourceArticleIdentity(
+        "publisher:item:123",
+        "source-identity-v1",
+        canonical_url="https://example.com/canonical/123",
+    )
+    assert identity.canonical_url == "https://example.com/canonical/123"
+
+
+def test_canonical_url_does_not_change_semantic_revision_fingerprint() -> None:
+    without_canonical_url = revision()
+    with_canonical_url = revision(
+        source_article_identity=SourceArticleIdentity(
+            "publisher:item:123",
+            "source-identity-v1",
+            canonical_url="https://example.com/canonical/123",
+        )
+    )
+    assert (
+        with_canonical_url.revision_fingerprint
+        == without_canonical_url.revision_fingerprint
+    )
+
+
+@pytest.mark.parametrize(
+    "canonical_url",
+    ["example.com/article", "ftp://example.com/file", "https:///missing-host"],
+)
+def test_canonical_url_requires_absolute_http_url(canonical_url: str) -> None:
+    with pytest.raises(ValueError, match="absolute HTTP"):
+        SourceArticleIdentity(
+            "publisher:item:123",
+            "source-identity-v1",
+            canonical_url=canonical_url,
+        )
+
