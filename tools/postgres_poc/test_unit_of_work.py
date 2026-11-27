@@ -46,11 +46,11 @@ class PostgreSQLUnitOfWorkPoCTests(unittest.TestCase):
                 sql.SQL("SET search_path TO {}").format(sql.Identifier(self.schema))
             )
             migration_connection.commit()
-            with migration_connection.transaction():
-                for migration_name in MIGRATION_NAMES:
-                    migration_sql = (MIGRATIONS / migration_name).read_text(
-                        encoding="utf-8"
-                    )
+            for migration_name in MIGRATION_NAMES:
+                migration_sql = (MIGRATIONS / migration_name).read_text(
+                    encoding="utf-8"
+                )
+                with migration_connection.transaction():
                     migration_connection.execute(migration_sql, prepare=False)
         finally:
             migration_connection.close()
