@@ -296,4 +296,6 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.18):** Records 25 passing test methods, including POC-22's transactional failed-migration rollback check. A failure after partial DDL leaves neither the schema object nor an applied-migration history entry. Production migration tooling and rollback/recovery procedures remain unapproved.
 
 
+**Revision Note (v4.19):** Updated the readiness assessment against the 2026-11-27 main-branch snapshot and recorded the 26-test PostgreSQL PoC evidence while preserving the distinction between partial PoC results and production qualification.
+
 **Revision Note (v4.20):** Reconciles the readiness blockers and R1 technology gate with the latest 26-test PostgreSQL PoC evidence (22 integration methods plus four standalone retention-policy tests), including POC-22 migration rollback and POC-23 migration reapplication idempotency. The evidence remains partial; production key/credential custody, retention enforcement, off-site protection, restore authorization, full cluster/tablespace recovery, approved workload and performance thresholds, formal ADR-005 acceptance, and production toolchain selection remain open.
