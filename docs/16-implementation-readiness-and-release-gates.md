@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.87  
+**Version:** 4.88  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Executable application, tests, and PostgreSQL PoC reviewed on 2026-11-27 commit `bd7948ac187f65462c271d79f26689bc016ba638`. Application CI run `46000896403`, Documentation Validation run `46000896358`, and PostgreSQL 18.7 / Python 3.15 PoC run `46000896419` all completed successfully on this exact commit.
+**Baseline:** Executable application, tests, and PostgreSQL PoC reviewed on 2026-11-27 commit `cb258297a4568e6eec2083a0803e36caf61198e1`. Application CI run `46001262517`, Documentation Validation run `46001262593`, and PostgreSQL 18.7 / Python 3.15 PoC run `46001262732` all completed successfully on this exact commit.
 
 ---
 
@@ -186,7 +186,7 @@ A first-slice implementation may start only when all applicable gates below have
 | Gate | Required evidence | Pass condition |
 |---|---|---|
 | R0 — Product and architecture baseline | Scope statement, accepted foundational ADRs, reconciled architecture/data/component documents | No unresolved contradiction affecting the selected slice; deferred capabilities are explicitly disabled |
-| R1 — Technology baseline | 41 PoC test methods passed on PostgreSQL 18.7/Psycopg 3.3.9/Python 3.15.2 (37 PostgreSQL integration methods plus four standalone retention-policy unit tests; run `46000896419`, source commit `bd7948ac187f65462c271d79f26689bc016ba638`, artifact `15197638741`). Coverage includes concurrent-write logical backup/restore, nine versioned PoC-only migrations, encrypted/authenticated backup, least-privilege backup/restore identities, fail-closed retention planning, migration rollback/reapplication and concurrency (POC-22–24), domain integrity and ArticleRevision atomicity/concurrency (POC-25–30), idempotency and lease fencing (POC-31–33), external-outcome reconciliation (POC-34), and transaction-bound authorization/content-rights revocation ordering (POC-35–38). The latest four race scenarios prove that `FOR SHARE` locks serialize grant/assessment revocation against a protected write in the test schema; they do not prove production adapters or complete policy/profile locking. The PostgreSQL 18.7 linux/amd64 image is pinned to `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`. Remaining production credential/key management, retention enforcement, off-site/restore controls, restore authorization/credential lifecycle, full cluster/tablespace recovery, approved workload profile and thresholds, formal ADR-005/016 acceptance and explicit production-toolchain selection remain open | All mandatory correctness, backup/security, recovery, and approved workload gates pass; reproducible evidence and operational feasibility are reviewed; production engine/tooling/configuration are explicitly recorded in the Accepted ADR. PoC-only candidates do not satisfy production selection by themselves |
+| R1 — Technology baseline | 41 PoC test methods passed on PostgreSQL 18.7/Psycopg 3.3.9/Python 3.15.2 (37 PostgreSQL integration methods plus four standalone retention-policy unit tests; run `46001262732`, source commit `cb258297a4568e6eec2083a0803e36caf61198e1`, artifact `15198735753`). Coverage includes concurrent-write logical backup/restore, nine versioned PoC-only migrations, encrypted/authenticated backup, least-privilege backup/restore identities, fail-closed retention planning, migration rollback/reapplication and concurrency (POC-22–24), domain integrity and ArticleRevision atomicity/concurrency (POC-25–30), idempotency and lease fencing (POC-31–33), external-outcome reconciliation (POC-34), and transaction-bound authorization/content-rights revocation ordering (POC-35–38). The latest four race scenarios prove that `FOR SHARE` locks serialize grant/assessment revocation against a protected write in the test schema; they do not prove production adapters or complete policy/profile locking. The PostgreSQL 18.7 linux/amd64 image is pinned to `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`. Remaining production credential/key management, retention enforcement, off-site/restore controls, restore authorization/credential lifecycle, full cluster/tablespace recovery, approved workload profile and thresholds, formal ADR-005/016 acceptance and explicit production-toolchain selection remain open | All mandatory correctness, backup/security, recovery, and approved workload gates pass; reproducible evidence and operational feasibility are reviewed; production engine/tooling/configuration are explicitly recorded in the Accepted ADR. PoC-only candidates do not satisfy production selection by themselves |
 | R2 — Contract baseline | Approved Document 15; complete DTO schemas and transition matrices for every enabled workflow | No enabled workflow depends on an unresolved state, field, authorization, or concurrency rule |
 | R3 — Security, rights, and privacy | Threat-model controls, operation-specific rights decisions, privacy authorization boundaries, secret handling | Deny/unknown/expired/revoked/scope-mismatch cases fail closed; test-source permissions are documented |
 | R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, safe errors, structured logging, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
@@ -254,7 +254,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.87  
+**Version:** 4.88  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -501,3 +501,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.87):** Refreshes the exact-commit readiness baseline and records successful verification for the UnitOfWork-bound Article/current-revision repository reads: 302 Application CI tests, 23 documentation validator tests, and 41 isolated PostgreSQL PoC methods. This remains application-port and PoC evidence only; concrete production adapters, full policy/profile locking, formal ADR acceptance, and production qualification remain open.
+
+
+**Revision Note (v4.88):** Refreshes the exact inspected code baseline to `cb258297a4568e6eec2083a0803e36caf61198e1`. Exact-commit verification passed 302 Application CI tests, 23 documentation validator tests, and all 41 isolated PostgreSQL PoC methods. The additional regression assertion covers source-identity lookup inside the same active UnitOfWork. No production adapter or ADR approval is implied.
