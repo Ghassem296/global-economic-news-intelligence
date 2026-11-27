@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 4.0  
+**Version:** 4.1  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -235,7 +235,7 @@ These relationships do not imply that any related Proposed ADR has been accepted
 
 The PostgreSQL qualification test method, workload-profile template, mandatory correctness/failure matrix, measurement controls, decision method, and evidence-artifact requirements are defined in GENI-ADR-005-POC-001, `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`.
 
-That protocol is part of the evidence required to resolve this ADR. Its result register records reproducible partial PoC evidence: 37 test methods passed against the provisional PostgreSQL 18.7/Psycopg 3.3.9 stack (33 PostgreSQL integration methods and four standalone retention-policy unit tests) on Python 3.15. The latest verified source-code snapshot is `dd7d69e2b97cbf89c3ab1eda656964283a3aca9e`; its GitHub Actions PoC run `45993074511` uploaded evidence artifact `15195155946`. POC-31 through POC-33 verify concurrent idempotency claim/replay, interrupted-claim rollback, and lease-takeover fencing. POC-34 verifies that an unknown external side-effect outcome automatically moves to RECONCILIATION_REQUIRED, blocks blind execution retries, and advances to SUCCEEDED only after reconciliation. PoC-only migrations 007 and 008 provide the operation/attempt model, retry guard, and automatic state transitions. This remains partial PoC evidence only; production application adapters, workload/performance, key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, production toolchain approval, and formal ADR acceptance remain open.
+That protocol is part of the evidence required to resolve this ADR. GENI-ADR-005-POC-001 v1.36 records the latest exact-main freshness rerun: all 41 test methods passed against the provisional PostgreSQL 18.7/Psycopg 3.3.9 stack (37 PostgreSQL integration methods and four standalone retention-policy unit tests) on CPython 3.15.2. The verified executable source snapshot is `cb258297a4568e6eec2083a0803e36caf61198e1`; GitHub Actions PoC run `46001262732` uploaded evidence artifact `15198735753`. The run re-verifies the existing POC-01–38 scope, including ArticleRevision ownership/concurrency, idempotency, lease fencing, external-outcome reconciliation, and isolated transaction-bound authorization/content-rights revocation races. The PoC-only migration inventory remains nine migrations; migration 009 and the row-lock experiments are synthetic evidence, not production schema or adapters. This remains partial PoC evidence only; production application adapters, approved workload/performance thresholds, key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, production toolchain approval, and formal ADR acceptance remain open.
 
 The PoC must test the persistence semantics required by GENI-ADR-016, including atomic idempotency state, lease ownership, fencing, unknown-outcome recovery, and stale-worker rejection. GENI-ADR-016 remains a separate Proposed decision: the PoC may validate candidate-engine behavior against the proposed contract, but it does not accept ADR-016 or authorize production durable execution.
 
@@ -322,7 +322,7 @@ The references below are internal project documents used to establish the curren
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines relational entities, integrity constraints, and transactions. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Records PostgreSQL as the owner-selected target, subject to qualification and formal ADR acceptance. |
 | `GENI-ADR-016` | Internal | Defines persistence and recovery behaviors that constrain engine selection. |
-| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | GENI-ADR-005-POC-001 v1.33 defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records 37 passing PoC test methods on source-code snapshot `dd7d69e2b97cbf89c3ab1eda656964283a3aca9e` (run `45993074511`, artifact `15195155946`), including POC-34 automatic unknown-outcome reconciliation and retry blocking. This remains partial evidence, not full production qualification. |
+| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | GENI-ADR-005-POC-001 v1.36 defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records the latest exact-main 41-method PoC rerun on source-code snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` (run `46001262732`, artifact `15198735753`). This remains partial evidence, not full production qualification. |
 
 External legal review, provider measurements, market-data coverage measurements, and model-quality benchmarks remain outstanding wherever relevant.
 
@@ -363,3 +363,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | 4.0 | 2026-11-27 | Proposed | Synchronizes GENI-ADR-005-POC-001 v1.33 with the successful 37-method PostgreSQL PoC run `45993074511` on source-code snapshot `dd7d69e2b97cbf89c3ab1eda656964283a3aca9e` (artifact `15195155946`). Strengthens POC-34 with database-managed unknown-outcome transition, reconciliation gate, and terminal-state enforcement through PoC-only migrations 007–008. Production qualification, workload thresholds, security/operations, and formal ADR-005/ADR-016 acceptance remain open. | AI Architecture Assistant |
 
 **End of ADR**
+
+
+| 4.1 | 2026-11-27 | Proposed | Synchronizes the PoC evidence reference with GENI-ADR-005-POC-001 v1.36 and the successful exact-main 41-method freshness rerun on commit `cb258297a4568e6eec2083a0803e36caf61198e1` (run `46001262732`, artifact `15198735753`). The rerun adds no PoC scope; production qualification, workload/performance thresholds, security/operations, and formal ADR-005/ADR-016 acceptance remain open. | AI Architecture Assistant |
