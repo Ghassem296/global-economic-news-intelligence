@@ -35,7 +35,6 @@ from global_economic_news_intelligence.domain.contracts import UnitOfWork
 from global_economic_news_intelligence.exceptions import ErrorCode, GeniError
 
 
-
 def _require_uow(uow: UnitOfWork) -> PostgreSQLUnitOfWork:
     if not isinstance(uow, PostgreSQLUnitOfWork):
         raise TypeError("PoC PostgreSQL repositories require PostgreSQLUnitOfWork.")
