@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.23
+**Version:** 1.24
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -62,7 +62,7 @@ Create one versioned workload-profile record before any qualification measuremen
 | Recovery objectives | Approved RPO, RTO, backup frequency, backup retention, restore target, and acceptable recovery intervention | UNSET |
 | Availability and operations | Availability objective, maintenance window, monitoring/alerting expectations, and operator support capacity | UNSET |
 | Resource and cost envelope | CPU, memory, storage/IOPS, network, hosting constraints, and approved recurring cost ceiling | UNSET |
-| Correctness gates | Required outcomes for every POC-01 through POC-27 scenario; all are hard gates, not weighted scores | Defined in §5; owner approval of profile pending |
+| Correctness gates | Required outcomes for every POC-01 through POC-29 scenario; all are hard gates, not weighted scores | Defined in §5; owner approval of profile pending |
 | Performance thresholds | Predeclared per-operation throughput and p50/p95/p99 latency limits, lock/retry limits, resource ceilings, and measurement duration/repetition policy | UNSET |
 | Migration and recovery thresholds | Approved clean-install/upgrade, backup, restore, and crash-recovery limits | UNSET |
 
@@ -192,7 +192,7 @@ The completed PoC package must include:
 | Concurrency and async | POC-03, POC-07, POC-08, POC-11, and POC-12 passed in the isolated test run |
 | Performance results | Not measured; workload profile and thresholds remain unset; POC-18 captured a query plan only |
 | Operational assessment | Partial: concurrent-write logical backup/restore, ephemeral encryption/authentication, private backup-file permissions, and read-only least-privilege role smoke passed. Production key management, retention, off-site/immutable storage, restore authorization, monitoring, alerting, and operator runbook exercise remain pending |
-| Mandatory gates | 31 PoC test methods passed (27 PostgreSQL integration methods plus four standalone retention-policy unit tests), including POC-22 through POC-28 migration, domain-integrity, and atomic legacy-revision-backfill checks, but qualification remains partial: production key management, retention/off-site controls, restore authorization, approved workload profile, performance thresholds, formal security review, and ADR acceptance remain open |
+| Mandatory gates | All 32 PoC test methods passed (28 PostgreSQL integration methods plus four standalone retention-policy unit tests), including POC-22 through POC-29 migration, domain-integrity, atomic legacy-revision-backfill, and concurrent ArticleRevision compare-and-swap checks. Qualification remains partial: production key management, retention/off-site controls, restore authorization, full cluster/tablespace recovery, approved workload profile, performance thresholds, formal security review, and ADR-005 acceptance remain open |
 
 The follow-up run completed successfully in GitHub Actions run `45941330079` (commit `d0f8cec8f0df07373bf69178bd626d477a2edb9e`). All 18 test methods passed. The machine-readable artifact `postgres-poc-d0f8cec8f0df07373bf69178bd626d477a2edb9e` was uploaded with archive SHA-256 `70d12c61e62accfb54c162dad5e5c5ea6bf966656828f6fb67c8e855de0311b9`. The latest protection-enhanced run completed successfully in GitHub Actions run `45942169818` on commit `13555a16fe4eb26cb665c3505e37d1f3c5190fe7`; all 18 test methods passed, and artifact `postgres-poc-13555a16fe4eb26cb665c3505e37d1f3c5190fe7` was uploaded with archive SHA-256 `e78d8e607d07165de480d2e8f631f0ed518dbfae673abf07be4feedf5992fb52`. POC-15 checks remote and local backup file mode `0600`, uses an ephemeral random passphrase for an AES-256-CBC/PBKDF2 envelope, verifies a separate HMAC-SHA256 authentication tag before decryption, and checks that wrong-key and modified-ciphertext tags do not verify before restoring the database. The test uses a disposable key only; it is not a KMS/HSM or production key-custody implementation. POC-16 uses a child process and fresh process to verify committed state after restart; POC-17 checks a read-only least-privilege role. Production key management/rotation, retention, off-site/immutable storage, restore authorization, cluster-global-object recovery, formal security review, monitoring, and operator runbooks remain open. POC-18 captures a query plan only; no latency, throughput, capacity, or workload compliance is claimed. The approved workload profile and thresholds remain unset. PostgreSQL is not production-qualified and ADR-005 remains Proposed.
 
@@ -259,6 +259,7 @@ After qualification and formal acceptance, review the experimental evidence and 
 | 1.21 | 2026-11-27 | Proposed | Refreshes the latest reproducible 31-test PostgreSQL 18.7 / Python 3.15 PoC evidence to run `45961988925` on commit `428e6b6d3ea142175373246bba209476c50cd5c6`, artifact `15180889132`. All 31 tests pass; POC-28 remains synthetic candidate evidence only, and production qualification, workload thresholds, security/operations, and formal ADR-005 acceptance remain open. |
 | 1.22 | 2026-11-27 | Proposed | Adds POC-29 and records its successful execution: 32 total test methods (28 PostgreSQL integration and four retention-policy unit tests), run `45962990616`, artifact `15181591814`. Production workload/security/operations qualification and formal ADR-005 acceptance remain open. |
 | 1.23 | 2026-11-27 | Proposed | Refreshes the latest 32-test POC-29 evidence to run `45963235373` on commit `5c9e34af98a97326c22ac756f306225493f91e29`, artifact `15182595241`. All 32 methods pass; production qualification and formal ADR-005 acceptance remain open. |
+| 1.24 | 2026-11-27 | Proposed | Corrects the workload-profile correctness-gate range to include POC-29 and reconciles the mandatory-gates summary with the latest 32-method result (28 PostgreSQL integration methods plus four standalone retention-policy unit tests). Production qualification and formal ADR-005 acceptance remain open. |
 
 
 **End of Evidence Protocol**
