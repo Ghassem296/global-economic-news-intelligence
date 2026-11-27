@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.6  
+**Version:** 4.7  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `b869cf9cf77dd1305ea1ae71aedb900df8caaafc`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `b2e8ac5f9e1a707a8a05007f4364f0a46daef77b`
 
 ---
 
@@ -31,13 +31,13 @@ A published file, passing documentation check, or merged change is not by itself
 
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45939259661 for commit b869cf9cf77dd1305ea1ae71aedb900df8caaafc. It completed locked dependency installation, Ruff, mypy, and pytest; 211 tests passed.
+The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45939388122 for commit b2e8ac5f9e1a707a8a05007f4364f0a46daef77b. It completed locked dependency installation, Ruff, mypy, and pytest. The current run's test step passed; no test count is asserted here.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
 - A CLI that reports package version and disabled capability boundaries, using validated settings and safe logging initialization.
 - Unit tests for transition guards, aggregation, successor-decision linearity, review projection, external-outcome reconciliation, validated configuration, safe errors/logging, and domain dependency boundaries.
-- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the current main-branch run passed (45465238823).
+- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the current main-branch run passed (45939388122).
 - Existing documentation CI and registry validation remain separate and are preserved.
 
 The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
@@ -232,9 +232,9 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.6
+**Version:** 4.7
 **Status:** Proposed — Readiness assessment; not an architectural approval  
-**Last Updated:** 2026-11-26
+**Last Updated:** 2026-11-27
 
 **Revision Note (v2.8):** Tightened R1 and persistence blockers to require completed GENI-ADR-005-POC-001 evidence and formal ADR-005 acceptance before selecting a production database. Aligned the first-slice scope guard with Document 04 v1.31: new-event proposals remain proposals, ambiguous/review-required outcomes remain unresolved without material review actions, and Analysis/Report are fixture-driven with no LLM or external side effects. No ADR approval is implied.
 
@@ -269,3 +269,6 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.5):** Synchronizes current Document 15 references to v4.2 and preserves older version references only in historical revision notes. Aligns readiness evidence with the PostgreSQL target qualification gate.
 
 **Revision Note (v4.6):** Refreshes the inspected `main` baseline and Python 3.15 CI evidence to commit `b869cf9cf77dd1305ea1ae71aedb900df8caaafc` and successful Application CI run 45939259661 (211 tests passed). This verifies the code-quality baseline only; it does not establish product or production readiness.
+
+
+**Revision Note (v4.7):** Refreshes the inspected main-branch baseline to `b2e8ac5` and records the latest successful Python 3.15 Application CI run 45939388122 and Documentation validation run 45939388133. No ADR status, first-slice approval, or production authorization is changed.
