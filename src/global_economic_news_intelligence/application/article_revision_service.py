@@ -108,7 +108,14 @@ class AuthorizationVerifier(Protocol):
         *,
         action: str,
         resource_reference: str,
+        uow: UnitOfWork | None = None,
     ) -> bool:
+        """Check authorization; with a UoW, bind the decision to its commit.
+
+        Transaction-aware adapters must lock or otherwise serialize the
+        authoritative grant/policy version until this UnitOfWork commits or
+        rolls back. A preflight check without a UoW is not commit authorization.
+        """
         ...
 
 
@@ -120,6 +127,7 @@ class ContentRightsVerifier(Protocol):
         revision: PersistArticleRevision,
         *,
         at: datetime,
+        uow: UnitOfWork | None = None,
     ) -> bool:
         """Verify METADATA_ACCESS plus the applicable metadata-preservation rule."""
         ...
@@ -129,6 +137,7 @@ class ContentRightsVerifier(Protocol):
         revision: PersistArticleRevision,
         *,
         at: datetime,
+        uow: UnitOfWork | None = None,
     ) -> bool:
         ...
 
@@ -206,6 +215,13 @@ class ArticleRevisionService:
         request_fingerprint = self._request_fingerprint(command)
         uow = self._uow_factory.begin()
         try:
+            # Revalidate inside the same transaction that owns the business
+            # writes. Transaction-aware adapters must hold the authoritative
+            # authorization/rights versions stable through commit. This second
+            # check is also mandatory for idempotent replay.
+            self._require_authorization(metadata, resource_reference, uow=uow)
+            self._require_content_rights(revision, metadata, uow=uow)
+
             replay = self._idempotency.claim(
                 scope=metadata.idempotency_scope,
                 key=metadata.idempotency_key,
@@ -460,11 +476,14 @@ class ArticleRevisionService:
         self,
         metadata: CommandMetadata,
         resource_reference: str,
+        *,
+        uow: UnitOfWork | None = None,
     ) -> None:
         if not self._authorization.is_authorized(
             metadata,
             action=self.ACTION,
             resource_reference=resource_reference,
+            uow=uow,
         ):
             raise self._error(
                 ErrorCode.AUTHORIZATION_DENIED,
@@ -476,6 +495,8 @@ class ArticleRevisionService:
         self,
         revision: PersistArticleRevision,
         metadata: CommandMetadata,
+        *,
+        uow: UnitOfWork | None = None,
     ) -> None:
         evaluation_time = self._now()
         if not revision.rights_assessment_references:
@@ -487,6 +508,7 @@ class ArticleRevisionService:
         if not self._content_rights.permits_metadata_retention(
             revision,
             at=evaluation_time,
+            uow=uow,
         ):
             raise self._error(
                 ErrorCode.RIGHTS_NOT_ALLOWED,
