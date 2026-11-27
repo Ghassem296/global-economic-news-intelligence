@@ -13,6 +13,7 @@ from typing import Any
 import psycopg
 
 ROOT = Path(__file__).parent
+sys.path.insert(0, str(ROOT.parent.parent / "src"))
 RESULTS = ROOT / "results" / "poc-results.json"
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
 
