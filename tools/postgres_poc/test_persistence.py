@@ -929,6 +929,8 @@ asyncio.run(main())
                     "--publish",
                     "127.0.0.1::5432",
                     "--env",
+                    "POSTGRES_USER=geni_restore_admin",
+                    "--env",
                     "POSTGRES_PASSWORD=poc_restore_ephemeral",
                     image_digest,
                 )
@@ -944,7 +946,7 @@ asyncio.run(main())
                             target_container,
                             "pg_isready",
                             "-U",
-                            "postgres",
+                            "geni_restore_admin",
                             "-d",
                             "postgres",
                         ],
@@ -967,7 +969,7 @@ asyncio.run(main())
                         target_container,
                         "psql",
                         "-U",
-                        "postgres",
+                        "geni_restore_admin",
                         "-d",
                         "postgres",
                         "--set",
@@ -985,7 +987,7 @@ asyncio.run(main())
                 )
                 host_port = port_result.stdout.strip().rsplit(":", 1)[1]
                 target_url = (
-                    "postgresql://postgres:poc_restore_ephemeral@"
+                    "postgresql://geni_restore_admin:poc_restore_ephemeral@"
                     f"127.0.0.1:{host_port}/postgres"
                 )
                 target_connection = await psycopg.AsyncConnection.connect(
@@ -1008,6 +1010,10 @@ asyncio.run(main())
                         (parent_role, False, True),
                     ],
                 )
+                restored_superuser = await target_connection.execute(
+                    "SELECT rolsuper FROM pg_roles WHERE rolname = 'postgres'"
+                )
+                self.assertTrue((await restored_superuser.fetchone())[0])
                 membership = await target_connection.execute(
                     """
                     SELECT count(*)
