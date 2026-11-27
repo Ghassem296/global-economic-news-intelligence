@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.32  
+**Version:** 4.33  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `3e01ee2c0a725f670e0ca81e253e7436242f8ae7`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `03e34f5d5ed5e9889bb833b46955503540a91e11`
 
 ---
 
@@ -175,7 +175,7 @@ A first-slice implementation may start only when all applicable gates below have
 | Gate | Required evidence | Pass condition |
 |---|---|---|
 | R0 — Product and architecture baseline | Scope statement, accepted foundational ADRs, reconciled architecture/data/component documents | No unresolved contradiction affecting the selected slice; deferred capabilities are explicitly disabled |
-| R1 — Technology baseline | 26 PoC test methods passed on PostgreSQL 18.7/Psycopg 3.3.9 (22 PostgreSQL integration methods plus four standalone retention-policy unit tests), including concurrent-write full-database logical backup/restore, three migrations, experimental encrypted/authenticated backup with private file permissions, user-defined cluster-role/membership restore into a clean instance, a read-only `pg_read_all_data` backup identity plus a separate target-scoped restore identity, a fail-closed retention planner (without deletion/enforcement), child-process restart/reconnect, least-privilege role smoke tests, failed-migration rollback (POC-22), and idempotent migration reapplication (POC-23); remaining production credential/key management, owner-approved retention values/enforcement, off-site/restore controls, restore authorization/credential lifecycle, and full cluster/tablespace recovery, approved workload profile and thresholds, formal ADR-005 acceptance and explicit production-toolchain selection | All mandatory correctness, backup/security, recovery, and approved workload gates pass; reproducible evidence and operational feasibility are reviewed; production engine/tooling/configuration are explicitly recorded in the Accepted ADR. PoC-only candidates do not satisfy production selection by themselves |
+| R1 — Technology baseline | 30 PoC test methods passed on PostgreSQL 18.7/Psycopg 3.3.9/Python 3.15.2 (26 PostgreSQL integration methods plus four standalone retention-policy unit tests; GitHub Actions run `45955426252`, commit `03e34f5d5ed5e9889bb833b46955503540a91e11`, evidence artifact `15178850761`). Coverage includes concurrent-write full-database logical backup/restore, four migrations, experimental encrypted/authenticated backup with private file permissions, user-defined cluster-role/membership restore into a clean instance, separate read-only backup and target-scoped restore identities, fail-closed retention planning (without deletion/enforcement), child-process restart/reconnect, least-privilege role smoke tests, failed-migration rollback (POC-22), migration reapplication idempotency (POC-23), concurrent whole-file migration execution (POC-24), Article current-revision same-aggregate FK (POC-25), decision-case/outcome constraints (POC-26), and unique source-identity index verification (POC-27). The PostgreSQL 18.7 linux/amd64 image is pinned to `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`. Remaining production credential/key management, owner-approved retention values/enforcement, off-site/restore controls, restore authorization/credential lifecycle, full cluster/tablespace recovery, approved workload profile and thresholds, formal ADR-005 acceptance and explicit production-toolchain selection remain open | All mandatory correctness, backup/security, recovery, and approved workload gates pass; reproducible evidence and operational feasibility are reviewed; production engine/tooling/configuration are explicitly recorded in the Accepted ADR. PoC-only candidates do not satisfy production selection by themselves |
 | R2 — Contract baseline | Approved Document 15; complete DTO schemas and transition matrices for every enabled workflow | No enabled workflow depends on an unresolved state, field, authorization, or concurrency rule |
 | R3 — Security, rights, and privacy | Threat-model controls, operation-specific rights decisions, privacy authorization boundaries, secret handling | Deny/unknown/expired/revoked/scope-mismatch cases fail closed; test-source permissions are documented |
 | R4 — Executable foundation | Installable application package, pinned dependencies, validated configuration, safe errors, structured logging, CI, migrations | Clean setup succeeds; tests/lint/type checks run without paid production services |
@@ -344,3 +344,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.32):** Records the successful 30-test PostgreSQL PoC run (26 PostgreSQL integration methods plus four standalone retention-policy unit tests), including POC-24 through POC-27 and migration 004, with PostgreSQL 18.7 / Psycopg 3.3.9 / Python 3.15.2 and the immutable linux/amd64 image digest. Captures the raw evidence artifact and explicitly retains the nullable legacy current-revision pointer as an open production data-backfill/non-null gate. This is stronger PoC correctness evidence, not production qualification or ADR-005 acceptance.
+
+
+**Revision Note (v4.33):** Synchronizes the R1 technology gate with the latest successful 30-test PostgreSQL PoC evidence (26 PostgreSQL integration methods plus four standalone retention-policy tests), the four-migration schema, POC-24–27, immutable PostgreSQL image digest, and machine-readable artifact. The test run demonstrates PoC correctness only; production security/operations, workload approval, non-null legacy Article revision backfill, formal ADR-005 acceptance, and production toolchain selection remain gated.
