@@ -1068,11 +1068,12 @@ asyncio.run(main())
                     sql.SQL("DROP ROLE IF EXISTS {}").format(role)
                 )
             if restore_role_created:
-                await admin.execute(
+                await self.admin.execute(
                     sql.SQL("REVOKE ALL ON SCHEMA {} FROM {}").format(
                         sql.Identifier(self.schema), restore_role
                     )
                 )
+                await self.admin.commit()
                 await admin.execute(
                     sql.SQL("DROP ROLE IF EXISTS {}").format(restore_role)
                 )
