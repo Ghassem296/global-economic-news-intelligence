@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.31  
+**Version:** 4.32  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1301,7 +1301,7 @@ The EventIdentityOperation aggregate repository owns the operation and its input
 The workflow has four distinct phases:
 
 1. Prepare: authenticate actor; resolve exact authorization; load and validate policy version; validate input/output cardinality, roles, preassigned output Events, subject ownership, allocation completeness, evidence references and request fingerprint; check for conflicting active operations; then persist PENDING operation, links, initial history and idempotency result atomically. No Event identity projection changes in this phase.
-2. Claim and apply core effect: acquire the approved durable execution lease/fencing token; transition PENDING to IN_PROGRESS with history; within one UnitOfWork revalidate authorization/policy freshness and every expected `EventHistory` version, lock/serialize the complete input/output identity set, validate no conflicting operation has become active, coordinate EventRepository.apply_identity_projection, append each affected `EventHistory` record through EventHistoryRepository, persist operation effect state APPLIED through EventIdentityOperationRepository, and create durable downstream reconciliation intent. If the transaction outcome is uncertain, do not repeat the effect; reconcile by operation ID and durable history.
+2. Claim and apply core effect: acquire the approved durable execution lease/fencing token; transition PENDING to IN_PROGRESS with history; within one UnitOfWork revalidate authorization/policy freshness and every expected `EventHistory` version, lock/serialize the complete input/output identity set, validate no conflicting operation has become active, coordinate EventRepository.apply_identity_projection, append each affected `EventHistory` record through EventHistoryRepository, persist operation effect state APPLIED through EventIdentityOperationRepository, and, within that same UnitOfWork, create or retrieve the initial bounded discovery/finalization ProcessingStep records through `ProcessingStepRepository.create_or_get_identity_work_item` under a ProcessingRun targeted at the exact operation. These typed ProcessingStep records are the authoritative durable reconciliation intent; no separate outbox/queue entity is required. A broker notification, if later adopted, is only a wake-up hint and must be recoverable from persisted ProcessingStep state. If the transaction outcome is uncertain, do not repeat the effect; reconcile by operation ID and durable history.
 3. Reconcile downstream: enumerate affected EventMatchCase, Analysis and exact Report versions. Re-evaluate cases only through Event Resolution Workflow; any changed association requires a new case-scoped EventMatchDecision and EventService application. Analyses remain immutable; create a successor analysis only when the approved analytical workflow determines it is required. For every affected report version, create exactly one `EventIdentityOperationReportImpact` and initial history action; ReportVersionService assesses it and assigns an owned remediation work item when correction is required. PublicationService and ReportDelivery are never invoked implicitly.
 4. Finalize: mark SUCCEEDED only when core effect is APPLIED, discovery is complete, every required case/analysis reconciliation step is complete, and every discovered report impact is ASSESSED, REMEDIATION_REQUIRED with a valid owned work-item reference, or RESOLVED. A case-reconciliation step is complete only after a successor EventMatchDecision is applied, an explicit unresolved/no-link disposition is permitted by the approved policy, or a required human review is handed to a durable, correctly scoped and assigned ReviewRecord under GENI-ADR-014. An analysis-reconciliation step is complete only after a documented no-change assessment or an immutable successor Analysis is persisted. A merely queued/in-memory task, open case without an accountable review task, or pending analysis step is not completion. Otherwise remain RECONCILIATION_REQUIRED. FAILED/CANCELLED is permitted only when the core effect is definitively NOT_APPLIED.
 
@@ -1389,6 +1389,8 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 **Revision Note (v4.0):** Defines the typed ArticleRevisionRecord persistence result and aligns the repository port signatures with its fingerprint-verification contract. The port remains technology-neutral; no database adapter or ArticleRepository implementation is implied.
 
 **Revision Note (v4.1):** Records PostgreSQL as the owner-selected target while keeping production qualification and exact tooling gated; removes stale wording that treated the physical database engine itself as still undecided.
+
+**Revision Note (v4.32):** Removes ambiguity in the core-transaction handoff by requiring initial bounded discovery/finalization work to be persisted as typed ProcessingStep records in the same UnitOfWork as the applied identity effect and its history. ProcessingStep is authoritative; any future broker message is only a wake-up hint. Runtime execution remains gated.
 
 **End of Document**
 
