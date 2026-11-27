@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.0  
+**Version:** 4.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -15,7 +15,7 @@ This document converts the first-slice repository inventory in Document 02, Sect
 
 It is a proposed implementation specification, not an ADR and not an approval of any technology, policy, provider, source license, or business rule. It does not authorize production processing. The Project Owner must approve this contract baseline and all applicable ADRs before dependent implementation begins.
 
-The notation is language- and database-neutral. Identifiers are opaque domain identifiers; concrete representations (UUID, integer, string, etc.) are selected by the implementation only after the applicable technology decision. No SQL, ORM, transport framework, database engine, queue, or public API is selected here.
+The notation is language- and database-neutral. PostgreSQL is the Project Owner-selected target relational engine, but its production qualification and exact implementation configuration remain gated by GENI-ADR-005. Identifiers are opaque domain identifiers; concrete representations (UUID, integer, string, etc.) are selected only after the applicable technology and qualification decisions. This document does not select a driver, ORM/query layer, migration tool, transaction strategy, queue, or public API.
 
 ## 2. Scope and explicit exclusions
 
@@ -386,8 +386,8 @@ Before implementation of these contracts:
 ### Gate B — Technology proof and implementation selection
 
 Before persistence adapters are selected:
-- GENI-ADR-005 is formally Accepted only after the GENI-ADR-005-POC-001 protocol is executed with an approved workload profile, predeclared thresholds, all mandatory correctness/failure gates, reproducible raw evidence, and a reviewed engine recommendation. The protocol itself is not evidence of a passing PoC.
-- Database engine, exact version, driver, migration tool, async strategy, transaction isolation/locking, connection lifecycle, deployment topology, and backup/restore procedure are recorded in the Accepted ADR and synchronized implementation baseline.
+- PostgreSQL production qualification and formal acceptance of GENI-ADR-005 require execution of GENI-ADR-005-POC-001 with an approved workload profile, predeclared thresholds, all mandatory correctness/failure gates, reproducible raw evidence, and a reviewed qualification recommendation. PostgreSQL is already the owner-selected target; the protocol itself is not evidence of a passing PoC.
+- Exact PostgreSQL version, driver, query/ORM layer, migration tool, async strategy, transaction isolation/locking, connection lifecycle, deployment topology, and backup/restore procedure are recorded in the Accepted ADR and synchronized implementation baseline.
 - GENI-ADR-016 is accepted before durable lease, fencing, idempotency and recovery behavior is treated as approved implementation policy.
 
 ### Gate C — Executable verification
@@ -410,7 +410,7 @@ Before a first-slice milestone is declared complete:
 The following remain open and must not be guessed by implementers:
 
 - Concrete programming-language types, ID encoding and serialization.
-- Database engine, schema dialect, driver, ORM/query layer and migration tool.
+- Exact PostgreSQL version, schema details, driver, ORM/query layer and migration tool.
 - Transaction isolation level, lock strategy and numeric concurrency targets.
 - EventCreationPolicy values, authorization owner and review requirements.
 - Event matching thresholds, scoring calibration and policy version semantics.
@@ -595,8 +595,8 @@ For the deterministic fixture slice, complete only the DTOs exercised by its ena
 
 #### 10.10.2 Persistence and transaction proof
 
-Before selecting or enabling the physical database, complete GENI-ADR-005 proof-of-concept and record:
-- Engine and supported version.
+Before selecting or enabling the production PostgreSQL configuration, complete GENI-ADR-005 proof-of-concept and record:
+- Exact PostgreSQL version and supported upgrade policy.
 - Driver and synchronous/asynchronous access strategy.
 - Migration tool and clean-install/upgrade behavior.
 - Transaction isolation/locking and optimistic concurrency behavior.
@@ -1175,7 +1175,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.0  
+**Version:** 4.1  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
@@ -1196,5 +1196,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v3.9):** Adds the application-layer PersistArticleRevisionCommand envelope, composes it with the shared CommandMetadata exactly once, and places expected aggregate version only in the common envelope. Application authorization and source-content rights references remain independent.
 
 **Revision Note (v4.0):** Defines the typed ArticleRevisionRecord persistence result and aligns the repository port signatures with its fingerprint-verification contract. The port remains technology-neutral; no database adapter or ArticleRepository implementation is implied.
+
+**Revision Note (v4.1):** Records PostgreSQL as the owner-selected target while keeping production qualification and exact tooling gated; removes stale wording that treated the physical database engine itself as still undecided.
 
 **End of Document**
