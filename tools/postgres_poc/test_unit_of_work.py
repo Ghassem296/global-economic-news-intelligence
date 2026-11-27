@@ -5,11 +5,12 @@ import unittest
 import uuid
 from pathlib import Path
 from typing import Any
+from unittest.mock import Mock
 
 import psycopg
 from psycopg import sql
 
-from postgres_poc_uow import PostgreSQLUnitOfWorkFactory
+from postgres_poc_uow import PostgreSQLUnitOfWork, PostgreSQLUnitOfWorkFactory
 
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
 POSTGRES_CONTAINER_ID = os.environ.get("GENI_POC_POSTGRES_CONTAINER_ID", "")
@@ -143,3 +144,30 @@ class PostgreSQLUnitOfWorkPoCTests(unittest.TestCase):
                     future.result()
         finally:
             uow.rollback()
+
+class PostgreSQLUnitOfWorkFailureTests(unittest.TestCase):
+    def test_rollback_error_is_not_masked_by_connection_close_error(self) -> None:
+        connection = Mock()
+        connection.rollback.side_effect = RuntimeError("rollback failed")
+        connection.close.side_effect = OSError("close failed")
+        uow = PostgreSQLUnitOfWork(connection)
+
+        with self.assertRaisesRegex(RuntimeError, "rollback failed"):
+            uow.rollback()
+
+        self.assertEqual(uow.state, "ROLLED_BACK")
+        connection.rollback.assert_called_once_with()
+        connection.close.assert_called_once_with()
+
+    def test_successful_rollback_reports_connection_close_error(self) -> None:
+        connection = Mock()
+        connection.close.side_effect = OSError("close failed")
+        uow = PostgreSQLUnitOfWork(connection)
+
+        with self.assertRaisesRegex(OSError, "close failed"):
+            uow.rollback()
+
+        self.assertEqual(uow.state, "ROLLED_BACK")
+        connection.rollback.assert_called_once_with()
+        connection.close.assert_called_once_with()
+
