@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 3.1  
+**Version:** 3.2  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -23,7 +23,7 @@ The initial development foundation uses:
 - A setuptools-based pyproject package with the build backend pinned to `setuptools==84.2.1`.
 - uv 0.13.9 as the pinned project package manager, with the complete Python 3.15 dependency resolution committed in `uv.lock`.
 - No runtime third-party dependencies in the domain foundation.
-- Validated environment/log-level configuration, safe machine-classifiable errors, and allowlisted structured JSON logging.
+- Validated environment/log-level configuration, safe machine-classifiable errors, and allowlisted structured JSON logging. Non-finite numeric metadata is omitted and JSON serialization rejects NaN/infinity values.
 - pytest, Ruff, and mypy as development tools.
 - GitHub Actions for application CI.
 
@@ -304,3 +304,5 @@ The first executable baseline includes the Python package, validated configurati
 **Revision Note (v3.0):** Aligns ArticleRevision `original_url` and `canonical_url` validation with the shared Source URL hygiene policy. Credential-bearing URLs, sensitive query parameters, fragments, invalid ports, whitespace, control characters and backslashes are rejected consistently. This is structural validation only; DNS/redirect/SSRF and egress controls remain mandatory at network use time.
 
 **Revision Note (v3.1):** Extends the shared URL hygiene rule to reject Unicode whitespace and Unicode control/format characters, closing invisible-character variants of the same ambiguous-input risk. Network-time DNS, redirect, SSRF and egress controls remain separate.
+
+**Revision Note (v3.2):** Hardens structured logging against non-finite numeric metadata: NaN and positive/negative infinity are omitted from allowlisted fields, and JSON serialization runs with non-standard numeric values disabled. Regression tests cover all three values. No new logging fields or production capability is enabled.
