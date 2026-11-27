@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.21  
+**Version:** 4.22  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1314,4 +1314,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v4.20):** Extends the disabled EventIdentityOperation contract gate to cover durable discovery and assessment of affected immutable report versions, and explicitly separates report correction from publication and recipient-delivery remediation. Aligns with Documents 02 v1.55 and 03 v1.58; no implementation or capability enablement is implied.
 
 
-**Revision Note (v4.21):** Requires append-only report-impact history and a durable owned remediation work-item reference for every unresolved report correction. An impact note without an accountable persisted work item cannot satisfy the EventIdentityOperation completion gate. Aligns with Documents 02 v1.56 and 03 v1.59.
+**Revision Note (v4.21):** Requires append-only report-impact history and a durable owned remediation work-item reference for every unresolved report correction. An impact note without an accountable persisted work item cannot satisfy the EventIdentityOperation completion gate. Aligns with Documents 02 v1.57 and 03 v1.60.
+
+
+**Revision Note (v4.22):** Synchronizes active cross-document references with Documents 02 v1.57 and 03 v1.60 after the report-impact history subsection was placed under the correct Event Identity Operations section. No implementation gate is relaxed.
