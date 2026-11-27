@@ -1508,7 +1508,7 @@ asyncio.run(main())
             SELECT indexname, indexdef
             FROM pg_indexes
             WHERE schemaname = %s AND tablename = 'articles'
-              AND indexdef LIKE '%(source_id, external_identity)%'
+              AND position('(source_id, external_identity)' in indexdef) > 0
             ORDER BY indexname
             """,
             (self.schema,),
