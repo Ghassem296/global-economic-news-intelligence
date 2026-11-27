@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.88
+**Version:** 10.89
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -161,7 +161,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.62 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.41 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.8 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
+| GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model.md` | 1.10 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-API-009 | API and Integration Contracts | `docs/09-api-and-integration-contracts.md` | 1.3 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-SRC-010 | Source Credibility and Independence Specification | `docs/10-source-credibility-and-independence.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-TAX-011 | Economic Taxonomy Specification | `docs/11-economic-taxonomy-specification.md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
@@ -512,6 +512,8 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v4.9):** Aligns Document 16's duplicate version metadata at v4.3 and refreshes the inspected baseline. The rights-policy implementation remains a pure eligibility gate; no expiry job, deletion workflow, or production authorization is implied.
 
 **Revision Note (v5.0):** Refreshes the controlled-document inventory for Document 16 v4.4 and the inspected `main` baseline. Records the corrected distinction between the owner-selected PostgreSQL target and pending production qualification/formal ADR-005 acceptance. No ADR status or production authorization is changed.
+
+**Revision Note (v10.89):** Synchronizes GENI-SEC-008 to v1.10 after adding explicit gated permissions for Event Identity Operation commands.
 
 **End of Document**
 
