@@ -1219,7 +1219,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.6  
+**Version:** 4.7  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-27
 
@@ -1257,9 +1257,6 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v4.5):** Makes the absence of rights-assessment references an explicit fail-closed condition for every persisted ArticleRevision, including metadata-only and unavailable revisions. No write transaction may begin without at least one applicable rights-evidence reference.
 
 **Revision Note (v4.6):** Aligns the ArticleRevisionService contract with the reviewed implementation: the request fingerprint now binds the optional canonical URL; Article/aggregate-version/current-revision invariants are verified identically for ID-addressed and identity-addressed commands; rollback covers cancellation and interruption; and the untrusted `observed_at` rights-evaluation time is recorded as an open hardening requirement. No ADR approval is implied.
-
-
-**Revision Note (v4.7):** Hardens ArticleRevisionService rights checks to use a validated trusted application Clock rather than source-supplied `observed_at`, and captures one evaluation instant for all required rights checks. Defines source identity by source ID, canonical source identifier and normalization version; treats canonical URL, original URL and external ID as mutable projection attributes. When semantic revision fingerprint is unchanged, the service refreshes those projection attributes with optimistic concurrency without appending a new immutable ArticleRevision. Production Clock, repository adapters and PostgreSQL concurrency/integration tests remain required.
 
 
 **Revision Note (v4.7):** Hardens ArticleRevisionService rights checks to use a validated trusted application Clock rather than source-supplied `observed_at`, and captures one evaluation instant for all required rights checks. Defines source identity by source ID, canonical source identifier and normalization version; treats canonical URL, original URL and external ID as mutable projection attributes. When semantic revision fingerprint is unchanged, the service refreshes those projection attributes with optimistic concurrency without appending a new immutable ArticleRevision. Production Clock, repository adapters and PostgreSQL concurrency/integration tests remain required.
