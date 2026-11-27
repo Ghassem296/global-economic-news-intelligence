@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-OPS-013  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -68,7 +68,7 @@ A failed or interrupted restore must not be treated as successful because the da
 
 ### 7.3 Current PostgreSQL PoC evidence boundary
 
-The isolated PostgreSQL PoC exercises a full logical database backup during concurrent activity, isolated database restore, migration-history/application-invariant verification, private file permissions, and an experimental encrypted/authenticated envelope. POC-19 additionally restores user-defined roles and role membership from `pg_dumpall --globals-only --no-role-passwords` into a clean PostgreSQL 18.7 instance, retaining the destination bootstrap administrator and verifying role attributes and membership. POC-20 verifies two distinct identities: a dedicated backup login inheriting `pg_read_all_data` can create a full logical database dump with file mode `0600` but cannot write application rows; a separate restore login owns only the isolated target database, restores the dump there, and is denied writes to the source database. Both identities lack superuser, CREATEDB, and CREATEROLE privileges. The restore verifies synthetic application rows and migration history. POC-21 is covered by four standalone unit tests, independent of PostgreSQL service availability, and exercises a pure retention planner using synthetic fixtures: it requires an explicit policy, preserves the minimum verified-copy count, legal holds, and active immutability windows, excludes unverified artifacts from automatic deletion, and returns oldest-first candidates. The planner also rejects malformed/future-dated metadata, checks exact immutability expiry boundaries, and returns deterministic order for tied timestamps. It does not delete, schedule, or enforce retention; its example values are not production policy. POC-22 injects a failure after partial migration DDL and verifies transactional rollback removes the schema change and leaves no applied-migration record. This is a PoC runner test, not approval of production migration tooling or rollback procedures. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. The tests do not establish production backup encryption, KMS/HSM custody, production credential provisioning/rotation/revocation, separate restore authorization, off-site storage, immutability, retention enforcement, separate restore-identity authorization, tablespace/configuration recovery, full cluster recovery, role-password/secret recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
+The isolated PostgreSQL PoC exercises a full logical database backup during concurrent activity, isolated database restore, migration-history/application-invariant verification, private file permissions, and an experimental encrypted/authenticated envelope. POC-19 additionally restores user-defined roles and role membership from `pg_dumpall --globals-only --no-role-passwords` into a clean PostgreSQL 18.7 instance, retaining the destination bootstrap administrator and verifying role attributes and membership. POC-20 verifies two distinct identities: a dedicated backup login inheriting `pg_read_all_data` can create a full logical database dump with file mode `0600` but cannot write application rows; a separate restore login owns only the isolated target database, restores the dump there, and is denied writes to the source database. Both identities lack superuser, CREATEDB, and CREATEROLE privileges. The restore verifies synthetic application rows and migration history. POC-21 is covered by four standalone unit tests, independent of PostgreSQL service availability, and exercises a pure retention planner using synthetic fixtures: it requires an explicit policy, preserves the minimum verified-copy count, legal holds, and active immutability windows, excludes unverified artifacts from automatic deletion, and returns oldest-first candidates. The planner also rejects malformed/future-dated metadata, checks exact immutability expiry boundaries, and returns deterministic order for tied timestamps. It does not delete, schedule, or enforce retention; its example values are not production policy. POC-22 injects a failure after partial migration DDL and verifies transactional rollback removes the schema change and leaves no applied-migration record. This is a PoC runner test, not approval of production migration tooling or rollback procedures. POC-23 reruns already-applied migrations and confirms the migration history and original timestamps do not change. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. The tests do not establish production backup encryption, KMS/HSM custody, production credential provisioning/rotation/revocation, separate restore authorization, off-site storage, immutability, retention enforcement, separate restore-identity authorization, tablespace/configuration recovery, full cluster recovery, role-password/secret recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
 
 ## 8. Capacity and Cost
 
@@ -117,7 +117,7 @@ Runbook publication is not evidence of successful exercise. See Documents 02, 03
 ---
 
 **Document ID:** GENI-OPS-013  
-**Version:** 1.8  
+**Version:** 1.9  
 **Status:** Draft — Under Architecture Review  
 
 
@@ -132,5 +132,7 @@ Runbook publication is not evidence of successful exercise. See Documents 02, 03
 **Revision Note (v1.7):** Records four standalone retention unit tests that run without PostgreSQL and validate malformed/future-dated metadata, immutability expiry boundaries, and deterministic ordering. The planner remains non-destructive; owner-approved production retention and enforcement remain release gates.
 
 **Revision Note (v1.8):** Records POC-22's successful synthetic failed-migration rollback test. It verifies partial DDL and migration-history changes roll back together; production migration tooling, recovery procedures, and operator authorization remain open.
+
+**Revision Note (v1.9):** Records POC-23's successful idempotent reapplication of migrations 001–003, preserving migration history and original timestamps. This does not approve production migration tooling or a production rollback strategy.
 
 **End of Document**

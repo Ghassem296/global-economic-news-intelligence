@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 6.8
+**Version:** 6.9
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -166,10 +166,10 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-SRC-010 | Source Credibility and Independence Specification | `docs/10-source-credibility-and-independence.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-TAX-011 | Economic Taxonomy Specification | `docs/11-economic-taxonomy-specification.md` | 1.0 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-EVAL-012 | Testing and Evaluation Strategy | `docs/12-testing-and-evaluation-strategy.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.8 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
+| GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-26 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.18 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.19 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 2.3 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-26 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -179,9 +179,9 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 6.8 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 6.9 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.34 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.35 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
 
@@ -197,7 +197,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 2.6 | Proposed | Published | Project Owner | 2026-11-26 | PostgreSQL target direction recorded; partial 24-test PoC evidence: 20 PostgreSQL integration methods plus four standalone retention-policy unit tests, including cluster-role/membership restore and separate least-privilege backup/restore identities; qualification and formal acceptance pending |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 2.7 | Proposed | Published | Project Owner | 2026-11-26 | PostgreSQL target direction recorded; partial 24-test PoC evidence: 20 PostgreSQL integration methods plus four standalone retention-policy unit tests, including cluster-role/membership restore and separate least-privilege backup/restore identities; qualification and formal acceptance pending |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -245,7 +245,7 @@ They are not automatically binding project specifications.
 | Agent Template Reference Guide | `docs/references/agent-template/README.md` | Reference | Published |
 | Agent Template Architecture | `docs/references/agent-template/agent-template-architecture.md` | Reference | Published |
 | Agent Template Implementation Specification | `docs/references/agent-template/agent-template-implementation-specification.md` | Reference | Published |
-| GENI-ADR-005 Persistence Proof-of-Concept Protocol | `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | v1.16 Proposed protocol; 24 test methods passed (20 PostgreSQL integration and four standalone retention-policy unit tests), including authenticated backup, cluster-role/membership restore, separate least-privilege backup/restore identities, and fail-closed retention-planner checks; qualification remains partial | Published |
+| GENI-ADR-005 Persistence Proof-of-Concept Protocol | `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | v1.17 Proposed protocol; 24 test methods passed (20 PostgreSQL integration and four standalone retention-policy unit tests), including authenticated backup, cluster-role/membership restore, separate least-privilege backup/restore identities, and fail-closed retention-planner checks; qualification remains partial | Published |
 
 Reference material may inform project design, but product-specific requirements and accepted decisions must be documented in the appropriate authoritative project documents.
 
@@ -551,3 +551,5 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v6.7):** Records PoC-001 v1.15, ADR-005 v2.5, ADR Registry v1.33, Readiness Document 16 v4.17, and Operations Document 13 v1.7. The latest successful 24-test run comprises 20 PostgreSQL integration methods and four standalone retention-policy unit tests. The independent tests validate fail-closed metadata handling, future-date rejection, immutability boundaries, and deterministic candidate ordering. The planner remains non-destructive and does not set production retention values or enforcement. Production credential lifecycle, owner-approved retention, off-site/immutable protection, restore authorization, full cluster/tablespace recovery, workload/performance thresholds, and formal ADR acceptance remain open. The inspected baseline is `41a6254e36c56e45477309c76f31f532f0b907c4`.
 
 **Revision Note (v6.8):** Records PoC-001 v1.16, ADR-005 v2.6, ADR Registry v1.34, Readiness Document 16 v4.18, and Operations Document 13 v1.8. The latest successful 25-test run comprises 21 PostgreSQL integration methods and four standalone retention-policy unit tests. POC-22 validates rollback of partial DDL and migration-history changes after a failed migration. Production migration tooling, rollback/recovery procedures, credential lifecycle, owner-approved retention, off-site/immutable protection, restore authorization, full cluster/tablespace recovery, workload/performance thresholds, and formal ADR acceptance remain open. The inspected baseline is `a1ed856641d9c029f92fabb50005f1bd0f44addc`.
+
+**Revision Note (v6.9):** Records PoC-001 v1.17, ADR-005 v2.7, ADR Registry v1.35, Readiness Document 16 v4.19, and Operations Document 13 v1.9. The latest successful 26-test run comprises 22 PostgreSQL integration methods and four standalone retention-policy unit tests. POC-23 verifies that rerunning migrations 001–003 preserves migration history and original timestamps. Production migration tooling, rollback/recovery procedures, credential lifecycle, owner-approved retention, off-site/immutable protection, restore authorization, full cluster/tablespace recovery, workload/performance thresholds, and formal ADR acceptance remain open. The inspected baseline is `49a7690e40dbac2c5e0a1afd0cf8229e78a10ed6`.
