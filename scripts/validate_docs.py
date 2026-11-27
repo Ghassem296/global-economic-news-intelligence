@@ -95,7 +95,7 @@ def validate_readiness_document_version_references() -> None:
     """Keep Document 16's explicit version references aligned with source documents."""
     readiness = read_text(ROOT / "docs/16-implementation-readiness-and-release-gates.md")
     # Historical revision notes intentionally retain the versions that were current at that time.
-    current_readiness = "\\n".join(
+    current_readiness = "\n".join(
         line for line in readiness.splitlines() if not line.startswith("**Revision Note")
     )
     expected_versions = {
@@ -103,7 +103,7 @@ def validate_readiness_document_version_references() -> None:
         "Document 15": document_version(ROOT / "docs/15-first-slice-implementation-contracts.md"),
     }
     for label, expected in expected_versions.items():
-        found = re.findall(rf"{re.escape(label)} v([0-9]+\.[0-9]+)", readiness)
+        found = re.findall(rf"{re.escape(label)} v([0-9]+\.[0-9]+)", current_readiness)
         if not found:
             fail(f"{label} version reference is missing from Document 16")
         mismatches = sorted(set(version for version in found if version != expected))
