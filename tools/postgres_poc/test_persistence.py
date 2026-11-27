@@ -529,6 +529,8 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     "postgres",
                     "-d",
                     "geni_poc",
+                    "-n",
+                    self.schema,
                     "-Fc",
                     "-f",
                     remote_backup,
@@ -559,6 +561,8 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     "--no-owner",
                     "--no-acl",
                     "--exit-on-error",
+                    "-n",
+                    self.schema,
                     remote_backup,
                 )
                 restored_url = DATABASE_URL.rsplit("/", 1)[0] + f"/{restore_database}"
@@ -589,10 +593,12 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
     async def test_poc_17_least_privilege_role_cannot_write(self) -> None:
         role_name = f"poc_reader_{uuid.uuid4().hex[:12]}"
         role = sql.Identifier(role_name)
+        role_created = False
         try:
             await self.admin.execute(
                 sql.SQL("CREATE ROLE {} NOLOGIN").format(role)
             )
+            role_created = True
             await self.admin.execute(
                 sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(
                     sql.Identifier(self.schema), role
@@ -622,20 +628,21 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 )
             await self.connection.rollback()
         finally:
-            await self.admin.execute(
-                sql.SQL("REVOKE ALL ON TABLE {}.articles FROM {}").format(
-                    sql.Identifier(self.schema), role
+            if role_created:
+                await self.admin.execute(
+                    sql.SQL("REVOKE ALL ON TABLE {}.articles FROM {}").format(
+                        sql.Identifier(self.schema), role
+                    )
                 )
-            )
-            await self.admin.execute(
-                sql.SQL("REVOKE ALL ON SCHEMA {} FROM {}").format(
-                    sql.Identifier(self.schema), role
+                await self.admin.execute(
+                    sql.SQL("REVOKE ALL ON SCHEMA {} FROM {}").format(
+                        sql.Identifier(self.schema), role
+                    )
                 )
-            )
-            await self.admin.execute(
-                sql.SQL("DROP ROLE IF EXISTS {}").format(role)
-            )
-            await self.admin.commit()
+                await self.admin.execute(
+                    sql.SQL("DROP ROLE IF EXISTS {}").format(role)
+                )
+                await self.admin.commit()
 
     async def test_poc_16_reconnect_reads_committed_operation(self) -> None:
         record_id = uuid.uuid4()
