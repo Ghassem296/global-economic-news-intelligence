@@ -186,7 +186,7 @@ class ArticleRevisionService:
         revision = command.revision
         resource_reference = self._resource_reference(command)
         self._require_authorization(metadata, resource_reference)
-        self._require_content_rights(revision)
+        self._require_content_rights(revision, metadata)
 
         request_fingerprint = self._request_fingerprint(command)
         uow = self._uow_factory.begin()
@@ -201,7 +201,7 @@ class ArticleRevisionService:
                 uow.rollback()
                 return replay
 
-            article = self._resolve_article(command, uow)
+            article = self._resolve_article(command)
             if article is not None:
                 current = self._revisions.get_current_for_article(article.article_id)
                 if current is None or current.revision_id != article.current_revision_id:
@@ -277,7 +277,6 @@ class ArticleRevisionService:
     def _resolve_article(
         self,
         command: PersistArticleRevisionCommand,
-        uow: UnitOfWork,
     ) -> ArticleProjection | None:
         if command.article_id is not None:
             article = self._articles.get_by_id(command.article_id)
@@ -311,6 +310,25 @@ class ArticleRevisionService:
                 "Persisted Article is missing its aggregate version.",
                 command.metadata,
             )
+        if article is not None and command.article_id is None:
+            current = self._revisions.get_current_for_article(article.article_id)
+            if current is None or current.revision_id != article.current_revision_id:
+                raise self._error(
+                    ErrorCode.INVARIANT_VIOLATION,
+                    "Article current revision pointer is inconsistent.",
+                    command.metadata,
+                )
+            if (
+                current.revision_fingerprint
+                != command.revision.revision_fingerprint
+                or current.revision_fingerprint_schema_version
+                != ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION
+            ):
+                raise self._error(
+                    ErrorCode.CONFLICT,
+                    "Source identity already exists; update requires an Article ID and expected version.",
+                    command.metadata,
+                )
         return article
 
     @staticmethod
@@ -371,7 +389,11 @@ class ArticleRevisionService:
                 metadata,
             )
 
-    def _require_content_rights(self, revision: PersistArticleRevision) -> None:
+    def _require_content_rights(
+        self,
+        revision: PersistArticleRevision,
+        metadata: CommandMetadata,
+    ) -> None:
         if revision.content_availability not in {
             ContentAvailability.AVAILABLE,
             ContentAvailability.PARTIAL,
@@ -384,8 +406,7 @@ class ArticleRevisionService:
             raise self._error(
                 ErrorCode.RIGHTS_NOT_ALLOWED,
                 "Persistent storage is not authorized for this content scope.",
-                # The caller's metadata is attached by execute below if this fails.
-                None,
+                metadata,
             )
 
     @staticmethod
@@ -403,6 +424,7 @@ class ArticleRevisionService:
         revision = command.revision
         manifest = {
             "schema_version": command.metadata.schema_version,
+            "expected_aggregate_version": command.metadata.expected_aggregate_version,
             "actor_reference": command.metadata.actor_reference,
             "authorization_reference": command.metadata.authorization_reference,
             "article_id": command.article_id,
