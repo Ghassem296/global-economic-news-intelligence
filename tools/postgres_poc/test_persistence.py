@@ -924,6 +924,12 @@ asyncio.run(main())
             await backup_connection.close()
             backup_connection = None
 
+            await self.admin.execute(
+                sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(
+                    sql.Identifier(self.schema), restore_role
+                )
+            )
+            await self.admin.commit()
             restore_probe = await psycopg.AsyncConnection.connect(
                 DATABASE_URL,
                 user=restore_role_name,
@@ -1062,6 +1068,11 @@ asyncio.run(main())
                     sql.SQL("DROP ROLE IF EXISTS {}").format(role)
                 )
             if restore_role_created:
+                await admin.execute(
+                    sql.SQL("REVOKE ALL ON SCHEMA {} FROM {}").format(
+                        sql.Identifier(self.schema), restore_role
+                    )
+                )
                 await admin.execute(
                     sql.SQL("DROP ROLE IF EXISTS {}").format(restore_role)
                 )
