@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.60  
+**Version:** 4.61  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `bb7681854d197ccf5e916362b6b1b5cbd3a763eb`; ArticleRevision URL-validation hardening, including Unicode whitespace/control rejection, is included, but fresh Application CI is pending
+**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `d511108cfdb48873ec8fe98e0fa403fba86db259`; ArticleRevision URL-validation hardening, including Unicode whitespace/control rejection, is included, but fresh Application CI is pending
 
 ---
 
@@ -427,3 +427,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.59):** Advances the reviewed code/test snapshot to `6afdfe7a876b93f0f31cc7cc5f14eaf12b5feedb` after extending URL validation to Unicode whitespace and control/format characters and adding regression cases. Current-main Application CI and Documentation Validation remain pending; no production authorization changes.
 
 **Revision Note (v4.60):** Advances the inspected code/test snapshot to `bb7681854d197ccf5e916362b6b1b5cbd3a763eb` after a non-functional standard-library import-order cleanup in the shared URL validator. Current-main Application CI and Documentation Validation remain pending.
+
+**Revision Note (v4.61):** Advances the reviewed code/test snapshot to `d511108cfdb48873ec8fe98e0fa403fba86db259` after correcting the new regression fixtures to contain actual Unicode whitespace, format-control, and newline characters rather than escaped backslash sequences. Current-main Application CI and Documentation Validation remain pending.
