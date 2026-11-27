@@ -94,7 +94,7 @@ class PostgreSQLUnitOfWorkPoCTests(unittest.TestCase):
 
     def test_rollback_discards_write_and_closes_single_use_uow(self) -> None:
         uow = self.factory.begin()
-        uow._connection.execute(
+        uow.connection.execute(
             "INSERT INTO counters (counter_name, value) VALUES ('uow-rollback', 1)"
         )
 
