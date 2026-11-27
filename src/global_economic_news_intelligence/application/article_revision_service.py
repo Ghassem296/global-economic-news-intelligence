@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Protocol
 
@@ -61,7 +62,7 @@ class ArticleProjection:
     language: str | None
     published_at: datetime | None
     current_revision_id: str | None
-    metadata: object
+    metadata: Mapping[str, object]
     aggregate_version: str | None
     created_at: datetime
     updated_at: datetime
@@ -238,6 +239,17 @@ class ArticleRevisionService:
                 expected_article_version=expected_version,
                 uow=uow,
             )
+            if (
+                record.article_id != article_id
+                or record.revision_fingerprint != revision.revision_fingerprint
+                or record.revision_fingerprint_schema_version
+                != ARTICLE_REVISION_FINGERPRINT_SCHEMA_VERSION
+            ):
+                raise self._error(
+                    ErrorCode.INVARIANT_VIOLATION,
+                    "ArticleRevisionRepository returned a mismatched revision record.",
+                    metadata,
+                )
             projection = self._build_projection(
                 article_id=article_id,
                 revision=revision,
@@ -249,10 +261,16 @@ class ArticleRevisionService:
                 expected_version=expected_version,
                 uow=uow,
             )
-            if not saved.aggregate_version:
+            if (
+                not saved.aggregate_version
+                or saved.article_id != article_id
+                or saved.current_revision_id != record.revision_id
+                or saved.content_availability is not revision.content_availability
+                or saved.source_id != revision.source_id
+            ):
                 raise self._error(
                     ErrorCode.INVARIANT_VIOLATION,
-                    "ArticleRepository did not return an aggregate version.",
+                    "ArticleRepository returned an inconsistent Article projection.",
                     metadata,
                 )
             result = PersistArticleRevisionResult(
