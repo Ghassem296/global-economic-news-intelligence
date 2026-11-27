@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.58  
+**Version:** 4.59  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `7539e872d74f289ffc3e0e6af0794eb1f1c3139d`; ArticleRevision URL-validation hardening is included, but fresh Application CI is pending
+**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `6afdfe7a876b93f0f31cc7cc5f14eaf12b5feedb`; ArticleRevision URL-validation hardening, including Unicode whitespace/control rejection, is included, but fresh Application CI is pending
 
 ---
 
@@ -423,3 +423,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.57):** Clarifies the implementation baseline and records the GitHub comparison showing documentation-only changes after the 275-test Application CI commit. The existing application test evidence remains applicable to current code; fresh documentation validation remains pending. No readiness verdict or production authorization changes.
 
 **Revision Note (v4.58):** Records the shared ArticleRevision URL-validation hardening and regression tests, and corrects the CI evidence boundary: the 275-test result belongs to commit `5c9e34a` and does not verify the later code/test changes. Current-main Application CI and Documentation Validation remain pending. No readiness verdict or production authorization changes.
+
+**Revision Note (v4.59):** Advances the reviewed code/test snapshot to `6afdfe7a876b93f0f31cc7cc5f14eaf12b5feedb` after extending URL validation to Unicode whitespace and control/format characters and adding regression cases. Current-main Application CI and Documentation Validation remain pending; no production authorization changes.
