@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-SEC-008  
-**Version:** 1.9  
+**Version:** 1.10  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-27
 
 ---
 
@@ -91,6 +91,10 @@ The following permission identifiers are a proposed logical vocabulary for imple
 | Evaluate event candidates | `event.match.evaluate` | Exact EventMatchCase and candidate set | Evaluation may append candidate evidence but cannot activate an ArticleEventLink |
 | Append an event-match decision | `event.match.decide` | Exact case, candidate, predecessor and aggregate version | Immutable authorization reference; approved decision policy; atomic successor/link reconciliation |
 | Create an Event | `event.create` | Exact preassigned Event ID and candidate/case | Effective NEW_EVENT_CANDIDATE decision, approved EventCreationPolicy and idempotency |
+| Prepare an Event identity operation | `event.identity.operation.prepare` | Exact operation ID, operation type, complete ordered Event inputs/outputs, subject allocations, evidence and policy version | Approved identity policy; immutable actor/authorization references; validate input/output cardinality, complete allocations, idempotency scope and expected EventHistory versions; preparation has no identity side effect |
+| Apply an Event identity operation | `event.identity.operation.apply` | Exact prepared operation and expected aggregate/EventHistory versions | Explicit operation/resource/scope-bound grant; accepted GENI-ADR-011 and GENI-ADR-016; current fenced worker ownership; revalidate stored authorization and policy; atomic core-effect/EventHistory transaction; no direct ArticleEventLink mutation |
+| Reconcile Event identity downstream work | `event.identity.operation.reconcile` | Exact operation and owned durable ProcessingStep/work-item reference | Authorized workflow service identity, current lease/fencing token, bounded target scope and append-only attempt/audit; cannot reapply the core identity effect or bypass successor EventMatchDecision/ReviewRecord workflows |
+| Finalize an Event identity operation | `event.identity.operation.finalize` | Exact operation and expected aggregate version | Derive completion only from confirmed core effect, complete discovery, case/analysis reconciliation and every report-impact outcome; no caller-supplied completion flag; remain RECONCILIATION_REQUIRED while any required work is unresolved |
 | Evaluate content-rights scope | `rights.assessment.evaluate` | Exact Source/Article/revision, operation, content scope and purpose | Current rights policy, source/contract evidence and explicit ALLOW; unknown or conflicting rights deny |
 | Administer rights policy | `rights.policy.administer` | Exact policy/assessment rule and effective period | Separate governance approval and immutable policy version; no runtime content permission is implied |
 | Append evidence | `evidence.append` | Exact claim/analysis context and evidence origin | Exact rights/retention permission for any stored quotation or extract |
@@ -165,6 +169,6 @@ Logs, traces, prompts, exception messages and evaluation artifacts are privacy-r
 **Status:** Draft — Under Architecture Review  
 
 
-**Revision Note (v1.9):** Added separate deny-by-default permissions for duplicate-candidate evaluation and immutable duplicate-decision append. The permissions do not authorize article merging, deletion, or event matching.
+**Revision Note (v1.10):** Added separate deny-by-default permissions for preparing, applying, reconciling and finalizing Event Identity Operations. The permissions are independently scoped, gated by accepted identity/persistence architecture, current authorization and fenced ownership; they do not authorize direct ArticleEventLink mutation or bypass successor-decision and human-review workflows.
 
 **End of Document**
