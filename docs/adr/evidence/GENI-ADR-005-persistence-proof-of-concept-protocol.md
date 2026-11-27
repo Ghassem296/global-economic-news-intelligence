@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.7
+**Version:** 1.8
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -175,15 +175,15 @@ The completed PoC package must include:
 |---|---|
 | Exact version/configuration | PostgreSQL 18.7; image `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`; CPython 3.15.2; Psycopg 3.3.9; direct SQL; native async connection; versioned SQL migration runner (PoC-only) |
 | Workload profile ID | Not established; no capacity claim permitted |
-| Correctness matrix | 16 test methods passed for POC-01–14, a POC-16 reconnect smoke test, and POC-18 query-plan capture; POC-15 and POC-17 not run; full POC-16 process-restart exercise remains pending |
+| Correctness matrix | 18 test methods passed for POC-01–14, full-database logical backup/restore smoke (POC-15), child-process restart/reconnect (POC-16), least-privilege read-only role smoke (POC-17), and query-plan capture (POC-18). POC-15 concurrent-write backup consistency and POC-17 backup protection/encryption/retention review remain open |
 | Migration/upgrade | POC-13 clean install and POC-14 data-preserving schema upgrade passed |
-| Backup/restore | Not run (POC-15 pending) |
+| Backup/restore | Full-database `pg_dump`/`pg_restore` to a separate database passed with application-row and migration-history checks; backup during concurrent writes and operational backup protection remain untested |
 | Concurrency and async | POC-03, POC-07, POC-08, POC-11, and POC-12 passed in the isolated test run |
 | Performance results | Not measured; workload profile and thresholds remain unset; POC-18 captured a query plan only |
-| Operational assessment | Not assessed; POC-17 security/backup-control review pending |
-| Mandatory gates | Partial correctness evidence only; PostgreSQL not qualified; ADR-005 remains Proposed |
+| Operational assessment | Partial: backup/restore smoke and read-only least-privilege role passed; backup encryption, retention, restore permissions, monitoring, and operator runbook review remain pending |
+| Mandatory gates | 18 PoC test methods passed, but qualification remains partial: concurrent-write backup consistency, backup security/retention review, approved workload profile, performance thresholds, and formal ADR acceptance remain open |
 
-The first run completed successfully in GitHub Actions run `45940666045` (commit `218bdac2e7c0c0c923fa20e2b7ab86c830bd2373`). The machine-readable artifact `postgres-poc-218bdac2e7c0c0c923fa20e2b7ab86c830bd2373` was uploaded with archive SHA-256 `faaa2560cde47b80af85998bff06edfb6816401aa4500336a4a086ef9763a707`. The 16 passing test methods establish only the scenarios explicitly listed above. In particular, a new-connection read is not a process-crash/restart exercise; backup/restore and the security/backup-control review remain unrun. Workload values and performance thresholds remain unset. PostgreSQL is not production-qualified and ADR-005 remains Proposed. “Not run” must never be rewritten as “pass” based on design review or documentation.
+The follow-up run completed successfully in GitHub Actions run `45941019381` (commit `2947911a880c527202230574abe99a12dcaa368f`). All 18 test methods passed. The machine-readable artifact `postgres-poc-2947911a880c527202230574abe99a12dcaa368f` was uploaded with archive SHA-256 `0eed2d2c60c46674943502d245ddde3e7bd3bb8079bd38d515b6004793dea563`. The tests include a full-database logical backup/restore to a separate database, a child-process commit followed by a new-process read, and a least-privilege read-only role smoke test. These do not complete the full operational gates: backup during concurrent writes, backup encryption/retention/restore permissions, and formal security review remain open. POC-18 captures a query plan only; no latency, throughput, capacity, or workload compliance is claimed. The approved workload profile and thresholds remain unset. PostgreSQL is not production-qualified and ADR-005 remains Proposed.
 
 ## 9. Approval and implementation boundary
 
@@ -213,5 +213,6 @@ After qualification and formal acceptance, review the experimental evidence and 
 | 1.5 | 2026-11-27 | Proposed | Adds an explicit owner-approved workload-profile template with unset values, evidence provenance, and a prohibition on inventing or retrofitting numeric thresholds. |
 | 1.6 | 2026-11-27 | Proposed | Defines provisional, isolated PoC-only technology candidates and explicitly separates experimental evidence from production tool/dependency approval. |
 | 1.7 | 2026-11-27 | Proposed | Records the first reproducible PostgreSQL 18.7/Psycopg 3.3.9 PoC run and its 16 passing test methods, while explicitly retaining backup/restore, security review, full restart, workload, performance, and production-acceptance gates as open. |
+| 1.8 | 2026-11-27 | Proposed | Records the follow-up run with all 18 PoC test methods passing, including full-database logical backup/restore, child-process restart/reconnect, and least-privilege role smoke tests; retains concurrent-write backup, backup security/retention, workload, performance, and production-acceptance gates. |
 
 **End of Evidence Protocol**
