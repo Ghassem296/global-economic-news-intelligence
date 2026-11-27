@@ -9,6 +9,12 @@ from typing import Any
 import psycopg
 from psycopg import sql
 
+sys_path = str(Path(__file__).resolve().parents[2] / "src")
+import sys
+
+if sys_path not in sys.path:
+    sys.path.insert(0, sys_path)
+
 from postgres_poc_uow import PostgreSQLUnitOfWorkFactory
 
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
@@ -71,7 +77,7 @@ class PostgreSQLUnitOfWorkPoCTests(unittest.TestCase):
 
     def test_commit_persists_write_and_closes_single_use_uow(self) -> None:
         uow = self.factory.begin()
-        uow._connection.execute(
+        uow.connection.execute(
             "INSERT INTO counters (counter_name, value) VALUES ('uow-commit', 1)"
         )
 
