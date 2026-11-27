@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.46
+**Version:** 1.47
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -467,3 +467,6 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 
 
 **Revision Note (v1.46):** Synchronizes GENI-ADR-011 v1.11 after adding the proposed EventIdentityOperationReportImpact entity and downstream report-remediation boundaries. ADR-011 remains Proposed.
+
+
+**Revision Note (v1.47):** Synchronizes GENI-ADR-011 v1.12 after adding the proposed EventIdentityOperationReportImpactHistory entity and explicit durable remediation tracking. ADR-011 remains Proposed.
