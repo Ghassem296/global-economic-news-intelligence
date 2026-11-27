@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 3.4  
+**Version:** 3.5  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -322,7 +322,7 @@ The references below are internal project documents used to establish the curren
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines relational entities, integrity constraints, and transactions. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Records PostgreSQL as the owner-selected target, subject to qualification and formal ADR acceptance. |
 | `GENI-ADR-016` | Internal | Defines persistence and recovery behaviors that constrain engine selection. |
-| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | GENI-ADR-005-POC-001 v1.27 defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records 32 passing PoC test methods on repository snapshot `7714cb393a0340cd4b117e9edcc3d8ba70d9a1a7` (run `45982963505`, artifact `15189763965`), including POC-24 through POC-29 migration, domain-integrity, legacy-revision-backfill, and concurrent ArticleRevision compare-and-swap checks, but not full production qualification. |
+| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | GENI-ADR-005-POC-001 v1.28 defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records 33 passing PoC test methods on repository snapshot `4ce279e7786270475ae2618c484f2404c47b82a4` (run `45983781671`, artifact `15190297773`), including POC-24 through POC-30 migration, domain-integrity, legacy-revision-backfill, concurrent ArticleRevision compare-and-swap, and deferred owner-FK create-order checks, but not full production qualification. |
 
 External legal review, provider measurements, market-data coverage measurements, and model-quality benchmarks remain outstanding wherever relevant.
 
