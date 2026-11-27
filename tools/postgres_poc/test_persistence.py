@@ -1338,5 +1338,27 @@ asyncio.run(main())
         self.assertIn("Plan", plan[0])
 
 
+    async def test_poc_23_reapplying_migrations_is_idempotent(self) -> None:
+        migration_names = (
+            "001_initial.sql",
+            "002_article_last_seen.sql",
+            "003_backup_payload.sql",
+        )
+        before = await self.connection.execute(
+            "SELECT version, applied_at FROM schema_migrations ORDER BY version"
+        )
+        before_rows = await before.fetchall()
+        self.assertEqual(len(before_rows), len(migration_names))
+
+        await apply_migrations(self.connection, migration_names)
+
+        after = await self.connection.execute(
+            "SELECT version, applied_at FROM schema_migrations ORDER BY version"
+        )
+        after_rows = await after.fetchall()
+        self.assertEqual(after_rows, before_rows)
+        self.assertEqual(len(after_rows), len(migration_names))
+        await self.connection.commit()
+
 if __name__ == "__main__":
     unittest.main()
