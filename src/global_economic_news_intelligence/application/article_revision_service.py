@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass, replace
 from datetime import datetime
 from types import MappingProxyType
@@ -345,11 +346,9 @@ class ArticleRevisionService:
             # Preserve the original failure (including a post-commit connection-close
             # error). A rollback can itself fail when commit already crossed the
             # database point of no return or when the connection is broken.
-            try:
-                uow.rollback()
-            except BaseException:
+            with suppress(BaseException):
                 # Cleanup must never replace the exception that explains the outcome.
-                pass
+                uow.rollback()
             raise
 
     def _resolve_article(
