@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.8  
+**Version:** 4.9  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `b2e8ac5f9e1a707a8a05007f4364f0a46daef77b`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `48fe15716847cae6ce3d84c7f981f7f1d18d4d01`
 
 ---
 
@@ -46,7 +46,7 @@ The project package-management choice is now uv 0.13.9, pinned by `[tool.uv].req
 
 The following remain absent or incomplete:
 
-- PostgreSQL is the Project Owner-selected target relational engine. A disposable PoC may provisionally select and pin candidate PostgreSQL/driver/query/migration/async tools for experimental runs only; these choices are not production selections or runtime dependencies. Production qualification, production toolchain, and deployment profile remain unresolved; GENI-ADR-005 remains Proposed pending PoC evidence review and formal acceptance.
+- PostgreSQL is the Project Owner-selected target relational engine. The first isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed 16 test methods on commit `218bdac2e7c0c0c923fa20e2b7ab86c830bd2373` (GitHub Actions run `45940666045`). It covers POC-01–14, a reconnect-only POC-16 smoke test, and POC-18 query-plan capture. Backup/restore (POC-15), security/backup-control review (POC-17), a true process-restart recovery test, approved workload values, and performance thresholds remain outstanding. This is partial correctness evidence, not PostgreSQL qualification; production toolchain, migrations, and activation remain gated, and GENI-ADR-005 remains Proposed.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
 - Document 15 v4.2 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
@@ -118,7 +118,7 @@ Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.
 
 ### 5.2 Persistence and transaction implementation
 
-Complete the PostgreSQL qualification in GENI-ADR-005-POC-001 using a disposable PoC-only candidate toolchain, synthetic data, and an approved workload profile with predeclared thresholds for any capacity claim; retain raw results, failed runs, exact experimental versions/configuration, commit SHA, migration and backup/restore evidence. Correctness and operational-feasibility experiments may be recorded while numeric workload targets remain unset, but no capacity or final production-readiness claim is permitted. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all applicable PostgreSQL qualification gates must pass, before production dependencies, production migrations, or production activation. Then implement:
+Continue the PostgreSQL qualification in GENI-ADR-005-POC-001 from the first successful partial run (16 test methods; run `45940666045`) using the disposable PoC-only candidate toolchain and synthetic data. Complete POC-15 backup/restore, POC-17 security/backup-control review, full process-restart recovery, and any remaining correctness cases. Obtain an approved workload profile and predeclared thresholds before making capacity claims; retain raw results, failed runs, exact experimental versions/configuration, commit SHA, migration and backup/restore evidence. Correctness and operational-feasibility experiments may be recorded while numeric workload targets remain unset, but no capacity or final production-readiness claim is permitted. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all applicable PostgreSQL qualification gates must pass, before production dependencies, production migrations, or production activation. Then implement:
 - Database adapter, migrations, repository implementations, and UnitOfWork.
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
@@ -232,7 +232,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.8
+**Version:** 4.9
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -274,3 +274,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.7):** Refreshes the inspected main-branch baseline to `b2e8ac5` and records the latest successful Python 3.15 Application CI run 45939388122 and Documentation validation run 45939388133. No ADR status, first-slice approval, or production authorization is changed.
 
 **Revision Note (v4.8):** Resolves the ADR-005 PoC/production-tooling sequencing deadlock by permitting isolated, pinned PoC-only candidate stacks while retaining formal ADR acceptance and all production dependency/migration/activation gates. Numeric workload and capacity thresholds remain owner-approved inputs.
+
+**Revision Note (v4.9):** Records the first successful PostgreSQL 18.7/Psycopg 3.3.9 PoC run (16 test methods) and distinguishes its partial correctness evidence from full qualification. Backup/restore, security/backup-control review, full process restart, approved workload profile, performance thresholds, and production approval remain open.
