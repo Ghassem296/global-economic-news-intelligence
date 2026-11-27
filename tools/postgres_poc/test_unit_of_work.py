@@ -171,3 +171,15 @@ class PostgreSQLUnitOfWorkFailureTests(unittest.TestCase):
         connection.rollback.assert_called_once_with()
         connection.close.assert_called_once_with()
 
+    def test_commit_close_error_keeps_committed_state(self) -> None:
+        connection = Mock()
+        connection.close.side_effect = OSError("close failed after commit")
+        uow = PostgreSQLUnitOfWork(connection)
+
+        with self.assertRaisesRegex(OSError, "close failed after commit"):
+            uow.commit()
+
+        self.assertEqual(uow.state, "COMMITTED")
+        connection.commit.assert_called_once_with()
+        connection.close.assert_called_once_with()
+
