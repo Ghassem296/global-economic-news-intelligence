@@ -27,6 +27,12 @@ class PostgreSQLUnitOfWork:
     def state(self) -> str:
         return self._state
 
+    @property
+    def connection(self) -> psycopg.Connection[Any]:
+        """Expose the owned connection to PoC repositories while the UoW is active."""
+        self._require_active_owner()
+        return self._connection
+
     def _require_active_owner(self) -> None:
         if get_ident() != self._owner_thread:
             raise RuntimeError("PostgreSQL UnitOfWork cannot cross execution threads.")
