@@ -9,6 +9,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Barrier, Event
+from time import monotonic, sleep
 from typing import Any
 
 import psycopg
@@ -503,6 +504,7 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
         allow_commit = Event()
         revocation_started = Event()
         revocation_completed = Event()
+        application_name = f"geni-poc-revocation-{uuid.uuid4().hex}"
 
         class BlockingRevisionRepository(PostgreSQLArticleRevisionRepository):
             def append_revision(
@@ -531,6 +533,10 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
                         sql.Identifier(self.schema)
                     )
                 )
+                connection.execute(
+                    "SELECT set_config('application_name', %s, false)",
+                    (application_name,),
+                )
                 revocation_started.set()
                 connection.execute(
                     """
@@ -551,7 +557,24 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
             revocation_future = executor.submit(revoke_grant)
             try:
                 self.assertTrue(revocation_started.wait(timeout=5))
-                self.assertFalse(revocation_completed.wait(timeout=0.25))
+                deadline = monotonic() + 5
+                blocked_by_grant_lock = False
+                while monotonic() < deadline:
+                    wait_state = self.admin.execute(
+                        """
+                        SELECT wait_event_type
+                        FROM pg_stat_activity
+                        WHERE application_name = %s
+                        """,
+                        (application_name,),
+                    ).fetchone()
+                    if wait_state is not None and wait_state[0] == "Lock":
+                        blocked_by_grant_lock = True
+                        break
+                    if revocation_completed.is_set():
+                        break
+                    sleep(0.01)
+                self.assertTrue(blocked_by_grant_lock)
             finally:
                 allow_commit.set()
             result = service_future.result(timeout=15)
