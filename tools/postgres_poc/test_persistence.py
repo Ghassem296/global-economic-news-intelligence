@@ -526,6 +526,11 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             identity, last_seen = await result.fetchone()
             self.assertEqual(identity, "legacy-article")
             self.assertIsNone(last_seen)
+            result = await connection.execute(
+                "SELECT current_revision_id FROM articles WHERE article_id = %s",
+                (article_id,),
+            )
+            self.assertIsNone((await result.fetchone())[0])
         finally:
             await connection.close()
             await self.admin.execute(
@@ -1442,6 +1447,7 @@ asyncio.run(main())
         )
         await self.connection.commit()
 
+        await self.connection.execute("SET CONSTRAINTS articles_current_revision_fk IMMEDIATE")
         with self.assertRaises(ForeignKeyViolation):
             await self.connection.execute(
                 "UPDATE articles SET current_revision_id = %s WHERE article_id = %s",
