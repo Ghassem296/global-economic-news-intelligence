@@ -1741,6 +1741,7 @@ asyncio.run(main())
             (article_id,),
         )
         self.assertEqual(await result.fetchone(), (revision_id, revision_id))
+        await self.connection.commit()
 
         orphan_revision_id = uuid.uuid4()
         missing_article_id = uuid.uuid4()
