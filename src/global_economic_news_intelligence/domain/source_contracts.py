@@ -64,6 +64,8 @@ def _freeze_config(value: object, field_name: str = "collection_config") -> Froz
 
 
 def _validate_source_url(value: object) -> None:
+    if not isinstance(value, str):
+        raise ValueError("base_url must be a non-empty string.")
     require_text(value, "base_url")
     parsed = urlsplit(value)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
