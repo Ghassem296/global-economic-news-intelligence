@@ -14,6 +14,7 @@ from types import MappingProxyType
 from typing import Any
 from uuid import UUID, uuid4
 
+from postgres_poc_uow import PostgreSQLUnitOfWork, PostgreSQLUnitOfWorkFactory
 from psycopg.errors import UniqueViolation
 from psycopg.types.json import Jsonb
 
@@ -33,7 +34,6 @@ from global_economic_news_intelligence.domain.article_revision_contracts import 
 from global_economic_news_intelligence.domain.contracts import UnitOfWork
 from global_economic_news_intelligence.exceptions import ErrorCode, GeniError
 
-from postgres_poc_uow import PostgreSQLUnitOfWork, PostgreSQLUnitOfWorkFactory
 
 
 def _require_uow(uow: UnitOfWork) -> PostgreSQLUnitOfWork:
