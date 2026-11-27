@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.25
+**Version:** 1.26
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -420,3 +420,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **Revision Note (v1.24):** Records the first successful partial PostgreSQL PoC run documented in PoC-001 v1.7. The run produced 16 passing test methods but does not qualify PostgreSQL or accept ADR-005/ADR-016; backup/restore, security review, full process-restart recovery, workload approval, and production acceptance remain outstanding.
 
 **Revision Note (v1.25):** Records the follow-up PoC-001 v1.8 run with 18 passing test methods, including full-database logical backup/restore, a child-process restart/reconnect exercise, and a least-privilege role smoke test. The PoC remains experimental; concurrent-write backup, backup protection/retention, workload and performance qualification, and formal ADR acceptance remain open.
+
+**Revision Note (v1.26):** Records PoC-001 v1.9 and the successful concurrent-write full-database backup/restore run, plus the third SQL migration. All 18 test methods pass; backup security/retention, workload/performance qualification, and formal ADR acceptance remain open.
