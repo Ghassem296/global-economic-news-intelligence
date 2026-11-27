@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.50  
+**Version:** 4.51  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -244,7 +244,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.49
+**Version:** 4.51
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -399,3 +399,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.50):** Corrects the full source commit SHA recorded in the historical v4.48 evidence note for the POC-29 test commit. No test result, architecture decision, readiness gate, or approval status changes.
+
+
+**Revision Note (v4.51):** Synchronizes the document footer version with the controlled header version after the v4.50 historical SHA correction. No readiness verdict or evidence status changes.
