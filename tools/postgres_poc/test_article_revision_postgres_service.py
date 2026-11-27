@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import os
 import unittest
 import uuid
@@ -281,10 +280,11 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
         self.assertEqual(second.article_id, first.article_id)
         self.assertEqual(second.article_version, "article-version-2")
         self.assertEqual(self._counts(), (1, 2, 2))
-        current = self.revisions.get_current_for_article(
-            first.article_id,
-            self.factory.begin(),
-        )
+        uow = self.factory.begin()
+        try:
+            current = self.revisions.get_current_for_article(first.article_id, uow)
+        finally:
+            uow.rollback()
         self.assertIsNotNone(current)
         self.assertEqual(current.revision_number, 2)
 
