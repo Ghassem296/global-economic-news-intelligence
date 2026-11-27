@@ -3,9 +3,9 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.39
+**Version:** 1.40
 **Status:** Draft — Under Architecture Review
-**Last Updated:** 2026-11-26
+**Last Updated:** 2026-11-27
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
 
@@ -1856,3 +1856,5 @@ Exit criteria require executable tests and operational evidence, not document pr
 
 
 **Revision Note (v1.39):** Reconciles the Stage 1 foundation note with the executable capabilities already present in GENI-FOUNDATION-017 and GENI-READY-016, while retaining persistence, migrations, durable adapters, end-to-end verification, and unverified security-tooling tasks as outstanding. No architecture approval or production readiness is implied.
+
+**Revision Note (v1.40):** Corrects the Last Updated metadata to 2026-11-27 for the v1.39 foundation-status reconciliation. No additional scope, architecture decision, or readiness verdict changes.
