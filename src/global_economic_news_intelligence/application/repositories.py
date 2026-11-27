@@ -14,8 +14,24 @@ from global_economic_news_intelligence.domain.article_revision_contracts import 
     SourceArticleIdentity,
 )
 from global_economic_news_intelligence.domain.contracts import UnitOfWork
+from global_economic_news_intelligence.domain.source_contracts import SourceRecord
 
 ArticleT = TypeVar("ArticleT")
+
+
+@runtime_checkable
+class SourceRepository(Protocol):
+    """Read-only Source configuration port for authorized registry queries.
+
+    Collection eligibility is configuration state, not content-access rights.
+    Mutation and collection-query DTOs remain gated until their field-level
+    contracts and authorization/SSRF policies are approved.
+    """
+
+    def get_by_id(self, source_id: str) -> SourceRecord | None:
+        """Return one configured Source snapshot without exposing secrets."""
+        ...
+
 
 
 @runtime_checkable
