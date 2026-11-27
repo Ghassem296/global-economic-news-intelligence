@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.3  
+**Version:** 4.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -199,9 +199,9 @@ The executable application contract is `ArticleRevisionService.execute(PersistAr
 1. Validate the typed command and derive the exact authorization resource: the known Article ID for an update, or the source ID plus canonical source identity and normalization version for create-by-identity.
 2. Resolve the trusted authorization reference for action `article.revision.persist`. A missing, invalid, expired, or denied authorization must fail closed before any write transaction begins.
 3. For `available` or `partial` content, re-evaluate the supplied immutable rights-assessment references at `revision.observed_at`. The verifier must establish an effective `PERSISTENT_STORAGE` ALLOW for the exact source and content scope, with the applicable policy version and expiry/revocation checks. Retrieval, temporary processing, or internal-analysis permission is insufficient. A denied or unverifiable check raises `RIGHTS_NOT_ALLOWED` and performs no persistence.
-4. Metadata-only/unavailable revisions do not request persistent full-text permission. Any metadata access/retention permission remains a separate upstream obligation; absence of full-text permission must never be interpreted as metadata permission.
+4. Every revision must pass a separate metadata-rights check using the exact rights references and source/content scope. This check enforces `METADATA_ACCESS` and the applicable source-specific metadata-preservation rule. `available`/`partial` revisions must additionally pass `PERSISTENT_STORAGE`; absence of full-text permission must never be interpreted as metadata permission, and metadata permission must never authorize full-text retention.
 
-The application service does not decide whether a license is legally sufficient. The concrete verifier must use the authoritative rights-assessment records and the approved rights policy; it must not trust a caller-supplied status or a content hash as permission.
+The application service does not decide whether a license is legally sufficient. The concrete verifier must use the authoritative rights-assessment records and the approved rights policy; it must not trust a caller-supplied status or a content hash as permission. The current rights vocabulary has `METADATA_ACCESS` but no independent `METADATA_RETENTION` operation; the metadata-preservation rule must therefore be resolved by the source-specific rights profile/policy and must not be invented as a new operation identifier.
 
 #### Command idempotency contract
 
@@ -1216,7 +1216,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.3  
+**Version:** 4.4  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
@@ -1246,3 +1246,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.3):** Defines the ArticleRevisionService orchestration contract, typed current Article projection, authorization and persistent-storage rights revalidation, atomic command-idempotency port, source-identity create/reuse behavior, optimistic concurrency, and shared UnitOfWork ownership. The application service is implemented against ports and covered by synthetic unit tests; concrete security/rights/idempotency/PostgreSQL adapters and production activation remain gated.
+
+
+**Revision Note (v4.4):** Closes the application-service metadata-rights enforcement gap: every revision now requires a separate `METADATA_ACCESS`/metadata-preservation check, while `available` and `partial` revisions additionally require `PERSISTENT_STORAGE`. The source-specific metadata-preservation rule remains governed by the approved rights profile because the canonical operation catalog does not define a separate `METADATA_RETENTION` operation.
