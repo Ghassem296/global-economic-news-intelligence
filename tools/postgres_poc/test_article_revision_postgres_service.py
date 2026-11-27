@@ -488,7 +488,27 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
             second_future = executor.submit(run_second)
             try:
                 self.assertTrue(second_started.wait(timeout=5))
-                self.assertFalse(second_returned.wait(timeout=0.25))
+                deadline = monotonic() + 5
+                blocked_by_advisory_lock = False
+                while monotonic() < deadline:
+                    wait_state = self.admin.execute(
+                        """
+                        SELECT wait_event_type
+                        FROM pg_stat_activity
+                        WHERE pid <> pg_backend_pid()
+                          AND state = 'active'
+                          AND query LIKE '%pg_advisory_xact_lock%'
+                        ORDER BY query_start DESC
+                        LIMIT 1
+                        """
+                    ).fetchone()
+                    if wait_state is not None and wait_state[0] == "Lock":
+                        blocked_by_advisory_lock = True
+                        break
+                    if second_returned.is_set():
+                        break
+                    sleep(0.01)
+                self.assertTrue(blocked_by_advisory_lock)
             finally:
                 release_first.set()
             first_result = first_future.result(timeout=15)
