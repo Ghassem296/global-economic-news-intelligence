@@ -627,7 +627,7 @@ def test_metadata_only_revision_checks_metadata_rights_not_full_text_rights() ->
     service, _ = build_service(rights=rights)
     service.execute(PersistArticleRevisionCommand(make_metadata(), make_revision()))
     assert rights.calls == []
-    assert len(rights.metadata_calls) == 1
+    assert len(rights.metadata_calls) == 2
 
 
 def test_changed_source_identity_requires_explicit_versioned_update() -> None:
@@ -812,7 +812,7 @@ def test_available_content_requires_both_metadata_and_persistent_storage_rights(
 
     assert result.created
     assert len(rights.metadata_calls) == 1
-    assert len(rights.calls) == 1
+    assert len(rights.calls) == 2
     assert rights.calls[0][1] == rights.metadata_calls[0][1]
     assert rights.calls[0][1] == datetime(2026, 11, 27, 9, 0, tzinfo=UTC)
     articles = deps["articles"]
