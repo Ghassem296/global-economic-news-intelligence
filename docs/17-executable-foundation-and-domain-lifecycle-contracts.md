@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 2.6  
+**Version:** 2.7  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -53,7 +53,7 @@ This is a payload/fingerprint contract only. It does not choose or execute produ
 
 The application package now includes `application/article_revision_commands.py` and its unit tests. `PersistArticleRevisionCommand` composes the common `CommandMetadata` envelope with the typed `PersistArticleRevision` payload and an optional target Article ID. The expected aggregate version is carried only by `CommandMetadata`, never duplicated on the command. Create requests have no target Article ID or expected version; updates require both. The envelope keeps application authorization separate from source-content rights-assessment references.
 
-The command is consumed by the executable `application/article_revision_service.py` orchestration. The service performs command authorization, fail-closed metadata/content-rights checks through injected verifiers, command-fingerprint idempotency coordination, current-revision comparison, append-only revision creation, and Article projection refresh/update within one caller-owned UnitOfWork. It deliberately depends on application ports rather than a database or provider SDK. Durable idempotency storage, concrete authorization and rights-assessment adapters, repository/UnitOfWork implementations, and transaction/concurrency qualification remain unimplemented and gated.
+The command is consumed by the executable `application/article_revision_service.py` orchestration. The service performs command authorization, fail-closed metadata/content-rights checks through injected verifiers, command-fingerprint idempotency coordination, current-revision comparison, append-only revision creation, and Article projection refresh/update within one caller-owned UnitOfWork. It deliberately depends on application ports rather than a database or provider SDK. For an explicit Article update, the service compares the caller's expected aggregate version with the loaded Article version before current-revision reuse or projection refresh; stale commands fail with `STALE_VERSION`, including semantic no-op retries that use a new idempotency key. New Article projection `created_at` values come from the trusted application Clock; source `observed_at` remains provenance only. Durable idempotency storage, concrete authorization and rights-assessment adapters, repository/UnitOfWork implementations, and transaction/concurrency qualification remain unimplemented and gated.
 
 ### 3.3 ArticleRevision persistence record and repository port
 
@@ -282,3 +282,6 @@ The first executable baseline includes the Python package, validated configurati
 
 
 **Revision Note (v2.6):** Corrects the implementation inventory to reflect the executable ArticleRevisionService, ArticleRepository and ArticleRevisionRepository ports, and their unit tests. The service coordinates authorization, source/content-rights checks, idempotency, immutable revision append/reuse, and Article projection writes through injected ports and one UnitOfWork. Durable adapters, database-level concurrency/recovery qualification, source acquisition, provider egress, and production rights authorization remain unimplemented and gated.
+
+
+**Revision Note (v2.7):** Records two ArticleRevisionService correctness fixes: explicit Article updates now enforce the caller's expected aggregate version even when the incoming revision matches the current fingerprint, and new Article projection creation timestamps now use the trusted application Clock rather than source-supplied observation time. Synthetic unit tests cover both cases. Durable adapters and database-level concurrency/recovery qualification remain open.
