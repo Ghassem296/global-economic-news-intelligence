@@ -342,8 +342,14 @@ class ArticleRevisionService:
             uow.commit()
             return result
         except BaseException:
-            # BaseException: a cancellation or interrupt must not leave the transaction open.
-            uow.rollback()
+            # Preserve the original failure (including a post-commit connection-close
+            # error). A rollback can itself fail when commit already crossed the
+            # database point of no return or when the connection is broken.
+            try:
+                uow.rollback()
+            except BaseException:
+                # Cleanup must never replace the exception that explains the outcome.
+                pass
             raise
 
     def _resolve_article(
