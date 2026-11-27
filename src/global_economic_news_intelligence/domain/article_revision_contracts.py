@@ -16,7 +16,8 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from types import MappingProxyType
 from typing import cast
-from urllib.parse import urlsplit
+
+from global_economic_news_intelligence.domain.validation import require_http_url
 
 type JsonScalar = str | int | bool | None
 type FrozenJson = JsonScalar | tuple[FrozenJson, ...] | Mapping[str, FrozenJson]
@@ -58,12 +59,7 @@ def _aware_instant(value: object, field_name: str) -> None:
 
 
 def _http_url(value: object, field_name: str) -> None:
-    if not isinstance(value, str):
-        raise ValueError(f"{field_name} must be a non-empty string.")
-    _required_text(value, field_name)
-    parsed = urlsplit(value)
-    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
-        raise ValueError(f"{field_name} must be an absolute HTTP(S) URL.")
+    require_http_url(value, field_name)
 
 
 def _freeze_json(value: object, field_name: str) -> FrozenJson:
