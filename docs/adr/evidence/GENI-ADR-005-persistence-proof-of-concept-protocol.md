@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.24
+**Version:** 1.25
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -216,6 +216,8 @@ The latest reproducible 31-test execution completed successfully on 2026-11-27 i
 
 The latest reproducible 32-test execution completed successfully on 2026-11-27 in GitHub Actions run `45963235373` against commit `5c9e34af98a97326c22ac756f306225493f91e29`: 28 PostgreSQL integration methods plus four standalone retention-policy unit tests. POC-29 verifies concurrent ArticleRevision append and Article current-pointer compare-and-swap: exactly one writer commits for the shared expected version, while the stale writer's revision insert rolls back. The uploaded machine-readable evidence artifact is `postgres-poc-5c9e34af98a97326c22ac756f306225493f91e29` (artifact ID `15182595241`, archive SHA-256 `5eac19ecfcb8c73cd40af1b54187f0eea28001371fd0e9bb11198df0eaf553b5`). The run used PostgreSQL 18.7, Psycopg 3.3.9, CPython 3.15.2, and the pinned linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`. This is isolated PoC correctness evidence only; it does not implement a production repository/UnitOfWork adapter, establish workload performance, authorize production use, or satisfy formal ADR-005 acceptance.
 
+The latest reproducible rerun completed successfully on 2026-11-27 in GitHub Actions run `45980652401` against commit `fd30de42a32c577ca8745055355583e8b0baa30a`: all 32 test methods passed (28 PostgreSQL integration methods plus four standalone retention-policy unit tests). The uploaded evidence artifact is `postgres-poc-fd30de42a32c577ca8745055355583e8b0baa30a` (artifact ID `15189785653`). The run used PostgreSQL 18.7, Psycopg 3.3.9, CPython 3.15.2, and the pinned linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`. POC-29 again verifies one-winner ArticleRevision append/current-pointer compare-and-swap with rollback of the losing writer. This remains isolated correctness evidence only; workload thresholds, production security/operations, formal ADR-005 acceptance, and production activation remain open.
+
 ## 9. Approval and implementation boundary
 
 Until the PoC is complete and GENI-ADR-005 is formally Accepted:
@@ -260,6 +262,7 @@ After qualification and formal acceptance, review the experimental evidence and 
 | 1.22 | 2026-11-27 | Proposed | Adds POC-29 and records its successful execution: 32 total test methods (28 PostgreSQL integration and four retention-policy unit tests), run `45962990616`, artifact `15181591814`. Production workload/security/operations qualification and formal ADR-005 acceptance remain open. |
 | 1.23 | 2026-11-27 | Proposed | Refreshes the latest 32-test POC-29 evidence to run `45963235373` on commit `5c9e34af98a97326c22ac756f306225493f91e29`, artifact `15182595241`. All 32 methods pass; production qualification and formal ADR-005 acceptance remain open. |
 | 1.24 | 2026-11-27 | Proposed | Corrects the workload-profile correctness-gate range to include POC-29 and reconciles the mandatory-gates summary with the latest 32-method result (28 PostgreSQL integration methods plus four standalone retention-policy unit tests). Production qualification and formal ADR-005 acceptance remain open. |
+| 1.25 | 2026-11-27 | Proposed | Records the successful 32-method rerun on commit `fd30de42a32c577ca8745055355583e8b0baa30a`, run `45980652401`, artifact `15189785653`. POC-29 remains synthetic concurrency evidence; workload, production security/operations, and formal ADR-005 acceptance gates remain open. |
 
 
 **End of Evidence Protocol**
