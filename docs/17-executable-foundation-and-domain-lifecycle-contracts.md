@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 2.5  
+**Version:** 2.6  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -53,13 +53,13 @@ This is a payload/fingerprint contract only. It does not choose or execute produ
 
 The application package now includes `application/article_revision_commands.py` and its unit tests. `PersistArticleRevisionCommand` composes the common `CommandMetadata` envelope with the typed `PersistArticleRevision` payload and an optional target Article ID. The expected aggregate version is carried only by `CommandMetadata`, never duplicated on the command. Create requests have no target Article ID or expected version; updates require both. The envelope keeps application authorization separate from source-content rights-assessment references.
 
-This is an immutable command contract only. It does not implement ArticleRevisionService, idempotency storage, rights evaluation, repositories, UnitOfWork orchestration, or database persistence.
+The command is consumed by the executable `application/article_revision_service.py` orchestration. The service performs command authorization, fail-closed metadata/content-rights checks through injected verifiers, command-fingerprint idempotency coordination, current-revision comparison, append-only revision creation, and Article projection refresh/update within one caller-owned UnitOfWork. It deliberately depends on application ports rather than a database or provider SDK. Durable idempotency storage, concrete authorization and rights-assessment adapters, repository/UnitOfWork implementations, and transaction/concurrency qualification remain unimplemented and gated.
 
 ### 3.3 ArticleRevision persistence record and repository port
 
-The domain package now includes the immutable `ArticleRevisionRecord`, which binds server-owned revision identity/number/timestamp to the immutable payload and verifies that the persisted fingerprint and schema version match the recomputed payload fingerprint. The application package includes the technology-neutral `ArticleRevisionRepository` Protocol. Its methods read by ID/current Article, match only the current fingerprint, and append through a caller-owned UnitOfWork; the repository must not commit that UnitOfWork.
+The domain package now includes the immutable `ArticleRevisionRecord`, which binds server-owned revision identity/number/timestamp to the immutable payload and verifies that the persisted fingerprint and schema version match the recomputed payload fingerprint. The application package includes technology-neutral `ArticleRepository` and `ArticleRevisionRepository` Protocols. They resolve Articles by ID/source identity, read the current revision, compare only the current fingerprint, and append/update through a caller-owned UnitOfWork; repositories must not commit that UnitOfWork.
 
-The Protocol is an application port, not a PostgreSQL adapter. ArticleRepository, ArticleRevisionService, rights-decision evaluation, concurrency/transaction integration, and concrete persistence remain unimplemented and gated.
+These Protocols are application ports, not PostgreSQL adapters. `ArticleRevisionService` is implemented as deterministic orchestration over these ports and injected authorization, rights, idempotency, ID-generation, clock, and UnitOfWork dependencies. The service has unit tests for authorization denial, metadata versus full-text rights checks, current-revision reuse, projection refresh, idempotency behavior, and transaction outcomes. It does not provide durable storage, a concrete rights/authorization decision engine, a PostgreSQL adapter, or proof of database-level race handling; those remain unimplemented and gated.
 
 ### 3.4 Content-rights assessment and persistence gate
 
@@ -233,7 +233,7 @@ Review states: PENDING, IN_PROGRESS, COMPLETED, CANCELLED.
 
 ## 11. DTO and concurrency invariants added to executable baseline
 
-The Python domain package implements pure transition/projection rules and typed payload contracts for duplicate evaluation/decisions, event matching, ProcessingRun commands, and ArticleRevision persistence input. It does not implement persistence. Repository and application boundaries must additionally enforce:
+The Python domain package implements pure transition/projection rules and typed payload contracts for duplicate evaluation/decisions, event matching, ProcessingRun commands, and ArticleRevision persistence input. The application package also contains the ArticleRevision command, repository ports, and orchestration service; none of these provides durable persistence. Concrete repository/UnitOfWork adapters and database constraints must additionally enforce:
 
 - Enum values serialize by their exact uppercase symbolic values.
 - State-changing commands carry schema version, actor/service identity, authorization reference, correlation ID, idempotency key, and expected aggregate version where updating an existing aggregate.
@@ -247,7 +247,7 @@ The Python domain package implements pure transition/projection rules and typed 
 
 ## 12. Implementation boundary
 
-The first executable baseline includes the Python package, validated configuration, safe error primitives, allowlisted structured logging, pure lifecycle policy and typed payload-contract modules, CLI, tests (including domain dependency-boundary enforcement), Ruff, mypy, and application CI. It deliberately does not include a production persistence adapter, external source fetcher, LLM adapter, publication client, or delivery adapter. These remain gated by their corresponding ADRs and evidence in Document 16.
+The first executable baseline includes the Python package, validated configuration, safe error primitives, allowlisted structured logging, pure lifecycle policies and typed payload contracts, the ArticleRevision command/service and technology-neutral repository ports, CLI, unit tests (including domain dependency-boundary enforcement), Ruff, mypy, and application CI. It deliberately does not include a durable production persistence adapter/UnitOfWork, external source fetcher, LLM adapter, publication client, or delivery adapter. These remain gated by their corresponding ADRs and evidence in Document 16.
 
 ---
 
@@ -279,3 +279,6 @@ The first executable baseline includes the Python package, validated configurati
 
 
 **Revision Note (v2.5):** Records the ArticleRevisionService hardening: rights evaluation uses one validated trusted application Clock instant rather than source-supplied observation time, and source URL/canonical URL/external ID changes refresh the Article projection without creating a new semantic revision. This application behavior remains implemented against ports; concrete production adapters and integration/concurrency qualification are not implied.
+
+
+**Revision Note (v2.6):** Corrects the implementation inventory to reflect the executable ArticleRevisionService, ArticleRepository and ArticleRevisionRepository ports, and their unit tests. The service coordinates authorization, source/content-rights checks, idempotency, immutable revision append/reuse, and Article projection writes through injected ports and one UnitOfWork. Durable adapters, database-level concurrency/recovery qualification, source acquisition, provider egress, and production rights authorization remain unimplemented and gated.
