@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-OPS-013  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -62,13 +62,13 @@ A production backup procedure must define and verify all of the following before
 
 ### 7.2 Restore and recovery procedure
 
-A restore must first target an isolated environment with no production traffic or external side effects. Verify artifact identity and authenticated integrity before decryption. Restore database objects and required cluster-global objects using an explicitly reviewed ownership/privilege plan; do not silently discard or broaden grants. Apply only the migration path approved for the target release, then verify schema history, database constraints, application-level invariants, and representative reads/writes. Reconcile privacy deletion/restriction tombstones and external-operation ledgers before data is exposed or processing resumes. Quarantine any unresolved reconciliation result and require the authorized operator's recorded sign-off. Preserve the restore logs and verification evidence.
+A restore must first target an isolated environment with no production traffic or external side effects. Verify artifact identity and authenticated integrity before decryption. Restore database objects and required cluster-global objects using an explicitly reviewed ownership/privilege plan; do not silently discard or broaden grants. Treat the database dump and cluster-global dump as separate recovery artifacts. Restore user-defined roles and memberships into an isolated target before restoring database ACLs; retain or deliberately map the destination bootstrap administrator, and never import role passwords from a no-password globals dump. Validate role attributes and memberships, then separately validate tablespaces, configuration, extensions, ownership, grants, and any external identity dependencies. Do not expose the restored instance until the full target-specific recovery manifest is reconciled. Apply only the migration path approved for the target release, then verify schema history, database constraints, application-level invariants, and representative reads/writes. Reconcile privacy deletion/restriction tombstones and external-operation ledgers before data is exposed or processing resumes. Quarantine any unresolved reconciliation result and require the authorized operator's recorded sign-off. Preserve the restore logs and verification evidence.
 
 A failed or interrupted restore must not be treated as successful because the database process is accepting connections. Define cleanup of partial targets, safe retry behavior, escalation, and rollback/forward recovery before operational use.
 
 ### 7.3 Current PostgreSQL PoC evidence boundary
 
-The isolated PostgreSQL PoC currently exercises a full logical backup during concurrent database activity, restores it into a separate database, verifies migration history and application invariants, and checks private file permissions plus an experimental encrypted/authenticated backup envelope. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. They do not establish production backup encryption, KMS/HSM custody, key rotation, off-site storage, immutability, retention, restore authorization, cluster-global-object recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
+The isolated PostgreSQL PoC exercises a full logical database backup during concurrent activity, isolated database restore, migration-history/application-invariant verification, private file permissions, and an experimental encrypted/authenticated envelope. POC-19 additionally restores user-defined roles and role membership from `pg_dumpall --globals-only --no-role-passwords` into a clean PostgreSQL 18.7 instance, retaining the destination bootstrap administrator and verifying role attributes and membership. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. The tests do not establish production backup encryption, KMS/HSM custody, key rotation, off-site storage, immutability, retention, restore authorization, tablespace/configuration recovery, full cluster recovery, role-password/secret recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
 
 ## 8. Capacity and Cost
 
@@ -117,8 +117,10 @@ Runbook publication is not evidence of successful exercise. See Documents 02, 03
 ---
 
 **Document ID:** GENI-OPS-013  
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Draft — Under Architecture Review  
 
+
+**Revision Note (v1.3):** Adds explicit cluster-global role/membership restore guidance and records the POC-19 evidence boundary. It distinguishes tested user-defined role recovery from untested tablespace, configuration, password/secret, and full-cluster recovery.
 
 **End of Document**
