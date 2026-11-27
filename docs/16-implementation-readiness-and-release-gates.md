@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.62  
+**Version:** 4.63  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `c75f6e7ed81e60c7330e739181a252723c098b59`; ArticleRevision URL-validation hardening, including Unicode whitespace/control rejection, is included, but fresh Application CI is pending
+**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `c75f6e7ed81e60c7330e739181a252723c098b59`; ArticleRevision URL-validation hardening, including Unicode whitespace/control rejection, is included; current-code CI results have not been verified
 
 ---
 
@@ -33,14 +33,14 @@ The repository is no longer documentation-only. It now contains an installable P
 
 The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. The last verified main-branch Application CI run was 45963235364 for commit `5c9e34af98a97326c22ac756f306225493f91e29`; it completed locked dependency installation, Ruff, mypy, and pytest with all 275 then-existing tests passing.
 
-The current code snapshot subsequently adds a shared structural HTTP(S) URL validator and applies it to Source and ArticleRevision URLs, with new ArticleRevision regression tests. These code/test changes are later than the 275-test run, so that result is historical evidence for its commit only and must not be represented as verification of the current code. A fresh Application CI run and a fresh Documentation Validation run after the current changes are pending and have not been verified here.
+The current code snapshot subsequently adds a shared structural HTTP(S) URL validator and applies it to Source and ArticleRevision URLs, with new ArticleRevision regression tests. These code/test changes are later than the 275-test run, so that result is historical evidence for its commit only and must not be represented as verification of the current code. The Application CI and Documentation Validation workflows are configured to run on pushes to `main`, but their results for the current commits were not available for verification during this review.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
 - An executable ArticleRevisionService with technology-neutral ArticleRepository and ArticleRevisionRepository ports. It coordinates authorization, fail-closed rights checks, command idempotency, immutable revision append/reuse, and Article projection updates through one injected UnitOfWork; current tests are unit-level and do not qualify durable adapters or database concurrency.
 - A CLI that reports package version and disabled capability boundaries, using validated settings and safe logging initialization.
 - Unit tests for transition guards, aggregation, successor-decision linearity, review projection, external-outcome reconciliation, validated configuration, safe errors/logging, and domain dependency boundaries.
-- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the last verified run passed 275 tests on commit `5c9e34af98a97326c22ac756f306225493f91e29` (45963235364). The later shared URL-validation changes and new regression tests await a fresh run on current `main`.
+- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the last verified run passed 275 tests on commit `5c9e34af98a97326c22ac756f306225493f91e29` (45963235364). The later shared URL-validation changes and new regression tests require a confirmed run on current `main`; no result was available for verification during this review.
 - Existing documentation CI and registry validation remain separate and are preserved.
 
 The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
@@ -422,7 +422,7 @@ If new evidence changes readiness, update this document and the affected source-
 
 **Revision Note (v4.57):** Clarifies the implementation baseline and records the GitHub comparison showing documentation-only changes after the 275-test Application CI commit. The existing application test evidence remains applicable to current code; fresh documentation validation remains pending. No readiness verdict or production authorization changes.
 
-**Revision Note (v4.58):** Records the shared ArticleRevision URL-validation hardening and regression tests, and corrects the CI evidence boundary: the 275-test result belongs to commit `5c9e34a` and does not verify the later code/test changes. Current-main Application CI and Documentation Validation remain pending. No readiness verdict or production authorization changes.
+**Revision Note (v4.58):** Records the shared ArticleRevision URL-validation hardening and regression tests, and corrects the CI evidence boundary: the 275-test result belongs to commit `5c9e34a` and does not verify the later code/test changes. Current-main Application CI and Documentation Validation results remain unverified. No readiness verdict or production authorization changes.
 
 **Revision Note (v4.59):** Advances the reviewed code/test snapshot to `6afdfe7a876b93f0f31cc7cc5f14eaf12b5feedb` after extending URL validation to Unicode whitespace and control/format characters and adding regression cases. Current-main Application CI and Documentation Validation remain pending; no production authorization changes.
 
@@ -431,3 +431,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.61):** Advances the reviewed code/test snapshot to `d511108cfdb48873ec8fe98e0fa403fba86db259` after correcting the new regression fixtures to contain actual Unicode whitespace, format-control, and newline characters rather than escaped backslash sequences. Current-main Application CI and Documentation Validation remain pending.
 
 **Revision Note (v4.62):** Advances the reviewed code/test snapshot to `c75f6e7ed81e60c7330e739181a252723c098b59` after normalizing the regression fixtures to test a single literal backslash. Current-main Application CI and Documentation Validation remain pending.
+
+**Revision Note (v4.63):** Clarifies that the current-main CI workflows are configured for push events, but their run results were not available for verification in this review. The 275-test result remains tied only to commit `5c9e34a`; no current-code CI success is claimed.
