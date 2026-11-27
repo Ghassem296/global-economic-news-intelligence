@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 9.7
+**Version:** 9.8
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.9 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.46 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.47 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 2.9 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 9.7 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 9.8 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.36 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -245,7 +245,7 @@ They are not automatically binding project specifications.
 | Agent Template Reference Guide | `docs/references/agent-template/README.md` | Reference | Published |
 | Agent Template Architecture | `docs/references/agent-template/agent-template-architecture.md` | Reference | Published |
 | Agent Template Implementation Specification | `docs/references/agent-template/agent-template-implementation-specification.md` | Reference | Published |
-| GENI-ADR-005 Persistence Proof-of-Concept Protocol | `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | v1.20 Proposed protocol; latest 31-test execution passed on run `45961720585` (artifact `15180963314`), including POC-24 through POC-28; qualification remains partial | Published |
+| GENI-ADR-005 Persistence Proof-of-Concept Protocol | `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | v1.21 Proposed protocol; latest 31-test execution passed on run `45961988925` (artifact `15180889132`), including POC-24 through POC-28; qualification remains partial | Published |
 
 Reference material may inform project design, but product-specific requirements and accepted decisions must be documented in the appropriate authoritative project documents.
 
@@ -412,11 +412,11 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-27  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `6b72977316c5753fbfa2bd12919c1213457d813a`
+**Baseline Commit Inspected:** `2c985917acc84ec3865b20d575782cbccea2b15e`
 
-This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.9, Document 16 v4.46, and Document 17 v2.9. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
+This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.9, Document 16 v4.47, and Document 17 v2.9. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
-The inspected SourceRecord baseline has successful Application CI run `45961720499` (275 tests, Ruff and mypy), Documentation Validation run `45961720518`, and PostgreSQL 18.7 / Python 3.15 PoC run `45961720585` (31 test methods; artifact `15180963314`). All three workflows passed on commit `7e124789d02a95992c28fb559a625155bbf43a96`. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
+The inspected main baseline has successful Application CI run `45961988981` (275 tests, Ruff and mypy), Documentation Validation run `45961988971`, and PostgreSQL 18.7 / Python 3.15 PoC run `45961988925` (31 test methods; artifact `15180889132`). All three workflows passed on commit `428e6b6d3ea142175373246bba209476c50cd5c6`. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
 
 All twenty individual ADRs remain Proposed; none is recorded as Accepted. Publication, passing CI, and PoC evidence do not constitute formal architecture approval, legal permission, production readiness, or operational acceptance.
 
@@ -638,3 +638,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v9.7):** Synchronizes GENI-READY-016 v4.46 and refreshes the inspected baseline to `6b72977316c5753fbfa2bd12919c1213457d813a`. The current readiness assessment and POC-001 v1.20 now cite the same verified 275-test Application CI, documentation validation, and 31-test PostgreSQL PoC evidence from commit `7e124789d02a95992c28fb559a625155bbf43a96`. No production qualification or formal ADR acceptance is implied.
+
+
+**Revision Note (v9.8):** Synchronizes GENI-READY-016 v4.47 and GENI-ADR-005-POC-001 v1.21. Refreshes the inspected baseline to `2c985917acc84ec3865b20d575782cbccea2b15e` and records successful Application CI (275 tests), Documentation Validation, and PostgreSQL 18.7 / Python 3.15 PoC (31 tests; artifact `15180889132`) from commit `428e6b6d3ea142175373246bba209476c50cd5c6`. PostgreSQL qualification, production security/operations, workload thresholds, and formal ADR-005 acceptance remain open.
