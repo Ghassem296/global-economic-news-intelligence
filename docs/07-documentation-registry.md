@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.51
+**Version:** 10.52
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.12 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.84 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.85 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 3.2 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.51 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.52 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.44 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -245,7 +245,7 @@ They are not automatically binding project specifications.
 | Agent Template Reference Guide | `docs/references/agent-template/README.md` | Reference | Published |
 | Agent Template Architecture | `docs/references/agent-template/agent-template-architecture.md` | Reference | Published |
 | Agent Template Implementation Specification | `docs/references/agent-template/agent-template-implementation-specification.md` | Reference | Published |
-| GENI-ADR-005 Persistence Proof-of-Concept Protocol | `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | v1.34 Proposed protocol; source snapshot `87db2fc5f22ac9530e47c12febc4eb4793e9b772` passed 41 test methods on run `45999022538` (artifact `15196813815`), including POC-35–38 authorization and content-rights revocation race experiments; qualification remains partial | Published |
+| GENI-ADR-005 Persistence Proof-of-Concept Protocol | `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | v1.35 Proposed protocol; source snapshot `87db2fc5f22ac9530e47c12febc4eb4793e9b772` passed 41 test methods on run `45999022538` (artifact `15196813815`), including POC-35–38 authorization and content-rights revocation race experiments; nine PoC-only migrations verified; qualification remains partial | Published |
 
 Reference material may inform project design, but product-specific requirements and accepted decisions must be documented in the appropriate authoritative project documents.
 
@@ -412,11 +412,11 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-27  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `8e83b1a02e39a2bdb2b230c040615c0758257d91`
+**Baseline Commit Inspected:** `886add8d0313010dede7ae3d038a20a18f8d520d`
 
 This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.12, Document 16 v4.83, and Document 17 v3.2. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
-The inspected executable application/PoC source snapshot is `87db2fc5f22ac9530e47c12febc4eb4793e9b772`. Application CI run `45999022674` passed all 302 tests with lock verification, Ruff and mypy; Documentation Validation run `45999022465` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `45999022538` passed all 41 methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15196813815`). POC-35–38 add isolated row-lock experiments: a `FOR SHARE` lock on an active authorization grant or exact content-rights assessment blocks a concurrent revocation UPDATE until the protected transaction commits, while a previously committed revocation is observed as REVOKED. PoC-only migration 009 creates synthetic tables solely for this experiment. The result supports a candidate serialization pattern, but does not exercise concrete application adapters or complete policy/profile version locking. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005/016 remain Proposed. The inspected `main` baseline is `8e83b1a02e39a2bdb2b230c040615c0758257d91`; this registry refresh itself is a documentation-only follow-up.
+The inspected executable application/PoC source snapshot is `87db2fc5f22ac9530e47c12febc4eb4793e9b772`. Application CI run `45999022674` passed all 302 tests with lock verification, Ruff and mypy; Documentation Validation run `45999022465` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `45999022538` passed all 41 methods (37 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15196813815`). POC-35–38 add isolated row-lock experiments: a `FOR SHARE` lock on an active authorization grant or exact content-rights assessment blocks a concurrent revocation UPDATE until the protected transaction commits, while a previously committed revocation is observed as REVOKED. PoC-only migration 009 creates synthetic tables solely for this experiment; the nine-migration clean-install, upgrade, and backup/restore inventory is reflected in PoC protocol v1.35. This result supports a candidate serialization pattern, but does not exercise concrete application adapters or complete policy/profile version locking. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005/016 remain Proposed. The inspected `main` baseline is `886add8d0313010dede7ae3d038a20a18f8d520d`; this registry refresh itself is a documentation-only follow-up.
 
 All twenty individual ADRs remain Proposed; none is recorded as Accepted. Publication, passing CI, and PoC evidence do not constitute formal architecture approval, legal permission, production readiness, or operational acceptance.
 
@@ -773,3 +773,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v10.51):** Synchronizes GENI-READY-016 v4.84 and GENI-ADR-005-POC-001 v1.34. Refreshes the executable baseline to `87db2fc5f22ac9530e47c12febc4eb4793e9b772` and records exact-commit verification: 302 Application CI tests, 23 documentation validator tests, and 41 PostgreSQL PoC methods, including POC-35–38 transaction-bound authorization/content-rights revocation experiments. The locking evidence is isolated PoC evidence only; no production adapter, ADR acceptance, or production authorization is implied.
+
+
+**Revision Note (v10.52):** Synchronizes GENI-READY-016 v4.85 and GENI-ADR-005-POC-001 v1.35. Records that the current PoC results register includes nine PoC-only migrations and that the exact source snapshot `87db2fc5f22ac9530e47c12febc4eb4793e9b772` passed 41 test methods, including POC-35–38 authorization/content-rights revocation experiments. No production schema, adapter, ADR acceptance, or production authorization is implied.
