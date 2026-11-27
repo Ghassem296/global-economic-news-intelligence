@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.15  
+**Version:** 4.16  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -266,7 +266,7 @@ Candidate scores are not decision confidence. Semantic similarity may be absent;
 
 The repository does not calculate match scores or decide outcomes. Those belong to the approved matching policy and Event Resolution Workflow. Policy version, decision actor/method and rationale are mandatory provenance.
 
-**Case-lifecycle gate:** `case_status` is not a free-form side effect of `append_case`, `append_decision`, or `set_effective_decision`. Document 03, Section 7.1 explicitly leaves the initial state, allowed transitions, terminal/reopen/cancel rules, and derivation from the effective decision/review state undefined. Until that lifecycle policy and its versioned transition contract are approved, these repository methods may be exercised only by synthetic contract fixtures; production case creation, decision application, and link reconciliation are blocked. Implementations must not infer status mappings from outcome names or silently choose an initial status. When approved, the status transition, effective-decision pointer, and link reconciliation must be one UnitOfWork with expected-version validation.
+**Case-lifecycle contract:** The initial state, decision-to-case projection, allowed transitions, terminal states, and reopen/cancel behavior are defined by Document 17, Section 6 and implemented as pure domain policy with tests. Repository/application implementations must call that policy rather than inventing status mappings or setting arbitrary client-supplied states. The case-status transition, effective-decision pointer update, decision supersession, and ArticleEventLink activation/deactivation must be one UnitOfWork with expected-case-version validation. This executable lifecycle baseline does not accept GENI-ADR-002 or GENI-ADR-011 and does not enable production event matching; those approval, authorization, durable-adapter, and evaluation gates remain in force.
 
 ### 4.8 ArticleEventLinkRepository
 
@@ -1294,4 +1294,7 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v4.14):** Requires the active UnitOfWork for `find_current_by_revision_fingerprint`, aligning every current-ArticleRevision lookup with the transaction-bound repository-read rule. This is an application-port contract correction; it does not provide a durable adapter or database-level concurrency proof.
 
 
-**Revision Note (v4.15):** Makes the EventMatchCase lifecycle omission an explicit repository/application gate. Initial status, transition graph, terminal/reopen/cancel semantics, and status derivation must be approved before production case creation or decision application; repositories must not infer case status from decision outcomes. This aligns Document 15 with the explicit blocker in Document 03, Section 7.1 and preserves atomic coordination of status, effective decision, and ArticleEventLink changes.
+**Revision Note (v4.15):** Records the temporary finding that the EventMatchCase lifecycle was not defined in the data-model section; this finding is superseded by v4.16 after reconciliation with the executable lifecycle contract in Document 17, Section 6.
+
+
+**Revision Note (v4.16):** Aligns the EventMatchCase repository/application contract with the canonical initial-state, decision projection, and transition policy in Document 17, Section 6. It requires atomic status, effective-decision, supersession, and ArticleEventLink reconciliation under expected-version concurrency, without implying ADR-002/011 acceptance or production enablement.
