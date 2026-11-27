@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.61
+**Version:** 1.62
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -2679,7 +2679,8 @@ Where applicable, enforce:
 - Source and checkpoint type uniqueness.
 - SourceRelationship version uniqueness within its directed source pair and relationship type; only symmetric relationship types may canonicalize the pair.
 - ArticleOriginRelationship version uniqueness within its subject revision, target origin, relationship type, and assessment lineage.
-- Processing step identity within a run; for Event Identity reconciliation, enforce uniqueness by (processing_run_id, step_name, input_fingerprint), where the server-derived fingerprint binds operation ID, work kind, typed target and target version/cursor.
+- Processing step identity within a run.
+- ProcessingStepAttempt uniqueness by (processing_step_id, attempt_number), and idempotency-reference uniqueness within the logical step. For Event Identity reconciliation, enforce uniqueness by (processing_run_id, step_name, input_fingerprint), permitting multiple steps with the same step_name only when their server-derived fingerprints bind distinct logical work identities (operation ID, work kind, typed target and target version/cursor). A changed target state or policy creates a successor step/run under the approved reprocessing policy; it does not overwrite a completed step.
 - At most one active ExecutionLease per resource and strictly increasing fencing tokens per resource.
 - IdempotencyRecord uniqueness by `(operation_scope, idempotency_key)`.
 - ProcessingRun idempotency-key uniqueness within its documented run-type scope.
@@ -3390,3 +3391,6 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 **Revision Note (v1.60):** Places EventIdentityOperationReportImpactHistory under the Event Identity Operations section (§7.5), before EventRelationship (§7.6), correcting its structural placement without changing the lifecycle contract.
 
 **Revision Note (v1.61):** Defines a durable Event Identity reconciliation work-item mapping over the existing ProcessingRun/ProcessingStep/ProcessingStepAttempt/ExecutionLease model, including typed target metadata, deterministic input fingerprints, supported step kinds, retry/fencing semantics, and a uniqueness rule. This avoids introducing a parallel queue entity; persistence adapters and method-level contracts remain required, and no Event Identity capability is enabled.
+
+
+**Revision Note (v1.62):** Clarifies that Event Identity reconciliation may create multiple ProcessingSteps with the same step_name only when each server-derived input fingerprint identifies a distinct operation/work-kind/target/version unit, and adds immutable attempt-number/idempotency uniqueness. This prevents an ambiguous generic step-identity rule from collapsing distinct reconciliation targets or duplicating retries.
