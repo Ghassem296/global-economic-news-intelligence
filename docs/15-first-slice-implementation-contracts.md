@@ -69,8 +69,8 @@ Fixture-driven contract and integration tests may be developed without represent
 - `Instant` is a timezone-aware timestamp.
 - `Fingerprint` is a deterministic digest of the canonical logical inputs and relevant policy/version identifiers.
 - `ActorType` is a security-owned actor category; its allowed vocabulary is defined by the approved identity contract and is not selected by this document.
-- `ActorReference` is an opaque reference to an authenticated human or service identity resolvable by the security layer.
-- `AuthorizationReference` is an immutable opaque reference to the authorization/audit context for a state-changing action, resolvable by the security/audit layer.
+- ``ActorReference`` is an opaque reference to an authenticated human or service identity resolvable by the security layer.
+- ``AuthorizationReference`` is an immutable opaque reference to the authorization/audit context for a state-changing action, resolvable by the security/audit layer.
 - `Optional<T>` means the value may be absent; it is not interchangeable with an unknown, denied, or empty value.
 - `Page<T>` contains an ordered item list and an optional continuation cursor.
 - `Result<T>` is either a successful value or a typed failure; a failure must never be represented as a successful empty result.
@@ -233,7 +233,7 @@ The current application implementation is covered by unit tests using synthetic 
 |---|---|---|
 | `get_by_id` | `get_by_id(event_id: ID<Event>) -> Optional<Event>` | Returns the current Event projection and version. |
 | `find_candidates` | `find_candidates(query: EventCandidateQuery) -> Page<Event>` | Returns candidate Events only; retrieval is not an identity decision. Filters and ordering must be deterministic and bounded. |
-| `append_authorized_event` | `append_authorized_event(command: CreateAuthorizedEvent, uow: UnitOfWork) -> Event` | Available only after the applicable EventCreationPolicy and authorization contracts are approved. Requires stable preassigned Event ID, current effective NEW_EVENT_CANDIDATE decision, policy version, actor/authorization reference, and idempotency identity. Creates Event and initial EventHistory atomically. Same logical retry returns the same Event; a conflicting fingerprint fails. |
+| `append_authorized_event` | `append_authorized_event(command: CreateAuthorizedEvent, uow: UnitOfWork) -> Event` | Available only after the applicable EventCreationPolicy and authorization contracts are approved. Requires stable preassigned Event ID, current effective NEW_EVENT_CANDIDATE decision, policy version, actor/authorization reference, and idempotency identity. Creates Event and initial `EventHistory` atomically. Same logical retry returns the same Event; a conflicting fingerprint fails. |
 
 This repository must not expose an unrestricted create operation to generic workflows. Until the creation gate is approved, the method is unavailable to production application flows.
 
@@ -292,7 +292,7 @@ No method may create or activate a link from a candidate score, NEW_EVENT_CANDID
 |---|---|---|
 | `get_by_id` | `get_by_id(analysis_id: ID<Analysis>) -> Optional<Analysis>` | Returns immutable analysis output and version metadata. |
 | `append_analysis` | `append_analysis(command: AppendAnalysis, uow: UnitOfWork) -> Analysis` | Persists one versioned Analysis together with its exact AnalysisInput and AnalysisEvidenceLink records in the same UnitOfWork, plus result-schema version, methodology version, model/prompt provenance where used, and explicit unknown/uncertainty semantics. |
-| `list_for_event` | `list_for_event(event_id: ID<Event>, analysis_type: AnalysisType, query: AnalysisListQuery) -> Page<Analysis>` | Returns only the requested analysis type; importance, economic relevance and economic impact remain distinct types. |
+| `list_for_event` | `list_for_event(event_id: ID<Event>, analysis_type: AnalysisType, query: AnalysisListQuery) -> `Page<Analysis>`` | Returns only the requested analysis type; importance, economic relevance and economic impact remain distinct types. |
 
 The write command must reject missing required provenance and must not collapse unknown, not-established, zero, and false into one value.
 
@@ -376,7 +376,7 @@ The following local write sets are indivisible. They must be implemented through
 | Persist a material article revision | ArticleRevision insert + Article current-projection update + associated processing/idempotency state required by the operation |
 | Append a duplicate candidate | Immutable DuplicateCandidate insert + scoped idempotency result; no Article or ArticleRevision is merged or deleted |
 | Append a duplicate decision | Immutable DuplicateDecision insert + linear supersession constraint/idempotency result; effective outcome resolves from the unique terminal decision in the chain |
-| Create an Event | Event insert + initial EventHistory + authorized creation/idempotency provenance |
+| Create an Event | Event insert + initial `EventHistory` + authorized creation/idempotency provenance |
 | Record an event-match decision | EventMatchDecision append + EventMatchCase effective pointer + required ArticleEventLink activation/deactivation |
 | Persist evidence-backed analysis | Analysis append + exact AnalysisInput and AnalysisEvidenceLink set, all owned by AnalysisRepository and committed atomically |
 | Persist report version | Report version + immutable content manifest + all ReportEventLink, ReportArticleLink, ReportAnalysisLink and ReportEvidenceLink rows, committed atomically by ReportRepository |
@@ -457,7 +457,7 @@ Before a first-slice milestone is declared complete:
 
 ## 9. Unresolved items intentionally not decided here
 
-**Event identity operation boundary:** Documents 02/03 and GENI-ADR-011 define the logical identity model and workflow invariants. Section 10.17 now adds a provisional application command, aggregate-repository, query, transaction, and recovery contract. It does not approve the policy or activate execution. Remaining blockers are GENI-ADR-011 acceptance; approved operation/cardinality and allocation policies; authoritative authorization and survivor-selection policy; durable ProcessingStep/Attempt/ExecutionLease persistence and typed reconciliation-work correlation; production Event/EventHistory/operation/report-impact adapters; and failure-injection, concurrency, replay, and recovery evidence. The workflow must not directly repoint ArticleEventLink records: affected cases are re-resolved through successor EventMatchDecision records. Report versions, ReportEventLinks, publication decisions/records/attempts, and delivery records remain immutable. Any successor report, external replacement/withdrawal, or recipient correction remains a separate authorized workflow.
+**Event identity operation boundary:** Documents 02/03 and GENI-ADR-011 define the logical identity model and workflow invariants. Section 10.17 now adds a provisional application command, aggregate-repository, query, transaction, and recovery contract. It does not approve the policy or activate execution. Remaining blockers are GENI-ADR-011 acceptance; approved operation/cardinality and allocation policies; authoritative authorization and survivor-selection policy; durable ProcessingStep/Attempt/ExecutionLease persistence and typed reconciliation-work correlation; production Event/`EventHistory`/operation/report-impact adapters; and failure-injection, concurrency, replay, and recovery evidence. The workflow must not directly repoint ArticleEventLink records: affected cases are re-resolved through successor EventMatchDecision records. Report versions, ReportEventLinks, publication decisions/records/attempts, and delivery records remain immutable. Any successor report, external replacement/withdrawal, or recipient correction remains a separate authorized workflow.
 
 The following remain open and must not be guessed by implementers:
 
@@ -539,7 +539,7 @@ The allowed candidate processing vocabulary is only exemplified as `GENERATED`, 
 | `matching_policy_version` | `Version` | Required | Exact policy version used. | Document 03 §7.3 |
 | `decided_by_type` | `string/enum` | Required | Actor category; vocabulary and authorization mapping TBD. | Document 03 §7.3 |
 | `decided_by_reference` | `string/reference` | Required | Must resolve to authenticated actor/service identity; representation TBD. | Document 03 §7.3 |
-| `authorization_reference` | `AuthorizationReference` | Required | Immutable reference from trusted security/application context; must resolve to the exact action, case/resource, actor, scope, policy/version, timestamp, and result. | Documents 03 §7.3, 08 §5 |
+| `authorization_reference` | ``AuthorizationReference`` | Required | Immutable reference from trusted security/application context; must resolve to the exact action, case/resource, actor, scope, policy/version, timestamp, and result. | Documents 03 §7.3, 08 §5 |
 | `supersedes_decision_id` | `Optional<ID<EventMatchDecision>>` | Nullable | If present, same case and must be prior effective decision; one direct successor constraint applies. | Document 03 §§7.3–7.4 |
 | `created_at` | `Instant` | Required | Immutable decision timestamp. | Document 03 §7.3 |
 | `metadata` | `JSON/object` | Optional | Must not override typed authoritative fields. | Document 03 §7.3 |
@@ -563,8 +563,8 @@ Outcome-specific constraints:
 | `caveats` | `Optional<list/string>` | Nullable | Required in meaningful form for PUBLISH_WITH_CAVEATS; exact representation TBD. | Document 03 §11.6 |
 | `policy_version` | `Version` | Required | Exact publication policy version. | Document 03 §11.6 |
 | `actor_type` | `ActorType` | Required | Authenticated actor category from trusted command context; allowed values are governed by the security identity contract, not caller-supplied role text. | Documents 03 §11.6, 08 §5 |
-| `actor_reference` | `ActorReference` | Required | Authenticated human or service identity; must resolve through the security layer. | Documents 03 §11.6, 08 §5 |
-| `authorization_reference` | `AuthorizationReference` | Required | Immutable authorization/audit reference for the exact decision action; must be resolvable and valid at decision time. | Documents 03 §11.6, 08 §5 |
+| `actor_reference` | ``ActorReference`` | Required | Authenticated human or service identity; must resolve through the security layer. | Documents 03 §11.6, 08 §5 |
+| `authorization_reference` | ``AuthorizationReference`` | Required | Immutable authorization/audit reference for the exact decision action; must be resolvable and valid at decision time. | Documents 03 §11.6, 08 §5 |
 | `decided_at` | `Instant` | Required | Immutable decision time. | Document 03 §11.6 |
 | `supersedes_decision_id` | `Optional<ID<PublicationDecision>>` | Nullable | If present, must belong to the same exact report version and be the effective predecessor. | Document 03 §11.6 |
 | `metadata` | `JSON/object` | Optional | Typed decision fields remain authoritative. | Document 03 §11.6 |
@@ -591,7 +591,7 @@ Server assigns the run ID and initial PENDING status. started_at remains null un
 | `run_id` | `ID<ProcessingRun>` | Required | Exact durable run. | Document 03 §13.1 |
 | `expected_version` | `Version` | Required | Compare-and-swap against current aggregate version. | Document 15 §§4.13, 7 |
 | `new_status` | `ProcessingRunStatus` | Required | Must be one of the declared statuses and an allowed transition under GENI-FOUNDATION-017 §4; arbitrary status assignment is rejected. | Document 03 §13.1 |
-| `actor/worker_reference` | `ActorReference` | Required | Authenticated service/worker identity; concrete representation TBD. | Documents 15 §3.2, 03 §13.2.1 |
+| `actor/worker_reference` | ``ActorReference`` | Required | Authenticated service/worker identity; concrete representation TBD. | Documents 15 §3.2, 03 §13.2.1 |
 | `fencing_token` | `integer` | Conditional | Required for every worker state-changing write when durable leases are enabled; must equal current token. | Document 03 §13.2.1 |
 | `occurred_at` | `Instant` | Required | Server-trusted transition time; clock authority/precision TBD. | Document 15 §4.13 |
 | `reason/error_category` | `Optional<string/enum>` | Conditional | Required when transition represents failure/cancellation or other reasoned outcome; exact categories TBD. | Document 15 §4.13 |
@@ -1137,7 +1137,7 @@ The `generation_provenance` object in AppendReportVersion must identify how this
 | `template_version` | `Version` | Required | Must equal the outer AppendReportVersion template_version. |
 | `content_schema_version` | `Version` | Required | Exact schema for ReportContent and its block types. |
 | `input_fingerprint` | `Fingerprint` | Required | Must equal the outer input_fingerprint and cover the exact immutable input manifest and all generation-relevant versions. |
-| `generation_run_reference` | `ID<ProcessingRun>/null` | Conditional | Required when generation is executed under a persisted ProcessingRun; otherwise null with an explicit execution mode. |
+| `generation_run_reference` | ``ID<ProcessingRun>/null`` | Conditional | Required when generation is executed under a persisted ProcessingRun; otherwise null with an explicit execution mode. |
 | `model_usage_references` | `List<ID<LLMUsageRecord>>` | Conditional | Exact usage records when a model was used to generate or transform report content; empty when no model was used. |
 
 The generation-provenance object is evidence of how the report was produced, not authorization. It cannot replace the common command authorization reference, content-rights assessments, privacy-processing decisions, or publication/distribution decisions. Provider/model/prompt/region details must resolve through the referenced LLMUsageRecord when applicable; secrets and raw credentials are never included.
@@ -1173,8 +1173,8 @@ This tranche closes the missing first-slice repository and logical DTO boundary 
 | `matching_policy_version` | `Version` | Required | Exact policy/configuration version used. |
 | `input_fingerprint` | `Fingerprint` | Required | Deterministic fingerprint of the canonical exact revision pair and all comparison-relevant inputs/configuration. Canonical serialization remains open. |
 | `evaluated_at` | `Instant` | Required | Server-trusted evaluation time. |
-| `actor_reference` | `ActorReference` | Required | Authenticated service/human identity from trusted command context. |
-| `authorization_reference` | `AuthorizationReference` | Required | Immutable ALLOW reference for the exact `article.duplicate.evaluate` action, canonical revision pair, scope, policy/version and input fingerprint. |
+| `actor_reference` | ``ActorReference`` | Required | Authenticated service/human identity from trusted command context. |
+| `authorization_reference` | ``AuthorizationReference`` | Required | Immutable ALLOW reference for the exact `article.duplicate.evaluate` action, canonical revision pair, scope, policy/version and input fingerprint. |
 | `metadata` | `JSON/object` | Optional | Versioned extension only; cannot override typed fields or contain secrets/restricted content by default. |
 
 Candidate ID and creation metadata are server-owned. The revision pair must be canonicalized so reverse-order requests resolve to the same logical candidate. The exact canonical ordering rule must be deterministic and versioned; it must not depend on an unapproved identifier encoding. Repeated evaluation with the same canonical pair, method/policy version and input fingerprint is idempotent. Changed inputs or policy create a new immutable candidate.
@@ -1191,8 +1191,8 @@ Candidate generation failure, timeout, insufficient content or unavailable signa
 | `decision_method` | `string/enum` | Required | Method that produced/authorized the decision; vocabulary remains policy-governed. |
 | `decision_policy_version` | `Version` | Required | Exact decision policy version. |
 | `decision_confidence` | `number/null` | Nullable | Null when not assessed; semantics and calibration must be explicit and distinct from candidate similarity. |
-| `actor_reference` | `ActorReference` | Required | Authenticated actor/service identity from trusted command context. |
-| `authorization_reference` | `AuthorizationReference` | Required | Immutable ALLOW reference for the exact `article.duplicate.decide` action, candidate, outcome, effective predecessor and policy/version. |
+| `actor_reference` | ``ActorReference`` | Required | Authenticated actor/service identity from trusted command context. |
+| `authorization_reference` | ``AuthorizationReference`` | Required | Immutable ALLOW reference for the exact `article.duplicate.decide` action, candidate, outcome, effective predecessor and policy/version. |
 | `decided_at` | `Instant` | Required | Server-trusted immutable decision time. |
 | `supersedes_decision_id` | `Optional<ID<DuplicateDecision>>` | Nullable | Null only for the first decision; otherwise must identify the current effective decision for the same candidate. |
 | `metadata` | `JSON/object` | Optional | Versioned extension only; cannot override typed decision fields. |
@@ -1227,19 +1227,19 @@ PrepareEventIdentityOperation is the initial command envelope; apply and reconci
 
 | Field | Type | Requiredness | Validation |
 |---|---|---|---|
-| operation_id | ID<EventIdentityOperation> | Required | Stable, preassigned identifier; same logical retry reuses it. |
+| operation_id | `ID<EventIdentityOperation>` | Required | Stable, preassigned identifier; same logical retry reuses it. |
 | operation_type | MERGE, SPLIT, or IDENTITY_CORRECTION | Required | Closed vocabulary; policy must explicitly permit the type. |
-| inputs | NonEmptyList<EventIdentityInputRequest> | Required | Ordered; each input contains Event ID, expected EventHistory version, role and position. |
-| outputs | NonEmptyList<EventIdentityOutputRequest> | Required | Ordered; each output contains preassigned Event ID, role and position. |
-| allocations | List<EventIdentityAllocationRequest> | Required | Complete examined-subject set; each item contains supported subject type/ID, assigned output or explicit UNRESOLVED result, method, rationale and evidence references. Empty is valid only when no affected subjects exist and that absence is established. |
+| inputs | `NonEmptyList<EventIdentityInputRequest>` | Required | Ordered; each input contains Event ID, expected `EventHistory` version, role and position. |
+| outputs | `NonEmptyList<EventIdentityOutputRequest>` | Required | Ordered; each output contains preassigned Event ID, role and position. |
+| allocations | `List<EventIdentityAllocationRequest>` | Required | Complete examined-subject set; each item contains supported subject type/ID, assigned output or explicit UNRESOLVED result, method, rationale and evidence references. Empty is valid only when no affected subjects exist and that absence is established. |
 | reason | string | Required | Human-readable explanation; exact length/normalization remains a transport-schema decision. |
 | decision_method | string | Required | Versioned method identifier; vocabulary is policy-owned. |
 | decision_confidence | number/null | Optional | Semantics and range must be established by approved policy; absence is not zero. |
 | policy_version | Version | Required | Exact immutable identity-policy version used for validation and allocation. |
-| evidence_references | List<TypedEvidenceReference> | Required | Exact evidence/context references; no untyped free-form IDs. |
-| actor_type, actor_reference | ActorReference | Required | Authenticated actor or approved system-policy identity. |
-| authorization_reference | AuthorizationReference | Required | Resolvable, immutable, operation/resource/scope-bound authorization; caller-supplied role text is not authority. |
-| processing_run_id | ID<ProcessingRun>/null | Conditional | Required when invoked as a managed processing step. |
+| evidence_references | `List<TypedEvidenceReference>` | Required | Exact evidence/context references; no untyped free-form IDs. |
+| actor_type, actor_reference | `ActorReference` | Required | Authenticated actor or approved system-policy identity. |
+| authorization_reference | `AuthorizationReference` | Required | Resolvable, immutable, operation/resource/scope-bound authorization; caller-supplied role text is not authority. |
+| processing_run_id | `ID<ProcessingRun>/null` | Conditional | Required when invoked as a managed processing step. |
 | idempotency_key | IdempotencyKey | Required | Stable for the logical operation and unique within the canonical operation scope. |
 | request_fingerprint | Fingerprint | Server-derived | Canonical fingerprint over operation type, ordered inputs/outputs, allocations, policy, evidence, reason/method and authorization-relevant scope; callers cannot choose it. |
 
@@ -1248,7 +1248,7 @@ The command must not accept client-supplied status, identity_effect_state, seque
 #### 10.17.2 Typed results and queries
 
 - PrepareEventIdentityOperationResult: operation ID, current operation status, request fingerprint, created/replayed indicator, and current aggregate version. Preparation persists a PENDING operation and its ordered input/output/allocation records only after validation and authorization; it does not apply the identity effect.
-- ApplyEventIdentityOperationResult: operation ID, identity_effect_state, operation status, resulting EventHistory versions, durable reconciliation references, and whether the core effect was newly applied or already confirmed. It never returns guessed success after an unknown commit outcome.
+- ApplyEventIdentityOperationResult: operation ID, identity_effect_state, operation status, resulting `EventHistory` versions, durable reconciliation references, and whether the core effect was newly applied or already confirmed. It never returns guessed success after an unknown commit outcome.
 - ReconcileEventIdentityOperationResult: operation ID, confirmed core-effect state, reconciled work-item summary, remaining unresolved counts, and resulting operation status. It distinguishes confirmed NOT_APPLIED from APPLIED with outstanding downstream work.
 - ResolveEventIdentityQuery: historical Event ID plus optional exact EventMatchCase/evidence context. Result is exactly one of CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED, with complete operation lineage and the full successor set. The resolver never selects one successor from a split without case/evidence context and a new authorized EventMatchDecision.
 - GetEventIdentityOperationQuery: operation ID and optional history cursor; returns the operation projection, ordered input/output/allocation records, immutable operation history, and reconciliation summary under caller authorization.
@@ -1261,30 +1261,30 @@ The following are logical ports, not current executable adapters:
 
 | Repository | Method | Signature | Contract |
 |---|---|---|---|
-| EventIdentityOperationRepository | get_by_id | get_by_id(operation_id, uow?) -> Optional<EventIdentityOperationAggregate> | Loads operation plus ordered inputs, outputs and allocations consistently. |
-| EventIdentityOperationRepository | find_by_idempotency | find_by_idempotency(scope, key, uow) -> Optional<EventIdentityOperationAggregate> | Same key/fingerprint returns the existing operation; different fingerprint is CONFLICT. |
-| EventIdentityOperationRepository | create_pending | create_pending(command, uow) -> EventIdentityOperationAggregate | Atomically inserts the PENDING operation, ordered input/output/allocation links, initial operation-history action, and idempotency claim/result. Enforces cardinality, unique positions, subject uniqueness and output membership. |
-| EventIdentityOperationRepository | apply_core_effect | apply_core_effect(operation_id, expected_operation_version, fencing_context, uow) -> CoreIdentityEffectResult | Validates the operation aggregate, complete allocations and operation ownership; records the core-effect result and operation-history transition atomically. It does not own or directly update Event current-state projections. |
-| EventIdentityOperationRepository | list_unresolved_for_events | list_unresolved_for_events(event_ids, query) -> Page<EventIdentityOperation> | Bounded lookup used to reject or serialize overlapping nonterminal identity operations. |
-| EventRepository | apply_identity_projection | apply_identity_projection(command, expected_event_history_versions, uow) -> IdentityProjectionResult | Under one UnitOfWork, locks/validates the complete affected Event set, applies only the approved canonical/successor projection and disposition changes, and returns the exact Event changes to be recorded by EventHistoryRepository. It never mutates ArticleEventLink. |
-| EventIdentityOperationHistoryRepository | append_action | append_action(operation_id, action, expected_version, uow) -> EventIdentityOperationHistory | Allocates sequence atomically; enforces unique sequence/idempotency key and legal state/effect transition; projection and history commit together. |
-| EventHistoryRepository | append_identity_change | append_identity_change(event_id, expected_history_version, change, uow) -> EventHistory | Appends one immutable event change using compare-and-swap; never rewrites prior history. |
-| EventMatchCaseRepository | list_affected_by_events | list_affected_by_events(event_ids, query) -> Page<EventMatchCase> | Finds cases whose effective candidate/decision/association scope intersects the affected identity set; deterministic and bounded. |
-| AnalysisRepository | list_affected_by_events | list_affected_by_events(event_ids, query) -> Page<Analysis> | Finds immutable analyses whose exact AnalysisInput references affected events; does not mutate or silently invalidate them. |
-| ReportRepository | list_affected_versions | list_affected_versions(event_ids, query) -> Page<Report> | Discovers exact immutable Report versions through both primary Event references and ReportEventLink, deduplicated by report-version ID. |
-| ReportRepository | append_identity_impact | append_identity_impact(command, uow) -> EventIdentityOperationReportImpact | Atomically persists one unique (operation, exact report-version) impact aggregate and its initial append-only history action. Repeated discovery is idempotent. |
-| ReportRepository | append_identity_impact_action | append_identity_impact_action(command, expected_version, uow) -> EventIdentityOperationReportImpactHistory | Appends assessment/remediation/resolution action and updates the rebuildable impact projection atomically. |
-| EventRelationshipRepository | append_identity_relationships | append_identity_relationships(operation_id, inputs, outputs, uow) -> List<EventRelationship> | Persists policy-defined identity lineage only where the accepted taxonomy requires it; no inferred relationship type or deletion is permitted. |
+| EventIdentityOperationRepository | get_by_id | get_by_id(operation_id, uow?) -> `Optional<`EventIdentityOperationAggregate`>` | Loads operation plus ordered inputs, outputs and allocations consistently. |
+| EventIdentityOperationRepository | find_by_idempotency | find_by_idempotency(scope, key, uow) -> `Optional<`EventIdentityOperationAggregate`>` | Same key/fingerprint returns the existing operation; different fingerprint is CONFLICT. |
+| EventIdentityOperationRepository | create_pending | create_pending(command, uow) -> `EventIdentityOperationAggregate` | Atomically inserts the PENDING operation, ordered input/output/allocation links, initial operation-history action, and idempotency claim/result. Enforces cardinality, unique positions, subject uniqueness and output membership. |
+| EventIdentityOperationRepository | apply_core_effect | apply_core_effect(operation_id, expected_operation_version, fencing_context, uow) -> `CoreIdentityEffectResult` | Validates the operation aggregate, complete allocations and operation ownership; records the core-effect result and operation-history transition atomically. It does not own or directly update Event current-state projections. |
+| EventIdentityOperationRepository | list_unresolved_for_events | list_unresolved_for_events(event_ids, query) -> `Page<EventIdentityOperation>` | Bounded lookup used to reject or serialize overlapping nonterminal identity operations. |
+| EventRepository | apply_identity_projection | apply_identity_projection(command, expected_event_history_versions, uow) -> `IdentityProjectionResult` | Under one UnitOfWork, locks/validates the complete affected Event set, applies only the approved canonical/successor projection and disposition changes, and returns the exact Event changes to be recorded by `EventHistory`Repository. It never mutates ArticleEventLink. |
+| `EventIdentityOperationHistory`Repository | append_action | append_action(operation_id, action, expected_version, uow) -> `EventIdentityOperationHistory` | Allocates sequence atomically; enforces unique sequence/idempotency key and legal state/effect transition; projection and history commit together. |
+| `EventHistory`Repository | append_identity_change | append_identity_change(event_id, expected_history_version, change, uow) -> `EventHistory` | Appends one immutable event change using compare-and-swap; never rewrites prior history. |
+| EventMatchCaseRepository | list_affected_by_events | list_affected_by_events(event_ids, query) -> `Page<EventMatchCase>` | Finds cases whose effective candidate/decision/association scope intersects the affected identity set; deterministic and bounded. |
+| AnalysisRepository | list_affected_by_events | list_affected_by_events(event_ids, query) -> `Page<Analysis>` | Finds immutable analyses whose exact AnalysisInput references affected events; does not mutate or silently invalidate them. |
+| ReportRepository | list_affected_versions | list_affected_versions(event_ids, query) -> `Page<Report>` | Discovers exact immutable Report versions through both primary Event references and ReportEventLink, deduplicated by report-version ID. |
+| ReportRepository | append_identity_impact | append_identity_impact(command, uow) -> `EventIdentityOperationReportImpact` | Atomically persists one unique (operation, exact report-version) impact aggregate and its initial append-only history action. Repeated discovery is idempotent. |
+| ReportRepository | append_identity_impact_action | append_identity_impact_action(command, expected_version, uow) -> ``EventIdentityOperationReportImpact`History` | Appends assessment/remediation/resolution action and updates the rebuildable impact projection atomically. |
+| EventRelationshipRepository | append_identity_relationships | append_identity_relationships(operation_id, inputs, outputs, uow) -> `List<EventRelationship>` | Persists policy-defined identity lineage only where the accepted taxonomy requires it; no inferred relationship type or deletion is permitted. |
 
-The EventIdentityOperation aggregate repository owns the operation and its input/output/allocation child records. EventIdentityOperationHistory and EventHistory remain separate append-only aggregates but participate in the same UnitOfWork as the core identity effect. Report-impact records and their history are owned by ReportRepository as a report-impact aggregate. Private persistence adapters may combine physical tables but must preserve logical ownership and transaction boundaries.
+The EventIdentityOperation aggregate repository owns the operation and its input/output/allocation child records. `EventIdentityOperationHistory` and `EventHistory` remain separate append-only aggregates but participate in the same UnitOfWork as the core identity effect. Report-impact records and their history are owned by ReportRepository as a report-impact aggregate. Private persistence adapters may combine physical tables but must preserve logical ownership and transaction boundaries.
 
 #### 10.17.4 Workflow orchestration and atomicity
 
 The workflow has four distinct phases:
 
 1. Prepare: authenticate actor; resolve exact authorization; load and validate policy version; validate input/output cardinality, roles, preassigned output Events, subject ownership, allocation completeness, evidence references and request fingerprint; check for conflicting active operations; then persist PENDING operation, links, initial history and idempotency result atomically. No Event identity projection changes in this phase.
-2. Claim and apply core effect: acquire the approved durable execution lease/fencing token; transition PENDING to IN_PROGRESS with history; within one UnitOfWork revalidate authorization/policy freshness and every expected EventHistory version, lock/serialize the complete input/output identity set, validate no conflicting operation has become active, coordinate EventRepository.apply_identity_projection, append each affected EventHistory record through EventHistoryRepository, persist operation effect state APPLIED through EventIdentityOperationRepository, and create durable downstream reconciliation intent. If the transaction outcome is uncertain, do not repeat the effect; reconcile by operation ID and durable history.
-3. Reconcile downstream: enumerate affected EventMatchCase, Analysis and exact Report versions. Re-evaluate cases only through Event Resolution Workflow; any changed association requires a new case-scoped EventMatchDecision and EventService application. Analyses remain immutable; create a successor analysis only when the approved analytical workflow determines it is required. For every affected report version, create exactly one EventIdentityOperationReportImpact and initial history action; ReportVersionService assesses it and assigns an owned remediation work item when correction is required. PublicationService and ReportDelivery are never invoked implicitly.
+2. Claim and apply core effect: acquire the approved durable execution lease/fencing token; transition PENDING to IN_PROGRESS with history; within one UnitOfWork revalidate authorization/policy freshness and every expected `EventHistory` version, lock/serialize the complete input/output identity set, validate no conflicting operation has become active, coordinate EventRepository.apply_identity_projection, append each affected `EventHistory` record through `EventHistory`Repository, persist operation effect state APPLIED through EventIdentityOperationRepository, and create durable downstream reconciliation intent. If the transaction outcome is uncertain, do not repeat the effect; reconcile by operation ID and durable history.
+3. Reconcile downstream: enumerate affected EventMatchCase, Analysis and exact Report versions. Re-evaluate cases only through Event Resolution Workflow; any changed association requires a new case-scoped EventMatchDecision and EventService application. Analyses remain immutable; create a successor analysis only when the approved analytical workflow determines it is required. For every affected report version, create exactly one `EventIdentityOperationReportImpact` and initial history action; ReportVersionService assesses it and assigns an owned remediation work item when correction is required. PublicationService and ReportDelivery are never invoked implicitly.
 4. Finalize: mark SUCCEEDED only when core effect is APPLIED, discovery is complete, every required downstream work item is durably represented, and every discovered report impact is ASSESSED, REMEDIATION_REQUIRED with a valid owned work-item reference, or RESOLVED. Otherwise remain RECONCILIATION_REQUIRED. FAILED/CANCELLED is permitted only when the core effect is definitively NOT_APPLIED.
 
 The core identity transaction must not call network services, LLMs, publication targets, or recipient channels. External work is never hidden inside the identity UnitOfWork. A post-commit worker failure cannot roll back an already applied identity effect; it leaves durable reconciliation work outstanding.
@@ -1295,7 +1295,7 @@ The core identity transaction must not call network services, LLMs, publication 
 - SPLIT: exactly one original input; at least two distinct preassigned successor outputs; input/output sets are disjoint. Every assigned allocation targets exactly one output; unresolved allocations remain unlinked.
 - IDENTITY_CORRECTION: cardinality and permitted transitions are defined by the exact approved policy version. No generic fallback cardinality is allowed.
 - Every affected subject is validated through its authoritative repository inside the application-controlled boundary. subject_id is never trusted as an unchecked polymorphic reference.
-- Event IDs are never deleted or reused. Historical EventHistory, operation, allocation, ArticleEventLink, report, publication and delivery records remain immutable.
+- Event IDs are never deleted or reused. Historical `EventHistory`, operation, allocation, ArticleEventLink, report, publication and delivery records remain immutable.
 - An active ArticleEventLink is never directly repointed by this workflow. Affected cases are re-resolved; only a successor MATCH decision in the exact case can authorize a new link.
 - An unresolved allocation or unknown core effect never becomes a guessed canonical assignment.
 - A compensating correction after an applied operation is a new authorized IDENTITY_CORRECTION operation; no historical operation is reversed in place.
@@ -1307,14 +1307,14 @@ The core identity transaction must not call network services, LLMs, publication 
 | Before PENDING commit | No operation or identity effect | Safe to retry the same command; same key/fingerprint creates one operation. |
 | PENDING committed, worker not claimed | PENDING operation and initial history | A later worker may claim it under the approved lease/fencing contract. |
 | Worker lease lost before core transaction | No core effect; operation remains recoverable | Stale fencing token must fail every write. Reclaim only after lease ownership is safely established. |
-| Core transaction rolls back | Effect NOT_APPLIED; no partial EventHistory or projection writes | Retry only after confirmed rollback and current authorization/policy/input versions are revalidated. |
-| Core commit outcome unknown | Effect UNKNOWN; operation RECONCILIATION_REQUIRED | Read durable operation and EventHistory under a fresh transaction; never blindly reapply. |
+| Core transaction rolls back | Effect NOT_APPLIED; no partial `EventHistory` or projection writes | Retry only after confirmed rollback and current authorization/policy/input versions are revalidated. |
+| Core commit outcome unknown | Effect UNKNOWN; operation RECONCILIATION_REQUIRED | Read durable operation and `EventHistory` under a fresh transaction; never blindly reapply. |
 | Core effect applied, downstream discovery incomplete | Effect APPLIED; operation RECONCILIATION_REQUIRED | Resume idempotent discovery from durable operation ID and deterministic page/cursor; do not repeat core effect. |
 | One report impact append/assessment fails | Core effect remains APPLIED; that report impact or discovery work remains pending/reconciliation-required | Retry per exact (operation, report-version) uniqueness; preserve history and work-item ownership. |
 | One case/analysis reconciliation fails | Core effect remains APPLIED; operation remains RECONCILIATION_REQUIRED | Resume only the failed durable work item; decisions and successor analyses are append-only and idempotent. |
 | Final status commit outcome unknown | Query operation/history and all durable work references | Derive status from committed evidence; do not trust worker memory or a timeout response. |
 
-The request fingerprint binds the complete ordered command and policy/evidence context. Same key plus same fingerprint replays the same operation/result; same key plus a different fingerprint is CONFLICT. Per-operation history actions and per-report impact history actions use their own stable idempotency identities and unique sequence constraints. A retry must not create duplicate identity effects, EventHistory actions, report impacts, remediation work items, or successor decisions.
+The request fingerprint binds the complete ordered command and policy/evidence context. Same key plus same fingerprint replays the same operation/result; same key plus a different fingerprint is CONFLICT. Per-operation history actions and per-report impact history actions use their own stable idempotency identities and unique sequence constraints. A retry must not create duplicate identity effects, `EventHistory` actions, report impacts, remediation work items, or successor decisions.
 
 #### 10.17.7 Acceptance and implementation gates
 
@@ -1323,8 +1323,8 @@ Before this tranche can be implemented or enabled, all of the following are requ
 - GENI-ADR-011 is formally Accepted; GENI-ADR-016 is accepted for durable lease, fencing, idempotency and recovery mechanisms used by the workflow.
 - Project Owner-approved survivor-selection, identity-correction cardinality, allocation, authorization, evidence sufficiency, and human-review policies are versioned and testable.
 - ProcessingStep, ProcessingStepAttempt, ExecutionLease and IdempotencyRecord persistence ports/adapters are specified and transactionally qualified; each reconciliation unit has a deterministic typed reference to its operation and target aggregate.
-- Concrete EventRepository, EventHistoryRepository, EventIdentityOperationRepository, EventIdentityOperationHistoryRepository, EventMatchCase/Decision/ArticleEventLink repositories, ReportRepository impact aggregate, and UnitOfWork adapters exist.
-- PostgreSQL concurrency tests cover overlapping operations, stale EventHistory versions, competing survivor selection, allocation uniqueness, transaction rollback, fencing, and concurrent idempotent retries.
+- Concrete EventRepository, `EventHistory`Repository, EventIdentityOperationRepository, `EventIdentityOperationHistory`Repository, EventMatchCase/Decision/ArticleEventLink repositories, ReportRepository impact aggregate, and UnitOfWork adapters exist.
+- PostgreSQL concurrency tests cover overlapping operations, stale `EventHistory` versions, competing survivor selection, allocation uniqueness, transaction rollback, fencing, and concurrent idempotent retries.
 - Failure-injection tests cover every row in §10.17.6, including uncertain commit outcomes and worker crashes after core effect but before downstream completion.
 - Property/scenario tests prove merge/split cardinality, complete successor resolution, no arbitrary split selection, no direct ArticleEventLink repointing, report-version immutability, and no implicit publication/delivery action.
 - Exact-commit CI and PoC evidence is recorded. Documentation or isolated row-lock PoC evidence alone is not production qualification.
@@ -1437,4 +1437,4 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 **Revision Note (v4.23):** Adds a gated Event Identity Operation application-contract tranche covering typed command/result/query envelopes, aggregate repository methods, prepare/apply/reconcile/finalize phases, per-subject allocation validation, affected-case/analysis/report discovery, immutable report-impact persistence, idempotency, fencing, uncertain-outcome recovery, and acceptance tests. This closes the documentation-level command/repository/workflow definition gap but does not accept GENI-ADR-011/016, create production adapters, or enable merge/split execution.
 
 
-**Revision Note (v4.24):** Tightens Event Identity Operation command semantics by distinguishing the initial prepare envelope from subsequent apply/reconciliation commands and restores aggregate ownership boundaries: EventRepository owns Event current-state projection writes, EventHistoryRepository owns append-only EventHistory, and EventIdentityOperationRepository owns operation/allocation/effect state. All remain coordinated through one UnitOfWork; no execution capability is enabled.
+**Revision Note (v4.24):** Tightens Event Identity Operation command semantics by distinguishing the initial prepare envelope from subsequent apply/reconciliation commands and restores aggregate ownership boundaries: EventRepository owns Event current-state projection writes, `EventHistory`Repository owns append-only `EventHistory`, and EventIdentityOperationRepository owns operation/allocation/effect state. All remain coordinated through one UnitOfWork; no execution capability is enabled.
