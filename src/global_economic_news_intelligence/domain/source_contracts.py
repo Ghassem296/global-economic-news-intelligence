@@ -13,10 +13,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from types import MappingProxyType
-from urllib.parse import parse_qsl, urlsplit
 
 from global_economic_news_intelligence.domain.validation import (
     require_aware_instant,
+    require_http_url,
     require_text,
 )
 
@@ -64,34 +64,7 @@ def _freeze_config(value: object, field_name: str = "collection_config") -> Froz
 
 
 def _validate_source_url(value: object) -> None:
-    if not isinstance(value, str):
-        raise ValueError("base_url must be a non-empty string.")
-    require_text(value, "base_url")
-    has_ambiguous_characters = any(
-        ord(character) <= 0x20
-        or ord(character) == 0x7F
-        or character == "\\"
-        for character in value
-    )
-    if has_ambiguous_characters:
-        raise ValueError(
-            "base_url must not contain whitespace, control characters, or backslashes."
-        )
-    parsed = urlsplit(value)
-    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
-        raise ValueError("base_url must be an absolute HTTP(S) URL.")
-    if parsed.username is not None or parsed.password is not None:
-        raise ValueError("base_url must not embed credentials.")
-    if parsed.fragment:
-        raise ValueError("base_url must not contain a fragment.")
-    try:
-        _port = parsed.port
-    except ValueError as exc:
-        raise ValueError("base_url contains an invalid port.") from exc
-    for key, _ in parse_qsl(parsed.query, keep_blank_values=True):
-        normalized_key = "".join(character for character in key.casefold() if character.isalnum())
-        if any(part in normalized_key for part in _SENSITIVE_KEY_PARTS):
-            raise ValueError("base_url query must not contain credential-like parameters.")
+    require_http_url(value, "base_url")
 
 
 @dataclass(frozen=True, slots=True)
