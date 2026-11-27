@@ -146,7 +146,7 @@ Build a synthetic/authorized-fixture vertical slice from Source and ArticleRevis
 
 ### 5.1 Review findings recorded on 2026-11-27
 
-A full review of the published `main` snapshot at `8b486f3` produced the findings below. None changes the readiness verdict; each must be resolved or explicitly deferred before the dependent capability is enabled.
+A full review of the published `main` snapshot at `8b486f3` produced the initial findings below. Their status has been refreshed against subsequent commits: items 1 and 5 are resolved at the application-contract level, item 2 is corrected in the isolated PoC but awaits execution evidence, and items 3, 4 and 6 remain open. Resolved application/PoC findings retain their production qualification gates.
 
 1. **Rights-evaluation time:** Resolved in the reviewed application service: a validated Clock supplies one trusted evaluation instant for metadata and persistent-storage rights checks. The source-provided `observed_at` remains provenance only. A production Clock adapter and integration evidence remain open.
 2. **PoC migration runner hardening:** The earlier semicolon-splitting and pre-transaction history-check defects are corrected in the isolated PoC runner. It now acquires a schema-scoped PostgreSQL transaction advisory lock before reading migration history and executes each complete SQL file without splitting on semicolons. POC-24 adds a concurrent-runner/PL/pgSQL-body test; its result is pending the next PostgreSQL PoC workflow. This remains an experimental runner, not an approved production migration tool; production tooling and operational recovery remain gated by GENI-ADR-005.
