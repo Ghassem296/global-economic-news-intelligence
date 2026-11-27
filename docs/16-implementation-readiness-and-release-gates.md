@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.26  
+**Version:** 4.27  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `fddedd1fe9a70631994fa900c49b45d2ff14ce1b`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `d2a8d1d381daa31362fcc0eb0615008b61e4fc2c`
 
 ---
 
@@ -48,7 +48,7 @@ The following remain absent or incomplete:
 
 - PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 26 test methods (22 PostgreSQL integration methods and four standalone retention-policy unit tests) on commit `49a7690e40dbac2c5e0a1afd0cf8229e78a10ed6` (GitHub Actions run `45948260054`). POC-15 verified a concurrent-write logical backup/isolated restore, mode `0600` for backup files, and an experimental AES-256-CBC/PBKDF2 plus HMAC-SHA256 envelope with wrong-key/tamper detection. POC-16 verified process-restart/reconnect; POC-17 verified a least-privilege read-only role. The test key was ephemeral and does not implement production key custody. KMS/HSM integration, key rotation, retention, off-site/immutable protection, restore authorization, cluster-global-object recovery, formal security review, approved workload values, and performance thresholds remain outstanding. Query-plan capture is not a performance result. This is partial evidence, not PostgreSQL qualification; production toolchain, migrations, and activation remain gated, and GENI-ADR-005 remains Proposed.
 - No durable repositories, UnitOfWork, migrations, lease/idempotency persistence, or ProcessingStepAttempt adapter.
-- Document 15 v4.6 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
+- Document 15 v4.7 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
 - A pure, fail-closed content-rights persistence gate now exists for exact source/content scope and PERSISTENT_STORAGE assessments. Rights evidence verification, freshness policy, limited-retention deadlines, temporary-content lifecycle, persistence, revocation propagation, deletion, and operation-specific external-processing enforcement remain unimplemented.
 - No source acquisition, rights adapter, LLM execution adapter, economic analysis workflow, report generator, publication client, or delivery client.
@@ -326,3 +326,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.26):** Refreshes the readiness review after resolving the two ArticleRevisionService findings: rights are checked against a trusted application Clock, and non-semantic source URL/external-ID changes refresh the current Article projection without creating a content revision. The production Clock/repository adapters, transaction race tests, PostgreSQL qualification, and all formal ADR gates remain open.
+
+
+**Revision Note (v4.27):** Aligns the ArticleRevision application contract with Document 15 v4.7 and records the stable source identity tuple plus projection-refresh behavior. The inspected implementation baseline includes trusted-clock rights evaluation and synthetic tests; production adapters, PostgreSQL concurrency evidence, and formal ADR gates remain open.
