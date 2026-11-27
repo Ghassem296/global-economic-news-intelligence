@@ -37,3 +37,24 @@ def test_configure_logging_rejects_unknown_level() -> None:
         pass
     else:
         raise AssertionError("Invalid log level should fail.")
+
+
+def test_json_formatter_omits_non_finite_float_metadata() -> None:
+    for value in (float("nan"), float("inf"), float("-inf")):
+        record = logging.LogRecord(
+            name="geni.test",
+            level=logging.INFO,
+            pathname=__file__,
+            lineno=1,
+            msg="ignored",
+            args=(),
+            exc_info=None,
+        )
+        record.duration_ms = value
+
+        rendered = SafeJsonFormatter().format(record)
+        payload = json.loads(rendered)
+
+        assert "duration_ms" not in payload
+        assert "NaN" not in rendered
+        assert "Infinity" not in rendered
