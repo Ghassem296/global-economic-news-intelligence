@@ -2,11 +2,11 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.59  
+**Version:** 1.60  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-27
 
 ---
 
@@ -396,7 +396,7 @@ Responsibilities:
 - Validate event identity and lifecycle rules.
 - Update event metadata and maintain stable event identifiers.
 - Coordinate event updates and record event-history occurrences.
-- Coordinate approved merge and split operations through the Event Identity Operation Workflow; persist the operation, ordered input/output links, and append-only EventIdentityOperationHistory; apply the core identity change and corresponding EventHistory records atomically; and enqueue downstream reconciliation durably.
+- Coordinate approved merge and split operations through the Event Identity Operation Workflow; persist the operation, ordered input/output links, and append-only EventIdentityOperationHistory; apply the core identity change and corresponding EventHistory records atomically; and, in the same UnitOfWork, persist the initial durable reconciliation work as typed ProcessingStep records within a ProcessingRun targeted at the exact EventIdentityOperation. ProcessingStep is the authoritative work-item record; an optional broker notification may only wake workers and must never become a second source of work state.
 - Preserve historical relationships after corrections.
 
 EventService owns event-level business rules and the application of authorized event-association decisions. For an approved merge/split/identity correction, the Event Identity Operation Workflow must also coordinate durable report-impact discovery after the core identity transaction. It must persist one idempotent EventIdentityOperationReportImpact for every affected immutable Report version discovered through the primary Event reference or ReportEventLink; it must not mutate report versions, report links, publication state, or delivery history. ReportVersionService assesses the impact, appends EventIdentityOperationReportImpactHistory, assigns durable remediation work when required, and creates any corrected successor report version. PublicationPolicy and PublicationService independently govern eligibility and external replacement/withdrawal, while ReportDelivery independently governs recipient correction/notification under its own authorization and rights checks. The Event Resolution workflow coordinates candidate evaluation, case-level decision creation, and review routing. EventService must reject attempts to create an active association from a non-MATCH decision.
@@ -2281,3 +2281,5 @@ PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction li
 
 
 **Revision Note (v1.59):** Aligns WorkflowOrchestrator's ProcessingStepRepository ownership with the typed Event Identity reconciliation-work mapping in GENI-DATA-003 §13.2 and GENI-IMPL-015 §10.17, including immutable attempts and step-scoped fencing. No production persistence adapter or identity-operation capability is enabled.
+
+**Revision Note (v1.60):** Makes EventService's initial downstream-work persistence explicit: typed ProcessingStep records within the operation's ProcessingRun are created atomically with the core identity effect; any broker notification is non-authoritative. No production persistence adapter or identity-operation capability is enabled.
