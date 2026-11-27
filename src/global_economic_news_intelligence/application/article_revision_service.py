@@ -12,6 +12,7 @@ import hashlib
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from types import MappingProxyType
 from datetime import datetime
 from typing import Protocol
 
@@ -379,7 +380,11 @@ class ArticleRevisionService:
                 metadata,
             )
         current = self._revisions.get_current_for_article(article.article_id)
-        if current is None or current.revision_id != article.current_revision_id:
+        if (
+            current is None
+            or current.article_id != article.article_id
+            or current.revision_id != article.current_revision_id
+        ):
             raise self._error(
                 ErrorCode.INVARIANT_VIOLATION,
                 "Article current revision pointer is inconsistent.",
@@ -445,7 +450,7 @@ class ArticleRevisionService:
             language=revision.language,
             published_at=revision.published_at,
             current_revision_id=record.revision_id,
-            metadata=revision.metadata or {},
+            metadata=(revision.metadata if revision.metadata is not None else MappingProxyType({})),
             aggregate_version=previous.aggregate_version if previous is not None else None,
             created_at=created_at,
             updated_at=now,
