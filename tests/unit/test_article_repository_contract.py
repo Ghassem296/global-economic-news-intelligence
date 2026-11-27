@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from global_economic_news_intelligence.application.repositories import ArticleRepository
 from global_economic_news_intelligence.domain.article_revision_contracts import (
     SourceArticleIdentity,
