@@ -3,7 +3,7 @@
 
 **Document ID:** GENI-PLAN-004
 
-**Version:** 1.38
+**Version:** 1.39
 **Status:** Draft — Under Architecture Review
 **Last Updated:** 2026-11-26
 **Project:** Global Economic News Intelligence  
@@ -432,7 +432,7 @@ Not every future capability must be fully designed before the first implementati
 
 ## 7. Development Stage 1 — Project Foundation
 
-**Foundation baseline note:** The initial executable baseline described in GENI-FOUNDATION-017 was first introduced with Python 3.12–3.13 metadata and CI. That historical configuration has since been superseded by the Python 3.15-only runtime policy recorded in the current package metadata and CI. Validated runtime configuration, structured logging, centralized error handling, persistence, and migration tooling remain outstanding.
+**Foundation baseline note:** The initial executable baseline described in GENI-FOUNDATION-017 was first introduced with Python 3.12–3.13 metadata and CI; that historical configuration has been superseded by the Python 3.15-only policy. The current repository already implements the installable Python package, pinned uv/setuptools toolchain, package metadata, validated environment/log-level configuration, safe machine-classifiable errors, allowlisted structured JSON logging, domain dependency-boundary tests, minimal CLI, and Application CI with Ruff, strict mypy, and pytest. These completed foundation capabilities are documented in GENI-FOUNDATION-017 and GENI-READY-016. Persistence adapters, production database lifecycle, migrations, durable repositories/UnitOfWork, and the end-to-end fixture workflow remain outstanding. The Stage 1 task list is not a declaration that every task is complete: dependency/secret scanning and any remaining setup/security controls must be verified separately before Stage 1 is closed.
 
 ### Objectives
 
@@ -1853,3 +1853,6 @@ Exit criteria require executable tests and operational evidence, not document pr
 
 
 **Revision Note (v1.38):** Records PostgreSQL as the Project Owner-selected relational database target and aligns the technology baseline and database considerations with the PostgreSQL-only qualification protocol. Exact database tooling and production activation remain gated by GENI-ADR-005.
+
+
+**Revision Note (v1.39):** Reconciles the Stage 1 foundation note with the executable capabilities already present in GENI-FOUNDATION-017 and GENI-READY-016, while retaining persistence, migrations, durable adapters, end-to-end verification, and unverified security-tooling tasks as outstanding. No architecture approval or production readiness is implied.
