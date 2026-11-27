@@ -12,8 +12,8 @@ import hashlib
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from types import MappingProxyType
 from datetime import datetime
+from types import MappingProxyType
 from typing import Protocol
 
 from global_economic_news_intelligence.application.article_revision_commands import (
