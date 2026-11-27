@@ -195,7 +195,11 @@ class FakeArticleRepository:
         uow: FakeUnitOfWork,
     ) -> ArticleProjection:
         self.save_calls += 1
-        version_number = 1 if expected_version is None else int(expected_version.rsplit("-", 1)[-1]) + 1
+        version_number = (
+            1
+            if expected_version is None
+            else int(expected_version.rsplit("-", 1)[-1]) + 1
+        )
         saved = replace(article, aggregate_version=f"article-version-{version_number}")
         self.items[saved.article_id] = saved
         return saved
@@ -207,7 +211,10 @@ class FakeArticleRevisionRepository:
         self.append_calls = 0
 
     def get_by_id(self, revision_id: str) -> ArticleRevisionRecord | None:
-        return next((item for item in self.current.values() if item.revision_id == revision_id), None)
+        return next(
+            (item for item in self.current.values() if item.revision_id == revision_id),
+            None,
+        )
 
     def get_current_for_article(self, article_id: str) -> ArticleRevisionRecord | None:
         return self.current.get(article_id)
@@ -374,7 +381,7 @@ def test_metadata_only_revision_does_not_request_full_text_storage_rights() -> N
     assert rights.calls == []
 
 
-def test_existing_source_identity_with_changed_revision_requires_explicit_versioned_update() -> None:
+def test_changed_source_identity_requires_explicit_versioned_update() -> None:
     articles = FakeArticleRepository()
     revisions = FakeArticleRevisionRepository()
     original = make_revision()
