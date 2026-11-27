@@ -35,7 +35,12 @@ class ArticleRepository(Protocol[ArticleT]):
         source_id: str,
         external_identity: SourceArticleIdentity,
     ) -> ArticleT | None:
-        """Resolve only the source-scoped canonical identity; never merge collisions."""
+        """Resolve the stable source identity tuple, never the mutable canonical URL.
+
+        Implementations key on source_id, canonical_source_identifier, and
+        normalization_version. canonical_url is a mutable secondary routing hint,
+        not part of identity equality; collisions must return CONFLICT, never merge.
+        """
         ...
 
     def save_projection(
