@@ -681,7 +681,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 (legacy_decision_id, legacy_case_id),
             )
             await connection.commit()
-            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql"))
+            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql"))
             result = await connection.execute(
                 """
                 SELECT external_identity, source_last_seen_at
@@ -952,6 +952,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                         "003_backup_payload.sql",
                         "004_domain_integrity.sql",
                         "005_deferred_article_revision_owner_fk.sql",
+                        "006_atomic_idempotency_claims.sql",
                     ],
                 )
         finally:
@@ -1248,6 +1249,7 @@ asyncio.run(main())
                     "003_backup_payload.sql",
                     "004_domain_integrity.sql",
                     "005_deferred_article_revision_owner_fk.sql",
+                    "006_atomic_idempotency_claims.sql",
                 ],
             )
             owner = await restored.execute(
@@ -1555,6 +1557,7 @@ asyncio.run(main())
             "003_backup_payload.sql",
             "004_domain_integrity.sql",
             "005_deferred_article_revision_owner_fk.sql",
+            "006_atomic_idempotency_claims.sql",
         )
         before = await self.connection.execute(
             "SELECT version, applied_at FROM schema_migrations ORDER BY version"
