@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.52
+**Version:** 1.53
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -141,7 +141,7 @@ The PostgreSQL implementation must explicitly configure and test foreign-key enf
 
 PostgreSQL durability settings, checkpointing, autovacuum, indexes, and pool behavior must be tested against the approved workload. Durability must not be weakened merely to improve benchmark results.
 
-### 3.2 Future Relational Storage
+### 3.2 Production Qualification Gate
 
 PostgreSQL is the sole target for the initial relational persistence implementation. Production activation remains gated by the PostgreSQL qualification protocol and formal acceptance of GENI-ADR-005. No SQLite adapter or dual-engine portability promise is in scope.
 
@@ -2998,7 +2998,7 @@ The initial deployment must document:
 - Treatment of in-progress workflows after restoration.
 - Treatment of pending external delivery operations after restoration.
 
-Backups must use a consistency-safe method supported by the database engine selected under GENI-ADR-005. Engine-specific backup and restore procedures must be documented and restore-tested; no SQLite-specific operating mode is assumed before that ADR is accepted.
+Backups must use a consistency-safe method supported by PostgreSQL. PostgreSQL-specific backup and restore procedures must be documented and restore-tested as part of GENI-ADR-005-POC-001; production operation remains blocked until the qualification evidence is reviewed and GENI-ADR-005 is formally accepted.
 
 A restore test is required before backups are considered operationally reliable.
 
@@ -3210,7 +3210,7 @@ It also provides explicit support for event identity decisions, processing recov
 
 The initial persistence implementation should remain deliberately simple, but must not sacrifice traceability, idempotency, or the ability to evolve.
 
-Database engine selection, semantic storage, content retention, and other unresolved architecture choices remain subject to formal ADR approval.
+PostgreSQL is the Project Owner-selected target relational engine. Exact PostgreSQL configuration and tooling, production activation, semantic storage, content retention, and other unresolved architecture choices remain subject to their respective qualification and formal ADR approval gates.
 
 This document defines the intended logical data model. Physical schema design and migration implementation must follow the approved architecture and the component contracts defined in Document 02.
 
@@ -3267,3 +3267,5 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 **Revision Note (v1.51):** Makes ArticleRevision's rights provenance explicit as immutable operation/content-scope RightsAssessment references rather than a single ambiguous `rights_status` field. Adds the complete historical publication-time/metadata snapshot and server creation timestamp; operation-specific rights remain authoritative in RightsAssessment records.
 
 **Revision Note (v1.52):** Clarifies that Article.rights_status is a non-authoritative summary projection only. Every restricted operation must consult the current operation- and content-scope-specific RightsAssessment; the summary field cannot grant permission.
+
+**Revision Note (v1.53):** Removes stale pre-ADR SQLite assumptions from backup/recovery guidance and distinguishes the owner-selected PostgreSQL target from the still-gated production configuration and activation.
