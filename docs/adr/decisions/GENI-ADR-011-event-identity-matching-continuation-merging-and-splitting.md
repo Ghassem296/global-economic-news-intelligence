@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.9  
+**Version:** 1.10  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -817,9 +817,10 @@ Proposed domain entities include:
 - `EventIdentityOperation`
 - `EventIdentityOperationInput`
 - `EventIdentityOperationOutput`
+- `EventIdentityOperationAllocation`
 - `EventIdentityOperationHistory`
 
-The proposed logical model uses EventHistory and explicit EventIdentityOperation input/output/history records; it does not require a separate EventVersion, EventIdentityAlias, or EventReviewRecord entity. Historical identity resolution is derived from the EventIdentityOperation graph, while human review uses the shared ReviewRecord defined by ADR-014. The exact physical schema and repository boundaries are defined provisionally in Documents 02 and 03 and remain subject to formal ADR approval.
+The proposed logical model uses EventHistory and explicit EventIdentityOperation input/output/allocation/history records; allocation records map each affected Article, Claim, Evidence, or MarketObservation to one successor Event or preserve it as unresolved. They use type-specific repository validation rather than unchecked polymorphic references. The model does not require a separate EventVersion, EventIdentityAlias, or EventReviewRecord entity. Historical identity resolution is derived from the EventIdentityOperation graph, while human review uses the shared ReviewRecord defined by ADR-014. The exact physical schema and repository boundaries are defined provisionally in Documents 02 and 03 and remain subject to formal ADR approval.
 
 Proposed application operations include:
 
@@ -871,7 +872,7 @@ If accepted, implementation should include:
 - Event continuation handling.
 - Event relationship records.
 - Event merge operations with explicit survivor-in-input/output semantics and immutable operation history.
-- Event split operations with stable successor identifiers, explicit allocation, and unresolved-allocation handling.
+- Event split operations with stable successor identifiers, explicit per-subject allocation records, type-specific reference validation, and unresolved-allocation handling.
 - Identity resolution that distinguishes the applied core identity effect from pending downstream reconciliation.
 - Historical event versions and operation records.
 - Review integration for uncertain cases.
@@ -1027,3 +1028,5 @@ Such measurements must be obtained through a representative evaluation dataset b
 ---
 
 **End of ADR**
+
+**Revision Note (v1.10):** Aligns the proposed Event Identity Operation entity inventory and implementation implications with Document 03 v1.57 by adding explicit per-subject EventIdentityOperationAllocation records. ADR status remains Proposed; this clarification does not authorize implementation or merge/split execution.
