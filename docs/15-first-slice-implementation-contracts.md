@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.1  
+**Version:** 4.2  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -386,7 +386,7 @@ Before implementation of these contracts:
 ### Gate B — Technology proof and implementation selection
 
 Before persistence adapters are selected:
-- PostgreSQL production qualification and formal acceptance of GENI-ADR-005 require execution of GENI-ADR-005-POC-001 with an approved workload profile, predeclared thresholds, all mandatory correctness/failure gates, reproducible raw evidence, and a reviewed qualification recommendation. PostgreSQL is already the owner-selected target; the protocol itself is not evidence of a passing PoC.
+- GENI-ADR-005 must be formally Accepted only after PostgreSQL qualification under GENI-ADR-005-POC-001 has an approved workload profile, predeclared thresholds, all mandatory correctness/failure gates, reproducible raw evidence, and a reviewed qualification recommendation. PostgreSQL is already the owner-selected target; the protocol itself is not evidence of a passing PoC.
 - Exact PostgreSQL version, driver, query/ORM layer, migration tool, async strategy, transaction isolation/locking, connection lifecycle, deployment topology, and backup/restore procedure are recorded in the Accepted ADR and synchronized implementation baseline.
 - GENI-ADR-016 is accepted before durable lease, fencing, idempotency and recovery behavior is treated as approved implementation policy.
 
@@ -1200,3 +1200,5 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v4.1):** Records PostgreSQL as the owner-selected target while keeping production qualification and exact tooling gated; removes stale wording that treated the physical database engine itself as still undecided.
 
 **End of Document**
+
+**Revision Note (v4.2):** Makes the formal ADR-005 acceptance prerequisite explicit in the technology gate while preserving PostgreSQL as the already owner-selected target and retaining the production qualification boundary.
