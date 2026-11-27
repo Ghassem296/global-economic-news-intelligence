@@ -1482,5 +1482,22 @@ asyncio.run(main())
             )
         await self.connection.rollback()
 
+
+    async def test_poc_27_source_identity_has_one_unique_lookup_index(self) -> None:
+        result = await self.connection.execute(
+            """
+            SELECT indexname, indexdef
+            FROM pg_indexes
+            WHERE schemaname = %s AND tablename = 'articles'
+              AND indexdef LIKE '%(source_id, external_identity)%'
+            ORDER BY indexname
+            """,
+            (self.schema,),
+        )
+        indexes = await result.fetchall()
+        self.assertEqual(len(indexes), 1)
+        self.assertIn("UNIQUE", indexes[0][1].upper())
+        self.assertNotEqual(indexes[0][0], "articles_source_identity_idx")
+
 if __name__ == "__main__":
     unittest.main()
