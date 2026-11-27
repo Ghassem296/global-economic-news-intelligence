@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.17  
+**Version:** 4.18  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -457,7 +457,7 @@ Before a first-slice milestone is declared complete:
 
 ## 9. Unresolved items intentionally not decided here
 
-**Event identity operation boundary:** Document 03 §7.5 and GENI-ADR-011 define the logical MERGE/SPLIT/IDENTITY_CORRECTION records, cardinality, immutable history, expected EventHistory versions, core-effect state, and reconciliation semantics. The current first-slice application contract does not expose an EventIdentityOperation command, repository, or service and the executable foundation does not implement these operations. They remain disabled; no ArticleEventLink may be directly repointed by a merge/split. Before enablement, a dedicated application contract must define operation preparation/validation, event-scoped concurrency/overlap serialization, atomic input/output/history/EventHistory writes, identity resolution for historical IDs, downstream case re-resolution through successor EventMatchDecision records, and durable reconciliation/failure-injection tests. GENI-ADR-011 must be formally accepted and all Document 16 gates satisfied first.
+**Event identity operation boundary:** Document 03 §7.5 and GENI-ADR-011 define the logical MERGE/SPLIT/IDENTITY_CORRECTION records, cardinality, immutable history, expected EventHistory versions, core-effect state, and reconciliation semantics. The current first-slice application contract does not yet define a dedicated EventIdentityOperation command or method-level repository contract, and the executable foundation does not implement the Event Identity Operation Workflow. Document 02 assigns the architectural coordination responsibility to EventService through that workflow; this ownership statement is not itself an executable command, repository contract, or implemented service. They remain disabled; no ArticleEventLink may be directly repointed by a merge/split. Before enablement, a dedicated application contract must define operation preparation/validation, event-scoped concurrency/overlap serialization, atomic input/output/history/EventHistory writes, identity resolution for historical IDs, downstream case re-resolution through successor EventMatchDecision records, and durable reconciliation/failure-injection tests. GENI-ADR-011 must be formally accepted and all Document 16 gates satisfied first.
 
 The following remain open and must not be guessed by implementers:
 
@@ -1303,3 +1303,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.17):** Aligns CreateEventMatchCase DTO authority with the canonical `OPEN` initial state and Document 17 §6 transitions; aligns candidate interruption semantics through Document 17 §7; and explicitly marks EventIdentityOperation execution as outside the current first slice until dedicated commands, persistence contracts, concurrency/reconciliation tests, ADR-011 acceptance, and release gates are satisfied.
+
+
+**Revision Note (v4.18):** Clarifies that Document 02 assigns EventService architectural ownership of approved identity operations, while the current first-slice contract and executable foundation still lack the dedicated operation command, method-level repository contract, and workflow implementation. This removes an ambiguity without enabling merge/split execution.
