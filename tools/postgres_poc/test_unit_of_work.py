@@ -24,6 +24,7 @@ MIGRATION_NAMES = (
     "007_external_outcome_reconciliation.sql",
     "008_automatic_external_outcome_transitions.sql",
     "009_transaction_bound_authorization_and_rights.sql",
+    "010_article_revision_service_payload.sql",
 )
 
 
