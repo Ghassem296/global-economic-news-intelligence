@@ -156,7 +156,7 @@ def validate_first_slice_duplicate_contract_alignment() -> None:
             "Evaluate duplicate candidates and record an explicit immutable decision.",
             "through deduplication, event matching",
             f"Document 15 v{document_version(ROOT / 'docs/15-first-slice-implementation-contracts.md')}",
-            "Document 08 v1.9",
+            f"Document 08 v{document_version(ROOT / 'docs/08-security-architecture-and-threat-model.md')}",
         ),
         "adr": (
             "The Article Deduplication Workflow must create an immutable DuplicateDecision",
