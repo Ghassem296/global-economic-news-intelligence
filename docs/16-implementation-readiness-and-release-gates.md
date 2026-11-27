@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.30  
+**Version:** 4.31  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `48e26ea0da6f63c750173e21d3542cee958c79ca`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `85c61ad6574ccbf9e0c15f54f0e5576bac18284b`
 
 ---
 
@@ -338,3 +338,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.30):** Adds PostgreSQL PoC migration 004 for Article current-revision integrity, decision-case referential integrity/backfill, constrained decision outcomes, and removal of a duplicate source-identity index. Adds POC-25 through POC-27, updates migration coverage to 001–004, and pins the PostgreSQL 18.7 linux/amd64 service image by manifest digest. The 26-test historical run remains unchanged; the new migration and tests require fresh PostgreSQL workflow evidence. Production ADR-005 and all operational gates remain open.
+
+
+**Revision Note (v4.31):** Refreshes the inspected baseline to the published main commit containing PostgreSQL migration 004, POC-25–27, and the immutable image pin. The Documentation Registry's self-inventory version row and snapshot baseline were also corrected after CI exposed stale registry self-metadata. The PostgreSQL workflow result remains the authority for the new PoC evidence.
