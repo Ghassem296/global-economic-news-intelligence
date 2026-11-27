@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.66
+**Version:** 10.67
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -203,7 +203,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-009 | Near-Real-Time News Acquisition Strategy | `docs/adr/decisions/GENI-ADR-009-near-real-time-news-acquisition-strategy.md` | 1.0 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-010 | Phased Text, Audio, and Video Delivery | `docs/adr/decisions/GENI-ADR-010-phased-text-audio-and-video-delivery.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.9 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
+| GENI-ADR-011 | Event Identity, Matching, Continuation, Merging, and Splitting | `docs/adr/decisions/GENI-ADR-011-event-identity-matching-continuation-merging-and-splitting.md` | 1.10 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-012 | Semantic Retrieval, Similarity Calculation, and Embedding Storage | `docs/adr/decisions/GENI-ADR-012-semantic-retrieval-similarity-calculation-and-embedding-storage.md` | 1.1 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-013 | News Content Access, Full-Text Retention, Licensing, and Republishing | `docs/adr/decisions/GENI-ADR-013-news-content-access-full-text-retention-licensing-and-republishing.md` | 1.7 | Proposed — owner-selected Alternative C; formal acceptance pending | Published | Project Owner | 2026-11-26 | Owner direction recorded; formal ADR approval pending |
 | GENI-ADR-014 | Human Review, Corrections, and Withdrawals | `docs/adr/decisions/GENI-ADR-014-human-review-corrections-and-withdrawals.md` | 1.6 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
@@ -818,3 +818,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v10.66):** Synchronizes Document 03 v1.57, Document 15 v4.19, and Document 16 v4.93 after adding the explicit EventIdentityOperationAllocation logical record and preserving the implementation/ADR gates. Inspected baseline: `625a4e74515c5f4fb16789fe2b3a6694168b7ef9`. No merge/split capability activation, ADR acceptance, or new CI result is implied.
+
+
+**Revision Note (v10.67):** Synchronizes GENI-ADR-011 v1.10 and the ADR registry v1.45 after aligning the proposed identity-operation entity inventory with Document 03 v1.57. The inspected documentation baseline includes the preceding model, implementation-gate, and readiness updates. ADR-011 remains Proposed; no merge/split capability activation, new CI result, or production authorization is implied.
