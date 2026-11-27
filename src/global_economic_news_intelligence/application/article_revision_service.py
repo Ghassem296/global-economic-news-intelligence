@@ -228,7 +228,7 @@ class ArticleRevisionService:
                     revision=revision,
                     record=current,
                     previous=article,
-                    now=self._clock.now(),
+                    now=self._now(),
                 )
                 comparable = replace(
                     proposed,
@@ -290,7 +290,7 @@ class ArticleRevisionService:
                 revision=revision,
                 record=record,
                 previous=article,
-                now=self._clock.now(),
+                now=self._now(),
             )
             saved = self._articles.save_projection(
                 projection,
@@ -464,6 +464,7 @@ class ArticleRevisionService:
         revision: PersistArticleRevision,
         metadata: CommandMetadata,
     ) -> None:
+        evaluation_time = self._now()
         if not revision.rights_assessment_references:
             raise self._error(
                 ErrorCode.RIGHTS_NOT_ALLOWED,
@@ -472,7 +473,7 @@ class ArticleRevisionService:
             )
         if not self._content_rights.permits_metadata_retention(
             revision,
-            at=self._clock.now(),
+            at=evaluation_time,
         ):
             raise self._error(
                 ErrorCode.RIGHTS_NOT_ALLOWED,
@@ -486,13 +487,20 @@ class ArticleRevisionService:
             return
         if not self._content_rights.permits_persistent_storage(
             revision,
-            at=self._clock.now(),
+            at=evaluation_time,
         ):
             raise self._error(
                 ErrorCode.RIGHTS_NOT_ALLOWED,
                 "Persistent storage is not authorized for this content scope.",
                 metadata,
             )
+
+    def _now(self) -> datetime:
+        """Return one validated, trusted application instant."""
+        value = self._clock.now()
+        if not isinstance(value, datetime) or value.utcoffset() is None:
+            raise ValueError("Clock.now() must return a timezone-aware datetime.")
+        return value
 
     @staticmethod
     def _resource_reference(command: PersistArticleRevisionCommand) -> str:
