@@ -145,6 +145,7 @@ class PostgreSQLUnitOfWorkPoCTests(unittest.TestCase):
         finally:
             uow.rollback()
 
+
 class PostgreSQLUnitOfWorkFailureTests(unittest.TestCase):
     def test_rollback_error_is_not_masked_by_connection_close_error(self) -> None:
         connection = Mock()
