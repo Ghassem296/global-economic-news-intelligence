@@ -29,12 +29,17 @@ async def apply_migrations(
     migration_names: tuple[str, ...],
 ) -> None:
     for migration_name in migration_names:
-        applied = await connection.execute(
-            "SELECT 1 FROM schema_migrations WHERE version = %s",
-            (migration_name,),
+        bootstrap = await connection.execute(
+            "SELECT to_regclass('schema_migrations')"
         )
-        if await applied.fetchone():
-            continue
+        migration_table = await bootstrap.fetchone()
+        if migration_table is not None and migration_table[0] is not None:
+            applied = await connection.execute(
+                "SELECT 1 FROM schema_migrations WHERE version = %s",
+                (migration_name,),
+            )
+            if await applied.fetchone():
+                continue
 
         migration_sql = (MIGRATIONS / migration_name).read_text(encoding="utf-8")
         async with connection.transaction():
