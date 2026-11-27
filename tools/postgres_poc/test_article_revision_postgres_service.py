@@ -591,3 +591,57 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
         self.assertEqual(row[0], "REVOKED")
         self.assertEqual(self._counts(), (1, 1, 1))
 
+    def test_duplicate_revision_fingerprint_reuses_existing_revision(self) -> None:
+        first = self.service.execute(
+            PersistArticleRevisionCommand(make_metadata(), make_revision())
+        )
+        replayed_revision = self.service.execute(
+            PersistArticleRevisionCommand(
+                make_metadata(key="same-content-new-command"),
+                make_revision(),
+            )
+        )
+
+        self.assertFalse(replayed_revision.created)
+        self.assertEqual(replayed_revision.revision_id, first.revision_id)
+        self.assertEqual(replayed_revision.article_version, first.article_version)
+        self.assertEqual(self._counts(), (1, 1, 2))
+
+    def test_nonsemantic_url_changes_refresh_projection_without_new_revision(self) -> None:
+        first = self.service.execute(
+            PersistArticleRevisionCommand(make_metadata(), make_revision())
+        )
+        changed = replace(
+            make_revision(),
+            source_article_identity=SourceArticleIdentity(
+                "publisher:article-123",
+                "identity-v1",
+                "https://example.test/articles/123/canonical",
+            ),
+            original_url="https://example.test/articles/123/new-path",
+            external_id="publisher-article-123-v2",
+        )
+        second = self.service.execute(
+            PersistArticleRevisionCommand(
+                make_metadata(
+                    key="routing-refresh",
+                    expected_version=first.article_version,
+                ),
+                changed,
+            )
+        )
+
+        self.assertFalse(second.created)
+        self.assertEqual(second.revision_id, first.revision_id)
+        self.assertEqual(second.article_version, "article-version-2")
+        self.assertEqual(self._counts(), (1, 1, 2))
+        uow = self.factory.begin()
+        try:
+            projection = self.articles.get_by_id(first.article_id, uow)
+        finally:
+            uow.rollback()
+        self.assertEqual(projection.url, changed.original_url)
+        self.assertEqual(projection.external_id, changed.external_id)
+        self.assertEqual(projection.canonical_url, changed.source_article_identity.canonical_url)
+        self.assertEqual(projection.current_revision_id, first.revision_id)
+
