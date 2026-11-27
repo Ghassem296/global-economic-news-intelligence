@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from threading import Barrier, Event
+from threading import Event, Lock
 from time import monotonic, sleep
 from typing import Any
 
@@ -406,26 +406,7 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
         self.assertIs(exc.exception.code, ErrorCode.CONFLICT)
         self.assertEqual(self._counts(), (1, 1, 1))
 
-    def test_concurrent_new_articles_with_same_source_identity_have_one_winner(self) -> None:
-        barrier = Barrier(2)
-
-        class RacingArticleRepository(PostgreSQLArticleRepository):
-            def find_by_source_identity(
-                self,
-                source_id: str,
-                external_identity: SourceArticleIdentity,
-                uow: UnitOfWork,
-            ):
-                result = super().find_by_source_identity(
-                    source_id,
-                    external_identity,
-                    uow,
-                )
-                if result is None:
-                    barrier.wait(timeout=10)
-                return result
-
-        self.service._articles = RacingArticleRepository()
+    def test_concurrent_same_source_identity_is_serialized_and_reused(self) -> None:
         commands = [
             PersistArticleRevisionCommand(
                 make_metadata(key=f"race-{index}"),
@@ -434,22 +415,89 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
             for index in range(2)
         ]
 
-        successes = []
-        conflicts = []
         with ThreadPoolExecutor(max_workers=2) as executor:
             futures = [
                 executor.submit(self.service.execute, command)
                 for command in commands
             ]
-            for future in futures:
-                try:
-                    successes.append(future.result(timeout=20))
-                except GeniError as exc:
-                    conflicts.append(exc)
+            results = [future.result(timeout=20) for future in futures]
 
-        self.assertEqual(len(successes), 1)
-        self.assertEqual(len(conflicts), 1)
-        self.assertIs(conflicts[0].code, ErrorCode.DUPLICATE_IDENTITY)
+        self.assertEqual(results[0].article_id, results[1].article_id)
+        self.assertEqual(sum(result.created for result in results), 1)
+        self.assertEqual(self._counts(), (1, 1, 2))
+
+    def test_concurrent_distinct_identities_cannot_claim_same_canonical_url(self) -> None:
+        first_command = PersistArticleRevisionCommand(
+            make_metadata(key="canonical-first"),
+            make_revision(),
+        )
+        second_revision = replace(
+            make_revision("A distinct source article"),
+            source_article_identity=SourceArticleIdentity(
+                "publisher:distinct-article",
+                "identity-v1",
+                "https://example.test/articles/123",
+            ),
+            original_url="https://example.test/articles/distinct",
+            external_id="distinct-article",
+        )
+        second_command = PersistArticleRevisionCommand(
+            make_metadata(key="canonical-second"),
+            second_revision,
+        )
+        first_returned = Event()
+        release_first = Event()
+        second_returned = Event()
+        second_started = Event()
+        call_lock = Lock()
+        call_count = 0
+
+        class PausingArticleRepository(PostgreSQLArticleRepository):
+            def find_by_source_identity(
+                self,
+                source_id: str,
+                external_identity: SourceArticleIdentity,
+                uow: UnitOfWork,
+            ):
+                nonlocal call_count
+                result = super().find_by_source_identity(
+                    source_id,
+                    external_identity,
+                    uow,
+                )
+                with call_lock:
+                    call_count += 1
+                    current_call = call_count
+                if current_call == 1:
+                    first_returned.set()
+                    if not release_first.wait(timeout=10):
+                        raise TimeoutError("Test did not release the first Article transaction.")
+                else:
+                    second_returned.set()
+                return result
+
+        self.service._articles = PausingArticleRepository()
+
+        def run_second() -> PersistArticleRevisionResult:
+            second_started.set()
+            return self.service.execute(second_command)
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            first_future = executor.submit(self.service.execute, first_command)
+            self.assertTrue(first_returned.wait(timeout=10))
+            second_future = executor.submit(run_second)
+            try:
+                self.assertTrue(second_started.wait(timeout=5))
+                self.assertFalse(second_returned.wait(timeout=0.25))
+            finally:
+                release_first.set()
+            first_result = first_future.result(timeout=15)
+            with self.assertRaises(GeniError) as exc:
+                second_future.result(timeout=15)
+
+        self.assertTrue(first_result.created)
+        self.assertIs(exc.exception.code, ErrorCode.CONFLICT)
+        self.assertFalse(second_returned.is_set())
         self.assertEqual(self._counts(), (1, 1, 1))
 
     def _insert_authorization_grant(
