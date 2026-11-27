@@ -2146,7 +2146,7 @@ asyncio.run(main())
         self.assertIsNone(await result.fetchone())
 
 
-    async def test_poc_38_authorization_revocation_serializes_after_protected_commit(self) -> None:
+    async def test_poc_35_authorization_revocation_serializes_after_protected_commit(self) -> None:
         now = "2026-11-27T12:00:00+00:00"
         await self.connection.execute(
             """
@@ -2215,7 +2215,7 @@ asyncio.run(main())
             await checker.close()
             await revoker.close()
 
-    async def test_poc_39_authorization_revocation_committed_before_check_is_denied(self) -> None:
+    async def test_poc_36_authorization_revocation_committed_before_check_is_denied(self) -> None:
         now = "2026-11-27T12:00:00+00:00"
         await self.connection.execute(
             """
@@ -2245,7 +2245,7 @@ asyncio.run(main())
             )
             self.assertEqual(await result.fetchone(), ("REVOKED", 2))
 
-    async def test_poc_40_content_rights_revocation_serializes_after_protected_commit(self) -> None:
+    async def test_poc_37_content_rights_revocation_serializes_after_protected_commit(self) -> None:
         now = "2026-11-27T12:00:00+00:00"
         fingerprint = "a" * 64
         await self.connection.execute(
@@ -2317,7 +2317,7 @@ asyncio.run(main())
             await checker.close()
             await revoker.close()
 
-    async def test_poc_41_content_rights_revocation_committed_before_check_is_denied(self) -> None:
+    async def test_poc_38_content_rights_revocation_committed_before_check_is_denied(self) -> None:
         now = "2026-11-27T12:00:00+00:00"
         await self.connection.execute(
             """
