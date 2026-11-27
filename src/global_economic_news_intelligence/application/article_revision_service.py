@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
@@ -326,7 +326,8 @@ class ArticleRevisionService:
             ):
                 raise self._error(
                     ErrorCode.CONFLICT,
-                    "Source identity already exists; update requires an Article ID and expected version.",
+                    "Source identity already exists; update requires an Article ID "
+                    "and expected version.",
                     command.metadata,
                 )
         return article
