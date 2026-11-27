@@ -72,7 +72,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.connection = await connect_to_schema(DATABASE_URL, self.schema)
         await apply_migrations(
             self.connection,
-            ("001_initial.sql", "002_article_last_seen.sql"),
+            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql"),
         )
         self.source_id = "source-test"
         self.article_id = uuid.uuid4()
@@ -449,7 +449,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             "SELECT version FROM schema_migrations ORDER BY version"
         )
         versions = [row[0] for row in await result.fetchall()]
-        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql"])
+        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql"])
         result = await self.connection.execute(
             """
             SELECT column_name FROM information_schema.columns
@@ -483,7 +483,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 (article_id, source_id),
             )
             await connection.commit()
-            await apply_migrations(connection, ("002_article_last_seen.sql",))
+            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql"))
             result = await connection.execute(
                 """
                 SELECT external_identity, source_last_seen_at
@@ -508,7 +508,9 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         admin_url = DATABASE_URL.rsplit("/", 1)[0] + "/postgres"
         admin = await psycopg.AsyncConnection.connect(admin_url, autocommit=True)
         restored: psycopg.AsyncConnection[Any] | None = None
+        backup_process: asyncio.subprocess.Process | None = None
         remote_backup = f"/tmp/{restore_database}.dump"
+        concurrent_article_id = uuid.uuid4()
 
         async def docker(*arguments: str) -> subprocess.CompletedProcess[str]:
             return await asyncio.to_thread(
@@ -522,8 +524,19 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         try:
             with tempfile.TemporaryDirectory() as temporary_directory:
                 local_backup = Path(temporary_directory) / "geni-poc.dump"
-                await docker(
+                await self.connection.execute(
+                    """
+                    INSERT INTO backup_payload (payload)
+                    SELECT repeat('x', 256) FROM generate_series(1, 50000)
+                    """
+                )
+                await self.connection.commit()
+
+                backup_process = await asyncio.create_subprocess_exec(
+                    "docker",
                     "exec",
+                    "-e",
+                    "PGAPPNAME=geni_poc_backup",
                     POSTGRES_CONTAINER_ID,
                     "pg_dump",
                     "-U",
@@ -533,6 +546,50 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     "-Fc",
                     "-f",
                     remote_backup,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+
+                backup_active = False
+                for _ in range(500):
+                    activity = await self.connection.execute(
+                        """
+                        SELECT 1 FROM pg_stat_activity
+                        WHERE application_name = 'geni_poc_backup'
+                          AND state = 'active'
+                        LIMIT 1
+                        """
+                    )
+                    backup_active = await activity.fetchone() is not None
+                    await self.connection.commit()
+                    if backup_active:
+                        break
+                    if backup_process.returncode is not None:
+                        break
+                    await asyncio.sleep(0.01)
+                self.assertTrue(
+                    backup_active,
+                    "Could not observe pg_dump while active; concurrent-write backup was not exercised.",
+                )
+
+                writer = await connect_to_schema(DATABASE_URL, self.schema)
+                try:
+                    await writer.execute(
+                        """
+                        INSERT INTO articles (article_id, source_id, external_identity)
+                        VALUES (%s, %s, 'publisher:concurrent-backup-write')
+                        """,
+                        (concurrent_article_id, self.source_id),
+                    )
+                    await writer.commit()
+                finally:
+                    await writer.close()
+
+                _, backup_stderr = await backup_process.communicate()
+                self.assertEqual(
+                    backup_process.returncode,
+                    0,
+                    backup_stderr.decode(errors="replace"),
                 )
                 await docker(
                     "cp",
@@ -570,13 +627,37 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 )
                 self.assertEqual((await result.fetchone())[0], 1)
                 result = await restored.execute(
+                    "SELECT count(*) FROM backup_payload"
+                )
+                self.assertEqual((await result.fetchone())[0], 50000)
+                result = await restored.execute(
+                    """
+                    SELECT source_id, external_identity, version
+                    FROM articles WHERE article_id = %s
+                    """,
+                    (concurrent_article_id,),
+                )
+                concurrent_row = await result.fetchone()
+                if concurrent_row is not None:
+                    self.assertEqual(
+                        concurrent_row,
+                        (self.source_id, "publisher:concurrent-backup-write", 1),
+                    )
+                result = await restored.execute(
                     "SELECT version FROM schema_migrations ORDER BY version"
                 )
                 self.assertEqual(
                     [row[0] for row in await result.fetchall()],
-                    ["001_initial.sql", "002_article_last_seen.sql"],
+                    [
+                        "001_initial.sql",
+                        "002_article_last_seen.sql",
+                        "003_backup_payload.sql",
+                    ],
                 )
         finally:
+            if backup_process is not None and backup_process.returncode is None:
+                backup_process.terminate()
+                await backup_process.wait()
             if restored is not None:
                 await restored.close()
             await admin.execute(
