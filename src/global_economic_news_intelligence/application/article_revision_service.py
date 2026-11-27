@@ -523,6 +523,7 @@ class ArticleRevisionService:
         if not self._content_rights.permits_persistent_storage(
             revision,
             at=evaluation_time,
+            uow=uow,
         ):
             raise self._error(
                 ErrorCode.RIGHTS_NOT_ALLOWED,
