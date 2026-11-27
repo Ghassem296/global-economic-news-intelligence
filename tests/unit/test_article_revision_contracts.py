@@ -320,6 +320,7 @@ def test_canonical_url_requires_absolute_http_url(canonical_url: str) -> None:
             canonical_url=canonical_url,
         )
 
+
 @pytest.mark.parametrize(
     "url",
     [
