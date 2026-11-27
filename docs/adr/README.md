@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.44
+**Version:** 1.45
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -462,3 +462,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **Revision Note (v1.43):** Synchronizes GENI-ADR-005 v3.9 and PoC-001 v1.32 after POC-34 verified that unknown external side-effect outcomes block blind EXECUTE retries until reconciliation. The 37-method result remains partial PoC evidence; ADR-005/016 remain Proposed and production qualification is open.
 
 **Revision Note (v1.44):** Synchronizes GENI-ADR-005 v4.0 and PoC-001 v1.33 after strengthening POC-34 with database-managed unknown-outcome transitions, retry blocking, and terminal-state enforcement. The 37-method result remains partial PoC evidence; ADR-005/016 remain Proposed and production qualification is open.
+
+**Revision Note (v1.45):** Synchronizes the ADR registry after GENI-ADR-011 v1.10 adds EventIdentityOperationAllocation to its proposed logical entity inventory. The ADR remains Proposed and no implementation or production capability is approved.
