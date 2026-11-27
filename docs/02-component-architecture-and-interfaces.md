@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.57  
+**Version:** 1.58  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1414,8 +1414,8 @@ The following crosswalk assigns every repository in the initial Document 03 inve
 | `EventMatchDecisionRepository` | EventMatchDecision | Event Resolution Workflow | Decision, supersession, case pointer, and link reconciliation transaction |
 | `EventHistoryRepository` | EventHistory | EventHistoryService via EventService | Append-only event state/history transaction |
 | `EventRelationshipRepository` | EventRelationship | EventService | Identity/relationship operation transaction |
-| `EventIdentityOperationRepository` | EventIdentityOperation and input/output links | EventService | Operation, inputs, outputs, and identity projection transaction |
-| `EventIdentityOperationHistoryRepository` | EventIdentityOperationHistory | EventService | Append-only operation status/action history transaction; operation projection and history update atomically |
+| `EventIdentityOperationRepository` | EventIdentityOperation and input/output/allocation links | EventService | Operation aggregate, ordered inputs/outputs, type-validated allocations, and core identity projection transaction; all share one UnitOfWork with EventHistory and operation-history writes |
+| `EventIdentityOperationHistoryRepository` | EventIdentityOperationHistory | EventService | Append-only operation status/effect/action history; sequence, idempotency and projection update atomically |
 | `ClaimRepository` | Claim current-assessment projection | EvidenceService | Claim identity/projection update with assessment transaction |
 | `ClaimObservationRepository` | ClaimObservation | EvidenceService / claim extraction workflow | Observation and source provenance transaction |
 | `EvidenceRepository` | Evidence | EvidenceService | Evidence registration and origin provenance transaction |
@@ -1674,7 +1674,7 @@ Observed economic effects, source-reported effects, inferred potential effects, 
 - `SPLIT` requires exactly one original input Event and at least two distinct successor output Events; input and output sets must not overlap.
 - `IDENTITY_CORRECTION` must follow the cardinality and permitted transition rules of its versioned policy.
 - Every input must still have the expected EventHistory version and be eligible for the requested identity operation. Overlapping unresolved identity operations must be rejected or serialized; stale requests must not be applied.
-- The actor, authorization, policy version, evidence context, operation identifier, and idempotency key must be validated before the identity effect is applied.
+- The actor, authorization, policy version, evidence context, operation identifier, and idempotency key must be validated before the identity effect is applied. The prepare/apply/reconcile/finalize phases, typed request/result/query contracts, repository method baseline, transaction write sets, and failure-recovery matrix are specified provisionally in GENI-IMPL-015 §10.17; that contract remains gated and does not activate this workflow.
 
 **Execution invariants:**
 
@@ -2276,3 +2276,5 @@ PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction li
 
 
 **Revision Note (v1.57):** Refreshes the component architecture reference after the structural correction to Document 03 v1.60; no ownership or runtime behavior changes.
+
+**Revision Note (v1.58):** Aligns the Event Identity Operation repository crosswalk with the explicit allocation aggregate and points the workflow to GENI-IMPL-015 §10.17 for its gated prepare/apply/reconcile/finalize application contract. No runtime capability, ADR acceptance, or production adapter is enabled.
