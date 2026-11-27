@@ -1551,6 +1551,9 @@ asyncio.run(main())
                     "UPDATE articles SET current_revision_id = %s WHERE article_id = %s",
                     (invalid_pointer, legacy_article_id),
                 )
+                await self.connection.execute(
+                    "SET CONSTRAINTS articles_current_revision_fk IMMEDIATE"
+                )
 
         after_failure = await self.connection.execute(
             """
