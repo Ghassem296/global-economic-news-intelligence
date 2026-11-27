@@ -34,14 +34,15 @@ MIGRATION_NAMES = (
 class PostgreSQLUnitOfWorkPoCTests(unittest.TestCase):
     def setUp(self) -> None:
         self.schema = f"uow_{uuid.uuid4().hex}"
-        self.admin: psycopg.Connection[Any] = psycopg.connect(DATABASE_URL)
-        self.admin.execute(
-            sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(self.schema))
-        )
-        self.admin.commit()
-
-        migration_connection = psycopg.connect(DATABASE_URL)
+        self.admin: psycopg.Connection[Any] | None = psycopg.connect(DATABASE_URL)
+        migration_connection: psycopg.Connection[Any] | None = None
         try:
+            self.admin.execute(
+                sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(self.schema))
+            )
+            self.admin.commit()
+
+            migration_connection = psycopg.connect(DATABASE_URL)
             migration_connection.execute(
                 sql.SQL("SET search_path TO {}").format(sql.Identifier(self.schema))
             )
@@ -52,15 +53,31 @@ class PostgreSQLUnitOfWorkPoCTests(unittest.TestCase):
                 )
                 with migration_connection.transaction():
                     migration_connection.execute(migration_sql, prepare=False)
-        finally:
-            migration_connection.close()
 
-        self.factory = PostgreSQLUnitOfWorkFactory(
-            database_url=DATABASE_URL,
-            schema=self.schema,
-        )
+            self.factory = PostgreSQLUnitOfWorkFactory(
+                database_url=DATABASE_URL,
+                schema=self.schema,
+            )
+        except BaseException:
+            if migration_connection is not None:
+                migration_connection.close()
+            if self.admin is not None:
+                self.admin.execute(
+                    sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(
+                        sql.Identifier(self.schema)
+                    )
+                )
+                self.admin.commit()
+                self.admin.close()
+                self.admin = None
+            raise
+        finally:
+            if migration_connection is not None and not migration_connection.closed:
+                migration_connection.close()
 
     def tearDown(self) -> None:
+        if self.admin is None:
+            return
         self.admin.execute(
             sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(
                 sql.Identifier(self.schema)
