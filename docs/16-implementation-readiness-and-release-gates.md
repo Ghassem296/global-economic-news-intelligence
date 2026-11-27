@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.92  
+**Version:** 4.93  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -132,7 +132,7 @@ Then implement:
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
 - Atomic write sets for decision pointer and ArticleEventLink reconciliation.
-- EventIdentityOperation persistence, merge/split application commands, event-scoped overlap serialization, historical-identity resolution, and downstream reconciliation through successor EventMatchDecision records are not implemented. These remain disabled pending the dedicated contract, GENI-ADR-011 acceptance, durable persistence/reconciliation, and failure-injection tests.
+- EventIdentityOperation persistence, merge/split application commands, per-subject EventIdentityOperationAllocation records, type-specific validation of affected Article/Claim/Evidence/MarketObservation references, event-scoped overlap serialization, historical-identity resolution, and downstream reconciliation through successor EventMatchDecision records are not implemented. Document 03 §7.5 now defines the logical allocation record, but no executable allocation repository or workflow exists. These capabilities remain disabled pending the dedicated Document 15 contract, GENI-ADR-011 acceptance, durable persistence/reconciliation, and failure-injection tests.
 - Atomic EvidenceLocation, AnalysisInput/AnalysisEvidenceLink, and ReportEventLink/ReportEvidenceLink/ReportArticleLink/ReportAnalysisLink writes through the parent aggregate repositories; child link persistence must not commit independently.
 - Atomic review action sequencing and projection updates.
 - Durable leases, fencing, idempotency records, and recovery.
@@ -517,3 +517,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.92):** Clarifies the division between Document 02's architectural EventService ownership and the missing dedicated EventIdentityOperation command/repository contract and workflow implementation recorded in Document 15 v4.18. Merge/split execution remains disabled; no CI result or production authorization is implied.
+
+
+**Revision Note (v4.93):** Records the missing per-subject allocation persistence discovered in the EventIdentityOperation audit. Aligns the readiness gate with Document 03 v1.57 and Document 15 v4.19; merge/split remains disabled and no new CI result or production authorization is implied.
