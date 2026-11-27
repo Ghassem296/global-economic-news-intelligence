@@ -105,7 +105,7 @@ class AuthorizationVerifier(Protocol):
 
 
 class ContentRightsVerifier(Protocol):
-    """Revalidates metadata and content rights for the exact source/content scope."""
+    """Revalidates exact metadata/content rights; missing assessment references deny by default."""
 
     def permits_metadata_retention(
         self,
@@ -417,6 +417,12 @@ class ArticleRevisionService:
         revision: PersistArticleRevision,
         metadata: CommandMetadata,
     ) -> None:
+        if not revision.rights_assessment_references:
+            raise self._error(
+                ErrorCode.RIGHTS_NOT_ALLOWED,
+                "No rights-assessment references were supplied for this revision.",
+                metadata,
+            )
         if not self._content_rights.permits_metadata_retention(
             revision,
             at=revision.observed_at,
