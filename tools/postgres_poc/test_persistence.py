@@ -1597,5 +1597,108 @@ asyncio.run(main())
         )
         self.assertEqual(await completed.fetchone(), (revision_id, 1))
 
+
+    async def test_poc_29_concurrent_article_revision_appends_are_atomic(self) -> None:
+        initial_revision_id = uuid.uuid4()
+        await self.connection.execute(
+            """
+            INSERT INTO article_revisions
+                (revision_id, article_id, revision_number, fingerprint)
+            VALUES (%s, %s, 1, 'initial-article-revision')
+            """,
+            (initial_revision_id, self.article_id),
+        )
+        await self.connection.execute(
+            """
+            UPDATE articles
+            SET current_revision_id = %s
+            WHERE article_id = %s
+            """,
+            (initial_revision_id, self.article_id),
+        )
+        await self.connection.commit()
+
+        barrier = asyncio.Event()
+        ready = 0
+        ready_lock = asyncio.Lock()
+
+        class StaleArticleVersion(Exception):
+            pass
+
+        async def append_revision(
+            revision_number: int,
+            fingerprint: str,
+        ) -> tuple[str, uuid.UUID]:
+            nonlocal ready
+            connection = await connect_to_schema(DATABASE_URL, self.schema)
+            revision_id = uuid.uuid4()
+            try:
+                async with ready_lock:
+                    ready += 1
+                    if ready == 2:
+                        barrier.set()
+                await barrier.wait()
+
+                try:
+                    async with connection.transaction():
+                        await connection.execute(
+                            """
+                            INSERT INTO article_revisions
+                                (revision_id, article_id, revision_number, fingerprint)
+                            VALUES (%s, %s, %s, %s)
+                            """,
+                            (
+                                revision_id,
+                                self.article_id,
+                                revision_number,
+                                fingerprint,
+                            ),
+                        )
+                        updated = await connection.execute(
+                            """
+                            UPDATE articles
+                            SET current_revision_id = %s, version = version + 1
+                            WHERE article_id = %s AND version = 1
+                            """,
+                            (revision_id, self.article_id),
+                        )
+                        if updated.rowcount != 1:
+                            raise StaleArticleVersion
+                    return ("committed", revision_id)
+                except StaleArticleVersion:
+                    return ("conflict", revision_id)
+            finally:
+                await connection.close()
+
+        outcomes = await asyncio.gather(
+            append_revision(2, "concurrent-revision-a"),
+            append_revision(3, "concurrent-revision-b"),
+        )
+        self.assertCountEqual([outcome[0] for outcome in outcomes], ["committed", "conflict"])
+
+        current = await self.connection.execute(
+            """
+            SELECT a.version, a.current_revision_id, r.revision_number,
+                   (SELECT COUNT(*) FROM article_revisions all_revisions
+                    WHERE all_revisions.article_id = a.article_id)
+            FROM articles a
+            JOIN article_revisions r
+              ON r.article_id = a.article_id
+             AND r.revision_id = a.current_revision_id
+            WHERE a.article_id = %s
+            """,
+            (self.article_id,),
+        )
+        version, current_revision_id, revision_number, revision_count = (
+            await current.fetchone()
+        )
+        self.assertEqual(version, 2)
+        self.assertEqual(revision_count, 2)
+        self.assertEqual(revision_number, 2 if outcomes[0][0] == "committed" else 3)
+        self.assertIn(
+            current_revision_id,
+            {outcome[1] for outcome in outcomes if outcome[0] == "committed"},
+        )
+
 if __name__ == "__main__":
     unittest.main()
