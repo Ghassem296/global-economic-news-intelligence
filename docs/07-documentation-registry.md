@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.43
+**Version:** 10.44
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.11 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.78 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.79 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 3.2 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -746,3 +746,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.42):** Synchronizes GENI-READY-016 v4.77, GENI-ADR-005 v3.9, ADR Registry v1.43, and PoC-001 v1.32. Records the verified 37-method PostgreSQL PoC (33 PostgreSQL integration plus four standalone retention-policy tests) on source snapshot `4aa5fd0d0b6bfcd3b4f239ed2fbad0f323cfa9f6`, including POC-34 unknown external outcome reconciliation. The PoC remains partial; ADR-005/016 remain Proposed and no production authorization is implied.
 
 **Revision Note (v10.43):** Synchronizes GENI-READY-016 v4.78, GENI-ADR-005 v4.0, ADR Registry v1.44, and PoC-001 v1.33. Records the verified 37-method PostgreSQL PoC (33 PostgreSQL integration plus four standalone retention-policy tests) on source snapshot `dd7d69e2b97cbf89c3ab1eda656964283a3aca9e`, including automatic unknown-outcome transitions and reconciliation-gated retry blocking. The PoC remains partial; ADR-005/016 remain Proposed and no production authorization is implied.
+
+
+**Revision Note (v10.44):** Synchronizes the controlled inventory with GENI-READY-016 v4.79 after correcting the stale 33-method PostgreSQL PoC reference in §5.2 to the latest verified 37-method evidence. No new test result, ADR acceptance, production qualification, or production authorization is implied.
