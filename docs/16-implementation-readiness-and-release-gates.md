@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.63  
+**Version:** 4.64  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -248,7 +248,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.57
+**Version:** 4.64
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -433,3 +433,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.62):** Advances the reviewed code/test snapshot to `c75f6e7ed81e60c7330e739181a252723c098b59` after normalizing the regression fixtures to test a single literal backslash. Current-main Application CI and Documentation Validation remain pending.
 
 **Revision Note (v4.63):** Clarifies that the current-main CI workflows are configured for push events, but their run results were not available for verification in this review. The 275-test result remains tied only to commit `5c9e34a`; no current-code CI success is claimed.
+
+**Revision Note (v4.64):** Aligns the duplicated document-control version metadata and records verified current-main results: Application CI and the PostgreSQL 18.7 / Python 3.15 correctness PoC succeeded on commit `1dadc81137a54cbf80b923b1a2af8b72e7dc605a`; documentation validation exposed this metadata mismatch. No readiness verdict or production authorization changes.
