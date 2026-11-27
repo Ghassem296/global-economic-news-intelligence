@@ -2,8 +2,9 @@
 
 This service coordinates authorization, content-rights revalidation, command
 idempotency, immutable revision append/reuse, and the current Article projection.
-Concrete security, rights, idempotency, identifier, and persistence adapters remain
-infrastructure responsibilities and must share the supplied UnitOfWork.
+Concrete security and rights adapters must perform a second, transaction-bound
+validation using the supplied UnitOfWork and hold the authoritative decision versions
+stable through commit. Idempotency and persistence adapters also share that UnitOfWork.
 """
 
 from __future__ import annotations
@@ -108,7 +109,7 @@ class AuthorizationVerifier(Protocol):
         *,
         action: str,
         resource_reference: str,
-        uow: UnitOfWork | None = None,
+        uow: UnitOfWork | None,
     ) -> bool:
         """Check authorization; with a UoW, bind the decision to its commit.
 
@@ -120,14 +121,14 @@ class AuthorizationVerifier(Protocol):
 
 
 class ContentRightsVerifier(Protocol):
-    """Revalidates exact metadata/content rights; missing assessment references deny by default."""
+    """Revalidates rights; transaction-bound calls must hold decision versions through commit."""
 
     def permits_metadata_retention(
         self,
         revision: PersistArticleRevision,
         *,
         at: datetime,
-        uow: UnitOfWork | None = None,
+        uow: UnitOfWork | None,
     ) -> bool:
         """Verify METADATA_ACCESS plus the applicable metadata-preservation rule."""
         ...
@@ -137,7 +138,7 @@ class ContentRightsVerifier(Protocol):
         revision: PersistArticleRevision,
         *,
         at: datetime,
-        uow: UnitOfWork | None = None,
+        uow: UnitOfWork | None,
     ) -> bool:
         ...
 
