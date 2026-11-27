@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.57  
+**Version:** 4.58  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Implementation/code snapshot reviewed on 2026-11-27 at `b154650c9cda341c71c7e25fe0e8c7825c6edb06`; subsequent changes reviewed through this revision are documentation-only
+**Baseline:** Implementation/code snapshot reviewed through 2026-11-27 commit `7539e872d74f289ffc3e0e6af0794eb1f1c3139d`; ArticleRevision URL-validation hardening is included, but fresh Application CI is pending
 
 ---
 
@@ -31,16 +31,16 @@ A published file, passing documentation check, or merged change is not by itself
 
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45963235364 for commit `5c9e34af98a97326c22ac756f306225493f91e29`. It completed locked dependency installation, Ruff, mypy, and pytest; all 275 tests passed.
+The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. The last verified main-branch Application CI run was 45963235364 for commit `5c9e34af98a97326c22ac756f306225493f91e29`; it completed locked dependency installation, Ruff, mypy, and pytest with all 275 then-existing tests passing.
 
-A GitHub commit comparison confirms that the seven commits from this tested code commit to the implementation baseline, and the subsequent commits through this revision, changed documentation files only. No application source, test, project configuration, lockfile, or workflow files changed in those intervals. The recorded 275-test Application CI result therefore remains applicable to the current code snapshot. A fresh Documentation Validation run after the current documentation edits is still required and has not been verified here.
+The current code snapshot subsequently adds a shared structural HTTP(S) URL validator and applies it to Source and ArticleRevision URLs, with new ArticleRevision regression tests. These code/test changes are later than the 275-test run, so that result is historical evidence for its commit only and must not be represented as verification of the current code. A fresh Application CI run and a fresh Documentation Validation run after the current changes are pending and have not been verified here.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
 - An executable ArticleRevisionService with technology-neutral ArticleRepository and ArticleRevisionRepository ports. It coordinates authorization, fail-closed rights checks, command idempotency, immutable revision append/reuse, and Article projection updates through one injected UnitOfWork; current tests are unit-level and do not qualify durable adapters or database concurrency.
 - A CLI that reports package version and disabled capability boundaries, using validated settings and safe logging initialization.
 - Unit tests for transition guards, aggregation, successor-decision linearity, review projection, external-outcome reconciliation, validated configuration, safe errors/logging, and domain dependency boundaries.
-- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the current main-branch run passed all 275 tests (45963235364).
+- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the last verified run passed 275 tests on commit `5c9e34af98a97326c22ac756f306225493f91e29` (45963235364). The later shared URL-validation changes and new regression tests await a fresh run on current `main`.
 - Existing documentation CI and registry validation remain separate and are preserved.
 
 The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
@@ -421,3 +421,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.56):** Updates the active Document 03 cross-reference from v1.53 to v1.54 and records the Source configuration aggregate-version addition without implying approval of the proposed data model or production persistence. No readiness verdict or production authorization changes.
 
 **Revision Note (v4.57):** Clarifies the implementation baseline and records the GitHub comparison showing documentation-only changes after the 275-test Application CI commit. The existing application test evidence remains applicable to current code; fresh documentation validation remains pending. No readiness verdict or production authorization changes.
+
+**Revision Note (v4.58):** Records the shared ArticleRevision URL-validation hardening and regression tests, and corrects the CI evidence boundary: the 275-test result belongs to commit `5c9e34a` and does not verify the later code/test changes. Current-main Application CI and Documentation Validation remain pending. No readiness verdict or production authorization changes.
