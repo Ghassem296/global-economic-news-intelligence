@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.56  
+**Version:** 1.57  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -2272,4 +2272,7 @@ PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction li
 **Revision Note (v1.55):** Assigns report-impact discovery to the Event Identity Operation Workflow and assessment/remediation to ReportVersionService. Clarifies that publication replacement/withdrawal and recipient correction remain separate authorized operations. Aligns component ownership with Document 03 v1.58; this does not implement or enable the workflow.
 
 
-**Revision Note (v1.56):** Clarifies that ReportVersionService owns the report-impact lifecycle projection/history and must create a durable owned remediation work item before an identity operation can treat a required report correction as tracked. Aligns with Document 03 v1.59.
+**Revision Note (v1.56):** Clarifies that ReportVersionService owns the report-impact lifecycle projection/history and must create a durable owned remediation work item before an identity operation can treat a required report correction as tracked. Aligns with Document 03 v1.60.
+
+
+**Revision Note (v1.57):** Refreshes the component architecture reference after the structural correction to Document 03 v1.60; no ownership or runtime behavior changes.
