@@ -29,13 +29,16 @@ class FakeArticleRepository:
         self.saved_expected_version: str | None = None
         self.saved_uow: UnitOfWork | None = None
 
-    def get_by_id(self, article_id: str) -> dict[str, Any] | None:
+    def get_by_id(
+        self, article_id: str, uow: UnitOfWork | None = None
+    ) -> dict[str, Any] | None:
         return self.article if article_id == self.article["id"] else None
 
     def find_by_source_identity(
         self,
         source_id: str,
         external_identity: SourceArticleIdentity,
+        uow: UnitOfWork | None = None,
     ) -> dict[str, Any] | None:
         if (
             source_id == self.article["source_id"]
@@ -66,12 +69,13 @@ def test_article_repository_resolves_source_scoped_identity() -> None:
     repository = FakeArticleRepository()
     identity = SourceArticleIdentity("publisher:123", "source-id-v1")
 
-    assert repository.find_by_source_identity("source-1", identity) == {
+    uow = FakeUnitOfWork()
+    assert repository.find_by_source_identity("source-1", identity, uow) == {
         "id": "article-1",
         "source_id": "source-1",
         "current_revision_id": "revision-1",
     }
-    assert repository.find_by_source_identity("source-2", identity) is None
+    assert repository.find_by_source_identity("source-2", identity, uow) is None
 
 
 @pytest.mark.parametrize(
