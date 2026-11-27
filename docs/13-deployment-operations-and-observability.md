@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-OPS-013  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Draft — Under Architecture Review  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -68,7 +68,7 @@ A failed or interrupted restore must not be treated as successful because the da
 
 ### 7.3 Current PostgreSQL PoC evidence boundary
 
-The isolated PostgreSQL PoC exercises a full logical database backup during concurrent activity, isolated database restore, migration-history/application-invariant verification, private file permissions, and an experimental encrypted/authenticated envelope. POC-19 additionally restores user-defined roles and role membership from `pg_dumpall --globals-only --no-role-passwords` into a clean PostgreSQL 18.7 instance, retaining the destination bootstrap administrator and verifying role attributes and membership. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. The tests do not establish production backup encryption, KMS/HSM custody, key rotation, off-site storage, immutability, retention, restore authorization, tablespace/configuration recovery, full cluster recovery, role-password/secret recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
+The isolated PostgreSQL PoC exercises a full logical database backup during concurrent activity, isolated database restore, migration-history/application-invariant verification, private file permissions, and an experimental encrypted/authenticated envelope. POC-19 additionally restores user-defined roles and role membership from `pg_dumpall --globals-only --no-role-passwords` into a clean PostgreSQL 18.7 instance, retaining the destination bootstrap administrator and verifying role attributes and membership. POC-20 verifies that a dedicated login identity inheriting `pg_read_all_data` can create a full logical database dump with file mode `0600`, cannot write application rows, and lacks superuser, CREATEDB, and CREATEROLE privileges; its dump restores synthetic application rows and migration history into an isolated database. These are correctness experiments on synthetic data only. The ephemeral test passphrase is not a key-management design. The tests do not establish production backup encryption, KMS/HSM custody, credential provisioning/rotation/revocation, off-site storage, immutability, retention enforcement, separate restore-identity authorization, tablespace/configuration recovery, full cluster recovery, role-password/secret recovery, privacy-ledger reconciliation, or an approved RPO/RTO. Those controls remain release gates under GENI-ADR-005 and this document.
 
 ## 8. Capacity and Cost
 
@@ -117,10 +117,12 @@ Runbook publication is not evidence of successful exercise. See Documents 02, 03
 ---
 
 **Document ID:** GENI-OPS-013  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Draft — Under Architecture Review  
 
 
 **Revision Note (v1.3):** Adds explicit cluster-global role/membership restore guidance and records the POC-19 evidence boundary. It distinguishes tested user-defined role recovery from untested tablespace, configuration, password/secret, and full-cluster recovery.
+
+**Revision Note (v1.4):** Records POC-20's synthetic-data evidence for a read-only `pg_read_all_data` backup identity and clarifies that production credential lifecycle, retention enforcement, restore identity separation, and full cluster recovery remain untested.
 
 **End of Document**
