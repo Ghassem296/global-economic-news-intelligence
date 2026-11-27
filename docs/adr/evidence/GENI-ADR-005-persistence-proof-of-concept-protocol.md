@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.25
+**Version:** 1.26
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -266,3 +266,6 @@ After qualification and formal acceptance, review the experimental evidence and 
 
 
 **End of Evidence Protocol**
+
+
+The latest reproducible 32-test execution completed successfully on 2026-11-27 in GitHub Actions run `45981896934` against exact main commit `1a02755f8356aa2263246c9c08ab13bfdd41bc70`: all 32 test methods passed (28 PostgreSQL integration methods plus four standalone retention-policy unit tests). The uploaded machine-readable evidence artifact is `postgres-poc-1a02755f8356aa2263246c9c08ab13bfdd41bc70` (artifact ID `15189922078`). The artifact records PostgreSQL 18.7, Psycopg 3.3.9, CPython 3.15.2, and the pinned linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`; it reports `successful: true`, with no failures or skipped tests. This rerun verifies the current main commit but does not expand the PoC's scope or close any production qualification gate. Workload profile and thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, and formal ADR-005 acceptance remain open.
