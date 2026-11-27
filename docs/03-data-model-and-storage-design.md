@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.57
+**Version:** 1.58
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -997,6 +997,43 @@ Constraints:
 - Input/output roles and ordering must be validated by the application layer.
 - Operation creation, status transition, input/output links, and affected event-history records must be transactionally consistent.
 - External notifications and downstream report reconciliation must use durable follow-up work; they must not be executed as an untracked side effect inside the identity transaction.
+
+**Report-impact discovery and preservation:** After the core identity effect is durably applied, the reconciliation workflow must discover every immutable Report version that references any input Event through either its primary `Report.event_id` convenience reference or an authoritative `ReportEventLink`. Discovery must be deterministic, paginated/restartable, and durably checkpointed; a report version is recorded once per identity operation even if it references multiple input Events. Existing Report rows, ReportEventLinks, ReportEvidenceLinks, ReportArticleLinks, ReportAnalysisLinks, PublicationDecisions, PublicationRecords, and DeliveryRecords are historical facts and must not be silently rewritten or repointed.
+
+**EventIdentityOperationReportImpact**
+
+One immutable assessment/projection record tracks the effect of one identity operation on one exact immutable Report version.
+
+Fields:
+
+- `id`
+- `operation_id`
+- `report_id` — exact immutable Report version, not a mutable report-family identifier
+- `impact_classification` — versioned classification describing why the report was selected and the nature of the event-identity change
+- `impact_status` — `PENDING`, `ASSESSED`, `REMEDIATION_REQUIRED`, or `RECONCILIATION_REQUIRED`
+- `reason_codes`
+- `assessment_summary`
+- `policy_version`
+- `actor_type`
+- `actor_reference`
+- `authorization_reference`
+- `created_at`
+- `assessed_at` nullable
+- `resolved_at` nullable
+- `resolution_reference` nullable — typed reference to the separately persisted remediation outcome, when one exists
+- `metadata`
+
+Constraints:
+
+- `(operation_id, report_id)` must be unique. Repeated discovery is idempotent and must not create duplicate impact records.
+- The report version and all of its provenance links remain immutable. The impact record is not permission to rewrite the report or its historical event links.
+- The assessment must consider all input Event references, persisted allocation outcomes including unresolved subjects, the exact report evidence/article/analysis provenance, and whether the report was previously published or delivered.
+- An unresolved allocation or unavailable provenance needed to determine the report's scope must not be treated as no impact; the impact remains `RECONCILIATION_REQUIRED` until resolved.
+- `ASSESSED` means the impact has been evaluated and its outcome recorded. If correction is required, use `REMEDIATION_REQUIRED`; this does not imply that a corrected report has been generated or republished.
+- A material correction creates a new immutable Report version through ReportVersionService, with new exact provenance links and a new publication-eligibility decision where applicable. The prior Report version and its PublicationDecision remain historical.
+- Replacing or withdrawing an external publication is a separate, explicitly authorized PublicationService operation. An identity operation must never automatically replace or withdraw an external publication.
+- A completed DeliveryRecord remains historical. Any recipient correction or notification requires a separately authorized ReportDelivery operation and its own rights authorization.
+- The identity operation may reach `SUCCEEDED` only after report-impact discovery is complete and every discovered report has a durable impact record whose assessment is `ASSESSED` or whose required remediation is durably assigned and tracked. Technical discovery/assessment failures remain `RECONCILIATION_REQUIRED`; they must not be hidden by marking the identity operation complete.
 - The system must not delete or reuse event identifiers after a merge or split.
 - ArticleEventLink changes require case-scoped successor EventMatchDecision records and EventService application; the identity operation must not directly repoint a historical link.
 - Survivor selection must use a documented, versioned policy and must not assume that the newest or oldest event is always correct.
@@ -1597,6 +1634,8 @@ Constraints:
 - Reports not associated with one event must be supported through explicit report scope and event relationships.
 
 ### 11.2 ReportEventLink
+
+Connects an immutable report version to one or more events. Its rows are immutable provenance links: event identity operations must not update or repoint them. Current event identity is resolved separately through the event-identity history/operation graph; report-impact assessment records whether a new report version or other separately authorized remediation is required.
 
 Connects a report to one or more events.
 
@@ -3309,3 +3348,6 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.57):** Adds the missing EventIdentityOperationAllocation logical record so MERGE/SPLIT can explicitly map affected articles, claims, evidence, and market observations to the canonical/successor Event identities or preserve them as unresolved. Clarifies type-specific repository validation and transaction consistency; this is a logical data-model correction, not an executable implementation or ADR approval.
+
+
+**Revision Note (v1.58):** Defines durable per-report-version impact tracking for Event identity operations. Requires discovery through both primary Event references and ReportEventLinks, preserves immutable report/publication/delivery history, and separates report correction, external publication replacement/withdrawal, and recipient correction into their respective services. This is a logical contract update; implementation and ADR approval remain gated.
