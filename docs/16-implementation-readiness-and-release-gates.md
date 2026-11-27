@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.48  
+**Version:** 4.49  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `a1f7398cad7aec5e9279fd6b96815c503739e73a`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `aaeb4de0c9c498c6e172ee878d2ee70875027104`
 
 ---
 
@@ -31,14 +31,14 @@ A published file, passing documentation check, or merged change is not by itself
 
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
-The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45962990531 for commit `a9dd0d9ab82a875fff19b05d0b26fafad82a607d`. It completed locked dependency installation, Ruff, mypy, and pytest; all 275 tests passed.
+The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45963235364 for commit `5c9e34af98a97326c22ac756f306225493f91e29`. It completed locked dependency installation, Ruff, mypy, and pytest; all 275 tests passed.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
 - An executable ArticleRevisionService with technology-neutral ArticleRepository and ArticleRevisionRepository ports. It coordinates authorization, fail-closed rights checks, command idempotency, immutable revision append/reuse, and Article projection updates through one injected UnitOfWork; current tests are unit-level and do not qualify durable adapters or database concurrency.
 - A CLI that reports package version and disabled capability boundaries, using validated settings and safe logging initialization.
 - Unit tests for transition guards, aggregation, successor-decision linearity, review projection, external-outcome reconciliation, validated configuration, safe errors/logging, and domain dependency boundaries.
-- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the current main-branch run passed all 275 tests (45962990531).
+- Application CI for Python 3.15 only, running Ruff, mypy, and pytest; the current main-branch run passed all 275 tests (45963235364).
 - Existing documentation CI and registry validation remain separate and are preserved.
 
 The lifecycle rules are now specified in GENI-FOUNDATION-017 and cross-referenced by Documents 03 and 15. This closes the prior logical state-machine specification gap; it does not implement durable state persistence, attempt storage, or transaction enforcement.
@@ -47,7 +47,7 @@ The project package-management choice is now uv 0.13.9, pinned by `[tool.uv].req
 
 The following remain absent or incomplete:
 
-- PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 32 test methods (28 PostgreSQL integration methods and four standalone retention-policy unit tests) on commit `a9dd0d9ab82a875fff19b05d0b26fafad82a607d` (GitHub Actions run `45962990616`, evidence artifact `15181591814`, archive SHA-256 `b900d487ed456dc0dc8297731b17f0eab4f4df9c8fa28e4f7767a23436425987`). POC-29 verifies concurrent ArticleRevision append/current-pointer compare-and-swap: one writer commits and the stale writer's revision insert rolls back. POC-24 through POC-27 verify concurrent migration execution, same-Article current-revision integrity, decision-case/outcome constraints, and source-identity index integrity. POC-28 verifies an atomic synthetic legacy Article revision backfill candidate, including rollback on an invalid deferred pointer and commit of a valid same-Article revision/pointer pair. POC-29 verifies competing ArticleRevision appends against the same expected Article version; only one writer advances the current pointer and the losing transaction leaves no extra revision. This is partial PoC evidence, not production qualification or approval of the legacy backfill policy. Production KMS/HSM integration, key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, approved workload values, and performance thresholds remain outstanding. GENI-ADR-005 remains Proposed.
+- PostgreSQL is the Project Owner-selected target relational engine. The latest isolated PoC-only run against PostgreSQL 18.7 with Psycopg 3.3.9 passed all 32 test methods (28 PostgreSQL integration methods and four standalone retention-policy unit tests) on commit `5c9e34af98a97326c22ac756f306225493f91e29` (GitHub Actions run `45963235373`, evidence artifact `15182595241`, archive SHA-256 `5eac19ecfcb8c73cd40af1b54187f0eea28001371fd0e9bb11198df0eaf553b5`). POC-29 verifies concurrent ArticleRevision append/current-pointer compare-and-swap: one writer commits and the stale writer's revision insert rolls back. POC-24 through POC-27 verify concurrent migration execution, same-Article current-revision integrity, decision-case/outcome constraints, and source-identity index integrity. POC-28 verifies an atomic synthetic legacy Article revision backfill candidate, including rollback on an invalid deferred pointer and commit of a valid same-Article revision/pointer pair. POC-29 verifies competing ArticleRevision appends against the same expected Article version; only one writer advances the current pointer and the losing transaction leaves no extra revision. This is partial PoC evidence, not production qualification or approval of the legacy backfill policy. Production KMS/HSM integration, key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster/tablespace/configuration/secret recovery, formal security review, approved workload values, and performance thresholds remain outstanding. GENI-ADR-005 remains Proposed.
 - The ArticleRevisionService and technology-neutral ArticleRepository/ArticleRevisionRepository ports are implemented, but no durable repository or UnitOfWork adapter, transactional idempotency store, concrete authorization/rights adapter, production migrations, lease/fencing persistence, or ProcessingStepAttempt adapter exists.
 - Document 15 v4.9 now defines the first source and article-to-report command/query DTO tranches, the proposed command-to-permission crosswalk, and the PostgreSQL qualification gate; Document 08 v1.9 now defines deny-by-default role boundaries and a minimum operation-permission catalogue. These are proposed logical baselines only. Final role-to-permission grants, policy administration, exact field bounds/canonicalization, and Project Owner approval remain incomplete.
 - Validated environment/log-level configuration, safe error-envelope primitives, and allowlisted structured JSON logging now exist; centralized exception mapping, metrics, tracing, alerting, and operational telemetry remain incomplete.
@@ -244,7 +244,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.48
+**Version:** 4.49
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -392,4 +392,7 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.47):** Refreshes the inspected `main` baseline to `428e6b6d3ea142175373246bba209476c50cd5c6` and synchronizes the latest verified evidence: Application CI run `45961988981` (275 tests, Ruff and mypy successful), Documentation Validation run `45961988971`, and PostgreSQL 18.7 / Python 3.15 PoC run `45961988925` (31 tests; artifact `15180889132`, archive SHA-256 `c306b10267d9bd46988c5bf8cf15b2af0ddcb7add4bf191ab8edfbb98f7d9fe0`). All three workflows succeeded. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed, production qualification and all applicable authorization/rights/security/operational gates remain open, and the overall readiness verdict is unchanged.
 
 
-**Revision Note (v4.48):** Refreshes the inspected `main` baseline to `a1f7398cad7aec5e9279fd6b96815c503739e73a` and records successful verification of POC-29 on source commit `a9dd0d9ab82a875fff19b05d0b26fafad82a607d`: Application CI run `45962990531` (275 tests, Ruff and mypy successful), Documentation Validation run `45962990536`, and PostgreSQL 18.7 / Python 3.15 PoC run `45962990616` (32 tests; artifact `15181591814`, archive SHA-256 `b900d487ed456dc0dc8297731b17f0eab4f4df9c8fa28e4f7767a23436425987`). All three workflows succeeded. The new test verifies atomic concurrent ArticleRevision append/current-pointer compare-and-swap. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed, production qualification and all applicable authorization/rights/security/operational gates remain open, and the overall readiness verdict is unchanged.
+**Revision Note (v4.48):** Refreshes the inspected `main` baseline to `a1f7398cad7aec5e9279fd6b96815c503739e73a` and records successful verification of POC-29 on source commit `a9dd0d9ab82a95992c28fb559a625155bbf43a96`: Application CI run `45962990531` (275 tests, Ruff and mypy successful), Documentation Validation run `45962990536`, and PostgreSQL 18.7 / Python 3.15 PoC run `45962990616` (32 tests; artifact `15181591814`, archive SHA-256 `b900d487ed456dc0dc8297731b17f0eab4f4df9c8fa28e4f7767a23436425987`). All three workflows succeeded. The new test verifies atomic concurrent ArticleRevision append/current-pointer compare-and-swap. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed, production qualification and all applicable authorization/rights/security/operational gates remain open, and the overall readiness verdict is unchanged.
+
+
+**Revision Note (v4.49):** Refreshes the inspected `main` baseline to `aaeb4de0c9c498c6e172ee878d2ee70875027104` and synchronizes evidence with the successful 275-test Application CI run `45963235364`, Documentation Validation run `45963235243`, and PostgreSQL 18.7 / Python 3.15 PoC run `45963235373` (32 tests; artifact `15182595241`, archive SHA-256 `5eac19ecfcb8c73cd40af1b54187f0eea28001371fd0e9bb11198df0eaf553b5`) on source commit `5c9e34af98a97326c22ac756f306225493f91e29`. POC-29 verifies one-winner concurrent ArticleRevision append/current-pointer compare-and-swap with rollback of the losing insert. The PoC remains isolated and partial; GENI-ADR-005 remains Proposed and production qualification, security/operations, workload thresholds, and formal acceptance remain open.
