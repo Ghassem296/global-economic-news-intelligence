@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.56
+**Version:** 1.57
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -957,6 +957,32 @@ The event input and output relationships must be stored through explicit relatio
 Input links must additionally preserve the expected current EventHistory version used for compare-and-swap validation. For `MERGE`, every participating Event is an input, the survivor input has role `SURVIVING_CANONICAL`, and the one output references that same Event with role `CANONICAL_SURVIVOR`. Other merge inputs use role `MERGED_SOURCE`. For `SPLIT`, the input identifies the original Event and outputs identify preallocated successor Event identifiers; no Event identifier may overlap the input and output sets. Positions are unique and define stable ordering within an operation.
 
 This avoids relying on JSON arrays as the only representation of event identity relationships.
+
+The operation must also persist an explicit allocation record for every affected event-scoped subject whose association is examined or changed. Input/output links identify the participating Event identities; they do not by themselves identify which Article, Claim, Evidence, or MarketObservation belongs to which successor after a split.
+
+**EventIdentityOperationAllocation**
+
+- `id`
+- `operation_id`
+- `subject_type` — one of the explicitly supported event-scoped record types: `ARTICLE_EVENT_ASSOCIATION`, `CLAIM`, `EVIDENCE`, or `MARKET_OBSERVATION`; extensions require a versioned contract change.
+- `subject_id` — opaque identifier resolved and validated by the type-specific authoritative repository; this is not an unchecked polymorphic reference.
+- `target_event_id` nullable — required when the allocation is resolved; must reference an Event in this operation's output set.
+- `allocation_status` — `ASSIGNED` or `UNRESOLVED`.
+- `allocation_method` — method/policy identifier used for the allocation.
+- `allocation_rationale`
+- `evidence_references` — immutable references to the evidence/context supporting the allocation, when applicable.
+- `created_at`
+
+Constraints:
+
+- Each affected subject may have at most one effective allocation within an operation; duplicate subject entries are rejected unless an explicitly versioned correction mechanism is defined.
+- `ASSIGNED` requires exactly one `target_event_id` from the operation's output set. `UNRESOLVED` requires a null target and an explicit rationale; it must never be assigned to an arbitrary successor.
+- For `MERGE`, every resolved allocation targets the canonical survivor output.
+- For `SPLIT`, each resolved allocation targets exactly one successor output. Unresolved allocations remain explicitly unresolved and must not create or repoint ArticleEventLinks.
+- The subject type/identifier must be validated by its authoritative repository inside the same application-controlled operation boundary. Implementations must not treat `subject_id` as a trusted free-form reference or bypass aggregate ownership.
+- Allocation records, operation input/output links, the core identity effect, and the corresponding EventHistory/operation-history writes must be transactionally consistent. If the allocation set cannot be durably established, the core effect must not be reported as successfully completed.
+- Allocation corrections after a completed operation require an authorized compensating identity operation; historical allocation records are not silently overwritten.
+- Allocation completeness and unresolved-item counts must be available to downstream reconciliation and audit. An unresolved allocation is a valid explicit outcome, not evidence that the subject belongs to every successor.
 
 Constraints:
 
@@ -3280,3 +3306,6 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.56):** Aligns EventMatchCandidate creation, evaluation, and interruption semantics with the executable lifecycle in Document 17, Section 7. The data model no longer describes those already-specified rules as undefined; candidate evaluation remains immutable and policy-versioned.
+
+
+**Revision Note (v1.57):** Adds the missing EventIdentityOperationAllocation logical record so MERGE/SPLIT can explicitly map affected articles, claims, evidence, and market observations to the canonical/successor Event identities or preserve them as unresolved. Clarifies type-specific repository validation and transaction consistency; this is a logical data-model correction, not an executable implementation or ADR approval.
