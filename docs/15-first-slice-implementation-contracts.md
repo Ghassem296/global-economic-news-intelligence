@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.13  
+**Version:** 4.14  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -148,7 +148,7 @@ The signatures below are logical signatures. Request and result structures named
 |---|---|---|
 | `get_by_id` | `get_by_id(revision_id: ID<ArticleRevision>) -> Optional<ArticleRevisionRecord>` | Returns an immutable, fingerprint-verified persistence record. |
 | `get_current_for_article` | `get_current_for_article(article_id: ID<Article>, uow: UnitOfWork) -> Optional<ArticleRevisionRecord>` | Resolves the exact revision record referenced by the Article projection through the caller's active UnitOfWork. |
-| `find_current_by_revision_fingerprint` | `find_current_by_revision_fingerprint(article_id: ID<Article>, revision_fingerprint: Fingerprint, schema_version: Version) -> Optional<ArticleRevisionRecord>` | Matches only the current revision of the same Article. It must not search all historical revisions or impose global uniqueness on fingerprints. |
+| `find_current_by_revision_fingerprint` | `find_current_by_revision_fingerprint(article_id: ID<Article>, revision_fingerprint: Fingerprint, schema_version: Version, uow: UnitOfWork) -> Optional<ArticleRevisionRecord>` | Matches only the current revision of the same Article. It must not search all historical revisions or impose global uniqueness on fingerprints. |
 | `append_revision` | `append_revision(article_id: ID<Article>, revision: PersistArticleRevision, expected_article_version: Optional<Version>, uow: UnitOfWork) -> ArticleRevisionRecord` | Appends one immutable revision inside the caller's UnitOfWork. ArticleRevisionService coordinates the Article projection update through ArticleRepository in that same UnitOfWork. Enforces unique `(article_id, revision_number)`; repeated current fingerprint is reused before append. The repository must not commit the UnitOfWork. |
 
 The persistence result is `ArticleRevisionRecord`, containing the server-owned revision ID, Article ID, positive revision number, immutable `PersistArticleRevision` payload, computed fingerprint and schema version, and server creation timestamp. Construction/read validation requires the stored fingerprint to equal the payload's recomputed fingerprint and rejects unsupported fingerprint schema versions. Rights provenance is represented by the payload's immutable `rights_assessment_references`; there is no single per-revision `rights_status` because permissions are operation- and content-scope-specific.
@@ -1287,3 +1287,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.13):** Makes Article and current-ArticleRevision reads explicitly participate in the active UnitOfWork used by ArticleRevisionService. This prevents repository adapters from silently performing pre-transaction or independently scoped reads while the service assumes transaction consistency. It is a port-contract correction only; concrete PostgreSQL adapters and race/integration qualification remain unimplemented.
+
+
+**Revision Note (v4.14):** Requires the active UnitOfWork for `find_current_by_revision_fingerprint`, aligning every current-ArticleRevision lookup with the transaction-bound repository-read rule. This is an application-port contract correction; it does not provide a durable adapter or database-level concurrency proof.
