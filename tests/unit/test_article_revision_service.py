@@ -579,3 +579,16 @@ def test_available_content_requires_both_metadata_and_persistent_storage_rights(
     articles = deps["articles"]
     assert isinstance(articles, FakeArticleRepository)
     assert articles.items[result.article_id].content_availability is ContentAvailability.AVAILABLE
+
+
+def test_revision_without_rights_assessment_references_is_denied() -> None:
+    revision = replace(make_revision(), rights_assessment_references=())
+    service, deps = build_service()
+
+    with pytest.raises(GeniError) as exc:
+        service.execute(PersistArticleRevisionCommand(make_metadata(), revision))
+
+    assert exc.value.code is ErrorCode.RIGHTS_NOT_ALLOWED
+    factory = deps["uow_factory"]
+    assert isinstance(factory, FakeUnitOfWorkFactory)
+    assert factory.items == []
