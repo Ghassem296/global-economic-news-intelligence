@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.15
+**Version:** 10.16
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.15 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.16 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.40 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -412,7 +412,7 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-27  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `b154650c9cda341c71c7e25fe0e8c7825c6edb06`
+**Baseline Commit Inspected:** `0e14844d2eb1c9ff9b6c70460db8b0ebcada28d3`
 
 This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.9, Document 16 v4.54, and Document 17 v2.9. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
@@ -685,3 +685,5 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.14):** Synchronizes GENI-PLAN-004 v1.40 and its Last Updated date after the Stage 1 foundation-status correction. No readiness verdict or production approval changes.
 
 **Revision Note (v10.15):** Synchronizes GENI-READY-016 v4.57 after recording the code-baseline comparison supporting continued applicability of the 275-test Application CI evidence. Fresh documentation validation remains pending; no production approval is implied.
+
+**Revision Note (v10.16):** Advances the inspected documentation baseline to `0e14844d2eb1c9ff9b6c70460db8b0ebcada28d3` after reviewing the current published `main` snapshot, including all 20 ADR files, all controlled-document version/registry pairs, the privacy architecture cross-references, and the documentation validator/CI definitions. This records the inspection baseline only; automated validation after this revision remains pending.
