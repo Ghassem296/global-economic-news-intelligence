@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.2
+**Version:** 10.3
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -181,7 +181,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
 | GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
-| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.36 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
+| GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.37 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
 | N/A | Repository README / Project Entry Point | `README.md` | N/A | Entry-point document | Published | Not stated in file metadata | Not stated | Not applicable |
 
@@ -197,7 +197,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 3.0 | Proposed | Published | Project Owner | 2026-11-27 | PostgreSQL target direction recorded; partial 31-test PoC evidence: 27 PostgreSQL integration methods plus four standalone retention-policy unit tests, including POC-24 through POC-28; qualification and formal acceptance pending |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 3.1 | Proposed | Published | Project Owner | 2026-11-27 | PostgreSQL target direction recorded; partial 32-test PoC evidence: 28 PostgreSQL integration methods plus four standalone retention-policy unit tests, including POC-24 through POC-29; qualification and formal acceptance pending |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -412,11 +412,11 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-27  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `0edc235b621d7fa0220c5266a5818ed49db39dcc`
+**Baseline Commit Inspected:** `b154650c9cda341c71c7e25fe0e8c7825c6edb06`
 
 This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.9, Document 16 v4.51, and Document 17 v2.9. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
-The inspected main baseline is `75cda16cd397efb73ae36a2ef23c1b1bd0f2bd57`. The latest code-and-PoC verification on source commit `5c9e34af98a97326c22ac756f306225493f91e29` passed Application CI run `45963235364` (275 tests, Ruff and mypy), Documentation Validation run `45963235243`, and PostgreSQL 18.7 / Python 3.15 PoC run `45963235373` (32 test methods; artifact `15182595241`, archive SHA-256 `5eac19ecfcb8c73cd40af1b54187f0eea28001371fd0e9bb11198df0eaf553b5`). POC-29 confirms one-winner optimistic concurrency and rollback of the losing ArticleRevision insert. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
+The inspected main baseline is `b154650c9cda341c71c7e25fe0e8c7825c6edb06`. The latest code-and-PoC verification on source commit `5c9e34af98a97326c22ac756f306225493f91e29` passed Application CI run `45963235364` (275 tests, Ruff and mypy), Documentation Validation run `45963235243`, and PostgreSQL 18.7 / Python 3.15 PoC run `45963235373` (32 test methods; artifact `15182595241`, archive SHA-256 `5eac19ecfcb8c73cd40af1b54187f0eea28001371fd0e9bb11198df0eaf553b5`). POC-29 confirms one-winner optimistic concurrency and rollback of the losing ArticleRevision insert. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
 
 All twenty individual ADRs remain Proposed; none is recorded as Accepted. Publication, passing CI, and PoC evidence do not constitute formal architecture approval, legal permission, production readiness, or operational acceptance.
 
@@ -652,4 +652,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.1):** Synchronizes GENI-READY-016 v4.50 and refreshes the inspected registry baseline to `44558b15051c004c50f596cae5fc7620e6521b6e` after correcting the historical source commit SHA in the readiness evidence note. No test results or approval status changed.
 
 
-**Revision Note (v10.2):** Synchronizes GENI-READY-016 v4.51 and refreshes the inspected registry baseline to `0edc235b621d7fa0220c5266a5818ed49db39dcc` after matching the readiness document's controlled header/footer version. No test results, architecture decisions, or approval statuses changed.
+**Revision Note (v10.2):** Historical registry synchronization with GENI-READY-016 v4.51 and the then-inspected baseline `0edc235b621d7fa0220c5266a5818ed49db39dcc`.
+
+**Revision Note (v10.3):** Synchronizes GENI-READY-016 v4.52, GENI-ADR-005 v3.1, and ADR Registry v1.37. Reconciles the central inventory with the latest 32-test POC-29 evidence (28 PostgreSQL integration methods plus four standalone retention-policy unit tests) while preserving the Proposed status and all production qualification gates.
