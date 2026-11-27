@@ -1333,7 +1333,7 @@ asyncio.run(main())
 
         self.assertEqual(
             plan_backup_deletions(artifacts, policy, now),
-            ("boundary", "expired"),
+            ("expired", "boundary"),
         )
         self.assertEqual(
             plan_backup_deletions(artifacts[:2], policy, now),
