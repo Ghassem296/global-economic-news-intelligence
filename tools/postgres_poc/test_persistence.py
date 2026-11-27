@@ -595,6 +595,129 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(fingerprint, "identical-request")
         self.assertEqual(result_id, next(iter(result_ids)))
 
+
+    async def test_poc_32_interrupted_idempotency_claim_rolls_back_for_safe_retry(self) -> None:
+        await self.connection.commit()
+        key = f"interrupted-{uuid.uuid4()}"
+        interrupted = await connect_to_schema(DATABASE_URL, self.schema)
+        state, result_id = await claim_idempotency(
+            interrupted,
+            operation_scope="article.persist",
+            idempotency_key=key,
+            request_fingerprint="same-request",
+        )
+        self.assertEqual(state, "claimed")
+        self.assertIsNone(result_id)
+        await interrupted.execute(
+            "UPDATE counters SET value = value + 1 WHERE counter_name = 'writes'"
+        )
+        # Closing before COMMIT simulates process loss: both claim and local effect roll back.
+        await interrupted.close()
+
+        absent = await self.connection.execute(
+            """
+            SELECT 1 FROM idempotency_records
+            WHERE operation_scope = 'article.persist' AND idempotency_key = %s
+            """,
+            (key,),
+        )
+        self.assertIsNone(await absent.fetchone())
+
+        result_id = uuid.uuid4()
+        async with self.connection.transaction():
+            retry_state, retry_result = await claim_idempotency(
+                self.connection,
+                operation_scope="article.persist",
+                idempotency_key=key,
+                request_fingerprint="same-request",
+            )
+            self.assertEqual(retry_state, "claimed")
+            self.assertIsNone(retry_result)
+            await self.connection.execute(
+                "UPDATE counters SET value = value + 1 WHERE counter_name = 'writes'"
+            )
+            await complete_idempotency(
+                self.connection,
+                operation_scope="article.persist",
+                idempotency_key=key,
+                request_fingerprint="same-request",
+                result_id=result_id,
+            )
+
+        count = await self.connection.execute(
+            "SELECT value FROM counters WHERE counter_name = 'writes'"
+        )
+        self.assertEqual((await count.fetchone())[0], 1)
+
+    async def test_poc_33_expired_lease_takeover_increments_fence_and_rejects_stale_worker(
+        self,
+    ) -> None:
+        resource_id = f"lease-{uuid.uuid4()}"
+        await self.connection.execute(
+            """
+            INSERT INTO execution_leases
+                (resource_id, owner_id, fencing_token, expires_at)
+            VALUES (%s, 'worker-old', 1, clock_timestamp() - interval '1 second')
+            """,
+            (resource_id,),
+        )
+        await self.connection.execute(
+            """
+            INSERT INTO protected_state (resource_id, fencing_token, value)
+            VALUES (%s, 1, 'old-state')
+            """,
+            (resource_id,),
+        )
+
+        takeover = await self.connection.execute(
+            """
+            INSERT INTO execution_leases
+                (resource_id, owner_id, fencing_token, expires_at)
+            VALUES (%s, 'worker-new', 1, clock_timestamp() + interval '5 minutes')
+            ON CONFLICT (resource_id) DO UPDATE
+            SET owner_id = EXCLUDED.owner_id,
+                fencing_token = execution_leases.fencing_token + 1,
+                expires_at = EXCLUDED.expires_at
+            WHERE execution_leases.expires_at <= clock_timestamp()
+            RETURNING owner_id, fencing_token
+            """,
+            (resource_id,),
+        )
+        self.assertEqual(await takeover.fetchone(), ("worker-new", 2))
+
+        stale = await self.connection.execute(
+            """
+            UPDATE protected_state SET value = 'stale-write'
+            WHERE resource_id = %s AND fencing_token = 1
+              AND EXISTS (
+                  SELECT 1 FROM execution_leases
+                  WHERE resource_id = %s
+                    AND owner_id = 'worker-old' AND fencing_token = 1
+              )
+            """,
+            (resource_id, resource_id),
+        )
+        current = await self.connection.execute(
+            """
+            UPDATE protected_state SET value = 'new-state'
+            WHERE resource_id = %s AND fencing_token = 2
+              AND EXISTS (
+                  SELECT 1 FROM execution_leases
+                  WHERE resource_id = %s
+                    AND owner_id = 'worker-new' AND fencing_token = 2
+              )
+            """,
+            (resource_id, resource_id),
+        )
+        await self.connection.commit()
+        self.assertEqual(stale.rowcount, 0)
+        self.assertEqual(current.rowcount, 1)
+        result = await self.connection.execute(
+            "SELECT value FROM protected_state WHERE resource_id = %s",
+            (resource_id,),
+        )
+        self.assertEqual((await result.fetchone())[0], "new-state")
+
     async def test_poc_11_concurrent_atomic_updates_have_no_lost_increments(self) -> None:
         async def increment() -> None:
             connection = await connect_to_schema(DATABASE_URL, self.schema)
