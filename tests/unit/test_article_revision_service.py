@@ -343,6 +343,7 @@ def test_new_article_append_and_projection_share_one_unit_of_work() -> None:
     with pytest.raises(TypeError):
         articles.items["article-1"].metadata["mutate"] = "not allowed"
     assert revisions.current["article-1"].revision_number == 1
+    assert articles.last_read_uow is uow_factory.items[0]
     assert uow_factory.items[0].committed
     assert not uow_factory.items[0].rolled_back
 
