@@ -861,15 +861,20 @@ asyncio.run(main())
 
     async def test_poc_20_least_privilege_backup_role_can_dump_without_write_access(self) -> None:
         role_name = f"poc_backup_{uuid.uuid4().hex[:12]}"
+        restore_role_name = f"poc_restore_{uuid.uuid4().hex[:12]}"
         restore_database = f"restore_backup_{uuid.uuid4().hex[:12]}"
         remote_backup = f"/tmp/{restore_database}.dump"
         password = secrets.token_urlsafe(32)
+        restore_password = secrets.token_urlsafe(32)
         role = sql.Identifier(role_name)
+        restore_role = sql.Identifier(restore_role_name)
         admin_url = DATABASE_URL.rsplit("/", 1)[0] + "/postgres"
         admin = await psycopg.AsyncConnection.connect(admin_url, autocommit=True)
         backup_connection: psycopg.AsyncConnection[Any] | None = None
+        restore_probe: psycopg.AsyncConnection[Any] | None = None
         restored: psycopg.AsyncConnection[Any] | None = None
-        role_created = False
+        backup_role_created = False
+        restore_role_created = False
         database_created = False
 
         async def docker(*arguments: str) -> subprocess.CompletedProcess[str]:
@@ -888,10 +893,16 @@ asyncio.run(main())
                 )
             )
             await self.admin.execute(
+                sql.SQL("CREATE ROLE {} LOGIN INHERIT PASSWORD {}").format(
+                    restore_role, sql.Literal(restore_password)
+                )
+            )
+            await self.admin.execute(
                 sql.SQL("GRANT pg_read_all_data TO {}").format(role)
             )
             await self.admin.commit()
-            role_created = True
+            backup_role_created = True
+            restore_role_created = True
 
             backup_connection = await psycopg.AsyncConnection.connect(
                 DATABASE_URL,
@@ -913,16 +924,40 @@ asyncio.run(main())
             await backup_connection.close()
             backup_connection = None
 
+            restore_probe = await psycopg.AsyncConnection.connect(
+                DATABASE_URL,
+                user=restore_role_name,
+                password=restore_password,
+            )
+            await restore_probe.execute(
+                sql.SQL("SET search_path TO {}").format(sql.Identifier(self.schema))
+            )
+            with self.assertRaises(InsufficientPrivilege):
+                await restore_probe.execute(
+                    """
+                    INSERT INTO articles (article_id, source_id, external_identity)
+                    VALUES (%s, %s, 'restore-role-must-not-write-source')
+                    """,
+                    (uuid.uuid4(), self.source_id),
+                )
+            await restore_probe.rollback()
+            await restore_probe.close()
+            restore_probe = None
+
             role_attributes = await self.admin.execute(
                 """
-                SELECT rolsuper, rolcreatedb, rolcreaterole, rolcanlogin
-                FROM pg_roles WHERE rolname = %s
+                SELECT rolname, rolsuper, rolcreatedb, rolcreaterole, rolcanlogin
+                FROM pg_roles WHERE rolname IN (%s, %s)
+                ORDER BY rolname
                 """,
-                (role_name,),
+                (role_name, restore_role_name),
             )
             self.assertEqual(
-                await role_attributes.fetchone(),
-                (False, False, False, True),
+                await role_attributes.fetchall(),
+                [
+                    (role_name, False, False, False, True),
+                    (restore_role_name, False, False, False, True),
+                ],
             )
 
             await docker(
@@ -948,12 +983,21 @@ asyncio.run(main())
                 )
             )
             database_created = True
+            await admin.execute(
+                sql.SQL("ALTER DATABASE {} OWNER TO {}").format(
+                    sql.Identifier(restore_database), restore_role
+                )
+            )
             await docker(
                 "exec",
+                "-e",
+                f"PGPASSWORD={restore_password}",
                 POSTGRES_CONTAINER_ID,
                 "pg_restore",
+                "-h",
+                "127.0.0.1",
                 "-U",
-                "postgres",
+                restore_role_name,
                 "-d",
                 restore_database,
                 "--no-owner",
@@ -962,7 +1006,14 @@ asyncio.run(main())
                 remote_backup,
             )
             restored_url = DATABASE_URL.rsplit("/", 1)[0] + f"/{restore_database}"
-            restored = await connect_to_schema(restored_url, self.schema)
+            restored = await psycopg.AsyncConnection.connect(
+                restored_url,
+                user=restore_role_name,
+                password=restore_password,
+            )
+            await restored.execute(
+                sql.SQL("SET search_path TO {}").format(sql.Identifier(self.schema))
+            )
             result = await restored.execute(
                 "SELECT count(*) FROM articles WHERE article_id = %s",
                 (self.article_id,),
@@ -979,9 +1030,21 @@ asyncio.run(main())
                     "003_backup_payload.sql",
                 ],
             )
+            owner = await restored.execute(
+                """
+                SELECT pg_get_userbyid(class.relowner)
+                FROM pg_class class
+                JOIN pg_namespace namespace ON namespace.oid = class.relnamespace
+                WHERE namespace.nspname = %s AND class.relname = 'articles'
+                """,
+                (self.schema,),
+            )
+            self.assertEqual((await owner.fetchone())[0], restore_role_name)
         finally:
             if backup_connection is not None:
                 await backup_connection.close()
+            if restore_probe is not None:
+                await restore_probe.close()
             if restored is not None:
                 await restored.close()
             await self.admin.rollback()
@@ -991,12 +1054,16 @@ asyncio.run(main())
                         sql.Identifier(restore_database)
                     )
                 )
-            if role_created:
+            if backup_role_created:
                 await admin.execute(
                     sql.SQL("REVOKE pg_read_all_data FROM {}").format(role)
                 )
                 await admin.execute(
                     sql.SQL("DROP ROLE IF EXISTS {}").format(role)
+                )
+            if restore_role_created:
+                await admin.execute(
+                    sql.SQL("DROP ROLE IF EXISTS {}").format(restore_role)
                 )
             await admin.close()
             await asyncio.to_thread(
