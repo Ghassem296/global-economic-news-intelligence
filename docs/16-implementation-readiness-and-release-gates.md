@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.27  
+**Version:** 4.28  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `d2a8d1d381daa31362fcc0eb0615008b61e4fc2c`
+**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `23944dbe511fbe5660c366b44120b470bfb472c0`
 
 ---
 
@@ -329,3 +329,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.27):** Aligns the ArticleRevision application contract with Document 15 v4.7 and records the stable source identity tuple plus projection-refresh behavior. The inspected implementation baseline includes trusted-clock rights evaluation and synthetic tests; production adapters, PostgreSQL concurrency evidence, and formal ADR gates remain open.
+
+
+**Revision Note (v4.28):** Refreshes the inspected source/test baseline after adding explicit coverage for invalid Clock values and shared rights-evaluation timestamps. CI status for the refreshed commit must be confirmed from the workflow run; no production readiness or ADR status is changed.
