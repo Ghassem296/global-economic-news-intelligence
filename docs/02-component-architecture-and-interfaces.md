@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.55  
+**Version:** 1.56  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -399,7 +399,7 @@ Responsibilities:
 - Coordinate approved merge and split operations through the Event Identity Operation Workflow; persist the operation, ordered input/output links, and append-only EventIdentityOperationHistory; apply the core identity change and corresponding EventHistory records atomically; and enqueue downstream reconciliation durably.
 - Preserve historical relationships after corrections.
 
-EventService owns event-level business rules and the application of authorized event-association decisions. For an approved merge/split/identity correction, the Event Identity Operation Workflow must also coordinate durable report-impact discovery after the core identity transaction. It must persist one idempotent EventIdentityOperationReportImpact for every affected immutable Report version discovered through the primary Event reference or ReportEventLink; it must not mutate report versions, report links, publication state, or delivery history. ReportVersionService assesses the impact and creates any corrected successor report version. PublicationPolicy and PublicationService independently govern eligibility and external replacement/withdrawal, while ReportDelivery independently governs recipient correction/notification under its own authorization and rights checks. The Event Resolution workflow coordinates candidate evaluation, case-level decision creation, and review routing. EventService must reject attempts to create an active association from a non-MATCH decision.
+EventService owns event-level business rules and the application of authorized event-association decisions. For an approved merge/split/identity correction, the Event Identity Operation Workflow must also coordinate durable report-impact discovery after the core identity transaction. It must persist one idempotent EventIdentityOperationReportImpact for every affected immutable Report version discovered through the primary Event reference or ReportEventLink; it must not mutate report versions, report links, publication state, or delivery history. ReportVersionService assesses the impact, appends EventIdentityOperationReportImpactHistory, assigns durable remediation work when required, and creates any corrected successor report version. PublicationPolicy and PublicationService independently govern eligibility and external replacement/withdrawal, while ReportDelivery independently governs recipient correction/notification under its own authorization and rights checks. The Event Resolution workflow coordinates candidate evaluation, case-level decision creation, and review routing. EventService must reject attempts to create an active association from a non-MATCH decision.
 
 For new-event creation, EventService must require the effective NEW_EVENT_CANDIDATE decision for the case, validate the versioned EventCreationPolicy and any required review authorization, and use the decision's preassigned `proposed_event_reference` as the Event identifier. Creation must be idempotent: retrying the same authorized decision must return the same Event and must not create a duplicate. EventService creates the Event but does not create the ArticleEventLink from the NEW_EVENT_CANDIDATE decision; the new Event must first be recorded as a candidate and selected by a subsequent MATCH decision.
 
@@ -1362,7 +1362,7 @@ The following map identifies proposed writers for domain-state groups; it is not
 | Claim, ClaimObservation, Evidence, EvidenceLocation, ClaimEvidenceLink, ClaimAssessment, ClaimAssessmentEvidenceLink, and AssessmentHistory | `EvidenceService` through the Evidence/Claim Assessment workflow | Persists immutable assessment versions and append-only assessment history; extraction alone does not verify claims. |
 | Analysis, AnalysisInput, and AnalysisEvidenceLink | Event Intelligence Workflow with the relevant assessor/analyzer | Assessors produce typed outputs; workflow persists versioned results and exact inputs. |
 | MarketObservation | Market-data acquisition/normalization workflow to be defined under GENI-ADR-015 | Stores provider observations and provenance only; it must not infer event causality or mutate economic-impact assessments. |
-| Report, ReportEventLink, ReportEvidenceLink, ReportArticleLink, ReportAnalysisLink, report-version lineage, and EventIdentityOperationReportImpact | `ReportVersionService` | Persists immutable report versions/provenance and assesses durable event-identity impact records; never rewrites prior report links. |
+| Report, ReportEventLink, ReportEvidenceLink, ReportArticleLink, ReportAnalysisLink, report-version lineage, and EventIdentityOperationReportImpact and EventIdentityOperationReportImpactHistory | `ReportVersionService` | Persists immutable report versions/provenance and assesses durable event-identity impact records; never rewrites prior report links. |
 | PublicationDecision | `PublicationPolicy` through Publication Decision Workflow | Eligibility only; no external side effect. |
 | ReviewRecord and ReviewAction | `ReviewService` | Task lifecycle and reviewer audit only; no domain-decision override. |
 | PublicationRecord and PublicationAttempt | `PublicationService` | External publication operations and reconciliation. |
@@ -2270,3 +2270,6 @@ PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction li
 
 
 **Revision Note (v1.55):** Assigns report-impact discovery to the Event Identity Operation Workflow and assessment/remediation to ReportVersionService. Clarifies that publication replacement/withdrawal and recipient correction remain separate authorized operations. Aligns component ownership with Document 03 v1.58; this does not implement or enable the workflow.
+
+
+**Revision Note (v1.56):** Clarifies that ReportVersionService owns the report-impact lifecycle projection/history and must create a durable owned remediation work item before an identity operation can treat a required report correction as tracked. Aligns with Document 03 v1.59.
