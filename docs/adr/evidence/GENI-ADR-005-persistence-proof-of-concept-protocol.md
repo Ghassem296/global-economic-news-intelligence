@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -87,6 +87,14 @@ For each run, capture:
 - Warm-up, repetitions, cache state, measurement method, raw output, errors, and deviations.
 
 Do not compare different hardware, durability guarantees, transaction semantics, dataset sizes, or application behavior as if they were equivalent. Any engine-specific tuning must be documented and reviewed; default and tuned results must be distinguished. PostgreSQL durability must not be weakened merely to improve benchmark numbers.
+
+### 4.1 Provisional PoC-only toolchain boundary
+
+The PoC must execute against a real, isolated PostgreSQL instance; a design-only review is not a substitute for integration evidence. To avoid blocking the experiment on production approval, the PoC may provisionally select a candidate PostgreSQL major/minor version, Python driver, query/ORM layer (or direct SQL), migration tool, async execution approach, and connection-pool configuration solely for the disposable PoC environment. These are experimental candidates, not approved production selections.
+
+Before a run, record the exact candidate versions, source, rationale, configuration, lockfile or immutable image digest, and any known limitations. Keep the candidate stack in a dedicated PoC dependency group/environment and isolated test infrastructure. Do not add it to the production runtime dependency set, expose its types through domain/application ports, create production migrations, connect to production systems, or use production data/secrets. A candidate may be changed between PoC revisions only with a recorded reason and a new run identity; results from different stacks must not be merged as if they were one run.
+
+The PoC may report correctness and operational-feasibility evidence for its exact experimental stack. It may report capacity/performance compliance only against an approved workload profile and thresholds. No experimental result automatically approves the candidate for production. Production promotion requires completed evidence review and formal acceptance of GENI-ADR-005; ADR-016 remains independently Proposed unless separately accepted.
 
 ## 5. Mandatory correctness and failure matrix
 
@@ -179,14 +187,14 @@ This register must be updated only from actual retained evidence. Production qua
 
 Until the PoC is complete and GENI-ADR-005 is formally Accepted:
 
-- Do not add a production database dependency or select an ORM, driver, migration tool, or async database strategy.
+- Do not add a production database dependency or treat any PoC-only ORM, driver, migration tool, or async strategy as a production selection.
 - Do not create production migrations or claim database-backed repository implementation.
 - Do not treat SQLite as the default merely because it is convenient for local development.
 - Do not treat PostgreSQL as production-qualified merely because it supports higher concurrency.
 - Pure domain contracts, synthetic fixtures, and database-independent repository interfaces may continue only within their approved scope.
-- Any temporary experimental adapter must be isolated, explicitly non-production, and must not leak database-specific types into domain/application contracts.
+- A temporary experimental adapter and its dependencies must be isolated, explicitly non-production, recorded as PoC-only, and must not leak database-specific types into domain/application contracts.
 
-After qualification and formal acceptance, record the exact PostgreSQL version, driver, query/ORM layer, migration tool, async strategy, transaction/locking model, connection lifecycle, supported deployment topology, and tested backup/restore procedure in the implementation baseline and update the affected documents.
+After qualification and formal acceptance, review the experimental evidence and explicitly select or replace the production PostgreSQL version, driver, query/ORM layer, migration tool, async strategy, transaction/locking model, connection lifecycle, supported deployment topology, and backup/restore procedure. Record only the accepted production choices in the implementation baseline and update the affected documents.
 
 ---
 
@@ -201,5 +209,6 @@ After qualification and formal acceptance, record the exact PostgreSQL version, 
 
 | 1.4 | 2026-11-27 | Proposed | Clarifies that PostgreSQL is already the owner-selected target but is not production-qualified by virtue of its concurrency capabilities; qualification remains evidence-based. |
 | 1.5 | 2026-11-27 | Proposed | Adds an explicit owner-approved workload-profile template with unset values, evidence provenance, and a prohibition on inventing or retrofitting numeric thresholds. |
+| 1.6 | 2026-11-27 | Proposed | Defines provisional, isolated PoC-only technology candidates and explicitly separates experimental evidence from production tool/dependency approval. |
 
 **End of Evidence Protocol**
