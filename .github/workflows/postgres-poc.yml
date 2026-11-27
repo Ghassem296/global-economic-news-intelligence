@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 15
     services:
       postgres:
-        image: postgres:18.7
+        image: postgres:18.7@sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3
         env:
           POSTGRES_DB: geni_poc
           POSTGRES_USER: postgres
@@ -52,8 +52,8 @@ jobs:
       - name: Capture PostgreSQL image digest and container ID
         id: postgres-image
         run: |
-          echo "digest=$(docker image inspect postgres:18.7 --format '{{index .RepoDigests 0}}')" >> "$GITHUB_OUTPUT"
-          echo "container_id=$(docker ps --filter ancestor=postgres:18.7 --format '{{.ID}}' | head -n 1)" >> "$GITHUB_OUTPUT"
+          echo "digest=$(docker image inspect postgres:18.7@sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3 --format '{{index .RepoDigests 0}}')" >> "$GITHUB_OUTPUT"
+          echo "container_id=$(docker ps --filter ancestor=postgres:18.7@sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3 --format '{{.ID}}' | head -n 1)" >> "$GITHUB_OUTPUT"
 
       - name: Run PostgreSQL correctness and recovery PoC
         env:
