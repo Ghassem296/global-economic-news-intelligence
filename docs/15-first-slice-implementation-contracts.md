@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.27  
+**Version:** 4.28  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1263,11 +1263,7 @@ The exact durable work-item entity/adapter and cursor serialization remain Gate 
 - ResolveEventIdentityQuery: historical Event ID plus optional exact EventMatchCase/evidence context. Result is exactly one of CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED, with complete operation lineage and the full successor set. The resolver never selects one successor from a split without case/evidence context and a new authorized EventMatchDecision.
 - GetEventIdentityOperationQuery: operation ID and optional history cursor; returns the operation projection, ordered input/output/allocation records, immutable operation history, and reconciliation summary under caller authorization.
 
-- PrepareEventIdentityOperationResult: operation ID, current operation status, request fingerprint, created/replayed indicator, and current aggregate version. Preparation persists a PENDING operation and its ordered input/output/allocation records only after validation and authorization; it does not apply the identity effect.
-- ApplyEventIdentityOperationResult: operation ID, identity_effect_state, operation status, resulting EventHistory versions, durable reconciliation references, and whether the core effect was newly applied or already confirmed. It never returns guessed success after an unknown commit outcome.
-- ReconcileEventIdentityOperationResult: operation ID, confirmed core-effect state, reconciled work-item summary, remaining unresolved counts, and resulting operation status. It distinguishes confirmed NOT_APPLIED from APPLIED with outstanding downstream work.
-- ResolveEventIdentityQuery: historical Event ID plus optional exact EventMatchCase/evidence context. Result is exactly one of CANONICAL, MULTIPLE_SUCCESSORS, or UNRESOLVED, with complete operation lineage and the full successor set. The resolver never selects one successor from a split without case/evidence context and a new authorized EventMatchDecision.
-- GetEventIdentityOperationQuery: operation ID and optional history cursor; returns the operation projection, ordered input/output/allocation records, immutable operation history, and reconciliation summary under caller authorization.
+
 
 All query pagination is bounded and deterministic. A missing operation is NOT_FOUND; unknown identity effect or insufficient lineage is UNRESOLVED, not an empty successful result.
 
@@ -1463,3 +1459,6 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 
 
 **Revision Note (v4.27):** Adds explicit apply, reconcile, and finalize command envelopes after preparation, including expected-version and fencing requirements. Clarifies that durable reconciliation-work storage/cursor contracts remain Gate A/B blockers and cannot be replaced by in-memory queues. No implementation or capability activation is implied.
+
+
+**Revision Note (v4.28):** Removes a duplicated copy of the typed result/query list in §10.17.2, leaving one authoritative result/query catalogue after the command-envelope table. No contract semantics or approval gates change.
