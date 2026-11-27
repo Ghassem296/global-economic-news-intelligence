@@ -279,6 +279,9 @@ def validate_persistence_poc_alignment() -> None:
         "Single application instance and local/early-validation deployment",
         "PostgreSQL is the Project Owner-selected target relational engine",
         "No numeric article volume",
+        "Workload-profile record template",
+        "UNSET — Project Owner input required",
+        "The workload profile must be approved before benchmark results are collected or examined.",
     )
     missing = [item for item in required_protocol if item.casefold() not in protocol.casefold()]
     if missing:
