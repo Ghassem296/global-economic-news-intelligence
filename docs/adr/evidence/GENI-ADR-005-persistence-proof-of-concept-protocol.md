@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.21
+**Version:** 1.22
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -127,6 +127,12 @@ Correctness gates are pass/fail. A fast result cannot compensate for a violated 
 | POC-21 | Fail-closed backup retention planning | Explicit policy, minimum verified-copy count, legal holds, immutability windows, invalid metadata, and deterministic candidate ordering are enforced; no deletion occurs |
 | POC-22 | Failed migration after partial DDL execution | Transaction rollback removes all partial schema changes and does not record the failed migration as applied |
 | POC-23 | Reapply every already-applied migration | Repeated migration execution is idempotent; schema-migration records and original application timestamps remain unchanged |
+| POC-24 | Concurrent migration runners and complete SQL-file execution | Advisory-lock serialization prevents duplicate migration application; PL/pgSQL bodies containing internal semicolons execute intact |
+| POC-25 | Article current-revision ownership | A composite foreign key rejects a current-revision pointer to a revision owned by another Article |
+| POC-26 | Decision case and outcome integrity | A decision cannot reference a missing case or an outcome outside the constrained vocabulary |
+| POC-27 | Source-identity lookup index integrity | Exactly one unique source-identity lookup index exists; a redundant non-unique index is absent |
+| POC-28 | Atomic legacy Article revision backfill candidate | An invalid deferred current-revision pointer rolls back both revision insert and pointer update; a valid same-Article pair commits together |
+| POC-29 | Concurrent ArticleRevision append and current-projection compare-and-swap | Two writers using the same expected Article version cannot both advance the current pointer; the losing transaction rolls back its revision insert, leaving one new revision and one consistent current pointer |
 
 Tests must use synthetic data with no personal data, licensed source text, production credentials, or external provider calls. Failure injection must be deterministic and repeatable.
 
@@ -166,7 +172,7 @@ The completed PoC package must include:
 - Approved workload profile and target thresholds, with owners and sources.
 - Reproducible setup instructions and exact PostgreSQL version/configuration.
 - Synthetic dataset generator, seed, and dataset summary.
-- Correctness/failure test results for every POC-01 through POC-23 case.
+- Correctness/failure test results for every currently defined POC-01 through POC-29 case.
 - Raw benchmark output and machine-readable summary (CSV or JSON).
 - Backup/restore and migration logs, including integrity-check output.
 - Deviations, failed runs, fixes, and retest links.
@@ -180,7 +186,7 @@ The completed PoC package must include:
 |---|---|
 | Exact version/configuration | PostgreSQL 18.7; linux/amd64 image manifest `sha256:32f5fdbf4d27ebe0d4552313126a593400f40b21bff207e43617b2305838bce3`; CPython 3.15.2; Psycopg 3.3.9; OpenSSL CLI AES-256-CBC/PBKDF2 (200,000 iterations) plus HMAC-SHA256 encrypt-then-MAC envelope; native async connection; four versioned SQL migrations (PoC-only) |
 | Workload profile ID | Not established; no capacity claim permitted |
-| Correctness matrix | All 31 test methods passed: 27 PostgreSQL integration methods plus four standalone retention-policy unit tests. The four retention tests run independently of PostgreSQL service availability. POC-22 verifies failed-migration rollback of both partial DDL and its migration-history entry; POC-23 verifies idempotent reapplication of migrations 001–004 without changing recorded application timestamps. POC-24 verifies concurrent whole-file migration execution, including a PL/pgSQL body with internal semicolons. POC-25 verifies the composite same-Article current-revision foreign key rejects cross-Article pointers. POC-26 verifies the decision-case foreign key and exercised outcome CHECK constraint. POC-27 verifies that the redundant source-identity index is absent and only the required unique lookup index remains. POC-28 verifies that a legacy Article with a null current-revision pointer can be backfilled atomically: an invalid deferred pointer rolls back both the inserted revision and pointer update, while a valid same-Article revision and pointer commit together. POC-15 through POC-21 retain the backup/restore, child-process restart, least-privilege, cluster-role, and fail-closed retention-planner evidence described below. These are isolated correctness checks, not proof of complete cluster recovery or production qualification. Production key custody/rotation, retention-policy enforcement, off-site protection, restore authorization, tablespace recovery, role-password/secret recovery, full cluster recovery, and formal security review remain open |
+| Correctness matrix | All 32 test methods passed: 28 PostgreSQL integration methods plus four standalone retention-policy unit tests. The four retention tests run independently of PostgreSQL service availability. POC-22 verifies failed-migration rollback of both partial DDL and its migration-history entry; POC-23 verifies idempotent reapplication of migrations 001–004 without changing recorded application timestamps. POC-24 verifies concurrent whole-file migration execution, including a PL/pgSQL body with internal semicolons. POC-25 verifies the composite same-Article current-revision foreign key rejects cross-Article pointers. POC-26 verifies the decision-case foreign key and exercised outcome CHECK constraint. POC-27 verifies that the redundant source-identity index is absent and only the required unique lookup index remains. POC-28 verifies that a legacy Article with a null current-revision pointer can be backfilled atomically: an invalid deferred pointer rolls back both the inserted revision and pointer update, while a valid same-Article revision and pointer commit together. POC-29 races two ArticleRevision append transactions against the same expected Article version; exactly one advances the current pointer, and the stale writer's revision insert is rolled back. POC-15 through POC-21 retain the backup/restore, child-process restart, least-privilege, cluster-role, and fail-closed retention-planner evidence described below. These are isolated correctness checks, not proof of complete cluster recovery or production qualification. Production key custody/rotation, retention-policy enforcement, off-site protection, restore authorization, tablespace recovery, role-password/secret recovery, full cluster recovery, and formal security review remain open |
 | Migration/upgrade | POC-13 clean install of migrations 001–004 and POC-14 data-preserving upgrade through migrations 002–004 passed |
 | Backup/restore | Full-database `pg_dump`/`pg_restore` during an observed concurrent-write window passed; restored application rows and all four migration records verified. Experimental encrypted/authenticated envelope, tamper/wrong-key rejection, and private file permissions passed. Production KMS/HSM custody, rotation, retention, off-site/immutable storage, restore authorization, full cluster-global-object recovery (including tablespaces and configuration), and operator procedures remain untested; user-defined role and membership restore is covered by POC-19; database dump with a least-privilege read-only backup role is covered by POC-20 |
 | Concurrency and async | POC-03, POC-07, POC-08, POC-11, and POC-12 passed in the isolated test run |
@@ -249,6 +255,7 @@ After qualification and formal acceptance, review the experimental evidence and 
 | 1.19 | 2026-11-27 | Proposed | Records the latest successful 31-test run and POC-28's atomic legacy Article revision backfill candidate test. The test is synthetic PoC evidence only; production backfill policy, non-null enforcement, security, workload, and formal ADR-005 acceptance remain open. |
 | 1.20 | 2026-11-27 | Proposed | Refreshes the latest reproducible 31-test PostgreSQL 18.7 / Python 3.15 PoC evidence to run `45961720585` on commit `7e124789d02a95992c28fb559a625155bbf43a96`, artifact `15180963314`. All 31 tests pass; POC-28 remains synthetic candidate evidence only, and production qualification, workload thresholds, security/operations, and formal ADR-005 acceptance remain open. |
 | 1.21 | 2026-11-27 | Proposed | Refreshes the latest reproducible 31-test PostgreSQL 18.7 / Python 3.15 PoC evidence to run `45961988925` on commit `428e6b6d3ea142175373246bba209476c50cd5c6`, artifact `15180889132`. All 31 tests pass; POC-28 remains synthetic candidate evidence only, and production qualification, workload thresholds, security/operations, and formal ADR-005 acceptance remain open. |
+| 1.22 | 2026-11-27 | Proposed | Adds POC-29 for concurrent ArticleRevision append/current-pointer compare-and-swap atomicity. Evidence pending; the ADR remains Proposed and all production qualification gates remain open. |
 
 
 **End of Evidence Protocol**
