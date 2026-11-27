@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.84  
+**Version:** 4.85  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -254,7 +254,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.84  
+**Version:** 4.85  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -492,3 +492,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.84):** Records the exact-commit 41-method PostgreSQL 18.7 / Python 3.15 PoC run `45999022538` on `87db2fc5f22ac9530e47c12febc4eb4793e9b772` (37 PostgreSQL integration methods plus four retention-policy unit tests; artifact `15196813815`). Adds POC-35–38 evidence for authorization and content-rights revocation ordering using isolated `FOR SHARE` row-lock experiments and PoC-only migration 009. The result supports a candidate locking pattern only; production adapters, complete policy/profile version locking, qualification, and formal ADR-005/016 acceptance remain open.
+
+
+**Revision Note (v4.85):** Synchronizes the readiness evidence narrative with GENI-ADR-005-POC-001 v1.35, which reconciles the current results register with PoC-only migration 009 and the nine-migration clean-install/upgrade/backup-restore checks. The 41-method run and POC-35–38 transaction-bound revocation experiments are unchanged. No production migration tool, adapter, ADR acceptance, or production qualification is implied.
