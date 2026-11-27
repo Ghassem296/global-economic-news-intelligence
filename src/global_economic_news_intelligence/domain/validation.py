@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+import unicodedata
 from urllib.parse import parse_qsl, urlsplit
 
 
@@ -47,8 +48,8 @@ def require_http_url(value: object, field_name: str) -> None:
         raise ValueError(f"{field_name} must be a non-empty string.")
     require_text(value, field_name)
     if any(
-        ord(character) <= 0x20
-        or ord(character) == 0x7F
+        character.isspace()
+        or unicodedata.category(character) in {"Cc", "Cf"}
         or character == "\\"
         for character in value
     ):
