@@ -320,3 +320,51 @@ def test_canonical_url_requires_absolute_http_url(canonical_url: str) -> None:
             canonical_url=canonical_url,
         )
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://user:password@example.com/article",
+        "https://example.com/article#fragment",
+        "https://example.com:invalid/article",
+        "https://example.com/article?api_key=secret",
+        "https://example.com/article?access_token=secret",
+        "https://example.com/article path",
+        "https://example.com/article\\\\path",
+        "https://example.com/article\\npath",
+    ],
+)
+def test_original_url_rejects_credentials_and_ambiguous_url_forms(url: str) -> None:
+    with pytest.raises(ValueError):
+        revision(original_url=url)
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://user:password@example.com/canonical",
+        "https://example.com/canonical#fragment",
+        "https://example.com:invalid/canonical",
+        "https://example.com/canonical?api_key=secret",
+        "https://example.com/canonical path",
+        "https://example.com/canonical\\\\path",
+        "https://example.com/canonical\\npath",
+    ],
+)
+def test_canonical_url_rejects_credentials_and_ambiguous_url_forms(url: str) -> None:
+    with pytest.raises(ValueError):
+        SourceArticleIdentity(
+            "publisher:opaque-id",
+            "source-identity-v1",
+            canonical_url=url,
+        )
+
+
+def test_article_urls_allow_non_sensitive_query_parameters() -> None:
+    item = revision(original_url="https://example.com/article?id=123&lang=en")
+    identity = SourceArticleIdentity(
+        "publisher:opaque-id",
+        "source-identity-v1",
+        canonical_url="https://example.com/canonical?id=123",
+    )
+    assert item.original_url.endswith("?id=123&lang=en")
+    assert identity.canonical_url == "https://example.com/canonical?id=123"
