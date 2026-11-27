@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.33
+**Version:** 1.34
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -436,3 +436,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **Revision Note (v1.32):** Synchronizes GENI-ADR-005 v2.4 and PoC-001 v1.14 with the successful 21-test PostgreSQL run. POC-21 adds a fail-closed retention planner that requires explicit policy, preserves the minimum verified-copy count, legal holds, and immutability windows, and produces deterministic candidates without deleting or scheduling backups. Production retention values/enforcement, credential lifecycle, off-site protection, restore authorization, full cluster recovery, workload/performance qualification, and formal ADR acceptance remain open.
 
 **Revision Note (v1.33):** Synchronizes GENI-ADR-005 v2.5 and PoC-001 v1.15 with the successful 24-test rerun: 20 PostgreSQL integration methods and four standalone retention-policy unit tests. The new tests validate malformed/future-dated metadata, immutability expiry boundaries, and deterministic ordering. Production retention policy/enforcement, credential lifecycle, off-site protection, restore authorization, full cluster recovery, workload/performance qualification, and formal ADR acceptance remain open.
+
+**Revision Note (v1.34):** Synchronizes GENI-ADR-005 v2.6 and PoC-001 v1.16 with the successful 25-test run. POC-22 verifies transactional rollback of partial DDL and migration-history updates after an injected migration failure. Production migration tooling, rollback/recovery procedures, retention enforcement, credential lifecycle, full cluster recovery, workload/performance qualification, and formal ADR acceptance remain open.
