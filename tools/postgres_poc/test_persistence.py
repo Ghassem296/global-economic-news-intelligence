@@ -917,7 +917,7 @@ asyncio.run(main())
                 os.chmod(globals_dump, 0o600)
                 self.assertGreater(globals_dump.stat().st_size, 0)
                 self.assertIn(f"CREATE ROLE {parent_role};", dump.stdout)
-                self.assertIn(f"GRANT {parent_role} TO {member_role};", dump.stdout)
+                self.assertIn(f"GRANT {parent_role} TO {member_role} WITH INHERIT TRUE", dump.stdout)
                 self.assertNotIn("PASSWORD", dump.stdout.upper())
 
                 await docker(
