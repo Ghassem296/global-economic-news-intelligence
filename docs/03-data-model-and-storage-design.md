@@ -1,7 +1,7 @@
 # Global Economic News Intelligence — Data Model & Storage Design
 
 **Document ID:** GENI-DATA-003
-**Version:** 1.54
+**Version:** 1.55
 **Status:** Draft — Under Architecture Review
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner
@@ -796,7 +796,7 @@ Fields:
 
 Case states may include `OPEN`, `PENDING_REVIEW`, `RESOLVED`, `CLOSED`, and `CANCELLED`. The case is the unit of candidate evaluation, final decision, and human review. A case must not be reused for a materially different article revision or development scope. Reprocessing the same ArticleRevision and same development scope must reuse the same development_key and case. The effective-decision pointer is a mutable current-state projection; historical EventMatchDecision records remain immutable.
 
-The listed case states are a vocabulary, not a complete lifecycle contract. The allowed transitions, initial-state rule, terminal states, reopening/cancellation authority, and derivation of `case_status` from the effective EventMatchDecision and ReviewRecord are not defined here. In particular, no mapping from individual decision outcomes to case status may be inferred from the outcome names. A case-status change and any effective-decision/link reconciliation must be coordinated atomically under the approved application contract. These omissions are explicit implementation blockers.
+The canonical initial-state rule, decision-to-case projection, allowed transitions, terminal states, and reopening/cancellation behavior are defined in Document 17, Section 6. That lifecycle contract is the normative executable baseline for the pure domain policy and its tests; it must be changed together with implementation and tests. This section remains the logical data-model summary and does not independently redefine the transition graph. A case-status change, effective-decision pointer update, decision supersession, and ArticleEventLink activation/deactivation must be coordinated atomically in one UnitOfWork under expected-version concurrency. The lifecycle policy does not waive the separate ADR-002/011 approval, authorization, durable-adapter, and production activation gates.
 
 ### 7.2 EventMatchCandidate
 
@@ -3274,3 +3274,6 @@ See Documents 02, 08, 09, 12, 13 and 14; GENI-ADR-020.
 
 
 **Revision Note (v1.54):** Makes the Source configuration aggregate version explicit in the logical Source field inventory. This aligns the data model with the immutable SourceRecord version and the optimistic-concurrency contract for configuration updates; it does not define a version encoding or authorize configuration mutation.
+
+
+**Revision Note (v1.55):** Replaces the stale statement that EventMatchCase lifecycle rules are undefined with the canonical lifecycle reference in Document 17, Section 6. The data model now aligns with the implemented pure state machine and its tests while preserving ADR, authorization, persistence, and production-activation gates.
