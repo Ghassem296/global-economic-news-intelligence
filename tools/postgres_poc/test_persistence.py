@@ -16,7 +16,7 @@ from typing import Any
 
 import psycopg
 from psycopg import sql
-from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege, QueryCanceled, UniqueViolation
+from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege, QueryCanceled, UndefinedTable, UniqueViolation
 
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
 POSTGRES_CONTAINER_ID = os.environ.get("GENI_POC_POSTGRES_CONTAINER_ID", "")
@@ -32,32 +32,41 @@ async def connect_to_schema(database_url: str, schema: str) -> psycopg.AsyncConn
     return connection
 
 
+async def apply_migration_sql(
+    connection: psycopg.AsyncConnection[Any],
+    migration_name: str,
+    migration_sql: str,
+) -> bool:
+    bootstrap = await connection.execute(
+        "SELECT to_regclass('schema_migrations')"
+    )
+    migration_table = await bootstrap.fetchone()
+    if migration_table is not None and migration_table[0] is not None:
+        applied = await connection.execute(
+            "SELECT 1 FROM schema_migrations WHERE version = %s",
+            (migration_name,),
+        )
+        if await applied.fetchone():
+            return False
+
+    async with connection.transaction():
+        for statement in migration_sql.split(";"):
+            if statement.strip():
+                await connection.execute(statement, prepare=False)
+        await connection.execute(
+            "INSERT INTO schema_migrations (version) VALUES (%s)",
+            (migration_name,),
+        )
+    return True
+
+
 async def apply_migrations(
     connection: psycopg.AsyncConnection[Any],
     migration_names: tuple[str, ...],
 ) -> None:
     for migration_name in migration_names:
-        bootstrap = await connection.execute(
-            "SELECT to_regclass('schema_migrations')"
-        )
-        migration_table = await bootstrap.fetchone()
-        if migration_table is not None and migration_table[0] is not None:
-            applied = await connection.execute(
-                "SELECT 1 FROM schema_migrations WHERE version = %s",
-                (migration_name,),
-            )
-            if await applied.fetchone():
-                continue
-
         migration_sql = (MIGRATIONS / migration_name).read_text(encoding="utf-8")
-        async with connection.transaction():
-            for statement in migration_sql.split(";"):
-                if statement.strip():
-                    await connection.execute(statement, prepare=False)
-            await connection.execute(
-                "INSERT INTO schema_migrations (version) VALUES (%s)",
-                (migration_name,),
-            )
+        await apply_migration_sql(connection, migration_name, migration_sql)
 
 
 @unittest.skipUnless(
@@ -1287,6 +1296,33 @@ asyncio.run(main())
                     )
                 )
                 await self.admin.commit()
+
+    async def test_poc_22_failed_migration_rolls_back_schema_and_history(self) -> None:
+        migration_name = "poc_22_intentionally_failed.sql"
+        migration_sql = """
+        CREATE TABLE migration_rollback_probe (id INTEGER PRIMARY KEY);
+        INSERT INTO migration_rollback_probe (id) VALUES (1);
+        SELECT * FROM missing_migration_dependency;
+        """
+
+        with self.assertRaises(UndefinedTable):
+            await apply_migration_sql(
+                self.connection,
+                migration_name,
+                migration_sql,
+            )
+        await self.connection.rollback()
+
+        result = await self.connection.execute(
+            "SELECT to_regclass('migration_rollback_probe')"
+        )
+        self.assertIsNone((await result.fetchone())[0])
+        result = await self.connection.execute(
+            "SELECT 1 FROM schema_migrations WHERE version = %s",
+            (migration_name,),
+        )
+        self.assertIsNone(await result.fetchone())
+        await self.connection.commit()
 
     async def test_poc_18_read_path_exposes_machine_readable_query_plan(self) -> None:
         result = await self.connection.execute(
