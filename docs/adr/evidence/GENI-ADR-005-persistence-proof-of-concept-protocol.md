@@ -175,6 +175,6 @@ After qualification and formal acceptance, record the exact PostgreSQL version, 
 | 1.2 | 2026-11-24 | Proposed | Recorded the previously stated single-instance/local SQLite-first planning baseline while preserving unknown workload figures and the unselected ADR status. |
 | 1.3 | 2026-11-26 | Proposed | Re-scoped the protocol to qualify the Project Owner-selected PostgreSQL target; removed SQLite comparative testing while preserving workload, correctness, recovery, and production-approval gates. |
 
-**End of Evidence Protocol**
-
 | 1.4 | 2026-11-27 | Proposed | Clarifies that PostgreSQL is already the owner-selected target but is not production-qualified by virtue of its concurrency capabilities; qualification remains evidence-based. |
+
+**End of Evidence Protocol**
