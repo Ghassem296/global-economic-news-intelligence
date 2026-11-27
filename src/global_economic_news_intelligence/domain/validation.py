@@ -6,9 +6,9 @@ reports the same failure for the same kind of invalid field.
 
 from __future__ import annotations
 
+import unicodedata
 from datetime import datetime
 from decimal import Decimal
-import unicodedata
 from urllib.parse import parse_qsl, urlsplit
 
 
