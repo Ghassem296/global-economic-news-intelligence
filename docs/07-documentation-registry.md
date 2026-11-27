@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.38
+**Version:** 10.39
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.11 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.73 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.74 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 3.2 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.38 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.39 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.40 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -416,7 +416,7 @@ A periodic review should verify that the registry matches:
 
 This repository-only snapshot reflects the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 15 v4.11, Document 16 v4.73, and Document 17 v3.2. The executable baseline includes an immutable `SourceRecord` domain contract and a read-only `SourceRepository.get_by_id` port, in addition to the ArticleRevision orchestration and Article/ArticleRevision repository ports. Source configuration metadata is not collection authorization: source discovery, collection, configuration mutation, health/reliability/relationship assessment, durable Source persistence, and network acquisition remain unimplemented and gated. Basic URL parsing is not SSRF protection; use-time DNS, redirect, egress and operation-specific rights checks remain required.
 
-The inspected source-code repository snapshot is `4cd09ad5203552d0b2df851ad0aa76f892779c20`. Application CI run `45984540841` passed all 297 tests with Ruff and mypy successful; Documentation Validation run `45984540777` passed all 23 validator tests and repository-wide documentation checks; PostgreSQL 18.7 / Python 3.15 PoC run `45984540878` passed all 33 test methods (29 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15191416174`). The PoC artifact confirms success with no failures or skipped tests. The code snapshot includes the versioned fixed-order JSON tuple for source-scoped authorization references, strict JSON logging for non-finite numeric metadata, and the deferred ArticleRevision-owner FK candidate. POC-29 confirms one-winner optimistic concurrency and rollback of the losing ArticleRevision insert; POC-30 confirms atomic new-Article creation order and orphan rejection at commit. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
+The inspected executable source-code baseline is `4cd09ad5203552d0b2df851ad0aa76f892779c20`. The latest fully verified published `main` snapshot at this review is `4b9e96f7f8c2ca2dc7c69c2b2ac3d415f2fb5576`; the seven commits between these snapshots changed documentation only. On that verified snapshot, Application CI run `45988710895` passed all 297 tests with lock verification, Ruff and mypy; Documentation Validation run `45988710521` passed all 23 validator tests and repository-wide checks; PostgreSQL 18.7 / Python 3.15 PoC run `45988710518` passed all 33 test methods (29 PostgreSQL integration methods and four standalone retention-policy unit tests; artifact `15193455731`). The PoC job completed successfully and uploaded its evidence artifact. The executable baseline includes the versioned fixed-order JSON tuple for source-scoped authorization references, strict JSON logging for non-finite numeric metadata, and the deferred ArticleRevision-owner FK candidate. POC-29 confirms one-winner optimistic concurrency and rollback of the losing ArticleRevision insert; POC-30 confirms atomic new-Article creation order and orphan rejection at commit. The PoC remains partial: no approved workload profile or performance thresholds, production key custody/rotation, retention enforcement, off-site/immutable protection, restore authorization, full cluster recovery, or formal security/operational qualification is evidenced. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
 
 All twenty individual ADRs remain Proposed; none is recorded as Accepted. Publication, passing CI, and PoC evidence do not constitute formal architecture approval, legal permission, production readiness, or operational acceptance.
 
@@ -736,3 +736,5 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v10.38):** Corrects the registry's self-inventory version after the current snapshot metadata update. The controlled-document registry row now matches the Document 07 header; no project scope or approval state changes.
+
+**Revision Note (v10.39):** Synchronizes GENI-READY-016 v4.74 and refreshes the verification narrative to distinguish the executable source-code baseline (`4cd09ad`) from the later fully verified documentation snapshot (`4b9e96f`). Application CI passed 297 tests, Documentation Validation passed 23 validator tests, and the PostgreSQL PoC passed 33 methods on the latter snapshot. The PoC remains partial; no ADR acceptance or production authorization is implied.
