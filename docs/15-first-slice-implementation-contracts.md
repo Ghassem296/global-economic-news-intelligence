@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.10  
+**Version:** 4.11  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -214,6 +214,8 @@ The deterministic request fingerprint binds command schema, actor and authorizat
 #### Append/reuse and concurrency behavior
 
 - For a new source identity, generate the Article ID server-side, append revision 1, and save the initial Article projection in the same UnitOfWork. The repository must enforce source-identity uniqueness.
+
+For the PostgreSQL persistence candidate, the `ArticleRevision` owner foreign key (`article_revisions.article_id -> articles.article_id`) must be `DEFERRABLE INITIALLY DEFERRED` because this service order appends the revision before inserting the initial Article projection. Both writes remain in one UnitOfWork and the constraint is checked at commit, so an orphan revision is still rejected. A different adapter must preserve equivalent atomic create semantics. The PoC-only migration 005 and POC-30 exercise this candidate; they do not approve a production migration or qualify PostgreSQL for production.
 - For an explicit Article update, load the Article, verify the exact source identity, and require `CommandMetadata.expected_aggregate_version`. A stale version must fail without partial writes.
 - Compare only the current revision fingerprint and schema version. An exact match reuses the current revision. If `original_url`, `canonical_url`, or `external_id` changed while the semantic fingerprint remained equal, the service refreshes the Article projection under optimistic concurrency without appending a new ArticleRevision. If no projection field changed, no projection write occurs. A different fingerprint appends the next immutable revision and advances the current projection.
 - A create-by-source-identity request that resolves to an existing Article may be replayed only when its current fingerprint matches. A changed revision must use an explicit Article ID and expected aggregate version; it must not silently update an existing Article.
@@ -1274,3 +1276,6 @@ The following remain open and block production implementation of the correspondi
 **Revision Note (v4.9):** Tightens SourceRecord's structural URL validation to reject whitespace, control characters and backslashes before URL parsing, with unit-test coverage. This is input hygiene only; DNS resolution, redirect validation, SSRF prevention and egress authorization remain separate mandatory controls.
 
 **Revision Note (v4.10):** Requires a versioned, unambiguous structured serialization for source-scoped authorization resource references, preventing delimiter-collision ambiguity when source identity components contain punctuation. The ArticleRevisionService uses a fixed-order JSON tuple and includes regression coverage; this does not authorize any source collection or production persistence.
+
+
+**Revision Note (v4.11):** Clarifies the PostgreSQL persistence candidate's deferred ArticleRevision-owner foreign key requirement, derived from the implemented service write order (revision append before initial Article projection insert). PoC migration 005 and POC-30 verify atomic creation and rejection of an orphan revision at commit. This is experimental evidence only; production migration strategy and ADR-005 acceptance remain open.
