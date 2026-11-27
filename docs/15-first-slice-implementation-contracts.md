@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.7  
+**Version:** 4.8  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -966,6 +966,12 @@ The following remain open and block the corresponding implementation detail:
 - Cursor encoding, default/max page sizes, stable sort keys, and page consistency under concurrent source configuration changes.
 - Secret-reference management, if source adapters require credentials; this contract intentionally prohibits secret values and does not select a secret manager.
 
+#### 10.12.6 Executable SourceRecord baseline
+
+The current executable foundation implements an immutable `SourceRecord` and a read-only `SourceRepository.get_by_id` port. The record represents source identity, descriptive/configuration metadata, an opaque configuration version, activation state, optional context, non-secret JSON collection configuration, and server-owned timestamps. Its basic HTTP(S) URL checks are structural only and do not replace Document 08's DNS/redirect/SSRF/egress controls. Obvious credential-like configuration keys are rejected as defense in depth, but adapter schemas and trusted secret-reference handling remain separate responsibilities.
+
+This implementation does not close the open items above. In particular, no `UpdateSourceConfiguration` change-set or `SourceCollectionQuery` cursor/filter contract is inferred; no concrete persistence adapter or source acquisition path is enabled. The SourceRepository port is deliberately read-only until the field-level command/query DTOs, authorization policy, and use-time network controls are approved and testable.
+
 These gaps must remain explicit. They must not be filled by silently choosing a provider, URL policy, identity algorithm, page-size limit, or credential mechanism.
 
 
@@ -1219,7 +1225,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.7  
+**Version:** 4.8  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-27
 
@@ -1260,3 +1266,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.7):** Hardens ArticleRevisionService rights checks to use a validated trusted application Clock rather than source-supplied `observed_at`, and captures one evaluation instant for all required rights checks. Defines source identity by source ID, canonical source identifier and normalization version; treats canonical URL, original URL and external ID as mutable projection attributes. When semantic revision fingerprint is unchanged, the service refreshes those projection attributes with optimistic concurrency without appending a new immutable ArticleRevision. Production Clock, repository adapters and PostgreSQL concurrency/integration tests remain required.
+
+
+**Revision Note (v4.8):** Records the initial executable SourceRecord and read-only SourceRepository retrieval port. The implementation intentionally does not resolve the still-open SourceCollectionQuery and UpdateSourceConfiguration DTO semantics, adapter schemas, SSRF/egress policy, secret management, or production collection authorization.
