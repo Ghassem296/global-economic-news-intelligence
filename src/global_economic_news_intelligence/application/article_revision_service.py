@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
+from dataclasses import replace
+
 from global_economic_news_intelligence.application.article_revision_commands import (
     PersistArticleRevisionCommand,
     PersistArticleRevisionResult,
@@ -82,6 +84,13 @@ class ArticleProjection:
                 raise ValueError(f"{name} must be timezone-aware.")
         if self.aggregate_version is not None and not self.aggregate_version.strip():
             raise ValueError("aggregate_version must be non-empty when supplied.")
+
+
+class Clock(Protocol):
+    """Provides trusted application time, independent of source observation time."""
+
+    def now(self) -> datetime:
+        ...
 
 
 class ArticleIdGenerator(Protocol):
@@ -172,6 +181,7 @@ class ArticleRevisionService:
         authorization: AuthorizationVerifier,
         content_rights: ContentRightsVerifier,
         article_ids: ArticleIdGenerator,
+        clock: Clock,
     ) -> None:
         self._articles = articles
         self._revisions = revisions
@@ -180,6 +190,7 @@ class ArticleRevisionService:
         self._authorization = authorization
         self._content_rights = content_rights
         self._article_ids = article_ids
+        self._clock = clock
 
     def execute(self, command: PersistArticleRevisionCommand) -> PersistArticleRevisionResult:
         """Append/reuse one revision and atomically update its Article projection."""
@@ -212,6 +223,35 @@ class ArticleRevisionService:
                 and current is not None
                 and self._matches_current(current, revision)
             ):
+                # Source routing attributes may change without a semantic revision.
+                proposed = self._build_projection(
+                    article_id=article.article_id,
+                    revision=revision,
+                    record=current,
+                    previous=article,
+                    now=self._clock.now(),
+                )
+                comparable = replace(
+                    proposed,
+                    aggregate_version=article.aggregate_version,
+                    updated_at=article.updated_at,
+                )
+                if comparable != article:
+                    article = self._articles.save_projection(
+                        proposed,
+                        expected_version=article.aggregate_version,
+                        uow=uow,
+                    )
+                    if (
+                        not article.aggregate_version
+                        or article.article_id != current.article_id
+                        or article.current_revision_id != current.revision_id
+                    ):
+                        raise self._error(
+                            ErrorCode.INVARIANT_VIOLATION,
+                            "ArticleRepository returned an inconsistent projection refresh.",
+                            metadata,
+                        )
                 result = self._result(article, current, created=False)
                 self._idempotency.complete(
                     scope=metadata.idempotency_scope,
@@ -251,6 +291,7 @@ class ArticleRevisionService:
                 revision=revision,
                 record=record,
                 previous=article,
+                now=self._clock.now(),
             )
             saved = self._articles.save_projection(
                 projection,
@@ -364,7 +405,10 @@ class ArticleRevisionService:
     ) -> bool:
         return (
             article.source_id == revision.source_id
-            and article.source_article_identity == revision.source_article_identity
+            and article.source_article_identity.canonical_source_identifier
+            == revision.source_article_identity.canonical_source_identifier
+            and article.source_article_identity.normalization_version
+            == revision.source_article_identity.normalization_version
         )
 
     def _build_projection(
@@ -374,6 +418,7 @@ class ArticleRevisionService:
         revision: PersistArticleRevision,
         record: ArticleRevisionRecord,
         previous: ArticleProjection | None,
+        now: datetime,
     ) -> ArticleProjection:
         created_at = previous.created_at if previous is not None else revision.observed_at
         return ArticleProjection(
@@ -396,7 +441,7 @@ class ArticleRevisionService:
             metadata=revision.metadata or {},
             aggregate_version=previous.aggregate_version if previous is not None else None,
             created_at=created_at,
-            updated_at=revision.observed_at,
+            updated_at=now,
         )
 
     def _require_authorization(
@@ -428,7 +473,7 @@ class ArticleRevisionService:
             )
         if not self._content_rights.permits_metadata_retention(
             revision,
-            at=revision.observed_at,
+            at=self._clock.now(),
         ):
             raise self._error(
                 ErrorCode.RIGHTS_NOT_ALLOWED,
