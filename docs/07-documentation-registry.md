@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 10.13
+**Version:** 10.14
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -159,7 +159,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.25 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
 | GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.54 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
 | GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.54 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
-| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.39 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-26 | No approval recorded |
+| GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.40 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.8 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
 | GENI-API-009 | API and Integration Contracts | `docs/09-api-and-integration-contracts.md` | 1.3 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.13 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 10.14 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.40 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-27 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -681,3 +681,5 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v10.12):** Synchronizes GENI-PLAN-004 v1.39 after reconciling the Stage 1 foundation note with the implemented package, configuration, logging, error, CLI, and CI capabilities while preserving unimplemented persistence and security-tooling tasks. No readiness verdict or production approval changes.
 
 **Revision Note (v10.13):** Synchronizes GENI-READY-016 v4.56 after updating its active cross-reference to GENI-DATA-003 v1.54. The registry records document versions only; no data-model approval or production persistence authorization is implied.
+
+**Revision Note (v10.14):** Synchronizes GENI-PLAN-004 v1.40 and its Last Updated date after the Stage 1 foundation-status correction. No readiness verdict or production approval changes.
