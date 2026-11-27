@@ -520,10 +520,17 @@ class ArticleRevisionService:
         if command.article_id is not None:
             return f"article:{command.article_id}"
         identity = command.revision.source_article_identity
-        return (
-            f"source-article:{command.revision.source_id}:"
-            f"{identity.normalization_version}:{identity.canonical_source_identifier}"
+        # Encode the ordered identity tuple as JSON. Delimiter concatenation is
+        # ambiguous because source identifiers may themselves contain colons.
+        identity_payload = json.dumps(
+            [
+                command.revision.source_id,
+                identity.normalization_version,
+                identity.canonical_source_identifier,
+            ],
+            separators=(",", ":"),
         )
+        return f"source-article:v1:{identity_payload}"
 
     @staticmethod
     def _request_fingerprint(command: PersistArticleRevisionCommand) -> str:
