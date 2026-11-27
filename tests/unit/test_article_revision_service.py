@@ -399,6 +399,10 @@ def test_same_current_fingerprint_reuses_revision_without_projection_write() -> 
     factory = deps["uow_factory"]
     assert isinstance(factory, FakeUnitOfWorkFactory)
     assert factory.items[0].committed
+    # All reads that determine the current Article/revision state must use the
+    # exact UnitOfWork that later commits the projection/idempotency outcome.
+    assert articles.last_read_uow is factory.items[0]
+    assert revisions.last_read_uow is factory.items[0]
 
 
 
