@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.24  
+**Version:** 4.25  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -151,7 +151,7 @@ A full review of the published `main` snapshot at `8b486f3` produced the finding
 1. **Rights-evaluation time is caller-supplied.** See the hardening requirement in Document 15 v4.6 §4.3. Open; needs a trusted-clock port.
 2. **PoC migration runner is not production-grade.** The PoC splits migration files on `;` (unsafe for functions, `DO` blocks and quoted semicolons) and checks migration history before opening the transaction without an advisory lock, so two concurrent runners can both apply a migration. A production migration tool with locking is required by GENI-ADR-005.
 3. **PoC schema is a correctness experiment, not the production schema.** It has no Article current-revision pointer (required by `ArticleProjection.current_revision_id`), no foreign key from `decision_records.case_id`, no `CHECK` on decision outcome, and a redundant `articles_source_identity_idx` that duplicates the `UNIQUE (source_id, external_identity)` index. The recorded 26-test evidence is deliberately not altered by this review.
-4. **Supply-chain pinning is incomplete.** Only `astral-sh/setup-uv` is pinned to a commit SHA; the other GitHub Actions and the `postgres:18.7` service image are pinned by tag. Pin them by SHA/digest.
+4. **Supply-chain pinning is partly resolved.** All GitHub Actions are now pinned to commit SHAs (the tag is kept in a comment; Dependabot or a manual review must refresh them). The `postgres:18.7` service image is still pinned by tag only; pin it by digest.
 5. **Revision identity ignores some source fields.** The semantic fingerprint excludes `original_url`, `external_id` and `canonical_url` by design (Document 15 §4.3), so a change confined to those fields reuses the current revision and does not update the Article projection. Decide whether such changes need an explicit non-revision update path.
 6. **Quality tooling scope.** Ruff now covers `scripts` and `tools`; mypy strict mode still covers only the application package. Extend it when those directories become product code.
 
@@ -243,7 +243,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.24
+**Version:** 4.25
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -321,3 +321,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.23):** Updates active Document 15 references to v4.5 after requiring at least one applicable rights-assessment reference for every persisted ArticleRevision. Missing rights evidence now fails closed before transaction startup; production rights adapters and source-specific policy approval remain required.
 
 **Revision Note (v4.24):** Records the 2026-11-27 full-repository review findings (§5.1), the widened Ruff scope, and the Document 15 v4.6 / Document 17 v2.4 alignment. The readiness verdict is unchanged.
+
+**Revision Note (v4.25):** Records that all GitHub Actions in the three workflows are pinned to commit SHAs; the PostgreSQL service image digest pin remains open (§5.1 item 4).
