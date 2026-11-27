@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.14  
+**Version:** 4.15  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -265,6 +265,8 @@ Candidate scores are not decision confidence. Semantic similarity may be absent;
 | `append_decision` | `append_decision(decision: EventMatchDecision, expected_case_version: Version, uow: UnitOfWork) -> EventMatchDecision` | Appends a decision and preserves supersession history. MATCH must select exactly one eligible candidate from the same case. Non-MATCH outcomes cannot authorize an active association. Decision append, case pointer update and link reconciliation are one atomic local transaction. |
 
 The repository does not calculate match scores or decide outcomes. Those belong to the approved matching policy and Event Resolution Workflow. Policy version, decision actor/method and rationale are mandatory provenance.
+
+**Case-lifecycle gate:** `case_status` is not a free-form side effect of `append_case`, `append_decision`, or `set_effective_decision`. Document 03, Section 7.1 explicitly leaves the initial state, allowed transitions, terminal/reopen/cancel rules, and derivation from the effective decision/review state undefined. Until that lifecycle policy and its versioned transition contract are approved, these repository methods may be exercised only by synthetic contract fixtures; production case creation, decision application, and link reconciliation are blocked. Implementations must not infer status mappings from outcome names or silently choose an initial status. When approved, the status transition, effective-decision pointer, and link reconciliation must be one UnitOfWork with expected-version validation.
 
 ### 4.8 ArticleEventLinkRepository
 
@@ -1290,3 +1292,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.14):** Requires the active UnitOfWork for `find_current_by_revision_fingerprint`, aligning every current-ArticleRevision lookup with the transaction-bound repository-read rule. This is an application-port contract correction; it does not provide a durable adapter or database-level concurrency proof.
+
+
+**Revision Note (v4.15):** Makes the EventMatchCase lifecycle omission an explicit repository/application gate. Initial status, transition graph, terminal/reopen/cancel semantics, and status derivation must be approved before production case creation or decision application; repositories must not infer case status from decision outcomes. This aligns Document 15 with the explicit blocker in Document 03, Section 7.1 and preserves atomic coordination of status, effective decision, and ArticleEventLink changes.
