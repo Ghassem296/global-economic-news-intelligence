@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.33  
+**Version:** 4.34  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1274,8 +1274,8 @@ The following are logical ports, not current executable adapters:
 | Repository | Method | Signature | Contract |
 |---|---|---|---|
 | EventIdentityOperationRepository | get_by_id | get_by_id(operation_id, uow?) -> `Optional<EventIdentityOperationAggregate>` | Loads operation plus ordered inputs, outputs and allocations consistently. |
-| EventIdentityOperationRepository | find_by_idempotency | find_by_idempotency(scope, key, uow) -> `Optional<EventIdentityOperationAggregate>` | Same key/fingerprint returns the existing operation; different fingerprint is CONFLICT. |
-| EventIdentityOperationRepository | create_pending | create_pending(command, uow) -> `EventIdentityOperationAggregate` | Atomically inserts the PENDING operation, ordered input/output/allocation links, initial operation-history action, and idempotency claim/result. Enforces cardinality, unique positions, subject uniqueness and output membership. |
+| EventIdentityOperationRepository | find_by_idempotency | find_by_idempotency(scope, key, request_fingerprint, uow) -> `Optional<EventIdentityOperationAggregate>` | Resolves the canonical IdempotencyRecordRepository claim and loads its linked operation; same fingerprint returns the existing operation, different fingerprint is CONFLICT. This is a query convenience, not a second idempotency store. |
+| EventIdentityOperationRepository | create_pending | create_pending(command, uow) -> `EventIdentityOperationAggregate` | Atomically inserts the PENDING operation, ordered input/output/allocation links and initial operation-history action. Enforces cardinality, unique positions, subject uniqueness and output membership. It does not create a second idempotency record; the caller coordinates IdempotencyRecordRepository in the same UnitOfWork. |
 | IdempotencyRecordRepository | claim_or_get_identity_operation | claim_or_get_identity_operation(operation_scope, idempotency_key, request_fingerprint, operation_id, uow) -> `IdempotencyRecord` | Atomically creates or returns the single `IN_PROGRESS` idempotency record linked to the exact operation. Same scope/key and same fingerprint reuses it; a different fingerprint is CONFLICT. The record and PENDING operation commit in the same UnitOfWork. |
 | IdempotencyRecordRepository | mark_identity_reconciliation_required | mark_identity_reconciliation_required(record_id, expected_version, result_reference, uow) -> `IdempotencyRecord` | Records `RECONCILIATION_REQUIRED` when the core effect is UNKNOWN or APPLIED with required downstream work outstanding. It must never report FAILED for an UNKNOWN/APPLIED identity effect. |
 | IdempotencyRecordRepository | complete_identity_operation | complete_identity_operation(record_id, expected_version, result_reference, uow) -> `IdempotencyRecord` | Marks the idempotency record COMPLETED only in the same UnitOfWork that confirms EventIdentityOperation SUCCEEDED and its required reconciliation dispositions. |
@@ -1397,6 +1397,8 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 **Revision Note (v4.32):** Removes ambiguity in the core-transaction handoff by requiring initial bounded discovery/finalization work to be persisted as typed ProcessingStep records in the same UnitOfWork as the applied identity effect and its history. ProcessingStep is authoritative; any future broker message is only a wake-up hint. Runtime execution remains gated.
 
 **Revision Note (v4.33):** Defines the Event Identity mapping to the shared IdempotencyRecord aggregate, including atomic claim/replay, reconciliation-required state, completion and the NOT_APPLIED-only failure rule. Prevents operation and idempotency projections from disagreeing after an applied or uncertain core effect.
+
+**Revision Note (v4.34):** Makes IdempotencyRecordRepository the single canonical owner of Event Identity idempotency claims. EventIdentityOperationRepository.find_by_idempotency is explicitly a lookup projection, and create_pending no longer duplicates the claim/result write.
 
 **End of Document**
 
