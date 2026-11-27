@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.4
+**Version:** 1.5
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -45,6 +45,30 @@ No numeric article volume, concurrent-writer count, event/report volume, retenti
 The Project Owner must record a workload profile before running qualification measurements. Unknown values remain explicitly unknown; they must not be filled with convenient guesses.
 
 The workload profile must identify the source and confidence of each value. Product aspirations are not workload measurements. If a mandatory target has not been approved, record it as an unresolved decision and do not declare a candidate compliant with it.
+
+### 3.2 Workload-profile record template
+
+Create one versioned workload-profile record before any qualification measurement. The following fields are mandatory. A field without an approved value must remain `UNSET — Project Owner input required`; do not substitute a convenient default or infer a numeric target from product aspirations.
+
+| Profile field | Required content | Current state |
+|---|---|---|
+| Profile identity | Profile ID, version, owner, approval date, and evidence references for each approved value | UNSET |
+| Deployment topology | Application instance count, worker topology, hosting model, and whether the local/early-validation baseline remains applicable | Single application instance is a planning baseline only; owner confirmation required |
+| Article workload | Average and peak articles per day, burst window, payload-size distribution, source mix, and expected growth horizon | UNSET |
+| Concurrent access | Concurrent readers, writers, background workers, and expected contention patterns | UNSET |
+| Domain workload mix | Expected rates and proportions for article/revision writes, duplicate evaluation/decisions, event matching, evidence, analysis, report versions, and workflow state transitions | UNSET |
+| Read workload | Critical query classes, read/write ratio, pagination patterns, and expected hot-key or skew behavior | UNSET |
+| Dataset shape | Synthetic row counts by aggregate, relationship cardinalities, index expectations, and retained-data horizon | UNSET |
+| Recovery objectives | Approved RPO, RTO, backup frequency, backup retention, restore target, and acceptable recovery intervention | UNSET |
+| Availability and operations | Availability objective, maintenance window, monitoring/alerting expectations, and operator support capacity | UNSET |
+| Resource and cost envelope | CPU, memory, storage/IOPS, network, hosting constraints, and approved recurring cost ceiling | UNSET |
+| Correctness gates | Required outcomes for every POC-01 through POC-18 scenario; all are hard gates, not weighted scores | Defined in §5; owner approval of profile pending |
+| Performance thresholds | Predeclared per-operation throughput and p50/p95/p99 latency limits, lock/retry limits, resource ceilings, and measurement duration/repetition policy | UNSET |
+| Migration and recovery thresholds | Approved clean-install/upgrade, backup, restore, and crash-recovery limits | UNSET |
+
+For every non-UNSET value, record its unit, source, confidence, owner, and rationale. Distinguish measured workload observations from estimates and product requirements. Any estimate must be explicitly labeled and approved; it must not be represented as measured evidence.
+
+The workload profile must be approved before benchmark results are collected or examined. If the owner has not approved numeric workload or performance thresholds, correctness and operational-feasibility experiments may be recorded separately, but no workload-capacity or final production-readiness claim may be made. Updating the workload profile after seeing results requires a new profile version and a documented reason; thresholds must not be retrofitted to make an observed result pass.
 
 ## 4. Candidate implementations and fairness controls
 
@@ -176,5 +200,6 @@ After qualification and formal acceptance, record the exact PostgreSQL version, 
 | 1.3 | 2026-11-26 | Proposed | Re-scoped the protocol to qualify the Project Owner-selected PostgreSQL target; removed SQLite comparative testing while preserving workload, correctness, recovery, and production-approval gates. |
 
 | 1.4 | 2026-11-27 | Proposed | Clarifies that PostgreSQL is already the owner-selected target but is not production-qualified by virtue of its concurrency capabilities; qualification remains evidence-based. |
+| 1.5 | 2026-11-27 | Proposed | Adds an explicit owner-approved workload-profile template with unset values, evidence provenance, and a prohibition on inventing or retrofitting numeric thresholds. |
 
 **End of Evidence Protocol**
