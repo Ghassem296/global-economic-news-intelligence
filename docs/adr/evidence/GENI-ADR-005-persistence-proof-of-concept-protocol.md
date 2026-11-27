@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.3
+**Version:** 1.4
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -158,7 +158,7 @@ Until the PoC is complete and GENI-ADR-005 is formally Accepted:
 - Do not add a production database dependency or select an ORM, driver, migration tool, or async database strategy.
 - Do not create production migrations or claim database-backed repository implementation.
 - Do not treat SQLite as the default merely because it is convenient for local development.
-- Do not treat PostgreSQL as selected merely because it supports higher concurrency.
+- Do not treat PostgreSQL as production-qualified merely because it supports higher concurrency.
 - Pure domain contracts, synthetic fixtures, and database-independent repository interfaces may continue only within their approved scope.
 - Any temporary experimental adapter must be isolated, explicitly non-production, and must not leak database-specific types into domain/application contracts.
 
@@ -176,3 +176,5 @@ After qualification and formal acceptance, record the exact PostgreSQL version, 
 | 1.3 | 2026-11-26 | Proposed | Re-scoped the protocol to qualify the Project Owner-selected PostgreSQL target; removed SQLite comparative testing while preserving workload, correctness, recovery, and production-approval gates. |
 
 **End of Evidence Protocol**
+
+| 1.4 | 2026-11-27 | Proposed | Clarifies that PostgreSQL is already the owner-selected target but is not production-qualified by virtue of its concurrency capabilities; qualification remains evidence-based. |
