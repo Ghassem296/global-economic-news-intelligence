@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-011  
 **Title:** Event Identity, Matching, Continuation, Merging, and Splitting  
 **Status:** Proposed  
-**Version:** 1.14  
+**Version:** 1.15  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -578,7 +578,7 @@ The operation workflow has a durable preparation phase, one atomic core identity
 
 The core identity transaction uses compare-and-swap/optimistic concurrency over the recorded input versions. It applies the canonical identity disposition, writes the corresponding EventHistory records for every affected Event, sets identity_effect_state to APPLIED, records the operation-history transition, and creates the initial bounded downstream-discovery/finalization work as typed ProcessingStep records within the operation's ProcessingRun in that same UnitOfWork. Those ProcessingStep records are the authoritative durable work state; no separate outbox/queue entity is introduced. A future broker notification may only be a recoverable wake-up hint and cannot replace or own work state. If the database commit outcome cannot be established, identity_effect_state is UNKNOWN and the operation remains RECONCILIATION_REQUIRED until a read-after-failure reconciliation establishes whether the core effect committed.
 
-Downstream work re-evaluates every affected EventMatchCase. Any ArticleEventLink deactivation or replacement must be authorized by a successor EventMatchDecision in that same case and applied by EventService. Reports and analyses are never rewritten; they are versioned, explicitly marked stale, or reconciled through a controlled workflow. The operation reaches SUCCEEDED only when all required downstream tasks are confirmed complete. If the core identity transaction is definitively not applied, the operation may be FAILED or cancelled before application. Once the core effect is APPLIED, the operation must not be marked FAILED or CANCELLED and must not be rolled back by mutating history; a corrective action is a new authorized IDENTITY_CORRECTION operation.
+Downstream work re-evaluates every affected EventMatchCase. Any ArticleEventLink deactivation or replacement must be authorized by a successor EventMatchDecision in that same case and applied by EventService. Reports and analyses are never rewritten; they are versioned, explicitly marked stale, or reconciled through a controlled workflow. The operation reaches SUCCEEDED only when all required downstream reconciliation steps are complete: case and analysis work is resolved under the approved workflow, and every discovered immutable Report version has an impact disposition of ASSESSED, RESOLVED, or REMEDIATION_REQUIRED with a durable, owned remediation work-item reference. This finalizes the identity operation's reconciliation obligation; it does not mean that a separate report-remediation workflow has itself completed. If the core identity transaction is definitively not applied, the operation may be FAILED; cancellation is permitted only before the core effect is applied. Once the core effect is APPLIED, the operation must not be marked FAILED or CANCELLED and must not be rolled back by mutating history; a corrective action is a new authorized IDENTITY_CORRECTION operation.
 
 An overlapping merge/split request must be serialized or rejected using an event-scoped lease/lock and expected-version check. Idempotent retries reuse the same operation ID and key. External notifications and long-running analysis/report reconciliation execute from durable follow-up work, never inside the core identity transaction.
 
@@ -1030,6 +1030,8 @@ Such measurements must be obtained through a representative evaluation dataset b
 | 1.9 | 2026-11-18 | Proposed | Removed lifecycle and relationship-taxonomy items already defined as normative baselines from the deferred-question list; retained approval gates and genuinely open domain decisions. | AI Architecture Assistant |
 
 ---
+
+**Revision Note (v1.15):** Aligns the SUCCEEDED gate with GENI-IMPL-015 §10.17: report impact assessment is complete when its disposition is ASSESSED, RESOLVED, or REMEDIATION_REQUIRED with a durable owned work item; the separate remediation workflow need not be complete. Reasserts that APPLIED identity effects cannot be failed/cancelled.
 
 **End of ADR**
 
