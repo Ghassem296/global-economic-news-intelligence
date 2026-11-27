@@ -3,12 +3,12 @@ from __future__ import annotations
 import hashlib
 import os
 import unittest
-from concurrent.futures import ThreadPoolExecutor
 import uuid
-from threading import Barrier
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Barrier
 from typing import Any
 
 import psycopg
