@@ -572,9 +572,9 @@ class PostgreSQLArticleRevisionRepository:
             """
             INSERT INTO article_revisions (
                 revision_id, article_id, revision_number, fingerprint,
-                revision_payload, revision_fingerprint_schema_version
+                revision_payload, revision_fingerprint_schema_version, created_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, date_trunc('milliseconds', clock_timestamp()))
             RETURNING created_at
             """,
             (
