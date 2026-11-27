@@ -322,7 +322,7 @@ The references below are internal project documents used to establish the curren
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines relational entities, integrity constraints, and transactions. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Records PostgreSQL as the owner-selected target, subject to qualification and formal ADR acceptance. |
 | `GENI-ADR-016` | Internal | Defines persistence and recovery behaviors that constrain engine selection. |
-| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | Defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records 18 passing PoC test methods including experimental authenticated-backup checks, but not full production qualification. |
+| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | Defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records 26 passing PoC test methods (22 PostgreSQL integration methods and four standalone retention-policy unit tests), including POC-22 migration rollback and POC-23 migration reapplication idempotency, but not full production qualification. |
 
 External legal review, provider measurements, market-data coverage measurements, and model-quality benchmarks remain outstanding wherever relevant.
 
@@ -348,5 +348,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | 2.5 | 2026-11-27 | Proposed | Records 24 passing test methods: 20 PostgreSQL integration methods and four standalone retention-policy unit tests. Adds strict metadata validation, future-date rejection, immutability expiry-boundary checks, and deterministic candidate ordering. No deletion, scheduling, storage enforcement, or production retention values are implemented. | AI Architecture Assistant |
 | 2.6 | 2026-11-27 | Proposed | Records 25 passing test methods, including POC-22's synthetic failed-migration rollback check. Partial DDL and migration-history updates are rolled back together. Production migration tooling, rollback policy, recovery procedures, retention enforcement, and all remaining production qualification gates remain open. | AI Architecture Assistant |
 | 2.7 | 2026-11-27 | Proposed | Records 26 passing test methods, including POC-23's idempotent reapplication of migrations 001–003 with unchanged migration history and timestamps. Production migration tooling, rollback/recovery policy, retention enforcement, and all remaining production qualification gates remain open. | AI Architecture Assistant |
+| 2.8 | 2026-11-27 | Proposed | Reconciles the evidence reference table with the latest 26-test PoC result and explicitly identifies POC-22 migration rollback and POC-23 migration reapplication idempotency; production qualification and formal acceptance remain open. | AI Architecture Assistant |
 
 **End of ADR**
