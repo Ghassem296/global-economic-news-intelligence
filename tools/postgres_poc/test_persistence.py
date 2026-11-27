@@ -913,12 +913,20 @@ asyncio.run(main())
                     "--no-role-passwords",
                 )
                 os.chmod(temporary_directory, 0o700)
-                globals_dump.write_text(dump.stdout, encoding="utf-8")
+                # The destination cluster already bootstraps its postgres
+                # administrator. Keep that destination-owned identity and
+                # restore all other cluster-global roles and memberships.
+                restore_sql = "\\n".join(
+                    line for line in dump.stdout.splitlines()
+                    if line != "CREATE ROLE postgres;"
+                    and not line.startswith("ALTER ROLE postgres ")
+                ) + "\\n"
+                globals_dump.write_text(restore_sql, encoding="utf-8")
                 os.chmod(globals_dump, 0o600)
                 self.assertGreater(globals_dump.stat().st_size, 0)
-                self.assertIn(f"CREATE ROLE {parent_role};", dump.stdout)
-                self.assertIn(f"GRANT {parent_role} TO {member_role} WITH INHERIT TRUE", dump.stdout)
-                self.assertNotIn("PASSWORD", dump.stdout.upper())
+                self.assertIn(f"CREATE ROLE {parent_role};", restore_sql)
+                self.assertIn(f"GRANT {parent_role} TO {member_role} WITH INHERIT TRUE", restore_sql)
+                self.assertNotIn("PASSWORD", restore_sql.upper())
 
                 await docker(
                     "run",
@@ -928,8 +936,6 @@ asyncio.run(main())
                     target_container,
                     "--publish",
                     "127.0.0.1::5432",
-                    "--env",
-                    "POSTGRES_USER=geni_restore_admin",
                     "--env",
                     "POSTGRES_PASSWORD=poc_restore_ephemeral",
                     image_digest,
@@ -946,7 +952,7 @@ asyncio.run(main())
                             target_container,
                             "pg_isready",
                             "-U",
-                            "geni_restore_admin",
+                            "postgres",
                             "-d",
                             "postgres",
                         ],
@@ -969,7 +975,7 @@ asyncio.run(main())
                         target_container,
                         "psql",
                         "-U",
-                        "geni_restore_admin",
+                        "postgres",
                         "-d",
                         "postgres",
                         "--set",
@@ -987,7 +993,7 @@ asyncio.run(main())
                 )
                 host_port = port_result.stdout.strip().rsplit(":", 1)[1]
                 target_url = (
-                    "postgresql://geni_restore_admin:poc_restore_ephemeral@"
+                    "postgresql://postgres:poc_restore_ephemeral@"
                     f"127.0.0.1:{host_port}/postgres"
                 )
                 target_connection = await psycopg.AsyncConnection.connect(
