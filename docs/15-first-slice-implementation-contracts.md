@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.4  
+**Version:** 4.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -201,7 +201,7 @@ The executable application contract is `ArticleRevisionService.execute(PersistAr
 3. For `available` or `partial` content, re-evaluate the supplied immutable rights-assessment references at `revision.observed_at`. The verifier must establish an effective `PERSISTENT_STORAGE` ALLOW for the exact source and content scope, with the applicable policy version and expiry/revocation checks. Retrieval, temporary processing, or internal-analysis permission is insufficient. A denied or unverifiable check raises `RIGHTS_NOT_ALLOWED` and performs no persistence.
 4. Every revision must pass a separate metadata-rights check using the exact rights references and source/content scope. This check enforces `METADATA_ACCESS` and the applicable source-specific metadata-preservation rule. `available`/`partial` revisions must additionally pass `PERSISTENT_STORAGE`; absence of full-text permission must never be interpreted as metadata permission, and metadata permission must never authorize full-text retention.
 
-The application service does not decide whether a license is legally sufficient. The concrete verifier must use the authoritative rights-assessment records and the approved rights policy; it must not trust a caller-supplied status or a content hash as permission. The current rights vocabulary has `METADATA_ACCESS` but no independent `METADATA_RETENTION` operation; the metadata-preservation rule must therefore be resolved by the source-specific rights profile/policy and must not be invented as a new operation identifier.
+The application service does not decide whether a license is legally sufficient. The concrete verifier must use the authoritative rights-assessment records and the approved rights policy; it must not trust a caller-supplied status or a content hash as permission. An empty rights-assessment reference set is always denied for a persisted revision; the service must fail closed before opening a write transaction. The current rights vocabulary has `METADATA_ACCESS` but no independent `METADATA_RETENTION` operation; the metadata-preservation rule must therefore be resolved by the source-specific rights profile/policy and must not be invented as a new operation identifier.
 
 #### Command idempotency contract
 
@@ -1216,7 +1216,7 @@ The following remain open and block production implementation of the correspondi
 ---
 
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.4  
+**Version:** 4.5  
 **Status:** Proposed — Pending Project Owner Approval  
 **Last Updated:** 2026-11-26
 
@@ -1249,3 +1249,6 @@ The following remain open and block production implementation of the correspondi
 
 
 **Revision Note (v4.4):** Closes the application-service metadata-rights enforcement gap: every revision now requires a separate `METADATA_ACCESS`/metadata-preservation check, while `available` and `partial` revisions additionally require `PERSISTENT_STORAGE`. The source-specific metadata-preservation rule remains governed by the approved rights profile because the canonical operation catalog does not define a separate `METADATA_RETENTION` operation.
+
+
+**Revision Note (v4.5):** Makes the absence of rights-assessment references an explicit fail-closed condition for every persisted ArticleRevision, including metadata-only and unavailable revisions. No write transaction may begin without at least one applicable rights-evidence reference.
