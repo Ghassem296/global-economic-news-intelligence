@@ -2,11 +2,11 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.56  
+**Version:** 4.57  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
-**Baseline:** Published `main` snapshot reviewed on 2026-11-27 at `b154650c9cda341c71c7e25fe0e8c7825c6edb06`
+**Baseline:** Implementation/code snapshot reviewed on 2026-11-27 at `b154650c9cda341c71c7e25fe0e8c7825c6edb06`; subsequent changes reviewed through this revision are documentation-only
 
 ---
 
@@ -32,6 +32,8 @@ A published file, passing documentation check, or merged change is not by itself
 The repository is no longer documentation-only. It now contains an installable Python package, a minimal CLI, pure domain lifecycle policies, unit tests, Ruff/mypy configuration, and a dedicated application CI workflow.
 
 The initial executable foundation was originally checked on Python 3.12 and 3.13. That historical matrix has been superseded: the current project runtime policy is Python 3.15 only. Python 3.15 compatibility is verified by the successful main-branch Application CI run 45963235364 for commit `5c9e34af98a97326c22ac756f306225493f91e29`. It completed locked dependency installation, Ruff, mypy, and pytest; all 275 tests passed.
+
+A GitHub commit comparison confirms that the seven commits from this tested code commit to the implementation baseline, and the subsequent commits through this revision, changed documentation files only. No application source, test, project configuration, lockfile, or workflow files changed in those intervals. The recorded 275-test Application CI result therefore remains applicable to the current code snapshot. A fresh Documentation Validation run after the current documentation edits is still required and has not been verified here.
 
 - Python package metadata and supported runtime range (Python 3.15 only; `>=3.15,<3.16`).
 - Pure lifecycle policies for ProcessingRun, ProcessingStep, EventMatchCase, EventMatchCandidate, publication/delivery external operations, and ReviewRecord actions.
@@ -246,7 +248,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.56
+**Version:** 4.57
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -417,3 +419,5 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.56):** Updates the active Document 03 cross-reference from v1.53 to v1.54 and records the Source configuration aggregate-version addition without implying approval of the proposed data model or production persistence. No readiness verdict or production authorization changes.
+
+**Revision Note (v4.57):** Clarifies the implementation baseline and records the GitHub comparison showing documentation-only changes after the 275-test Application CI commit. The existing application test evidence remains applicable to current code; fresh documentation validation remains pending. No readiness verdict or production authorization changes.
