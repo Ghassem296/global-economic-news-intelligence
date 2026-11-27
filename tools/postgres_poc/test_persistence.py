@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import hmac
 import os
+import secrets
+import stat
 import subprocess
 import sys
 import tempfile
@@ -596,6 +600,86 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     f"{POSTGRES_CONTAINER_ID}:{remote_backup}",
                     str(local_backup),
                 )
+
+                # PoC-only envelope: encrypted backup plus an independent
+                # authentication tag. Production key custody/rotation remains
+                # outside this experiment and requires an approved KMS design.
+                os.chmod(local_backup, 0o600)
+                self.assertEqual(stat.S_IMODE(local_backup.stat().st_mode), 0o600)
+                passphrase = secrets.token_urlsafe(48)
+                encryption_environment = os.environ.copy()
+                encryption_environment["GENI_POC_BACKUP_PASSPHRASE"] = passphrase
+                encrypted_backup = local_backup.with_suffix(".dump.enc")
+                subprocess.run(
+                    [
+                        "openssl", "enc", "-aes-256-cbc", "-salt",
+                        "-pbkdf2", "-iter", "200000", "-md", "sha256",
+                        "-in", str(local_backup), "-out", str(encrypted_backup),
+                        "-pass", "env:GENI_POC_BACKUP_PASSPHRASE",
+                    ],
+                    check=True,
+                    capture_output=True,
+                    env=encryption_environment,
+                )
+                os.chmod(encrypted_backup, 0o600)
+                ciphertext = encrypted_backup.read_bytes()
+                authentication_key = hmac.new(
+                    passphrase.encode("utf-8"),
+                    b"GENI-PoC-backup-authentication-v1",
+                    hashlib.sha256,
+                ).digest()
+                authentication_tag = hmac.new(
+                    authentication_key, ciphertext, hashlib.sha256
+                ).hexdigest()
+                tag_file = encrypted_backup.with_suffix(".hmac")
+                tag_file.write_text(authentication_tag + "\\n", encoding="ascii")
+                os.chmod(tag_file, 0o600)
+                self.assertEqual(stat.S_IMODE(encrypted_backup.stat().st_mode), 0o600)
+                self.assertEqual(stat.S_IMODE(tag_file.stat().st_mode), 0o600)
+
+                wrong_key = hmac.new(
+                    b"incorrect-ephemeral-passphrase",
+                    b"GENI-PoC-backup-authentication-v1",
+                    hashlib.sha256,
+                ).digest()
+                wrong_tag = hmac.new(
+                    wrong_key, ciphertext, hashlib.sha256
+                ).hexdigest()
+                self.assertFalse(hmac.compare_digest(authentication_tag, wrong_tag))
+
+                tampered_ciphertext = bytearray(ciphertext)
+                tampered_ciphertext[-1] ^= 0x01
+                tampered_tag = hmac.new(
+                    authentication_key, tampered_ciphertext, hashlib.sha256
+                ).hexdigest()
+                self.assertFalse(
+                    hmac.compare_digest(authentication_tag, tampered_tag),
+                    "Modified backup ciphertext must fail authentication.",
+                )
+
+                authenticated_backup = local_backup.with_name("authenticated.dump")
+                verified_tag = hmac.new(
+                    authentication_key, ciphertext, hashlib.sha256
+                ).hexdigest()
+                self.assertTrue(hmac.compare_digest(authentication_tag, verified_tag))
+                subprocess.run(
+                    [
+                        "openssl", "enc", "-d", "-aes-256-cbc", "-pbkdf2",
+                        "-iter", "200000", "-md", "sha256",
+                        "-in", str(encrypted_backup), "-out", str(authenticated_backup),
+                        "-pass", "env:GENI_POC_BACKUP_PASSPHRASE",
+                    ],
+                    check=True,
+                    capture_output=True,
+                    env=encryption_environment,
+                )
+                os.chmod(authenticated_backup, 0o600)
+                self.assertEqual(
+                    hashlib.sha256(authenticated_backup.read_bytes()).digest(),
+                    hashlib.sha256(local_backup.read_bytes()).digest(),
+                )
+                local_backup.unlink()
+
                 await admin.execute(
                     sql.SQL("CREATE DATABASE {}").format(
                         sql.Identifier(restore_database)
@@ -603,7 +687,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 )
                 await docker(
                     "cp",
-                    str(local_backup),
+                    str(authenticated_backup),
                     f"{POSTGRES_CONTAINER_ID}:{remote_backup}",
                 )
                 await docker(
@@ -638,11 +722,14 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     (concurrent_article_id,),
                 )
                 concurrent_row = await result.fetchone()
-                if concurrent_row is not None:
-                    self.assertEqual(
-                        concurrent_row,
-                        (self.source_id, "publisher:concurrent-backup-write", 1),
-                    )
+                self.assertIsNotNone(
+                    concurrent_row,
+                    "The concurrent article committed during pg_dump must be present in the restored snapshot.",
+                )
+                self.assertEqual(
+                    concurrent_row,
+                    (self.source_id, "publisher:concurrent-backup-write", 1),
+                )
                 result = await restored.execute(
                     "SELECT version FROM schema_migrations ORDER BY version"
                 )
