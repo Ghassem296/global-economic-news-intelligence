@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 9.0
+**Version:** 9.1
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,8 +169,8 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.7 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.39 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
-| GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 2.6 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.40 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 2.7 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-27 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
 
@@ -179,7 +179,7 @@ The version column is a repository snapshot. It must be refreshed whenever a lis
 | Document ID | Document | Repository Path | Actual Version | Lifecycle Status | Publication State | Owner | Last Updated | Approval Reference |
 |---|---|---|---:|---|---|---|---|---|
 | GENI-GOV-006 | Documentation Governance and Change Management | `docs/06-documentation-governance-and-change-management.md` | 1.4 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-18 | Pending Project Owner approval |
-| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 9.0 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
+| GENI-GOV-007 | Documentation Registry | `docs/07-documentation-registry.md` | 9.1 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-27 | Pending Project Owner approval |
 | GENI-DOC-INDEX-001 | Documentation Index | `docs/README.md` | 1.29 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-19 | Pending documentation review |
 | GENI-ADR-REGISTRY-001 | ADR Registry | `docs/adr/README.md` | 1.36 | Draft — Under Documentation Review | Published | Project Owner | 2026-11-24 | Pending documentation review |
 | N/A | ADR Template | `docs/adr/adr-template.md` | 1.2 | Template | Published | Project Owner | 2026-11-18 | Not applicable — supporting template |
@@ -412,11 +412,11 @@ A periodic review should verify that the registry matches:
 **Inspection Date:** 2026-11-27  
 **Repository:** `Ghassem296/global-economic-news-intelligence`  
 **Reference Branch:** `main`  
-**Baseline Commit Inspected:** `78c1c8d3635b5fd02e82d4c151245ca6942275e6`
+**Baseline Commit Inspected:** `dba2ea64923c4443b7a59eb3344398748c541005`
 
-This is a repository-only snapshot of the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 16 v4.39 and Document 17 v2.6. The executable baseline includes the ArticleRevisionService orchestration and technology-neutral Article/ArticleRevision repository ports, but it does not include durable database adapters, a production UnitOfWork, concrete rights/authorization adapters, or database-level concurrency/recovery qualification.
+This is a repository-only snapshot of the published `main` branch; the local Working Tree was not inspected. The controlled inventory records Document 16 v4.40 and Document 17 v2.7. The executable baseline includes the ArticleRevisionService orchestration and technology-neutral Article/ArticleRevision repository ports. Explicit Article updates enforce the caller's expected aggregate version even when the current revision fingerprint matches, and new Article projection creation timestamps use the trusted application Clock. Durable database adapters, a production UnitOfWork, concrete rights/authorization adapters, and database-level concurrency/recovery qualification remain absent.
 
-The latest observed main-branch workflows for this baseline all completed successfully: Application CI run `45957896978`, Documentation validation run `45957897026`, and PostgreSQL persistence PoC run `45957897197`. The PoC evidence artifact is `15179627092` (31 test methods: 27 PostgreSQL integration methods and four standalone retention-policy unit tests). POC-28 is synthetic candidate evidence for atomic legacy Article revision backfill only; it does not approve the production backfill policy or non-null enforcement. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
+The latest observed main-branch workflows for the inspected baseline all completed successfully: Application CI run `45959116807` (247 tests, Ruff and mypy passed), Documentation validation run `45959116802`, and PostgreSQL persistence PoC run `45959116833`. The PoC evidence artifact is `15180485680` (31 test methods: 27 PostgreSQL integration methods and four standalone retention-policy unit tests). POC-28 is synthetic candidate evidence for atomic legacy Article revision backfill only; it does not approve the production backfill policy or non-null enforcement. PostgreSQL remains the Project Owner-selected target but is not production-qualified, and GENI-ADR-005 remains Proposed.
 
 All twenty individual ADRs are present and remain Proposed; none is recorded as Accepted. Publication, passing CI, and PoC evidence do not constitute formal architecture approval, legal permission, production readiness, or operational acceptance.
 
@@ -617,3 +617,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v9.0):** Synchronizes the controlled inventory with Document 16 v4.39 and Document 17 v2.6, refreshes the inspected main baseline to `78c1c8d3635b5fd02e82d4c151245ca6942275e6`, and records the latest successful Application CI, Documentation validation, and 31-test PostgreSQL PoC runs. Corrects the implementation boundary to include the ArticleRevisionService and repository ports while preserving all durable persistence, production rights, ADR-005, and operational qualification gates.
+
+
+**Revision Note (v9.1):** Synchronizes the controlled inventory with Document 16 v4.40 and Document 17 v2.7, refreshes the inspected main baseline to `dba2ea64923c4443b7a59eb3344398748c541005`, and records the latest successful 247-test Application CI, Documentation validation, and 31-test PostgreSQL PoC runs. Records the ArticleRevisionService expected-version and trusted-creation-time hardening while preserving all durable persistence, production rights, ADR-005, and operational qualification gates.
