@@ -514,7 +514,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                 (article_id, source_id),
             )
             await connection.commit()
-            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql"))
+            await apply_migrations(connection, ("002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql"))
             result = await connection.execute(
                 """
                 SELECT external_identity, source_last_seen_at
