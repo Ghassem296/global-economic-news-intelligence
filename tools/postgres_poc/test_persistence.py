@@ -857,6 +857,197 @@ asyncio.run(main())
         finally:
             await recovered.close()
 
+
+    async def test_poc_19_cluster_global_roles_restore_into_clean_instance(self) -> None:
+        image_digest = os.environ.get("GENI_POC_POSTGRES_IMAGE_DIGEST", "")
+        self.assertIn(
+            "@sha256:",
+            image_digest,
+            "A pinned PostgreSQL image digest is required for isolated globals restore.",
+        )
+        suffix = uuid.uuid4().hex[:12]
+        parent_role = f"poc_restore_parent_{suffix}"
+        member_role = f"poc_restore_member_{suffix}"
+        target_container = f"geni-poc-globals-{suffix}"
+        target_started = False
+        source_roles_created = False
+        target_connection: psycopg.AsyncConnection[Any] | None = None
+
+        async def docker(*arguments: str) -> subprocess.CompletedProcess[str]:
+            return await asyncio.to_thread(
+                subprocess.run,
+                ["docker", *arguments],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+        try:
+            await self.admin.execute(
+                sql.SQL("CREATE ROLE {} NOLOGIN INHERIT").format(
+                    sql.Identifier(parent_role)
+                )
+            )
+            await self.admin.execute(
+                sql.SQL("CREATE ROLE {} NOLOGIN INHERIT").format(
+                    sql.Identifier(member_role)
+                )
+            )
+            await self.admin.execute(
+                sql.SQL("GRANT {} TO {}").format(
+                    sql.Identifier(parent_role), sql.Identifier(member_role)
+                )
+            )
+            await self.admin.commit()
+            source_roles_created = True
+
+            with tempfile.TemporaryDirectory() as temporary_directory:
+                globals_dump = Path(temporary_directory) / "cluster-globals.sql"
+                dump = await docker(
+                    "exec",
+                    POSTGRES_CONTAINER_ID,
+                    "pg_dumpall",
+                    "-U",
+                    "postgres",
+                    "--globals-only",
+                    "--no-role-passwords",
+                )
+                os.chmod(temporary_directory, 0o700)
+                globals_dump.write_text(dump.stdout, encoding="utf-8")
+                os.chmod(globals_dump, 0o600)
+                self.assertGreater(globals_dump.stat().st_size, 0)
+                self.assertIn(f"CREATE ROLE {parent_role};", dump.stdout)
+                self.assertIn(f"GRANT {parent_role} TO {member_role};", dump.stdout)
+                self.assertNotIn("PASSWORD", dump.stdout.upper())
+
+                await docker(
+                    "run",
+                    "--detach",
+                    "--rm",
+                    "--name",
+                    target_container,
+                    "--publish",
+                    "127.0.0.1::5432",
+                    "--env",
+                    "POSTGRES_PASSWORD=poc_restore_ephemeral",
+                    image_digest,
+                )
+                target_started = True
+
+                ready = False
+                for _ in range(60):
+                    probe = await asyncio.to_thread(
+                        subprocess.run,
+                        [
+                            "docker",
+                            "exec",
+                            target_container,
+                            "pg_isready",
+                            "-U",
+                            "postgres",
+                            "-d",
+                            "postgres",
+                        ],
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    )
+                    if probe.returncode == 0:
+                        ready = True
+                        break
+                    await asyncio.sleep(1)
+                self.assertTrue(ready, "Clean PostgreSQL restore instance did not become ready.")
+
+                restore = await asyncio.to_thread(
+                    subprocess.run,
+                    [
+                        "docker",
+                        "exec",
+                        "-i",
+                        target_container,
+                        "psql",
+                        "-U",
+                        "postgres",
+                        "-d",
+                        "postgres",
+                        "--set",
+                        "ON_ERROR_STOP=1",
+                    ],
+                    input=globals_dump.read_text(encoding="utf-8"),
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertNotIn("ERROR", restore.stderr.upper())
+
+                port_result = await docker(
+                    "port", target_container, "5432/tcp"
+                )
+                host_port = port_result.stdout.strip().rsplit(":", 1)[1]
+                target_url = (
+                    "postgresql://postgres:poc_restore_ephemeral@"
+                    f"127.0.0.1:{host_port}/postgres"
+                )
+                target_connection = await psycopg.AsyncConnection.connect(
+                    target_url,
+                    connect_timeout=10,
+                )
+                roles = await target_connection.execute(
+                    """
+                    SELECT rolname, rolcanlogin, rolinherit
+                    FROM pg_roles
+                    WHERE rolname IN (%s, %s)
+                    ORDER BY rolname
+                    """,
+                    (parent_role, member_role),
+                )
+                self.assertEqual(
+                    await roles.fetchall(),
+                    [
+                        (member_role, False, True),
+                        (parent_role, False, True),
+                    ],
+                )
+                membership = await target_connection.execute(
+                    """
+                    SELECT count(*)
+                    FROM pg_auth_members membership
+                    JOIN pg_roles granted ON granted.oid = membership.roleid
+                    JOIN pg_roles member ON member.oid = membership.member
+                    WHERE granted.rolname = %s AND member.rolname = %s
+                    """,
+                    (parent_role, member_role),
+                )
+                self.assertEqual((await membership.fetchone())[0], 1)
+        finally:
+            if target_connection is not None:
+                await target_connection.close()
+            if target_started:
+                await asyncio.to_thread(
+                    subprocess.run,
+                    ["docker", "rm", "--force", target_container],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+            if source_roles_created:
+                await self.admin.execute(
+                    sql.SQL("REVOKE {} FROM {}").format(
+                        sql.Identifier(parent_role), sql.Identifier(member_role)
+                    )
+                )
+                await self.admin.execute(
+                    sql.SQL("DROP ROLE IF EXISTS {}").format(
+                        sql.Identifier(member_role)
+                    )
+                )
+                await self.admin.execute(
+                    sql.SQL("DROP ROLE IF EXISTS {}").format(
+                        sql.Identifier(parent_role)
+                    )
+                )
+                await self.admin.commit()
+
     async def test_poc_18_read_path_exposes_machine_readable_query_plan(self) -> None:
         result = await self.connection.execute(
             """
