@@ -98,13 +98,14 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.connection = await connect_to_schema(DATABASE_URL, self.schema)
         await apply_migrations(
             self.connection,
-            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql"),
+            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql"),
         )
         self.source_id = "source-test"
         self.article_id = uuid.uuid4()
         self.event_id = uuid.uuid4()
         self.analysis_id = uuid.uuid4()
         self.report_id = uuid.uuid4()
+        self.case_id = uuid.uuid4()
         await self.connection.execute(
             "INSERT INTO sources (source_id) VALUES (%s)",
             (self.source_id,),
@@ -127,6 +128,10 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         await self.connection.execute(
             "INSERT INTO reports (report_id) VALUES (%s)",
             (self.report_id,),
+        )
+        await self.connection.execute(
+            "INSERT INTO decision_cases (case_id) VALUES (%s)",
+            (self.case_id,),
         )
         await self.connection.execute(
             "INSERT INTO counters (counter_name, value) VALUES ('writes', 0)"
@@ -185,7 +190,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_poc_03_successor_chain_allows_only_one_direct_successor(self) -> None:
         predecessor_id = uuid.uuid4()
-        case_id = uuid.uuid4()
+        case_id = self.case_id
         await self.connection.execute(
             """
             INSERT INTO decision_records (decision_id, case_id, outcome)
@@ -205,7 +210,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                             (decision_id, case_id, predecessor_decision_id, outcome)
                         VALUES (%s, %s, %s, %s)
                         """,
-                        (uuid.uuid4(), uuid.uuid4(), predecessor_id, outcome),
+                        (uuid.uuid4(), self.case_id, predecessor_id, outcome),
                     )
                 return "committed"
             except UniqueViolation:
@@ -229,7 +234,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                     INSERT INTO decision_records (decision_id, case_id, outcome)
                     VALUES (%s, %s, 'MATCH')
                     """,
-                    (decision_id, uuid.uuid4()),
+                    (decision_id, self.case_id),
                 )
                 await self.connection.execute(
                     """
@@ -475,7 +480,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             "SELECT version FROM schema_migrations ORDER BY version"
         )
         versions = [row[0] for row in await result.fetchall()]
-        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql"])
+        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql"])
         result = await self.connection.execute(
             """
             SELECT column_name FROM information_schema.columns
@@ -763,6 +768,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                         "001_initial.sql",
                         "002_article_last_seen.sql",
                         "003_backup_payload.sql",
+                        "004_domain_integrity.sql",
                     ],
                 )
         finally:
@@ -838,6 +844,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         child_environment = os.environ.copy()
         child_environment["GENI_POC_SCHEMA"] = self.schema
         child_environment["GENI_POC_RECORD_ID"] = str(record_id)
+        child_environment["GENI_POC_CASE_ID"] = str(self.case_id)
         child_script = """
 import asyncio
 import os
@@ -853,7 +860,7 @@ async def main():
     await connection.execute(
         "INSERT INTO decision_records (decision_id, case_id, outcome) "
         "VALUES (%s, %s, 'OPEN')",
-        (uuid.UUID(os.environ["GENI_POC_RECORD_ID"]), uuid.uuid4()),
+        (uuid.UUID(os.environ["GENI_POC_RECORD_ID"]), uuid.UUID(os.environ["GENI_POC_CASE_ID"])),
     )
     await connection.commit()
     await connection.close()
@@ -1056,6 +1063,7 @@ asyncio.run(main())
                     "001_initial.sql",
                     "002_article_last_seen.sql",
                     "003_backup_payload.sql",
+                    "004_domain_integrity.sql",
                 ],
             )
             owner = await restored.execute(
@@ -1356,6 +1364,7 @@ asyncio.run(main())
             "001_initial.sql",
             "002_article_last_seen.sql",
             "003_backup_payload.sql",
+            "004_domain_integrity.sql",
         )
         before = await self.connection.execute(
             "SELECT version, applied_at FROM schema_migrations ORDER BY version"
