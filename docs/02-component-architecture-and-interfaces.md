@@ -2,7 +2,7 @@
 ## Component Architecture and Interface Contracts
 
 **Document ID:** GENI-ARCH-002  
-**Version:** 1.58  
+**Version:** 1.59  
 **Status:** Draft — Under Architecture Review  
 **Project:** Global Economic News Intelligence  
 **Owner:** Project Owner  
@@ -1442,7 +1442,7 @@ The following crosswalk assigns every repository in the initial Document 03 inve
 | `DeliveryAttemptRepository` | DeliveryAttempt | ReportDelivery | Attempt result transaction; delivery remains separate from publication |
 | `DistributionAuthorizationRepository` | DistributionAuthorizationDecision and DistributionAuthorizationRightsLink | ReportDelivery through Distribution Authorization Workflow | Decision, authorized content-scope fingerprint, complete rights-assessment link set/fingerprint, validity, and supersession in one transaction |
 | `ProcessingRunRepository` | ProcessingRun | WorkflowOrchestrator | Run lifecycle/lease state transaction |
-| `ProcessingStepRepository` | ProcessingStep | WorkflowOrchestrator | Step state/idempotency transaction |
+| `ProcessingStepRepository` | ProcessingStep, ProcessingStepAttempt, and step-scoped ExecutionLease | WorkflowOrchestrator | Step state, typed Event Identity reconciliation work-item, immutable attempts, and fenced lease transaction; work-item metadata/fingerprint contract is defined in Document 03 §13.2 and Document 15 §10.17 |
 | `ExecutionLeaseRepository` | ExecutionLease | WorkflowOrchestrator | Atomic lease claim/renew/release and fencing-token validation transaction |
 | `IdempotencyRecordRepository` | IdempotencyRecord | WorkflowOrchestrator and relevant application service | Scoped key/fingerprint claim and local domain-effect transaction |
 | `CollectionCheckpointRepository` | CollectionCheckpoint | NewsCollector with WorkflowOrchestrator | Checkpoint and collection progress transaction |
@@ -1674,7 +1674,7 @@ Observed economic effects, source-reported effects, inferred potential effects, 
 - `SPLIT` requires exactly one original input Event and at least two distinct successor output Events; input and output sets must not overlap.
 - `IDENTITY_CORRECTION` must follow the cardinality and permitted transition rules of its versioned policy.
 - Every input must still have the expected EventHistory version and be eligible for the requested identity operation. Overlapping unresolved identity operations must be rejected or serialized; stale requests must not be applied.
-- The actor, authorization, policy version, evidence context, operation identifier, and idempotency key must be validated before the identity effect is applied. The prepare/apply/reconcile/finalize phases, typed request/result/query contracts, repository method baseline, transaction write sets, and failure-recovery matrix are specified provisionally in GENI-IMPL-015 §10.17; that contract remains gated and does not activate this workflow.
+- The actor, authorization, policy version, evidence context, operation identifier, and idempotency key must be validated before the identity effect is applied. The prepare/apply/reconcile/finalize phases, typed request/result/query contracts, repository method baseline, transaction write sets, and failure-recovery matrix are specified provisionally in GENI-IMPL-015 §10.17. Durable downstream work is represented by typed ProcessingStep records under GENI-DATA-003 §13.2, not an in-memory queue or parallel work-item entity. These contracts remain gated and do not activate this workflow.
 
 **Execution invariants:**
 
@@ -2278,3 +2278,6 @@ PrivacyManagementService owns DataSubjectRequest and DataSubjectRequestAction li
 **Revision Note (v1.57):** Refreshes the component architecture reference after the structural correction to Document 03 v1.60; no ownership or runtime behavior changes.
 
 **Revision Note (v1.58):** Aligns the Event Identity Operation repository crosswalk with the explicit allocation aggregate and points the workflow to GENI-IMPL-015 §10.17 for its gated prepare/apply/reconcile/finalize application contract. No runtime capability, ADR acceptance, or production adapter is enabled.
+
+
+**Revision Note (v1.59):** Aligns WorkflowOrchestrator's ProcessingStepRepository ownership with the typed Event Identity reconciliation-work mapping in GENI-DATA-003 §13.2 and GENI-IMPL-015 §10.17, including immutable attempts and step-scoped fencing. No production persistence adapter or identity-operation capability is enabled.
