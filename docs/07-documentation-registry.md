@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 7.5
+**Version:** 7.6
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -571,3 +571,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 
 
 **Revision Note (v7.5):** Synchronizes GENI-READY-016 v4.25 after pinning GitHub Actions to commit SHAs.
+
+
+**Revision Note (v7.6):** Synchronizes GENI-IMPL-015 v4.7, GENI-READY-016 v4.26, and GENI-FOUNDATION-017 v2.5 after resolving the ArticleRevisionService trusted-time and non-semantic projection-refresh findings. No ADR acceptance, production rights authorization, or PostgreSQL production qualification is implied.
