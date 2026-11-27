@@ -6,13 +6,14 @@ import unittest
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from threading import Barrier
+from threading import Barrier, Event
 from typing import Any
 
 import psycopg
 from article_revision_postgres_adapters import (
+    PostgreSQLAuthorizationVerifier,
     PostgreSQLArticleRepository,
     PostgreSQLArticleRevisionRepository,
     PostgreSQLIdempotencyRepository,
@@ -448,5 +449,122 @@ class ArticleRevisionPostgreSQLServiceTests(unittest.TestCase):
         self.assertEqual(len(successes), 1)
         self.assertEqual(len(conflicts), 1)
         self.assertIs(conflicts[0].code, ErrorCode.DUPLICATE_IDENTITY)
+        self.assertEqual(self._counts(), (1, 1, 1))
+
+    def _insert_authorization_grant(
+        self,
+        command: PersistArticleRevisionCommand,
+        *,
+        status: str = "ACTIVE",
+    ) -> None:
+        resource_reference = ArticleRevisionService._resource_reference(command)
+        self.admin.execute(
+            sql.SQL(
+                """
+                INSERT INTO {}.poc_authorization_grants (
+                    grant_reference, actor_reference, action, resource_reference,
+                    status, effective_from, expires_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, NULL)
+                """
+            ).format(sql.Identifier(self.schema)),
+            (
+                command.metadata.authorization_reference,
+                command.metadata.actor_reference,
+                ArticleRevisionService.ACTION,
+                resource_reference,
+                status,
+                NOW - timedelta(minutes=1),
+            ),
+        )
+        self.admin.commit()
+
+    def test_postgres_authorization_verifier_fails_closed_without_exact_grant(self) -> None:
+        self.service._authorization = PostgreSQLAuthorizationVerifier(
+            self.factory,
+            FixedClock(),
+        )
+        command = PersistArticleRevisionCommand(make_metadata(), make_revision())
+
+        with self.assertRaises(GeniError) as exc:
+            self.service.execute(command)
+
+        self.assertIs(exc.exception.code, ErrorCode.AUTHORIZATION_DENIED)
+        self.assertEqual(self._counts(), (0, 0, 0))
+
+    def test_postgres_authorization_grant_lock_serializes_revocation_after_commit(self) -> None:
+        command = PersistArticleRevisionCommand(make_metadata(), make_revision())
+        self._insert_authorization_grant(command)
+        self.service._authorization = PostgreSQLAuthorizationVerifier(
+            self.factory,
+            FixedClock(),
+        )
+        append_entered = Event()
+        allow_commit = Event()
+        revocation_started = Event()
+        revocation_completed = Event()
+
+        class BlockingRevisionRepository(PostgreSQLArticleRevisionRepository):
+            def append_revision(
+                self,
+                article_id: str,
+                revision: PersistArticleRevision,
+                expected_article_version: str | None,
+                uow: UnitOfWork,
+            ):
+                record = super().append_revision(
+                    article_id,
+                    revision,
+                    expected_article_version,
+                    uow,
+                )
+                append_entered.set()
+                if not allow_commit.wait(timeout=10):
+                    raise TimeoutError("Test did not release the ArticleRevision transaction.")
+                return record
+
+        def revoke_grant() -> None:
+            connection = psycopg.connect(DATABASE_URL)
+            try:
+                connection.execute(
+                    sql.SQL("SET search_path TO {}").format(
+                        sql.Identifier(self.schema)
+                    )
+                )
+                revocation_started.set()
+                connection.execute(
+                    """
+                    UPDATE poc_authorization_grants
+                    SET status = 'REVOKED', version = version + 1
+                    WHERE grant_reference = 'test-grant'
+                    """
+                )
+                connection.commit()
+            finally:
+                connection.close()
+                revocation_completed.set()
+
+        self.service._revisions = BlockingRevisionRepository(self.factory)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            service_future = executor.submit(self.service.execute, command)
+            self.assertTrue(append_entered.wait(timeout=10))
+            revocation_future = executor.submit(revoke_grant)
+            try:
+                self.assertTrue(revocation_started.wait(timeout=5))
+                self.assertFalse(revocation_completed.wait(timeout=0.25))
+            finally:
+                allow_commit.set()
+            result = service_future.result(timeout=15)
+            revocation_future.result(timeout=15)
+
+        self.assertTrue(result.created)
+        self.assertTrue(revocation_completed.is_set())
+        row = self.admin.execute(
+            sql.SQL(
+                "SELECT status FROM {}.poc_authorization_grants WHERE grant_reference = %s"
+            ).format(sql.Identifier(self.schema)),
+            ("test-grant",),
+        ).fetchone()
+        self.assertEqual(row[0], "REVOKED")
         self.assertEqual(self._counts(), (1, 1, 1))
 
