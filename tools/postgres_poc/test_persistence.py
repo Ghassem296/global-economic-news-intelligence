@@ -848,7 +848,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             "SELECT version FROM schema_migrations ORDER BY version"
         )
         versions = [row[0] for row in await result.fetchall()]
-        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql", "009_transaction_bound_authorization_and_rights.sql"])
+        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql", "009_transaction_bound_authorization_and_rights.sql", "010_article_revision_service_payload.sql", "011_idempotency_result_payload.sql"])
         result = await self.connection.execute(
             """
             SELECT column_name FROM information_schema.columns
@@ -1166,6 +1166,8 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                         "007_external_outcome_reconciliation.sql",
                         "008_automatic_external_outcome_transitions.sql",
                         "009_transaction_bound_authorization_and_rights.sql",
+                    "010_article_revision_service_payload.sql",
+                    "011_idempotency_result_payload.sql",
                     ],
                 )
         finally:
@@ -1466,6 +1468,8 @@ asyncio.run(main())
                     "007_external_outcome_reconciliation.sql",
                     "008_automatic_external_outcome_transitions.sql",
                     "009_transaction_bound_authorization_and_rights.sql",
+                    "010_article_revision_service_payload.sql",
+                    "011_idempotency_result_payload.sql",
                 ],
             )
             owner = await restored.execute(
@@ -1777,6 +1781,8 @@ asyncio.run(main())
             "007_external_outcome_reconciliation.sql",
             "008_automatic_external_outcome_transitions.sql",
             "009_transaction_bound_authorization_and_rights.sql",
+            "010_article_revision_service_payload.sql",
+            "011_idempotency_result_payload.sql",
         )
         before = await self.connection.execute(
             "SELECT version, applied_at FROM schema_migrations ORDER BY version"
@@ -1895,7 +1901,10 @@ asyncio.run(main())
             SELECT indexname, indexdef
             FROM pg_indexes
             WHERE schemaname = %s AND tablename = 'articles'
-              AND position('(source_id, external_identity)' in indexdef) > 0
+              AND position(
+                  '(source_id, canonical_source_identifier, identity_normalization_version)'
+                  in indexdef
+              ) > 0
             ORDER BY indexname
             """,
             (self.schema,),
@@ -1903,7 +1912,7 @@ asyncio.run(main())
         indexes = await result.fetchall()
         self.assertEqual(len(indexes), 1)
         self.assertIn("UNIQUE", indexes[0][1].upper())
-        self.assertNotEqual(indexes[0][0], "articles_source_identity_idx")
+        self.assertEqual(indexes[0][0], "articles_source_identity_v2_unique")
 
     async def test_poc_28_legacy_article_revision_backfill_is_atomic(self) -> None:
         legacy_article_id = uuid.uuid4()
