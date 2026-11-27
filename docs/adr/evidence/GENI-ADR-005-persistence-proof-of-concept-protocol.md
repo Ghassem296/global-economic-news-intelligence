@@ -3,7 +3,7 @@
 **Project:** Global Economic News Intelligence  
 **Evidence ID:** GENI-ADR-005-POC-001  
 **Related ADR:** GENI-ADR-005 — Initial Persistence Technology and Migration Strategy  
-**Version:** 1.8
+**Version:** 1.9
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -94,7 +94,7 @@ The PoC must execute against a real, isolated PostgreSQL instance; a design-only
 
 Before a run, record the exact candidate versions, source, rationale, configuration, lockfile or immutable image digest, and any known limitations. Keep the candidate stack in a dedicated PoC dependency group/environment and isolated test infrastructure. Do not add it to the production runtime dependency set, expose its types through domain/application ports, create production migrations, connect to production systems, or use production data/secrets. A candidate may be changed between PoC revisions only with a recorded reason and a new run identity; results from different stacks must not be merged as if they were one run.
 
-**Experimental candidate stack (2026-11-27):** PostgreSQL 18.7 (`postgres:18.7`, image digest `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`), CPython 3.15.2, Psycopg 3.3.9 with its binary extra, native `AsyncConnection`, direct SQL (no ORM), and a small versioned SQL migration runner. The immutable image digest and exact Python/package versions were captured in successful GitHub Actions run `45941019381` for commit `2947911a880c527202230574abe99a12dcaa368f`. This is a provisional PoC stack only; it is not the selected production toolchain.
+**Experimental candidate stack (2026-11-27):** PostgreSQL 18.7 (`postgres:18.7`, image digest `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`), CPython 3.15.2, Psycopg 3.3.9 with its binary extra, native `AsyncConnection`, direct SQL (no ORM), and a small versioned SQL migration runner. The immutable image digest and exact Python/package versions were captured in successful GitHub Actions run `45941330079` for commit `d0f8cec8f0df07373bf69178bd626d477a2edb9e`. This is a provisional PoC stack only; it is not the selected production toolchain.
 
 The PoC may report correctness and operational-feasibility evidence for its exact experimental stack. It may report capacity/performance compliance only against an approved workload profile and thresholds. No experimental result automatically approves the candidate for production. Production promotion requires completed evidence review and formal acceptance of GENI-ADR-005; ADR-016 remains independently Proposed unless separately accepted.
 
@@ -173,17 +173,17 @@ The completed PoC package must include:
 
 | Field | PostgreSQL |
 |---|---|
-| Exact version/configuration | PostgreSQL 18.7; image `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`; CPython 3.15.2; Psycopg 3.3.9; direct SQL; native async connection; versioned SQL migration runner (PoC-only) |
+| Exact version/configuration | PostgreSQL 18.7; image `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`; CPython 3.15.2; Psycopg 3.3.9; direct SQL; native async connection; three versioned SQL migrations (PoC-only) |
 | Workload profile ID | Not established; no capacity claim permitted |
-| Correctness matrix | 18 test methods passed for POC-01–14, full-database logical backup/restore smoke (POC-15), child-process restart/reconnect (POC-16), least-privilege read-only role smoke (POC-17), and query-plan capture (POC-18). POC-15 concurrent-write backup consistency and POC-17 backup protection/encryption/retention review remain open |
-| Migration/upgrade | POC-13 clean install and POC-14 data-preserving schema upgrade passed |
-| Backup/restore | Full-database `pg_dump`/`pg_restore` to a separate database passed with application-row and migration-history checks; backup during concurrent writes and operational backup protection remain untested |
+| Correctness matrix | All 18 test methods passed for POC-01–18. POC-15 observed `pg_dump` active while a concurrent article write committed, then restored the full database into a separate database and verified application rows plus all three migration records. POC-16 exercised a child-process commit followed by a new-process read. POC-17 passed a least-privilege read-only role smoke test. POC-18 captured a machine-readable query plan. Backup encryption/retention/restore permissions and formal security review remain open |
+| Migration/upgrade | POC-13 clean install of migrations 001–003 and POC-14 data-preserving upgrade through migrations 002–003 passed |
+| Backup/restore | Full-database `pg_dump`/`pg_restore` during an observed concurrent-write window passed; restored application rows and all three migration records verified. Encryption, retention, off-site protection, restore authorization, and operator procedures remain untested |
 | Concurrency and async | POC-03, POC-07, POC-08, POC-11, and POC-12 passed in the isolated test run |
 | Performance results | Not measured; workload profile and thresholds remain unset; POC-18 captured a query plan only |
-| Operational assessment | Partial: backup/restore smoke and read-only least-privilege role passed; backup encryption, retention, restore permissions, monitoring, and operator runbook review remain pending |
+| Operational assessment | Partial: concurrent-write logical backup/restore and read-only least-privilege role smoke passed; backup encryption, retention, off-site protection, restore permissions, monitoring, alerting, and operator runbook review remain pending |
 | Mandatory gates | 18 PoC test methods passed, but qualification remains partial: concurrent-write backup consistency, backup security/retention review, approved workload profile, performance thresholds, and formal ADR acceptance remain open |
 
-The follow-up run completed successfully in GitHub Actions run `45941019381` (commit `2947911a880c527202230574abe99a12dcaa368f`). All 18 test methods passed. The machine-readable artifact `postgres-poc-2947911a880c527202230574abe99a12dcaa368f` was uploaded with archive SHA-256 `0eed2d2c60c46674943502d245ddde3e7bd3bb8079bd38d515b6004793dea563`. The tests include a full-database logical backup/restore to a separate database, a child-process commit followed by a new-process read, and a least-privilege read-only role smoke test. These do not complete the full operational gates: backup during concurrent writes, backup encryption/retention/restore permissions, and formal security review remain open. POC-18 captures a query plan only; no latency, throughput, capacity, or workload compliance is claimed. The approved workload profile and thresholds remain unset. PostgreSQL is not production-qualified and ADR-005 remains Proposed.
+The follow-up run completed successfully in GitHub Actions run `45941330079` (commit `d0f8cec8f0df07373bf69178bd626d477a2edb9e`). All 18 test methods passed. The machine-readable artifact `postgres-poc-d0f8cec8f0df07373bf69178bd626d477a2edb9e` was uploaded with archive SHA-256 `70d12c61e62accfb54c162dad5e5c5ea6bf966656828f6fb67c8e855de0311b9`. POC-15 now observes `pg_dump` while active, commits a concurrent synthetic article write, restores the full database to an isolated target, and verifies restored rows and migration history. POC-16 uses a child process and a fresh process to verify committed state after restart; POC-17 checks a read-only least-privilege role. Backup encryption, retention, off-site protection, restore authorization, formal security review, monitoring, and operator runbooks remain open. POC-18 captures a query plan only; no latency, throughput, capacity, or workload compliance is claimed. The approved workload profile and thresholds remain unset. PostgreSQL is not production-qualified and ADR-005 remains Proposed.
 
 ## 9. Approval and implementation boundary
 
@@ -214,5 +214,6 @@ After qualification and formal acceptance, review the experimental evidence and 
 | 1.6 | 2026-11-27 | Proposed | Defines provisional, isolated PoC-only technology candidates and explicitly separates experimental evidence from production tool/dependency approval. |
 | 1.7 | 2026-11-27 | Proposed | Records the first reproducible PostgreSQL 18.7/Psycopg 3.3.9 PoC run and its 16 passing test methods, while explicitly retaining backup/restore, security review, full restart, workload, performance, and production-acceptance gates as open. |
 | 1.8 | 2026-11-27 | Proposed | Records the follow-up run with all 18 PoC test methods passing, including full-database logical backup/restore, child-process restart/reconnect, and least-privilege role smoke tests; retains concurrent-write backup, backup security/retention, workload, performance, and production-acceptance gates. |
+| 1.9 | 2026-11-27 | Proposed | Records the successful concurrent-write full-database backup/restore exercise and three-migration clean-install/upgrade run; all 18 tests pass, while backup security/retention, workload, performance, and formal production-acceptance gates remain open. |
 
 **End of Evidence Protocol**
