@@ -43,3 +43,24 @@ class PersistArticleRevisionCommand:
                 "An existing Article command requires expected_aggregate_version "
                 "in CommandMetadata."
             )
+
+@dataclass(frozen=True, slots=True)
+class PersistArticleRevisionResult:
+    """Outcome of a revision append/reuse and its atomic Article projection update.
+
+    The result reports only the identifiers and aggregate version required by the
+    application contract; it does not expose persistence-specific details.
+    """
+
+    article_id: str
+    revision_id: str
+    created: bool
+    article_version: str
+
+    def __post_init__(self) -> None:
+        for field_name in ("article_id", "revision_id", "article_version"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must be a non-empty string.")
+        if not isinstance(self.created, bool):
+            raise TypeError("created must be a bool indicating append versus reuse.")
