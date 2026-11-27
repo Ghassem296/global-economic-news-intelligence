@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import json
 import hmac
+import json
 import os
 import secrets
 import stat
@@ -166,7 +166,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.connection = await connect_to_schema(DATABASE_URL, self.schema)
         await apply_migrations(
             self.connection,
-            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql", "009_transaction_bound_authorization_and_rights.sql", "010_article_revision_service_payload.sql"),
+            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql", "009_transaction_bound_authorization_and_rights.sql", "010_article_revision_service_payload.sql", "011_idempotency_result_payload.sql"),
         )
         self.source_id = "source-test"
         self.article_id = uuid.uuid4()
