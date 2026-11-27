@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.2  
+**Version:** 4.3  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26
@@ -178,6 +178,47 @@ The fingerprint deliberately excludes `content_reference` (storage relocation is
 Idempotency compares the incoming fingerprint only with the Article's current revision. A match reuses the current revision and creates no new revision. A non-match appends a new revision under the Article's expected version. Do not impose a unique constraint across all historical fingerprints: if an article changes from A to B and later returns to A, the return is a new chronological revision even though its fingerprint equals the earlier A revision. The unique revision constraint remains `(article_id, revision_number)`.
 
 The domain contract implements this deterministic fingerprint for the restricted JCS-safe value set. The application/repository layer must persist and verify the computed value; the storage adapter must not invent a second serialization or hashing scheme. The metadata-only fingerprint contains only permitted metadata; it does not justify retaining otherwise restricted content or derivatives.
+
+### 4.3.1 ArticleRevisionService application orchestration
+
+The application service coordinates the Article and ArticleRevision aggregate writes. It is an application-layer orchestrator, not a repository, database adapter, rights-policy author, or source collector.
+
+The executable application contract is `ArticleRevisionService.execute(PersistArticleRevisionCommand) -> PersistArticleRevisionResult`. Its dependencies are:
+
+- `ArticleRepository[ArticleProjection]` and `ArticleRevisionRepository`;
+- `UnitOfWorkFactory`, which creates one fresh transaction for the command;
+- `AuthorizationVerifier`, which resolves the immutable authorization reference for the exact `article.revision.persist` action and Article or source-scoped Article identity;
+- `ContentRightsVerifier`, which revalidates persistent-storage permission for the exact source/content scope and observation time;
+- `IdempotencyRepository`, which claims and completes the command key in the same UnitOfWork;
+- `ArticleIdGenerator`, which supplies a server-owned Article ID for a new source identity.
+
+`ArticleProjection` is a typed current-state projection containing the Article ID, source ID and source-scoped identity, original/canonical URL, external ID, current title and permitted summary/author/language/publication metadata, current content-availability/reference/hash/normalization fields, current revision ID, aggregate version, and creation/update timestamps. It does not introduce a second independently editable content history. The immutable ArticleRevision remains authoritative for each historical snapshot.
+
+#### Authorization and content-rights order
+
+1. Validate the typed command and derive the exact authorization resource: the known Article ID for an update, or the source ID plus canonical source identity and normalization version for create-by-identity.
+2. Resolve the trusted authorization reference for action `article.revision.persist`. A missing, invalid, expired, or denied authorization must fail closed before any write transaction begins.
+3. For `available` or `partial` content, re-evaluate the supplied immutable rights-assessment references at `revision.observed_at`. The verifier must establish an effective `PERSISTENT_STORAGE` ALLOW for the exact source and content scope, with the applicable policy version and expiry/revocation checks. Retrieval, temporary processing, or internal-analysis permission is insufficient. A denied or unverifiable check raises `RIGHTS_NOT_ALLOWED` and performs no persistence.
+4. Metadata-only/unavailable revisions do not request persistent full-text permission. Any metadata access/retention permission remains a separate upstream obligation; absence of full-text permission must never be interpreted as metadata permission.
+
+The application service does not decide whether a license is legally sufficient. The concrete verifier must use the authoritative rights-assessment records and the approved rights policy; it must not trust a caller-supplied status or a content hash as permission.
+
+#### Command idempotency contract
+
+`IdempotencyRepository.claim(scope, key, request_fingerprint, uow)` must atomically reserve the scoped key or return the previously completed result for the same request. A key reused with a different request fingerprint raises `IDEMPOTENCY_KEY_REUSE_CONFLICT`. Concurrent claims must be serialized by a unique constraint/locking strategy. `complete(..., result, uow)` stores the result in the same UnitOfWork as the Article and ArticleRevision writes. The idempotency record and business writes therefore commit or roll back together.
+
+The deterministic request fingerprint binds command schema, actor and authorization references, expected aggregate version, optional Article ID, source-scoped identity, semantic revision fingerprint, storage reference, observation/change metadata, and rights-assessment references. Authorization and rights are revalidated before an idempotent replay is returned; a prior successful result must not bypass a later revocation or authorization expiry.
+
+#### Append/reuse and concurrency behavior
+
+- For a new source identity, generate the Article ID server-side, append revision 1, and save the initial Article projection in the same UnitOfWork. The repository must enforce source-identity uniqueness.
+- For an explicit Article update, load the Article, verify the exact source identity, and require `CommandMetadata.expected_aggregate_version`. A stale version must fail without partial writes.
+- Compare only the current revision fingerprint and schema version. An exact match reuses the current revision and does not rewrite the Article projection. A different fingerprint appends the next immutable revision and advances the current projection.
+- A create-by-source-identity request that resolves to an existing Article may be replayed only when its current fingerprint matches. A changed revision must use an explicit Article ID and expected aggregate version; it must not silently update an existing Article.
+- Verify that the revision repository returned the requested Article ID and fingerprint, and that the saved Article projection points to that exact revision and has a server-returned aggregate version.
+- Repositories never commit or roll back the supplied UnitOfWork. The application service owns commit on success and rollback on failure. All local writes, including idempotency completion, are atomic.
+
+The current application implementation is covered by unit tests using synthetic in-memory adapters only. It does not supply production authorization, rights, idempotency, ID-generation, or PostgreSQL repository adapters. Those adapters and their integration/recovery tests remain mandatory before production collection or persistent content retention is enabled.
 
 ### 4.4 EventRepository
 
@@ -1202,3 +1243,6 @@ The following remain open and block production implementation of the correspondi
 **End of Document**
 
 **Revision Note (v4.2):** Makes the formal ADR-005 acceptance prerequisite explicit in the technology gate while preserving PostgreSQL as the already owner-selected target and retaining the production qualification boundary.
+
+
+**Revision Note (v4.3):** Defines the ArticleRevisionService orchestration contract, typed current Article projection, authorization and persistent-storage rights revalidation, atomic command-idempotency port, source-identity create/reuse behavior, optimistic concurrency, and shared UnitOfWork ownership. The application service is implemented against ports and covered by synthetic unit tests; concrete security/rights/idempotency/PostgreSQL adapters and production activation remain gated.
