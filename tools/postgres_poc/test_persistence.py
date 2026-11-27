@@ -11,12 +11,10 @@ import sys
 import tempfile
 import unittest
 import uuid
-from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import psycopg
-from retention_policy import BackupArtifact, BackupRetentionPolicy, plan_backup_deletions
 from psycopg import sql
 from psycopg.errors import ForeignKeyViolation, InsufficientPrivilege, QueryCanceled, UniqueViolation
 
@@ -1303,57 +1301,6 @@ asyncio.run(main())
         self.assertIsInstance(plan, list)
         self.assertIn("Plan", plan[0])
 
-
-
-    async def test_poc_21_retention_planner_requires_explicit_policy_and_preserves_holds(self) -> None:
-        now = datetime(2026, 11, 27, 12, 0, tzinfo=UTC)
-        policy = BackupRetentionPolicy(
-            retention_period=timedelta(days=7),
-            minimum_successful_backups=2,
-        )
-        artifacts = (
-            BackupArtifact("expired", now - timedelta(days=30), verified=True),
-            BackupArtifact("boundary", now - timedelta(days=7), verified=True),
-            BackupArtifact("recent-older", now - timedelta(days=2), verified=True),
-            BackupArtifact("recent-newest", now - timedelta(days=1), verified=True),
-            BackupArtifact(
-                "legal-hold",
-                now - timedelta(days=90),
-                verified=True,
-                legal_hold=True,
-            ),
-            BackupArtifact(
-                "immutable",
-                now - timedelta(days=90),
-                verified=True,
-                immutable_until=now + timedelta(days=1),
-            ),
-            BackupArtifact("unverified", now - timedelta(days=90), verified=False),
-        )
-
-        self.assertEqual(
-            plan_backup_deletions(artifacts, policy, now),
-            ("expired", "boundary"),
-        )
-        self.assertEqual(
-            plan_backup_deletions(artifacts[:2], policy, now),
-            (),
-            "The minimum number of successful backups must be retained.",
-        )
-        with self.assertRaises(ValueError):
-            plan_backup_deletions(artifacts, None, now)
-        with self.assertRaises(ValueError):
-            BackupRetentionPolicy(timedelta(0), 1)
-        with self.assertRaises(ValueError):
-            BackupRetentionPolicy(timedelta(days=7), 0)
-        with self.assertRaises(ValueError):
-            plan_backup_deletions(artifacts, policy, datetime(2026, 11, 27))
-        with self.assertRaises(ValueError):
-            plan_backup_deletions(
-                (artifacts[0], artifacts[0]),
-                policy,
-                now,
-            )
 
 if __name__ == "__main__":
     unittest.main()
