@@ -9,12 +9,6 @@ from typing import Any
 import psycopg
 from psycopg import sql
 
-sys_path = str(Path(__file__).resolve().parents[2] / "src")
-import sys
-
-if sys_path not in sys.path:
-    sys.path.insert(0, sys_path)
-
 from postgres_poc_uow import PostgreSQLUnitOfWorkFactory
 
 DATABASE_URL = os.environ.get("GENI_POC_DATABASE_URL", "")
