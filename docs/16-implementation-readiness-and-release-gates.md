@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.16  
+**Version:** 4.17  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -118,7 +118,7 @@ Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.
 
 ### 5.2 Persistence and transaction implementation
 
-Continue the PostgreSQL qualification in GENI-ADR-005-POC-001 from the successful 21-test protected-backup, cluster-role recovery, distinct least-privilege backup/restore-identity, and fail-closed retention-planner run (`45945075419`) using the disposable PoC-only candidate toolchain and synthetic data. Next, define and test production key custody/rotation, off-site/immutable backup storage, retention enforcement, restore authorization, tablespace/configuration recovery, full cluster-global recovery, privacy-ledger reconciliation, monitoring, alerting, and operator procedures. POC-19 is limited to user-defined roles and memberships; it is not a full cluster restore. POC-20 validates distinct read-only backup and target-scoped restore identities only. POC-21 validates retention planning only; it does not perform deletion, scheduling, or storage enforcement. Production credential management, credential rotation/revocation, owner-approved retention values/enforcement, and restore authorization remain untested. The experiment's ephemeral passphrase/HMAC envelope is not a production cryptographic or key-management approval. Obtain an approved workload profile and predeclared thresholds before making capacity claims; retain raw results, failed runs, exact experimental versions/configuration, commit SHA, migration and backup/restore evidence. Correctness and operational-feasibility experiments may be recorded while numeric workload targets remain unset, but no capacity or final production-readiness claim is permitted. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all applicable PostgreSQL qualification gates must pass, before production dependencies, production migrations, or production activation. Then implement:
+Continue the PostgreSQL qualification in GENI-ADR-005-POC-001 from the successful 24-test protected-backup, cluster-role recovery, distinct least-privilege backup/restore-identity, and fail-closed retention-planner run (`45946823488`) using the disposable PoC-only candidate toolchain and synthetic data. Next, define and test production key custody/rotation, off-site/immutable backup storage, retention enforcement, restore authorization, tablespace/configuration recovery, full cluster-global recovery, privacy-ledger reconciliation, monitoring, alerting, and operator procedures. POC-19 is limited to user-defined roles and memberships; it is not a full cluster restore. POC-20 validates distinct read-only backup and target-scoped restore identities only. POC-21 has four standalone unit tests that run without PostgreSQL; they validate explicit policy, malformed/future-dated metadata rejection, minimum verified-copy protection, legal holds, immutability boundaries, and deterministic ordering. They do not perform deletion, scheduling, or storage enforcement. Production credential management, credential rotation/revocation, owner-approved retention values/enforcement, and restore authorization remain untested. The experiment's ephemeral passphrase/HMAC envelope is not a production cryptographic or key-management approval. Obtain an approved workload profile and predeclared thresholds before making capacity claims; retain raw results, failed runs, exact experimental versions/configuration, commit SHA, migration and backup/restore evidence. Correctness and operational-feasibility experiments may be recorded while numeric workload targets remain unset, but no capacity or final production-readiness claim is permitted. PostgreSQL is the Project Owner-selected target, but the protocol is a test plan, not a test result or production authorization. GENI-ADR-005 must be formally Accepted, and all applicable PostgreSQL qualification gates must pass, before production dependencies, production migrations, or production activation. Then implement:
 - Database adapter, migrations, repository implementations, and UnitOfWork.
 - Optimistic concurrency and unique constraints for idempotency and linear decision successors, including canonical DuplicateCandidate pairs and one linear DuplicateDecision chain per candidate.
 - ProcessingStepAttempt, state-transition history, PublicationAttempt, and DeliveryAttempt persistence.
@@ -232,7 +232,7 @@ If new evidence changes readiness, update this document and the affected source-
 ---
 
 **Document ID:** GENI-READY-016  
-**Version:** 4.16
+**Version:** 4.17
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Last Updated:** 2026-11-27
 
@@ -290,3 +290,5 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v4.15):** Refines POC-20 to use separate backup and restore identities. The backup identity is read-only; the restore identity owns only the isolated target database and cannot write to the source database. Production credential provisioning/rotation/revocation, retention enforcement, restore authorization, off-site/immutable protection, full cluster/tablespace recovery, workload/performance approval, and formal ADR-005 acceptance remain open.
 
 **Revision Note (v4.16):** Records the successful 21-test PostgreSQL PoC run, adding a fail-closed retention planner with explicit policy inputs, minimum verified-copy protection, legal holds, immutability windows, and deterministic candidate ordering. The planner performs no deletion or scheduling and uses fixture values only; production retention policy/enforcement, credential lifecycle, off-site protection, restore authorization, full cluster recovery, workload/performance approval, and formal ADR-005 acceptance remain open.
+
+**Revision Note (v4.17):** Records the successful 24-test rerun, comprising 20 PostgreSQL integration methods and four independent retention-policy unit tests. The additional tests cover malformed/future-dated metadata, immutability expiry boundaries, and deterministic ordering. The planner remains non-destructive; owner-approved production retention and enforcement remain open.
