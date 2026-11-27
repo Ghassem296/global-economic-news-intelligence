@@ -883,8 +883,9 @@ asyncio.run(main())
 
         try:
             await self.admin.execute(
-                sql.SQL("CREATE ROLE {} LOGIN INHERIT PASSWORD %s").format(role),
-                (password,),
+                sql.SQL("CREATE ROLE {} LOGIN INHERIT PASSWORD {}").format(
+                    role, sql.Literal(password)
+                )
             )
             await self.admin.execute(
                 sql.SQL("GRANT pg_read_all_data TO {}").format(role)
@@ -983,6 +984,7 @@ asyncio.run(main())
                 await backup_connection.close()
             if restored is not None:
                 await restored.close()
+            await self.admin.rollback()
             if database_created:
                 await admin.execute(
                     sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(
