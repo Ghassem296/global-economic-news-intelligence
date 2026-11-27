@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 3.3  
+**Version:** 3.4  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -309,3 +309,6 @@ The first executable baseline includes the Python package, validated configurati
 
 
 **Revision Note (v3.3):** Aligns the ArticleRepository and ArticleRevisionRepository read ports with ArticleRevisionService's transaction boundary by requiring the active UnitOfWork for Article identity/current-projection reads and current-revision resolution. This closes an adapter ambiguity; no concrete persistence adapter or production capability is implied.
+
+
+**Revision Note (v3.4):** Clarifies that every ArticleRevision lookup used to resolve or compare the current revision, including fingerprint-based current-revision lookup, must participate in the caller's active UnitOfWork. The repository-port correction does not qualify persistence adapters or production concurrency behavior.
