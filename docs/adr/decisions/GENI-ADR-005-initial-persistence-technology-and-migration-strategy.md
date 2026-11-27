@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 1.8  
+**Version:** 1.9  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -235,7 +235,7 @@ These relationships do not imply that any related Proposed ADR has been accepted
 
 The PostgreSQL qualification test method, workload-profile template, mandatory correctness/failure matrix, measurement controls, decision method, and evidence-artifact requirements are defined in GENI-ADR-005-POC-001, `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md`.
 
-That protocol is part of the evidence required to resolve this ADR. It is not itself evidence that PostgreSQL has passed. The workload profile and numeric pass thresholds must be approved before qualification results are examined. All tests must use synthetic data and reproducible configurations; no real source content, personal data, production secrets, or provider calls are permitted.
+That protocol is part of the evidence required to resolve this ADR. Its result register now contains reproducible partial PoC evidence: 18 test methods passed against the provisional PostgreSQL 18.7/Psycopg 3.3.9 stack, including concurrent-write full-database backup/restore, process-restart/reconnect, and least-privilege role smoke tests. This does not mean PostgreSQL has passed full qualification. Backup encryption/retention/restore authorization, formal security review, approved workload profile, numeric pass thresholds, performance evidence, and production toolchain approval remain outstanding. All tests must use synthetic data and reproducible configurations; no real source content, personal data, production secrets, or provider calls are permitted.
 
 The PoC must test the persistence semantics required by GENI-ADR-016, including atomic idempotency state, lease ownership, fencing, unknown-outcome recovery, and stale-worker rejection. GENI-ADR-016 remains a separate Proposed decision: the PoC may validate candidate-engine behavior against the proposed contract, but it does not accept ADR-016 or authorize production durable execution.
 
@@ -322,7 +322,7 @@ The references below are internal project documents used to establish the curren
 | `docs/03-data-model-and-storage-design.md` | Internal | Defines relational entities, integrity constraints, and transactions. |
 | `docs/04-implementation-plan-and-roadmap.md` | Internal | Records PostgreSQL as the owner-selected target, subject to qualification and formal ADR acceptance. |
 | `GENI-ADR-016` | Internal | Defines persistence and recovery behaviors that constrain engine selection. |
-| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol | Defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; it contains no test results. |
+| `docs/adr/evidence/GENI-ADR-005-persistence-proof-of-concept-protocol.md` | Internal evidence protocol and partial results | Defines the reproducible workload, correctness/failure matrix, measurement controls, and required decision artifacts; records 18 passing PoC test methods but not full production qualification. |
 
 External legal review, provider measurements, market-data coverage measurements, and model-quality benchmarks remain outstanding wherever relevant.
 
@@ -339,5 +339,6 @@ External legal review, provider measurements, market-data coverage measurements,
 | 1.6 | 2026-11-27 | Proposed | Removes stale SQLite-selection language and aligns consequences, implementation sequence, verification, and acceptance criteria with the owner-selected PostgreSQL target and its remaining qualification gates. | AI Architecture Assistant |
 | 1.7 | 2026-11-27 | Proposed | References the explicit owner-approved workload-profile template in PoC-001 §3.2; numeric values and thresholds remain unset until Project Owner approval. | AI Architecture Assistant |
 | 1.8 | 2026-11-27 | Proposed | Removes the PoC/production tooling-selection deadlock by allowing explicitly provisional, isolated PoC-only candidates while keeping production dependencies and architecture gated by formal ADR acceptance. | AI Architecture Assistant |
+| 1.9 | 2026-11-27 | Proposed | Records the first 18-test PostgreSQL PoC evidence, including concurrent-write full-database backup/restore and the third migration, while explicitly retaining security, workload, performance, and formal production-acceptance gates. | AI Architecture Assistant |
 
 **End of ADR**
