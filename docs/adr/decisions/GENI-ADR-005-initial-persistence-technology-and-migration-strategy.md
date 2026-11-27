@@ -4,7 +4,7 @@
 **ADR ID:** GENI-ADR-005  
 **Title:** Initial Persistence Technology and Migration Strategy  
 **Status:** Proposed  
-**Version:** 1.7  
+**Version:** 1.8  
 **Date:** 2026-11-18  
 **Decision Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
@@ -241,6 +241,8 @@ The PoC must test the persistence semantics required by GENI-ADR-016, including 
 
 The evidence package must include raw results and failed runs, exact versions/configuration, workload profile, commit SHA, migration and backup/restore logs, and a reproducible qualification analysis. A narrative statement that a test passed without reproducible artifacts is insufficient.
 
+The PoC may use a separately documented, disposable experimental stack to execute the qualification protocol. Candidate PostgreSQL, driver, query/ORM, migration, and async tools may be selected provisionally for the PoC only; their exact versions and rationale must be recorded as experimental evidence. Such selection does not approve those tools for the product, add them to production dependencies, or authorize production migrations. The PoC must be reproducible and isolated from production data, secrets, and services. After qualification, the Project Owner may accept or reject ADR-005; only an Accepted ADR may promote a candidate stack into the production implementation baseline.
+
 ---
 
 ## 10. Implementation Implications
@@ -252,7 +254,7 @@ The evidence package must include raw results and failed runs, exact versions/co
 - Measure operation-class throughput/latency, lock contention, async behavior, resource use, migration, backup/restore, crash recovery, and operational effort under controlled and recorded configurations.
 - Retain raw outputs, failed runs, exact environment/configuration, commit SHA, and a reproducible analysis; do not report unrun tests as passing.
 - Document PostgreSQL-specific constraints and migration implications; PostgreSQL is the owner-selected target, while qualification and production acceptance remain pending.
-- Keep the production database dependency, ORM/driver, migration tool, and async strategy unselected until the ADR is formally Accepted.
+- Permit provisional PostgreSQL/driver/query-layer/migration/async candidates only inside a disposable, separately scoped PoC environment; record exact versions and evidence, and do not promote them to production dependencies or architecture before formal ADR acceptance.
 
 ### 10.2 Migration or Compatibility Requirements
 Existing data and implementation choices must be inspected before migration is designed. No production migration is claimed by this proposal. Any schema or interface migration must preserve historical traceability and must be tested from the current baseline.
@@ -265,10 +267,10 @@ Existing data and implementation choices must be inspected before migration is d
 ### 10.4 Implementation Sequence
 1. Define critical aggregates, write sets, and transaction boundaries from the approved domain contracts.
 2. Approve the PostgreSQL workload profile and predeclare mandatory thresholds before measurement.
-3. Build an isolated, synthetic-data PostgreSQL proof-of-concept without enabling production use.
+3. Select and record a provisional PoC-only PostgreSQL toolchain; build an isolated, synthetic-data proof-of-concept without enabling production use.
 4. Execute the correctness/failure matrix first; stop performance qualification if a hard correctness gate fails.
 5. Measure concurrency, latency, locking, async behavior, recovery, and operational effort against the approved workload profile.
-6. Retain reproducible artifacts and submit the results for formal ADR-005 acceptance; only then select and record exact production tooling and configuration.
+6. Retain reproducible artifacts and submit the results for formal ADR-005 acceptance; only after acceptance may the Project Owner promote and record exact production tooling and configuration.
 
 ### 10.5 Verification Requirements
 - Test foreign keys, unique constraints, and transactional invariants against PostgreSQL.
