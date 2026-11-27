@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 5.0
+**Version:** 5.1
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-26  
@@ -158,7 +158,7 @@ The versions and lifecycle states below were read from the actual file headers i
 |---|---|---|---:|---|---|---|---|---|
 | GENI-ARCH-001 | Product and System Architecture | `docs/01-product-and-system-architecture.md` | 1.25 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
 | GENI-ARCH-002 | Component Architecture and Interface Contracts | `docs/02-component-architecture-and-interfaces.md` | 1.54 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
-| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.52 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-26 | No approval recorded |
+| GENI-DATA-003 | Data Model and Storage Design | `docs/03-data-model-and-storage-design.md` | 1.53 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-26 | No approval recorded |
 | GENI-PLAN-004 | Implementation Plan and Development Roadmap | `docs/04-implementation-plan-and-roadmap.md` | 1.38 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-26 | No approval recorded |
 | GENI-GOV-005 | Architecture Decision Records Governance | `docs/05-architecture-decision-records.md` | 1.8 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-SEC-008 | Security Architecture and Threat Model | `docs/08-security-architecture-and-threat-model.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-24 | No approval recorded |
@@ -168,7 +168,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-EVAL-012 | Testing and Evaluation Strategy | `docs/12-testing-and-evaluation-strategy.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.1 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
-| GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.0 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-26 | Pending Project Owner approval |
+| GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-26 | Pending Project Owner approval |
 | GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.4 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 2.3 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-26 | No ADR approval implied |
 
@@ -197,7 +197,7 @@ The published `main` branch contains all twenty individual ADR documents. The fi
 | GENI-ADR-002 | Article Deduplication and Event Matching Separation | `docs/adr/decisions/GENI-ADR-002-article-deduplication-and-event-matching.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-24 | Not yet approved |
 | GENI-ADR-003 | Economic Intelligence as the Primary Editorial Focus | `docs/adr/decisions/GENI-ADR-003-economic-intelligence-as-primary-editorial-focus.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-004 | Publication Decisions, Quality Gates, and Automated Publishing Policy | `docs/adr/decisions/GENI-ADR-004-publication-decisions-quality-gates-and-automated-publishing-policy.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
-| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 1.5 | Proposed | Published | Project Owner | 2026-11-26 | PostgreSQL target direction recorded; qualification and formal acceptance pending |
+| GENI-ADR-005 | Initial Persistence Technology and Migration Strategy | `docs/adr/decisions/GENI-ADR-005-initial-persistence-technology-and-migration-strategy.md` | 1.6 | Proposed | Published | Project Owner | 2026-11-26 | PostgreSQL target direction recorded; qualification and formal acceptance pending |
 | GENI-ADR-006 | Provider-Independent LLM Execution Architecture | `docs/adr/decisions/GENI-ADR-006-provider-independent-llm-execution-architecture.md` | 1.3 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-007 | Deterministic Workflows and Selective Agent Reasoning | `docs/adr/decisions/GENI-ADR-007-deterministic-workflows-and-selective-agent-reasoning.md` | 1.2 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
 | GENI-ADR-008 | Evidence Provenance and Uncertainty Representation | `docs/adr/decisions/GENI-ADR-008-evidence-provenance-and-uncertainty-representation.md` | 1.7 | Proposed | Published | Project Owner | 2026-11-18 | Not yet approved |
@@ -513,3 +513,5 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v5.0):** Refreshes the controlled-document inventory for Document 16 v4.4 and the inspected `main` baseline. Records the corrected distinction between the owner-selected PostgreSQL target and pending production qualification/formal ADR-005 acceptance. No ADR status or production authorization is changed.
 
 **End of Document**
+
+**Revision Note (v5.1):** Synchronizes the registry with Documents 03 v1.53 and 15 v4.2 and GENI-ADR-005 v1.6 after the PostgreSQL-target documentation alignment. The ADR remains Proposed; production qualification is not yet passed.
