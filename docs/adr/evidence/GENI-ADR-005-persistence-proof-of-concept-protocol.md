@@ -7,7 +7,7 @@
 **Status:** Proposed PostgreSQL qualification protocol — production qualification not yet passed  
 **Owner:** Project Owner  
 **Prepared By:** AI Architecture Assistant  
-**Last Updated:** 2026-11-24
+**Last Updated:** 2026-11-27
 
 ---
 
@@ -94,7 +94,7 @@ The PoC must execute against a real, isolated PostgreSQL instance; a design-only
 
 Before a run, record the exact candidate versions, source, rationale, configuration, lockfile or immutable image digest, and any known limitations. Keep the candidate stack in a dedicated PoC dependency group/environment and isolated test infrastructure. Do not add it to the production runtime dependency set, expose its types through domain/application ports, create production migrations, connect to production systems, or use production data/secrets. A candidate may be changed between PoC revisions only with a recorded reason and a new run identity; results from different stacks must not be merged as if they were one run.
 
-**First experimental candidate run (2026-11-27):** PostgreSQL 18.7 (`postgres:18.7`, image digest `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`), CPython 3.15.2, Psycopg 3.3.9 with its binary extra, native `AsyncConnection`, direct SQL (no ORM), and a small versioned SQL migration runner. The immutable image digest and exact Python/package versions were captured in GitHub Actions run `45940666045` for commit `218bdac2e7c0c0c923fa20e2b7ab86c830bd2373`. This is a provisional PoC stack only; it is not the selected production toolchain.
+**Experimental candidate stack (2026-11-27):** PostgreSQL 18.7 (`postgres:18.7`, image digest `sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328`), CPython 3.15.2, Psycopg 3.3.9 with its binary extra, native `AsyncConnection`, direct SQL (no ORM), and a small versioned SQL migration runner. The immutable image digest and exact Python/package versions were captured in successful GitHub Actions run `45941019381` for commit `2947911a880c527202230574abe99a12dcaa368f`. This is a provisional PoC stack only; it is not the selected production toolchain.
 
 The PoC may report correctness and operational-feasibility evidence for its exact experimental stack. It may report capacity/performance compliance only against an approved workload profile and thresholds. No experimental result automatically approves the candidate for production. Production promotion requires completed evidence review and formal acceptance of GENI-ADR-005; ADR-016 remains independently Proposed unless separately accepted.
 
