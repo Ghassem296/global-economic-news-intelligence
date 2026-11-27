@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.40
+**Version:** 1.41
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -454,3 +454,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 
 
 **Revision Note (v1.40):** Synchronizes the GENI-ADR-005 evidence reference with PoC-001 v1.24 after correcting the workload-profile correctness-gate range to POC-29 and reconciling the mandatory-gates summary with the successful 32-method result. ADR-005 remains Proposed; PostgreSQL production qualification and activation remain gated.
+
+**Revision Note (v1.41):** Synchronizes GENI-ADR-005 v3.7 and PoC-001 v1.30 after POC-31 added a concurrent same-key idempotency claim/replay test with one domain effect. The 34-method result is partial PoC evidence only; ADR-005/016 remain Proposed and PostgreSQL production qualification remains open.
