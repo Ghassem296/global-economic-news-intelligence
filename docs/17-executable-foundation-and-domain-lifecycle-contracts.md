@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 2.4  
+**Version:** 2.5  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -276,3 +276,6 @@ The first executable baseline includes the Python package, validated configurati
 **End of Document**
 
 **Revision Note (v2.4):** Documents the shared domain field-validation module introduced when the duplicated private helpers of the processing, duplicate and event-match payload contracts were consolidated. Lifecycle transition rules are unchanged; run-status aggregation and terminal-run retry (a successor run) remain as specified in §4.
+
+
+**Revision Note (v2.5):** Records the ArticleRevisionService hardening: rights evaluation uses one validated trusted application Clock instant rather than source-supplied observation time, and source URL/canonical URL/external ID changes refresh the Article projection without creating a new semantic revision. This application behavior remains implemented against ports; concrete production adapters and integration/concurrency qualification are not implied.
