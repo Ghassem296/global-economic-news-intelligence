@@ -117,7 +117,7 @@ Runbook publication is not evidence of successful exercise. See Documents 02, 03
 ---
 
 **Document ID:** GENI-OPS-013  
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** Draft — Under Architecture Review  
 
 
