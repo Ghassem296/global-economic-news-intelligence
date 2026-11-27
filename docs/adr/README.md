@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.27
+**Version:** 1.28
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -424,3 +424,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **Revision Note (v1.26):** Records PoC-001 v1.9 and the successful concurrent-write full-database backup/restore run, plus the third SQL migration. All 18 test methods pass; backup security/retention, workload/performance qualification, and formal ADR acceptance remain open.
 
 **Revision Note (v1.27):** Updates GENI-ADR-005 to v1.9 to reference the reproducible 18-test partial PoC evidence. ADR-005 remains Proposed; PostgreSQL is not production-qualified and no production toolchain or migration is approved.
+
+**Revision Note (v1.28):** Synchronizes GENI-ADR-005 v2.0 and PoC-001 v1.10 with the latest successful 18-test run, including experimental authenticated-backup protection and private file permissions. Production key management, retention, off-site protection, restore authorization, workload/performance qualification, and formal ADR acceptance remain open.
