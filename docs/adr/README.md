@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.42
+**Version:** 1.43
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-27
 
@@ -458,3 +458,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **Revision Note (v1.41):** Synchronizes GENI-ADR-005 v3.7 and PoC-001 v1.30 after POC-31 added a concurrent same-key idempotency claim/replay test with one domain effect. The 34-method result is partial PoC evidence only; ADR-005/016 remain Proposed and PostgreSQL production qualification remains open.
 
 **Revision Note (v1.42):** Synchronizes GENI-ADR-005 v3.8 and PoC-001 v1.31 after POC-32 verified rollback of interrupted idempotency claims/local effects and POC-33 verified expired-lease takeover with monotonic fencing and stale-worker rejection. The 36-method result remains partial PoC evidence; ADR-005/016 remain Proposed and production qualification is open.
+
+**Revision Note (v1.43):** Synchronizes GENI-ADR-005 v3.9 and PoC-001 v1.32 after POC-34 verified that unknown external side-effect outcomes block blind EXECUTE retries until reconciliation. The 37-method result remains partial PoC evidence; ADR-005/016 remain Proposed and production qualification is open.
