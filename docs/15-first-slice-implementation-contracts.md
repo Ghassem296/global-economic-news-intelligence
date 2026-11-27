@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.24  
+**Version:** 4.25  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27
@@ -1438,3 +1438,6 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 
 
 **Revision Note (v4.24):** Tightens Event Identity Operation command semantics by distinguishing the initial prepare envelope from subsequent apply/reconciliation commands and restores aggregate ownership boundaries: EventRepository owns Event current-state projection writes, `EventHistory`Repository owns append-only `EventHistory`, and EventIdentityOperationRepository owns operation/allocation/effect state. All remain coordinated through one UnitOfWork; no execution capability is enabled.
+
+
+**Revision Note (v4.25):** Formats generic type expressions in the Event Identity Operation DTO and repository tables as code spans so Markdown cannot interpret their angle-bracket notation as HTML. No contract semantics, approval gate, or runtime capability changes.
