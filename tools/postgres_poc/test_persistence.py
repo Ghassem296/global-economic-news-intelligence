@@ -164,7 +164,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
         self.connection = await connect_to_schema(DATABASE_URL, self.schema)
         await apply_migrations(
             self.connection,
-            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql"),
+            ("001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql"),
         )
         self.source_id = "source-test"
         self.article_id = uuid.uuid4()
@@ -744,56 +744,24 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             """,
             (uuid.uuid4(), operation_id),
         )
-        await self.connection.execute(
-            """
-            UPDATE external_operations
-            SET status = 'RECONCILIATION_REQUIRED', version = version + 1
-            WHERE operation_id = %s AND status = 'IN_PROGRESS'
-            """,
+
+        state = await self.connection.execute(
+            "SELECT status FROM external_operations WHERE operation_id = %s",
             (operation_id,),
         )
+        self.assertEqual((await state.fetchone())[0], "RECONCILIATION_REQUIRED")
 
         with self.assertRaises(CheckViolation):
-            await self.connection.execute(
-                """
-                INSERT INTO external_attempts
-                    (attempt_id, operation_id, attempt_number, attempt_type, outcome)
-                VALUES (%s, %s, 2, 'EXECUTE', 'CONFIRMED_SUCCESS')
-                """,
-                (uuid.uuid4(), operation_id),
-            )
-        await self.connection.rollback()
+            async with self.connection.transaction():
+                await self.connection.execute(
+                    """
+                    INSERT INTO external_attempts
+                        (attempt_id, operation_id, attempt_number, attempt_type, outcome)
+                    VALUES (%s, %s, 2, 'EXECUTE', 'CONFIRMED_SUCCESS')
+                    """,
+                    (uuid.uuid4(), operation_id),
+                )
 
-        # Rebuild the intent and unknown outcome after the rejected statement rolled back.
-        await self.connection.execute(
-            """
-            INSERT INTO external_operations (operation_id, operation_kind, status)
-            VALUES (%s, 'PUBLICATION', 'PENDING')
-            """,
-            (operation_id,),
-        )
-        await self.connection.execute(
-            """
-            UPDATE external_operations SET status = 'IN_PROGRESS'
-            WHERE operation_id = %s AND status = 'PENDING'
-            """,
-            (operation_id,),
-        )
-        await self.connection.execute(
-            """
-            INSERT INTO external_attempts
-                (attempt_id, operation_id, attempt_number, attempt_type, outcome)
-            VALUES (%s, %s, 1, 'EXECUTE', 'OUTCOME_UNKNOWN')
-            """,
-            (uuid.uuid4(), operation_id),
-        )
-        await self.connection.execute(
-            """
-            UPDATE external_operations SET status = 'RECONCILIATION_REQUIRED'
-            WHERE operation_id = %s AND status = 'IN_PROGRESS'
-            """,
-            (operation_id,),
-        )
         await self.connection.execute(
             """
             INSERT INTO external_attempts
@@ -802,21 +770,24 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             """,
             (uuid.uuid4(), operation_id),
         )
-        await self.connection.execute(
-            """
-            UPDATE external_operations
-            SET status = 'SUCCEEDED', version = version + 1
-            WHERE operation_id = %s AND status = 'RECONCILIATION_REQUIRED'
-            """,
-            (operation_id,),
-        )
-        await self.connection.commit()
-
-        operation = await self.connection.execute(
+        state = await self.connection.execute(
             "SELECT status FROM external_operations WHERE operation_id = %s",
             (operation_id,),
         )
-        self.assertEqual((await operation.fetchone())[0], "SUCCEEDED")
+        self.assertEqual((await state.fetchone())[0], "SUCCEEDED")
+
+        with self.assertRaises(CheckViolation):
+            async with self.connection.transaction():
+                await self.connection.execute(
+                    """
+                    INSERT INTO external_attempts
+                        (attempt_id, operation_id, attempt_number, attempt_type, outcome)
+                    VALUES (%s, %s, 3, 'EXECUTE', 'CONFIRMED_SUCCESS')
+                    """,
+                    (uuid.uuid4(), operation_id),
+                )
+        await self.connection.commit()
+
         attempts = await self.connection.execute(
             """
             SELECT attempt_type, outcome FROM external_attempts
@@ -828,6 +799,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             await attempts.fetchall(),
             [("EXECUTE", "OUTCOME_UNKNOWN"), ("RECONCILE", "RECONCILED_SUCCESS")],
         )
+
 
     async def test_poc_11_concurrent_atomic_updates_have_no_lost_increments(self) -> None:
         async def increment() -> None:
@@ -874,7 +846,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
             "SELECT version FROM schema_migrations ORDER BY version"
         )
         versions = [row[0] for row in await result.fetchall()]
-        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql"])
+        self.assertEqual(versions, ["001_initial.sql", "002_article_last_seen.sql", "003_backup_payload.sql", "004_domain_integrity.sql", "005_deferred_article_revision_owner_fk.sql", "006_atomic_idempotency_claims.sql", "007_external_outcome_reconciliation.sql", "008_automatic_external_outcome_transitions.sql"])
         result = await self.connection.execute(
             """
             SELECT column_name FROM information_schema.columns
@@ -1190,6 +1162,7 @@ class PostgreSQLPersistencePoCTests(unittest.IsolatedAsyncioTestCase):
                         "005_deferred_article_revision_owner_fk.sql",
                         "006_atomic_idempotency_claims.sql",
                         "007_external_outcome_reconciliation.sql",
+                        "008_automatic_external_outcome_transitions.sql",
                     ],
                 )
         finally:
@@ -1488,6 +1461,7 @@ asyncio.run(main())
                     "005_deferred_article_revision_owner_fk.sql",
                     "006_atomic_idempotency_claims.sql",
                     "007_external_outcome_reconciliation.sql",
+                    "008_automatic_external_outcome_transitions.sql",
                 ],
             )
             owner = await restored.execute(
@@ -1797,6 +1771,7 @@ asyncio.run(main())
             "005_deferred_article_revision_owner_fk.sql",
             "006_atomic_idempotency_claims.sql",
             "007_external_outcome_reconciliation.sql",
+            "008_automatic_external_outcome_transitions.sql",
         )
         before = await self.connection.execute(
             "SELECT version, applied_at FROM schema_migrations ORDER BY version"
