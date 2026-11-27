@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 4.99  
+**Version:** 5.0  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -118,7 +118,7 @@ The logical lifecycle contracts for the first-slice state machines are now speci
 ### 5.1 Field-level DTO and command schemas
 
 Document 15 §10.11–10.13 provides field-level DTO tranches for the core article-to-report flow, source configuration/identity and command-to-permission crosswalk. Section 10.14 defines separate structured-output baselines for Importance, Economic Relevance and Economic Impact; §10.15 defines ReportContent and ReportGenerationProvenance; §10.16 adds the pairwise article-deduplication repository, authorization and DTO contracts. These are proposed logical baselines only. Document 03 v1.56 requires actor and immutable authorization references on both duplicate candidate and decision records, bound to their exact operation scope; v1.54 also makes the Source configuration aggregate version explicit. Neither change approves the proposed contracts or enables production persistence.
-For every actual provider request, Document 15 v4.18 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
+For every actual provider request, Document 15 v4.24 requires an LLMUsageRecord linked to the exact Analysis and/or ProcessingRun/ProcessingStep and carrying the applicable privacy-authorization decision, processing purpose, data category, region, transfer assessment, content-rights decision references, provider/model, prompt/schema versions, outcome and retry provenance. Document 08 v1.9 adds the independent `privacy.processing.authorize` permission bound to the exact purpose, operation, data category, payload/input fingerprint, provider/model and region. Privacy authorization must independently ALLOW that exact request, and source-content rights must separately cover the exact payload and use; missing, unknown, expired, revoked or mismatched references block egress.
 Remaining work includes the explicit blockers in Document 15 §§10.10.1, 10.11.9, 10.12.5, 10.13.2, 10.14.5, 10.15.4 and 10.16.4: exact serialization/bounds/canonicalization, remaining query/report-family schemas, assessment vocabularies/scales/uncertainty calibration, template/input-manifest identity, duplicate-pair canonicalization and score/decision calibration, final grant assignments and policy-administration contracts. These documents remain Proposed and do not authorize execution.
 
 ### 5.2 Persistence and transaction implementation
@@ -537,3 +537,6 @@ If new evidence changes readiness, update this document and the affected source-
 
 
 **Revision Note (v4.99):** Records the new gated Event Identity Operation application-contract tranche in GENI-IMPL-015 v4.23 and clarifies that it closes a documentation contract gap only; durable work-item persistence, adapters, ADR acceptance, integration/failure-recovery tests, and capability activation remain outstanding. Reconciles the Application CI summary to the latest recorded exact source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` (302 tests); this is not verification of the subsequent documentation commits.
+
+
+**Revision Note (v5.0):** Synchronizes the active provider-usage contract reference with GENI-IMPL-015 v4.24 and records the clarified Event Identity aggregate ownership boundaries: EventRepository owns current Event projections, EventHistoryRepository owns append-only EventHistory, and EventIdentityOperationRepository owns operation/allocation/effect state. This is a documentation contract clarification only; adapters, durable work-item persistence, ADR acceptance, and execution remain gated.
