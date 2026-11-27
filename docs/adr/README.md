@@ -4,7 +4,7 @@
 **Owner:** Project Owner  
 **Document:** Architecture Decision Records Registry  
 **Document ID:** GENI-ADR-REGISTRY-001  
-**Version:** 1.19
+**Version:** 1.20
 **Status:** Draft — Under Documentation Review  
 **Last Updated:** 2026-11-24
 
@@ -408,3 +408,5 @@ The registry is the central reference for ADR inventory and status tracking. Ind
 **End of Document**
 
 **Revision Note (v1.19):** Records the PostgreSQL owner-selected target status for GENI-ADR-005 v1.5. The ADR remains Proposed pending qualification evidence and formal acceptance.
+
+**Revision Note (v1.20):** Synchronizes the ADR inventory with GENI-ADR-005 v1.6. PostgreSQL remains the owner-selected target; qualification and formal acceptance remain pending.
