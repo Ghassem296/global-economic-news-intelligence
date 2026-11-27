@@ -193,14 +193,19 @@ class FakeArticleRepository:
         self.items: dict[str, ArticleProjection] = {}
         self.save_calls = 0
 
-    def get_by_id(self, article_id: str) -> ArticleProjection | None:
+    def get_by_id(
+        self, article_id: str, uow: FakeUnitOfWork | None = None
+    ) -> ArticleProjection | None:
+        self.last_read_uow = uow
         return self.items.get(article_id)
 
     def find_by_source_identity(
         self,
         source_id: str,
         external_identity: SourceArticleIdentity,
+        uow: FakeUnitOfWork | None = None,
     ) -> ArticleProjection | None:
+        self.last_read_uow = uow
         return next(
             (
                 item
@@ -242,7 +247,10 @@ class FakeArticleRevisionRepository:
             None,
         )
 
-    def get_current_for_article(self, article_id: str) -> ArticleRevisionRecord | None:
+    def get_current_for_article(
+        self, article_id: str, uow: FakeUnitOfWork | None = None
+    ) -> ArticleRevisionRecord | None:
+        self.last_read_uow = uow
         return self.current.get(article_id)
 
     def find_current_by_revision_fingerprint(
