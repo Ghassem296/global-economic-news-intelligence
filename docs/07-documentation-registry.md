@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-GOV-007  
-**Version:** 6.9
+**Version:** 7.0
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-27  
@@ -169,7 +169,7 @@ The versions and lifecycle states below were read from the actual file headers i
 | GENI-OPS-013 | Deployment, Operations, and Observability | `docs/13-deployment-operations-and-observability.md` | 1.9 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-27 | No approval recorded |
 | GENI-PRIV-014 | Data Protection and Privacy Specification | `docs/14-data-protection-and-privacy-specification.md` | 1.2 | Draft — Under Architecture Review | Published | Project Owner | 2026-11-18 | No approval recorded |
 | GENI-IMPL-015 | First-Slice Implementation Contracts | `docs/15-first-slice-implementation-contracts.md` | 4.2 | Proposed — Pending Project Owner Approval | Published | Project Owner | 2026-11-26 | Pending Project Owner approval |
-| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.19 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
+| GENI-READY-016 | Implementation Readiness and Release Gates | `docs/16-implementation-readiness-and-release-gates.md` | 4.20 | Proposed — Readiness assessment; not an architectural approval | Published | Project Owner | 2026-11-27 | No architectural approval implied |
 | GENI-FOUNDATION-017 | Executable Foundation and Domain Lifecycle Contracts | `docs/17-executable-foundation-and-domain-lifecycle-contracts.md` | 2.3 | Proposed — Executable baseline; architecture approval remains governed by ADRs | Published | Project Owner | 2026-11-26 | No ADR approval implied |
 
 The version column is a repository snapshot. It must be refreshed whenever a listed document is revised. Publication in `main` does not constitute Project Owner approval.
@@ -553,3 +553,6 @@ Every controlled document and architectural decision must retain its own lifecyc
 **Revision Note (v6.8):** Records PoC-001 v1.16, ADR-005 v2.6, ADR Registry v1.34, Readiness Document 16 v4.18, and Operations Document 13 v1.8. The latest successful 25-test run comprises 21 PostgreSQL integration methods and four standalone retention-policy unit tests. POC-22 validates rollback of partial DDL and migration-history changes after a failed migration. Production migration tooling, rollback/recovery procedures, credential lifecycle, owner-approved retention, off-site/immutable protection, restore authorization, full cluster/tablespace recovery, workload/performance thresholds, and formal ADR acceptance remain open. The inspected baseline is `a1ed856641d9c029f92fabb50005f1bd0f44addc`.
 
 **Revision Note (v6.9):** Records PoC-001 v1.17, ADR-005 v2.7, ADR Registry v1.35, Readiness Document 16 v4.19, and Operations Document 13 v1.9. The latest successful 26-test run comprises 22 PostgreSQL integration methods and four standalone retention-policy unit tests. POC-23 verifies that rerunning migrations 001–003 preserves migration history and original timestamps. Production migration tooling, rollback/recovery procedures, credential lifecycle, owner-approved retention, off-site/immutable protection, restore authorization, full cluster/tablespace recovery, workload/performance thresholds, and formal ADR acceptance remain open. The inspected baseline is `49a7690e40dbac2c5e0a1afd0cf8229e78a10ed6`.
+
+
+**Revision Note (v7.0):** Synchronizes the controlled-document inventory with Readiness Document 16 v4.20 and ADR-005 v2.8. It records the 26-test PostgreSQL PoC evidence (22 integration methods and four standalone retention-policy unit tests), including POC-22 migration rollback and POC-23 migration reapplication idempotency, while retaining all production qualification and formal-acceptance gates.
