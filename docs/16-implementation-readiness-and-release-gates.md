@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 5.15  
+**Version:** 5.16  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-27  
+**Last Updated:** 2026-11-28  
 **Baseline:** Executable application, tests, and PostgreSQL PoC reviewed on 2026-11-27 commit `64693999aafd1815f8b9f248c2339e622a29e6cf`. Application CI run `46033471250`, Documentation Validation run `46033471137`, and PostgreSQL 18.7 / Python 3.15 PoC run `46033471023` all completed successfully on this exact commit.
 
 ---
