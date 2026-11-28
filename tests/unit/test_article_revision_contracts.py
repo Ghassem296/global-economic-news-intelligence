@@ -107,9 +107,31 @@ def test_metadata_only_or_unavailable_rejects_persistent_content_reference() -> 
         )
 
 
-def test_persisted_content_requires_rights_assessment_provenance() -> None:
-    with pytest.raises(ValueError, match="requires at least one rights_assessment_reference"):
-        revision(rights_assessment_references=())
+@pytest.mark.parametrize(
+    "availability",
+    [
+        ContentAvailability.AVAILABLE,
+        ContentAvailability.PARTIAL,
+        ContentAvailability.METADATA_ONLY,
+        ContentAvailability.UNAVAILABLE,
+    ],
+)
+def test_every_revision_requires_metadata_rights_assessment_provenance(
+    availability: ContentAvailability,
+) -> None:
+    overrides: dict[str, object] = {"rights_assessment_references": ()}
+    if availability in {
+        ContentAvailability.METADATA_ONLY,
+        ContentAvailability.UNAVAILABLE,
+    }:
+        overrides.update(
+            content_availability=availability,
+            content_reference=None,
+            content_hash=None,
+            content_normalization_version=None,
+        )
+    with pytest.raises(ValueError, match="every revision requires at least one"):
+        revision(**overrides)
 
 
 def test_content_hash_must_be_lowercase_sha256_hex() -> None:
