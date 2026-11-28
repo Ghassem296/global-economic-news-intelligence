@@ -2,7 +2,7 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-READY-016  
-**Version:** 5.16  
+**Version:** 5.17  
 **Status:** Proposed — Readiness assessment; not an architectural approval  
 **Owner:** Project Owner  
 **Last Updated:** 2026-11-28  
@@ -590,7 +590,7 @@ If new evidence changes readiness, update this document and the affected source-
 
 **Revision Note (v5.10):** Synchronizes readiness with GENI-IMPL-015 v4.33, which now defines the Event Identity operation's linked IdempotencyRecord lifecycle and guards against false FAILED/COMPLETED outcomes. Durable idempotency and ProcessingStep adapters, atomicity tests and all ADR approvals remain outstanding; the not-ready verdict is unchanged.
 
-**Revision Note (v5.11):** Synchronizes readiness with GENI-IMPL-015 v4.34, which establishes IdempotencyRecordRepository as the single canonical owner of Event Identity idempotency claims and removes duplicate claim ownership from EventIdentityOperationRepository. Durable adapters and transactional qualification remain open; readiness is unchanged.
+**Revision Note (v5.11):** Synchronizes readiness with GENI-IMPL-015 v4.35, which establishes IdempotencyRecordRepository as the single canonical owner of Event Identity idempotency claims and removes duplicate claim ownership from EventIdentityOperationRepository. Durable adapters and transactional qualification remain open; readiness is unchanged.
 
 
 **Revision Note (v5.12):** Synchronizes the PostgreSQL evidence reference with GENI-ADR-005-POC-001 v1.36 and GENI-ADR-005 v4.1. The exact-main 41-method rerun remains tied to source snapshot `cb258297a4568e6eec2083a0803e36caf61198e1` (run `46001262732`, artifact `15198735753`); readiness remains Not Ready for production because workload, security/operations, production adapters, and formal ADR acceptance gates remain open.
@@ -600,3 +600,6 @@ If new evidence changes readiness, update this document and the affected source-
 **Revision Note (v5.14):** Records exact-main Python 3.15 verification on commit `2ac253d7f93a04d06ff9861d809d4cfdc6840070`: Application CI passed 303 tests with Ruff and mypy; Documentation Validation passed all 23 validator tests; PostgreSQL 18.7 / Psycopg 3.3.9 PoC passed 49 methods across 11 PoC migrations. Marks the synchronous PoC UnitOfWork tranche complete and explicitly distinguishes schema-level JSONB checks from missing application repositories and service-level PostgreSQL integration. The project remains not ready for production; rights-scope canonicalization, concrete adapters, accepted ADRs, and operational gates remain open.
 
 **Revision Note (v5.16):** Reconciles the readiness assessment with the current `main` tip `cb38588738ae456382079f891be3dbc3f05d1d82`. The latest executable changes after the last fully verified baseline `64693999aafd1815f8b9f248c2339e622a29e6cf` strengthen the PoC test for canonical-URL advisory-lock contention (including observation of PostgreSQL's actual lock wait). No exact-commit Application CI, Documentation Validation, or PostgreSQL PoC run is recorded for the current tip; the prior 303/23/60 evidence remains attributable only to its exact earlier commit. This update also distinguishes the existing PoC ArticleRevisionService integration/concurrency/rollback tests from missing production integration and complete end-to-end vertical-slice evidence. The PostgreSQL ContentRightsVerifier remains unimplemented: the service-level rights checks use injected test verifiers, and no database-backed adapter currently proves exact source/content-scope assessment matching, metadata-retention policy binding, immutable policy/profile version locking, expiry/revocation serialization through commit, or rights-change propagation. The canonical scope fingerprint and metadata-retention contract remain explicit blockers; no real source-content persistence or production authorization is enabled. The overall readiness verdict is unchanged.
+
+
+**Revision Note (v5.17):** Aligns readiness references with GENI-IMPL-015 v4.35 and GENI-FOUNDATION-017 v3.5. Records that every ArticleRevision state now requires immutable rights-assessment provenance and that Document 15 explicitly blocks a concrete ContentRightsVerifier until separate, versioned metadata-scope and retained-content-scope manifests and assessment-coverage rules are specified. The semantic revision fingerprint and distribution manifest are expressly not interchangeable with ingestion authorization scopes. No exact-commit CI/PoC evidence has been added; production readiness and the existing fail-closed content-retention gate are unchanged.
