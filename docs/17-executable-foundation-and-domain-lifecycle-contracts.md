@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-FOUNDATION-017  
-**Version:** 3.4  
+**Version:** 3.5  
 **Status:** Proposed — Executable baseline; architecture approval remains governed by ADRs  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-27
+**Last Updated:** 2026-11-28
 
 ---
 
@@ -45,7 +45,7 @@ Payload contracts share dependency-free field validators (`require_text`, `requi
 
 ### 3.1 ArticleRevision payload contract
 
-The pure domain package now includes `domain/article_revision_contracts.py` and its unit tests. The contract defines the revision-level `ContentAvailability` vocabulary (`available`, `partial`, `metadata-only`, `unavailable`), enforces that metadata-only/unavailable revisions persist no content reference/hash/content-normalization version, validates SHA-256 content hashes for retained full/partial content, and computes a separate versioned semantic `revision_fingerprint`. Fingerprint v1 uses a restricted JCS-safe JSON value set and a fixed semantic manifest; it excludes observation time, content storage location, change reason, and rights-assessment references. The fingerprint is intended for comparison with the current revision only, not for global historical uniqueness. The contract also snapshots the source-reported author and includes it in the fingerprint, validates source identity shape/version and credential-free absolute HTTP(S) URLs (rejecting embedded userinfo, credential-like query keys, fragments, invalid ports, Unicode whitespace, control/format characters and backslashes), millisecond-precision timezone-aware timestamps, unique immutable rights-assessment references, and deeply immutable JCS-safe metadata.
+The pure domain package now includes `domain/article_revision_contracts.py` and its unit tests. The contract defines the revision-level `ContentAvailability` vocabulary (`available`, `partial`, `metadata-only`, `unavailable`), requires at least one immutable rights-assessment reference for every revision because metadata access/preservation must be authorized even when full text is absent, enforces that metadata-only/unavailable revisions persist no content reference/hash/content-normalization version, validates SHA-256 content hashes for retained full/partial content, and computes a separate versioned semantic `revision_fingerprint`. Fingerprint v1 uses a restricted JCS-safe JSON value set and a fixed semantic manifest; it excludes observation time, content storage location, change reason, and rights-assessment references. The fingerprint is intended for comparison with the current revision only, not for global historical uniqueness. The contract also snapshots the source-reported author and includes it in the fingerprint, validates source identity shape/version and credential-free absolute HTTP(S) URLs (rejecting embedded userinfo, credential-like query keys, fragments, invalid ports, Unicode whitespace, control/format characters and backslashes), millisecond-precision timezone-aware timestamps, unique immutable rights-assessment references, and deeply immutable JCS-safe metadata.
 
 This is a payload/fingerprint contract only. It does not choose or execute production source-identity canonicalization, decide whether a rights assessment allows an operation, manage retention expiry/deletion or rights revocation, or persist an Article/ArticleRevision aggregate. The source adapter must provide the versioned source identity and only permission-filtered semantic metadata; the application/repository layer must compare the computed fingerprint with the current revision under optimistic concurrency. A null content hash is expected for metadata-only/unavailable revisions and is never used as an idempotency key.
 
@@ -312,3 +312,6 @@ The first executable baseline includes the Python package, validated configurati
 
 
 **Revision Note (v3.4):** Clarifies that every ArticleRevision lookup used to resolve or compare the current revision, including fingerprint-based current-revision lookup, must participate in the caller's active UnitOfWork. The repository-port correction does not qualify persistence adapters or production concurrency behavior.
+
+
+**Revision Note (v3.5):** Aligns the executable ArticleRevision payload invariant with Document 15's mandatory metadata-rights check: every revision state, including metadata-only and unavailable, must carry at least one immutable rights-assessment reference. This validates provenance presence only; the concrete rights verifier and exact metadata-scope binding remain gated.
