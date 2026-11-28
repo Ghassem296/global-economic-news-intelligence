@@ -2,10 +2,10 @@
 
 **Project:** Global Economic News Intelligence  
 **Document ID:** GENI-IMPL-015  
-**Version:** 4.34  
+**Version:** 4.35  
 **Status:** Proposed — Pending Project Owner Approval  
 **Owner:** Project Owner  
-**Last Updated:** 2026-11-27
+**Last Updated:** 2026-11-28
 
 ---
 
@@ -198,8 +198,10 @@ The executable application contract is `ArticleRevisionService.execute(PersistAr
 
 1. Validate the typed command and derive the exact authorization resource: the known Article ID for an update, or the source ID plus canonical source identity and normalization version for create-by-identity.
 2. Resolve the trusted authorization reference for action `article.revision.persist`. A missing, invalid, expired, or denied authorization must fail closed before any write transaction begins.
-3. For `available` or `partial` content, re-evaluate the supplied immutable rights-assessment references at one trusted, timezone-aware `Clock.now()` instant captured by the application service. The verifier must establish an effective `PERSISTENT_STORAGE` ALLOW for the exact source and content scope, with the applicable policy version and expiry/revocation checks. Retrieval, temporary processing, or internal-analysis permission is insufficient. A denied or unverifiable check raises `RIGHTS_NOT_ALLOWED` and performs no persistence.
-4. Every revision must pass a separate metadata-rights check using the exact rights references and source/content scope. This check enforces `METADATA_ACCESS` and the applicable source-specific metadata-preservation rule. `available`/`partial` revisions must additionally pass `PERSISTENT_STORAGE`; absence of full-text permission must never be interpreted as metadata permission, and metadata permission must never authorize full-text retention.
+3. For `available` or `partial` content only, re-evaluate the supplied immutable rights-assessment references at one trusted, timezone-aware `Clock.now()` instant captured by the application service. The verifier must establish an effective `PERSISTENT_STORAGE` ALLOW for the exact source and retained-content scope, with the applicable policy version and expiry/revocation checks. Retrieval, temporary processing, or internal-analysis permission is insufficient. A denied or unverifiable check raises `RIGHTS_NOT_ALLOWED` and performs no content persistence. This check is additional to, and never replaces, the metadata-rights check in step 4.
+4. Every revision, including `metadata-only` and `unavailable`, must pass a separate metadata-rights check using the exact rights references and metadata scope. This check enforces `METADATA_ACCESS` and the applicable source-specific metadata-preservation rule. `available`/`partial` revisions must additionally pass `PERSISTENT_STORAGE`; absence of full-text permission must never be interpreted as metadata permission, and metadata permission must never authorize full-text retention.
+
+**Unresolved scope-fingerprint contract (blocking for a concrete rights adapter):** The current `ArticleRevision.revision_fingerprint` is a semantic change-detection fingerprint, not an authorization-scope fingerprint. The distribution `authorized_content_scope_fingerprint` in GENI-ADR-013 §6.15.2 binds immutable report items and their exact output bytes; it is not an ArticleRevision-ingestion manifest. Neither may be substituted for the missing ArticleRevision metadata-scope and retained-content-scope manifests. Before a database-backed `ContentRightsVerifier` is implemented, a versioned contract must define the exact field set and canonical serialization for each scope, including source identity and all persisted source-derived metadata, the retained-content digest and normalization version where applicable, and explicit exclusion of system-generated observation/change fields and storage-location references. It must also define how the supplied assessment references are proven to cover the exact source, scope, operation, policy/profile version, and validity interval. Until then, a matching 64-character digest alone is not evidence of authorization; the verifier must fail closed.
 
 5. **Transaction-bound revalidation is mandatory.** After opening the UnitOfWork and before idempotency claim/replay or any business read/write that can lead to persistence, the application service must re-evaluate the exact authorization decision and all applicable metadata/content rights using that same UnitOfWork. The transaction-aware verifier must lock or otherwise serialize the authoritative grant, policy and RightsAssessment versions until the UnitOfWork commits or rolls back; a concurrent revocation, expiry or superseding assessment must either serialize after the write or cause the write to fail closed. A preflight check with `uow=None` is only an early rejection optimization and is never sufficient to authorize commit. The transaction-bound check is also mandatory before returning an idempotent replay. The current ArticleRevisionService now passes its active UnitOfWork to these verifier calls; concrete database adapters must implement and integration-test the locking/serialization guarantee.
 
@@ -1487,3 +1489,6 @@ The tranche remains Proposed and disabled. Numeric retry/lease/time limits, cano
 
 
 **Revision Note (v4.31):** Tightens Event Identity operation finalization so durable existence of downstream work alone cannot be mistaken for completed reconciliation. Defines completion criteria for affected EventMatchCases and immutable Analyses, requires accountable ReviewRecord handoff when human review is necessary, and adds GENI-ADR-014 as a dependency for that handoff. The operation remains disabled until the relevant review and persistence gates pass.
+
+
+**Revision Note (v4.35):** Removes duplicated/contradictory wording in the ArticleRevision rights sequence and makes the missing ingestion-scope fingerprint contract an explicit blocker. Distinguishes semantic revision identity and distribution authorization manifests from metadata and retained-content authorization scopes; no adapter or production capability is enabled.
